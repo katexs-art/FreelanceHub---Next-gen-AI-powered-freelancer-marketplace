@@ -86,7 +86,7 @@ export function VoiceConfig() {
       return;
     }
     speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("Hi, thanks for calling. This is River, how can I help you today?");
+    const utterance = new SpeechSynthesisUtterance("Hi, thanks for calling. How can I help you today?");
     utterance.rate = 1.0;
     utterance.onend = () => setPlayingVoice(null);
     setPlayingVoice(voiceId);
