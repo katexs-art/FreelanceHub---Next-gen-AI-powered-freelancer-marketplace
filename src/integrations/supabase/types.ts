@@ -100,6 +100,33 @@ export type Database = {
         }
         Relationships: []
       }
+      api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          key_hash: string
+          last_used: string | null
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_hash: string
+          last_used?: string | null
+          name?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_hash?: string
+          last_used?: string | null
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       contacts: {
         Row: {
           created_at: string
@@ -183,6 +210,42 @@ export type Database = {
           },
         ]
       }
+      integration_settings: {
+        Row: {
+          api_key: string | null
+          config: Json | null
+          connected_at: string | null
+          created_at: string
+          id: string
+          integration_name: string
+          last_tested: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          api_key?: string | null
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string
+          id?: string
+          integration_name: string
+          last_tested?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          api_key?: string | null
+          config?: Json | null
+          connected_at?: string | null
+          created_at?: string
+          id?: string
+          integration_name?: string
+          last_tested?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           channel: Database["public"]["Enums"]["message_channel"]
@@ -248,6 +311,45 @@ export type Database = {
           phone?: string | null
           plan?: Database["public"]["Enums"]["user_plan"]
           trial_end_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      webhook_logs: {
+        Row: {
+          created_at: string
+          direction: string
+          duration_ms: number | null
+          event_type: string
+          id: string
+          payload: Json | null
+          response: Json | null
+          response_code: number | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          direction?: string
+          duration_ms?: number | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          response?: Json | null
+          response_code?: number | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          duration_ms?: number | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          response?: Json | null
+          response_code?: number | null
+          status?: string
           user_id?: string
         }
         Relationships: []
