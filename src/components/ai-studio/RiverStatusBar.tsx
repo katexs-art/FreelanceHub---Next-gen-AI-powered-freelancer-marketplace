@@ -6,9 +6,8 @@ export function RiverStatusBar() {
   const navigate = useNavigate();
 
   const integrations = [
-    { name: "Vapi", key: "vapi", alwaysOn: true },
+    { name: "Vapi", key: "vapi" },
     { name: "Twilio", key: "twilio" },
-    { name: "Anthropic", key: "anthropic", alwaysOn: true },
   ];
 
   return (

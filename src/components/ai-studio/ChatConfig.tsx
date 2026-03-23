@@ -206,7 +206,7 @@ export function ChatConfig() {
 
       {/* Knowledge */}
       <div>
-        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">What River Knows in Chat</label>
+        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">Agent Knowledge Base</label>
         <p className="text-[10px] text-foreground-muted mt-0.5">Shared between voice and chat agents</p>
         <Textarea value={knowledge} onChange={(e) => setKnowledge(e.target.value)} className="mt-2 text-[12px] bg-background-elevated border-border resize-y" rows={5} placeholder="Services, pricing, FAQs..." />
       </div>

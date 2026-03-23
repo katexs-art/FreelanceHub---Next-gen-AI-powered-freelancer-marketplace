@@ -365,7 +365,7 @@ export async function makeVapiCall(
         name: customerName || "Test Call",
       },
       assistantOverrides: {
-        firstMessage: "Hi, this is a test call from River AI. Your voice agent is working correctly. Thank you for testing Katexs.",
+        firstMessage: "Hi, this is a test call from your AI agent. Your voice agent is working correctly. Thank you for testing Katexs.",
       },
     }),
   });

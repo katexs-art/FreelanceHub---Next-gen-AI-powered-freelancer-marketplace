@@ -304,7 +304,7 @@ If asked if you are a robot or AI: say you are the virtual assistant for ${busin
 
       {/* Knowledge */}
       <div>
-        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">What River Knows</label>
+        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">Agent Knowledge Base</label>
         <Textarea className="mt-2 bg-background-elevated border-border text-foreground text-[13px] resize-y"
           placeholder="Services you offer, pricing, service area, hours, common questions and answers..."
           value={knowledge} onChange={(e) => setKnowledge(e.target.value)} rows={6} />

@@ -157,7 +157,7 @@ export function VoiceTester() {
       .replace("{caller_name}", "there")
       .replace("{time_of_day}", "today")
       .replace("{day_of_week}", "");
-    const utterance = new SpeechSynthesisUtterance(text || "Hi, thanks for calling. This is River, how can I help you today?");
+    const utterance = new SpeechSynthesisUtterance(text || "Hi, thanks for calling. How can I help you today?");
     speechSynthesis.speak(utterance);
   };
 
