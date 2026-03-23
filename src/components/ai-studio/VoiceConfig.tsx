@@ -32,7 +32,7 @@ export function VoiceConfig() {
   const [selectedVoice, setSelectedVoice] = useState("nova");
   const [personality, setPersonality] = useState("friendly");
   const [customPersonality, setCustomPersonality] = useState("");
-  const [greeting, setGreeting] = useState("Hi, thanks for calling {business_name}. This is River, how can I help you today?");
+  const [greeting, setGreeting] = useState("Hi, thanks for calling {business_name}. How can I help you today?");
   const [knowledge, setKnowledge] = useState("");
   const [recordCalls, setRecordCalls] = useState(false);
   const [transcribeCalls, setTranscribeCalls] = useState(true);
