@@ -11,6 +11,7 @@ import { useIntegrations } from "@/hooks/useIntegrations";
 import { useAuth } from "@/hooks/useAuth";
 import { Modal, ModalContent, ModalTitle, ModalDescription } from "@/components/ui/modal";
 import { toast } from "@/components/ui/sonner";
+import { fullVapiSync, validateVapiKey } from "@/services/vapiSync";
 
 /* ── Integration definitions ── */
 interface IntegrationDef {
@@ -32,8 +33,8 @@ const INTEGRATIONS: IntegrationDef[] = [
     fields: [{ label: "API Key", key: "api_key", type: "password", placeholder: "Your API key" }] },
   { name: "WhatsApp Business", key: "whatsapp", category: "Communication", description: "WhatsApp messaging via Twilio. Requires Twilio connection first.", icon: "WA",
     fields: [{ label: "WhatsApp Business Number", key: "phone_number", type: "text", placeholder: "+1..." }] },
-  { name: "Vapi", key: "vapi", category: "Voice AI", description: "AI voice agents — powered by Katexs. Configure in AI Studio.", icon: "Va",
-    fields: [], comingSoon: false },
+  { name: "Vapi", key: "vapi", category: "Voice AI", description: "AI voice agents for phone calls. Connect your Vapi API key to sync assistants, numbers, and call history.", icon: "Va",
+    fields: [{ label: "Vapi Private API Key", key: "api_key", type: "password", placeholder: "Your Vapi private key" }] },
   { name: "ElevenLabs", key: "elevenlabs", category: "Voice AI", description: "Ultra-realistic voice cloning for branded AI voice agents.", icon: "EL", comingSoon: true, fields: [] },
   { name: "Google Calendar", key: "google_calendar", category: "Calendar", description: "Sync appointments and let River book directly onto your calendar.", icon: "GC",
     fields: [{ label: "OAuth Token", key: "oauth_token", type: "password", placeholder: "Connect via OAuth" }] },
@@ -79,6 +80,8 @@ const Integrations = () => {
   const [connectModal, setConnectModal] = useState<IntegrationDef | null>(null);
   const [formValues, setFormValues] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncProgress, setSyncProgress] = useState("");
   const [apiTab, setApiTab] = useState<"curl" | "js" | "python">("curl");
   const [copied, setCopied] = useState(false);
 
@@ -95,12 +98,68 @@ const Integrations = () => {
   const handleConnect = async () => {
     if (!connectModal || !user) return;
     setSaving(true);
+
+    // Special Vapi connect flow with full sync
+    if (connectModal.key === "vapi") {
+      const apiKey = formValues["api_key"];
+      if (!apiKey) {
+        toast.error("Enter your Vapi API key");
+        setSaving(false);
+        return;
+      }
+
+      try {
+        const valid = await validateVapiKey(apiKey);
+        if (!valid) {
+          toast.error("Invalid Vapi API key. Check your key and try again.");
+          setSaving(false);
+          return;
+        }
+
+        await connectIntegration("vapi", apiKey, {});
+        setSyncProgress("Starting full sync...");
+
+        await fullVapiSync(user.id, apiKey, (msg) => setSyncProgress(msg));
+
+        toast.success("Vapi connected! All assistants, numbers, and calls synced.");
+        setSyncProgress("");
+        setConnectModal(null);
+        setFormValues({});
+        await refetch();
+      } catch (err: any) {
+        toast.error(err.message || "Failed to connect Vapi");
+        setSyncProgress("");
+      }
+      setSaving(false);
+      return;
+    }
+
     const apiKey = formValues["api_key"] || formValues["auth_token"] || formValues["access_token"] || formValues["oauth_token"] || "";
     await connectIntegration(connectModal.key, apiKey, formValues);
     toast.success(`${connectModal.name} connected successfully`);
     setSaving(false);
     setConnectModal(null);
     setFormValues({});
+  };
+
+  const handleVapiSync = async () => {
+    if (!user) return;
+    const vapiIntegration = getIntegration("vapi");
+    if (!vapiIntegration?.api_key) {
+      toast.error("Vapi not connected. Connect it first.");
+      return;
+    }
+    setSyncing(true);
+    setSyncProgress("Starting sync...");
+    try {
+      const result = await fullVapiSync(user.id, vapiIntegration.api_key, (msg) => setSyncProgress(msg));
+      toast.success(`Synced: ${result.assistants.length} assistants, ${result.phoneNumbers.length} numbers, ${result.calls.length} calls`);
+      await refetch();
+    } catch (err: any) {
+      toast.error(err.message || "Sync failed");
+    }
+    setSyncing(false);
+    setSyncProgress("");
   };
 
   const handleDisconnect = async (key: string, name: string) => {
@@ -187,7 +246,8 @@ const Integrations = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mb-6">
                   {items.map(intg => (
                     <IntegrationCard key={intg.key} def={intg} connected={isConnected(intg.key)} integration={getIntegration(intg.key)}
-                      onConnect={() => openConnectModal(intg)} onDisconnect={() => handleDisconnect(intg.key, intg.name)} />
+                      onConnect={() => openConnectModal(intg)} onDisconnect={() => handleDisconnect(intg.key, intg.name)}
+                      onSync={intg.key === "vapi" ? handleVapiSync : undefined} syncing={syncing} syncProgress={syncProgress} />
                   ))}
                 </div>
               </div>
@@ -196,7 +256,8 @@ const Integrations = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
               {filtered.map(intg => (
                 <IntegrationCard key={intg.key} def={intg} connected={isConnected(intg.key)} integration={getIntegration(intg.key)}
-                  onConnect={() => openConnectModal(intg)} onDisconnect={() => handleDisconnect(intg.key, intg.name)} />
+                  onConnect={() => openConnectModal(intg)} onDisconnect={() => handleDisconnect(intg.key, intg.name)}
+                  onSync={intg.key === "vapi" ? handleVapiSync : undefined} syncing={syncing} syncProgress={syncProgress} />
               ))}
             </div>
           )}
@@ -257,8 +318,8 @@ contacts = res.json()`}
         </div>
       </div>
 
-      {/* Connect Modal — Standard (non-Vapi) */}
-      <Modal open={!!connectModal} onOpenChange={() => { setConnectModal(null); setFormValues({}); }}>
+      {/* Connect Modal */}
+      <Modal open={!!connectModal} onOpenChange={() => { setConnectModal(null); setFormValues({}); setSyncProgress(""); }}>
         <ModalContent className="max-w-md">
           <ModalTitle className="text-[18px] font-semibold text-foreground">Connect {connectModal?.name}</ModalTitle>
           <ModalDescription className="text-[12px] text-foreground-secondary mt-1">{connectModal?.description}</ModalDescription>
@@ -284,7 +345,14 @@ contacts = res.json()`}
                 <p className="text-[11px] text-[hsl(var(--destructive))]">⚠ Twilio must be connected first.</p>
               </div>
             )}
-            {(connectModal?.fields.length ?? 0) === 0 && !connectModal?.comingSoon && (
+            {connectModal?.key === "vapi" && (
+              <div className="bg-[hsl(var(--accent-purple)/0.06)] border border-[hsl(var(--accent-purple)/0.15)] rounded-lg p-3">
+                <p className="text-[11px] text-foreground-secondary">
+                  Find your Private API key at <a href="https://dashboard.vapi.ai" target="_blank" rel="noopener" className="text-[#AFA9EC] underline">dashboard.vapi.ai</a> → Account → API Keys
+                </p>
+              </div>
+            )}
+            {(connectModal?.fields.length ?? 0) === 0 && !connectModal?.comingSoon && connectModal?.key !== "vapi" && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] text-foreground-secondary uppercase tracking-[0.08em] w-20">API Key</span>
@@ -294,10 +362,18 @@ contacts = res.json()`}
                 <p className="text-[11px] text-foreground-secondary">Use these credentials in {connectModal?.name} to connect with Katexs.</p>
               </div>
             )}
+            {syncProgress && (
+              <div className="flex items-center gap-2 text-[12px] text-foreground-secondary">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                {syncProgress}
+              </div>
+            )}
             <div className="flex gap-2 pt-2">
-              <Button variant="ghost" className="flex-1" onClick={() => { setConnectModal(null); setFormValues({}); }}>Cancel</Button>
+              <Button variant="ghost" className="flex-1" onClick={() => { setConnectModal(null); setFormValues({}); setSyncProgress(""); }}>Cancel</Button>
               {(connectModal?.fields.length ?? 0) > 0 ? (
-                <Button className="flex-1" onClick={handleConnect} disabled={saving}>{saving ? "Connecting..." : "Connect & Test"}</Button>
+                <Button className="flex-1" onClick={handleConnect} disabled={saving}>
+                  {saving ? (connectModal?.key === "vapi" ? "Connecting & syncing..." : "Connecting...") : "Connect & Sync"}
+                </Button>
               ) : (
                 <Button className="flex-1" onClick={() => { setConnectModal(null); toast.success("Instructions copied!"); }}>Done</Button>
               )}
@@ -311,11 +387,12 @@ contacts = res.json()`}
 };
 
 /* ── Integration Card ── */
-function IntegrationCard({ def, connected, integration, onConnect, onDisconnect }: {
+function IntegrationCard({ def, connected, integration, onConnect, onDisconnect, onSync, syncing, syncProgress }: {
   def: IntegrationDef; connected: boolean; integration?: { config: Record<string, unknown>; connected_at: string | null } | undefined;
-  onConnect: () => void; onDisconnect: () => void;
+  onConnect: () => void; onDisconnect: () => void; onSync?: () => void; syncing?: boolean; syncProgress?: string;
 }) {
-  
+  const vapiConfig = integration?.config as Record<string, unknown> | undefined;
+
   return (
     <div className="bg-background-card border border-border rounded-[12px] p-5 hover:border-border-strong transition-colors group">
       <div className="flex items-start justify-between mb-3">
@@ -327,8 +404,6 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
         </div>
         {def.comingSoon ? (
           <Badge className="bg-[hsl(36,90%,50%)/0.1] text-[hsl(36,90%,50%)] border-[hsl(36,90%,50%)/0.2] text-[9px]">Coming soon</Badge>
-        ) : def.key === "vapi" ? (
-          <Badge className="bg-[hsl(var(--accent-purple)/0.15)] text-[#AFA9EC] border-[hsl(var(--accent-purple)/0.25)] text-[9px]">Included</Badge>
         ) : connected ? (
           <Badge variant="green" className="text-[9px]">Connected</Badge>
         ) : (
@@ -339,28 +414,47 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-background-elevated border border-border text-foreground-secondary">{def.category}</span>
       </div>
-      {connected && integration && def.key !== "vapi" && (
+      {connected && integration && (
         <div className="mb-3 space-y-1">
           {integration.connected_at && (
             <p className="text-[10px] text-accent-green">Connected {new Date(integration.connected_at).toLocaleDateString()}</p>
           )}
-          {(integration.config as Record<string, unknown>)?.phone_number && (
-            <p className="text-[10px] text-foreground-secondary">📞 {String((integration.config as Record<string, unknown>).phone_number)}</p>
+          {def.key === "vapi" && vapiConfig && (
+            <>
+              {vapiConfig.assistants_count !== undefined && (
+                <p className="text-[10px] text-foreground-secondary">🤖 {String(vapiConfig.assistants_count)} assistants · 📞 {String(vapiConfig.phone_numbers_count || 0)} numbers · 📊 {String(vapiConfig.calls_synced || 0)} calls</p>
+              )}
+              {vapiConfig.last_full_sync && (
+                <p className="text-[10px] text-foreground-muted">Last synced: {new Date(String(vapiConfig.last_full_sync)).toLocaleString()}</p>
+              )}
+              {syncing && syncProgress && (
+                <div className="flex items-center gap-1 text-[10px] text-foreground-secondary">
+                  <Loader2 className="w-3 h-3 animate-spin" />{syncProgress}
+                </div>
+              )}
+            </>
           )}
-          {(integration.config as Record<string, unknown>)?.from_email && (
-            <p className="text-[10px] text-foreground-secondary">✉️ {String((integration.config as Record<string, unknown>).from_email)}</p>
+          {def.key !== "vapi" && (vapiConfig as any)?.phone_number && (
+            <p className="text-[10px] text-foreground-secondary">📞 {String((vapiConfig as any).phone_number)}</p>
+          )}
+          {def.key !== "vapi" && (vapiConfig as any)?.from_email && (
+            <p className="text-[10px] text-foreground-secondary">✉️ {String((vapiConfig as any).from_email)}</p>
           )}
         </div>
       )}
       <div className="flex items-center gap-2">
         {def.comingSoon ? (
           <Button variant="ghost" size="sm" disabled className="flex-1 text-[12px]">Coming soon</Button>
-        ) : def.key === "vapi" ? (
-          <Button variant="ghost" size="sm" className="flex-1 text-[12px]" asChild>
-            <a href="/ai-studio">Open AI Studio →</a>
-          </Button>
         ) : connected ? (
-          <Button variant="destructive" size="sm" className="flex-1 text-[12px]" onClick={onDisconnect}>Disconnect</Button>
+          <>
+            {def.key === "vapi" && onSync && (
+              <Button variant="ghost" size="sm" className="flex-1 text-[12px]" onClick={onSync} disabled={syncing}>
+                <RefreshCw className={`w-3 h-3 mr-1.5 ${syncing ? "animate-spin" : ""}`} />
+                {syncing ? "Syncing..." : "Sync now"}
+              </Button>
+            )}
+            <Button variant="destructive" size="sm" className="flex-1 text-[12px]" onClick={onDisconnect}>Disconnect</Button>
+          </>
         ) : (
           <Button size="sm" className="flex-1 text-[12px]" onClick={onConnect}>Connect</Button>
         )}
