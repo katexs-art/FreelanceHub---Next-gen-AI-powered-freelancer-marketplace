@@ -311,7 +311,7 @@ export async function updateVapiAssistant(
     method: "PATCH",
     headers: vapiHeaders(vapiKey),
     body: JSON.stringify({
-      name: `${config.businessName} — River AI`,
+      name: `${config.businessName} — AI Agent`,
       model: {
         provider: "openai",
         model: "gpt-4o-mini",
