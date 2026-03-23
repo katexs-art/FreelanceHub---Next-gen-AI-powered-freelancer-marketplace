@@ -35,8 +35,8 @@ export function useIntegrations() {
     if (!user) return;
     setLoading(true);
     const [intRes, logRes] = await Promise.all([
-      supabase.from("integration_settings").select("*").order("created_at", { ascending: false }),
-      supabase.from("webhook_logs").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("integration_settings").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+      supabase.from("webhook_logs").select("*").eq("user_id", user.id).order("created_at", { ascending: false }).limit(50),
     ]);
     if (intRes.data) setIntegrations(intRes.data as unknown as IntegrationSetting[]);
     if (logRes.data) setWebhookLogs(logRes.data as unknown as WebhookLog[]);
