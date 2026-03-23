@@ -281,7 +281,7 @@ If asked if you are a robot or AI: say you are the virtual assistant for ${busin
         </div>
         {personality === "custom" && (
           <Textarea className="mt-2 bg-background-elevated border-border text-foreground text-[13px]"
-            placeholder="Describe how River should speak and behave on calls..."
+            placeholder="Describe how your agent should speak and behave on calls..."
             value={customPersonality} onChange={(e) => setCustomPersonality(e.target.value)} rows={3} />
         )}
       </div>
