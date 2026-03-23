@@ -238,7 +238,7 @@ export async function createVapiAssistant(
   userId: string
 ) {
   const payload = {
-    name: `${config.businessName} — River AI`,
+    name: `${config.businessName} — AI Agent`,
     model: {
       provider: "openai",
       model: "gpt-4o-mini",
