@@ -584,35 +584,6 @@ function Features() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  FOOTER                                                             */
-/* ------------------------------------------------------------------ */
-function Footer() {
-  return (
-    <footer
-      className="border-t"
-      style={{
-        background: "hsl(var(--background))",
-        borderColor: "rgba(255,255,255,0.06)",
-        padding: "40px 32px",
-      }}
-    >
-      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <span className="text-foreground font-heading font-semibold" style={{ fontSize: "16px" }}>
-          Katex<span className="relative">s<span className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full" style={{ background: "hsl(var(--accent-green))" }} /></span>
-        </span>
-        <div className="flex items-center gap-6">
-          <Link to="/pricing" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Pricing</Link>
-          <Link to="/affiliates" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Affiliates</Link>
-          <Link to="/login" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Log in</Link>
-        </div>
-        <p className="text-foreground-muted" style={{ fontSize: "11px" }}>
-          © {new Date().getFullYear()} Katexs. All rights reserved.
-        </p>
-      </div>
-    </footer>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  LANDING PAGE                                                       */
