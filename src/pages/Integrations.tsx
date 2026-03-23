@@ -112,61 +112,6 @@ const Integrations = () => {
     setFormValues({});
   };
 
-  const handleVapiConnect = async () => {
-    if (!user) return;
-    const apiKey = formValues["api_key"] || "";
-    if (!apiKey) { setVapiError("Please enter your Vapi API key"); return; }
-    setVapiError("");
-    setVapiStep("syncing");
-    setVapiSyncProgress(0);
-
-    // Validate
-    const valid = await validateVapiKey(apiKey);
-    if (!valid) {
-      setVapiError("Invalid API key — check your Vapi dashboard");
-      setVapiStep("input");
-      return;
-    }
-    setVapiSyncProgress(1);
-
-    // Save API key first
-    await connectIntegration("vapi", apiKey, { api_key: apiKey });
-
-    // Animate progress steps
-    const stepDelay = (step: number) => new Promise<void>(r => setTimeout(() => { setVapiSyncProgress(step); r(); }, 600));
-    await stepDelay(2);
-
-    // Sync all data
-    try {
-      const result = await syncVapiData(user.id, apiKey);
-      await stepDelay(3);
-      await stepDelay(4);
-      await stepDelay(5);
-      await stepDelay(6);
-      setVapiSyncResult(result);
-      setVapiStep("review");
-    } catch (err: any) {
-      setVapiError(err.message || "Sync failed. Please try again.");
-      setVapiStep("input");
-    }
-  };
-
-  const handleVapiFinish = async () => {
-    if (vapiSelectedAssistant && user) {
-      const { supabase } = await import("@/integrations/supabase/client");
-      // Set selected assistant as active
-      await supabase.from("vapi_assistants").update({ is_active: false } as any).eq("user_id", user.id);
-      await supabase.from("vapi_assistants").update({ is_active: true } as any).eq("vapi_id", vapiSelectedAssistant);
-    }
-    await refetch();
-    toast.success("Vapi connected and synced!");
-    setConnectModal(null);
-    setVapiStep("input");
-    setVapiSyncResult(null);
-    setVapiSelectedAssistant(null);
-    setFormValues({});
-  };
-
   const handleDisconnect = async (key: string, name: string) => {
     await disconnectIntegration(key);
     toast.success(`${name} disconnected`);
@@ -182,12 +127,6 @@ const Integrations = () => {
   const openConnectModal = (intg: IntegrationDef) => {
     setConnectModal(intg);
     setFormValues({});
-    if (intg.key === "vapi") {
-      setVapiStep("input");
-      setVapiError("");
-      setVapiSyncResult(null);
-      setVapiSelectedAssistant(null);
-    }
   };
 
   const webhookUrl = `https://app.katexs.com/webhooks/${user?.id || "your-id"}/wh_live_xxxx`;
