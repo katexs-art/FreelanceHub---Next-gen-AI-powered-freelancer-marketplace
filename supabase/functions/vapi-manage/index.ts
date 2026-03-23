@@ -383,11 +383,9 @@ serve(async (req) => {
         const body: Record<string, unknown> = {};
         if (name) body.name = name;
         if (firstMessage) body.firstMessage = firstMessage;
-        if (voice) body.voice = { provider: voiceProvider || "openai", voiceId: voice };
+        if (voice) body.voice = { provider: voiceProvider || "vapi", voiceId: voice };
         if (systemPrompt) {
           body.model = {
-            provider: "openai",
-            model: "gpt-4o-mini",
             messages: [{ role: "system", content: systemPrompt }],
           };
         }
