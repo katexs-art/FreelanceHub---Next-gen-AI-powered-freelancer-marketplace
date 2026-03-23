@@ -69,7 +69,7 @@ export function VoicePhonePanel() {
         {phoneNumbers.length === 0 ? (
           <div className="text-center space-y-3">
             <p className="text-[13px] font-semibold text-foreground">Get your AI phone number</p>
-            <p className="text-[11px] text-foreground-secondary">Purchase a phone number for River to answer calls.</p>
+            <p className="text-[11px] text-foreground-secondary">Purchase a phone number for your AI agent to answer calls.</p>
             {showPurchase ? (
               <div className="space-y-2">
                 <Input placeholder="Area code (e.g. 602)" value={areaCode}
@@ -133,7 +133,7 @@ export function VoicePhonePanel() {
         <p className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em]">Call Stats Today</p>
         {[
           { label: "Calls received", value: todayCalls.length },
-          { label: "Answered by River", value: answered },
+          { label: "Answered by AI", value: answered },
           { label: "Missed", value: missed },
           { label: "Avg duration", value: `${avgDuration}s` },
         ].map(s => (

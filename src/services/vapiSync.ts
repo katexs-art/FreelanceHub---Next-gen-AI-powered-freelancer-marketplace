@@ -103,15 +103,16 @@ export async function updateVapiAssistant(
     greetingScript: string;
     recordCalls: boolean;
     systemPrompt: string;
+    voiceProvider?: string;
   },
   userId: string
 ) {
   return invokeVapi("update-assistant", {
     assistantId: vapiAssistantId,
-    name: `${config.businessName} — AI Agent`,
-    firstMessage: config.greetingScript.replace("{business_name}", config.businessName),
+    name: config.businessName,
+    firstMessage: config.greetingScript,
     voice: config.voiceId,
-    voiceProvider: "openai",
+    voiceProvider: config.voiceProvider || undefined,
     systemPrompt: config.systemPrompt,
     recordCalls: config.recordCalls,
   });
