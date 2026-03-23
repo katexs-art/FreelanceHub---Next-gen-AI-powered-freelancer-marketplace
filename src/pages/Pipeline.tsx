@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { toast } from "@/hooks/use-toast";
 import { Plus, MoreHorizontal, GripVertical, List, LayoutGrid, Trash2 } from "lucide-react";
+import { RiverPipelineInsight } from "@/components/river/RiverPipelineInsight";
+import { buildBusinessContext } from "@/services/river";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Deal = Tables<"deals">;
