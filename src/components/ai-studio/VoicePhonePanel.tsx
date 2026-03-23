@@ -133,7 +133,7 @@ export function VoicePhonePanel() {
         <p className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em]">Call Stats Today</p>
         {[
           { label: "Calls received", value: todayCalls.length },
-          { label: "Answered by River", value: answered },
+          { label: "Answered by AI", value: answered },
           { label: "Missed", value: missed },
           { label: "Avg duration", value: `${avgDuration}s` },
         ].map(s => (
