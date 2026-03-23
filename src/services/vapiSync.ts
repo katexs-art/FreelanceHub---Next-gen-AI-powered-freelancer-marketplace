@@ -238,7 +238,7 @@ export async function createVapiAssistant(
   userId: string
 ) {
   const payload = {
-    name: `${config.businessName} — River AI`,
+    name: `${config.businessName} — AI Agent`,
     model: {
       provider: "openai",
       model: "gpt-4o-mini",
@@ -311,7 +311,7 @@ export async function updateVapiAssistant(
     method: "PATCH",
     headers: vapiHeaders(vapiKey),
     body: JSON.stringify({
-      name: `${config.businessName} — River AI`,
+      name: `${config.businessName} — AI Agent`,
       model: {
         provider: "openai",
         model: "gpt-4o-mini",
@@ -365,7 +365,7 @@ export async function makeVapiCall(
         name: customerName || "Test Call",
       },
       assistantOverrides: {
-        firstMessage: "Hi, this is a test call from River AI. Your voice agent is working correctly. Thank you for testing Katexs.",
+        firstMessage: "Hi, this is a test call from your AI agent. Your voice agent is working correctly. Thank you for testing Katexs.",
       },
     }),
   });

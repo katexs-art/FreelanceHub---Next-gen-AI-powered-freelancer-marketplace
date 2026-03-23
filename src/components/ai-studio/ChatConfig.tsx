@@ -37,10 +37,10 @@ export function ChatConfig() {
   const [launcherStyle, setLauncherStyle] = useState("icon");
   const [launcherText, setLauncherText] = useState("Chat with us");
   const [showAvatar, setShowAvatar] = useState(true);
-  const [agentName, setAgentName] = useState("River");
+  const [agentName, setAgentName] = useState("AI Assistant");
   const [agentTitle, setAgentTitle] = useState("AI Assistant");
-  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! I'm River, the AI assistant for {business_name}. How can I help you today?");
-  const [awayMessage, setAwayMessage] = useState("We're currently closed. Leave a message and River will follow up!");
+  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! I'm the AI assistant for {business_name}. How can I help you today?");
+  const [awayMessage, setAwayMessage] = useState("We're currently closed. Leave a message and we'll follow up!");
   const [responseStyle, setResponseStyle] = useState("conversational");
   const [autoOpen, setAutoOpen] = useState("never");
   const [knowledge, setKnowledge] = useState("");
@@ -65,7 +65,7 @@ export function ChatConfig() {
         setLauncherStyle(cc.launcher_style || "icon");
         setLauncherText(cc.launcher_text || "Chat with us");
         setShowAvatar(cc.show_avatar ?? true);
-        setAgentName(cc.agent_name || "River");
+        setAgentName(cc.agent_name || "AI Assistant");
         setAgentTitle(cc.agent_title || "AI Assistant");
         setWelcomeMessage(cc.welcome_message || welcomeMessage);
         setAwayMessage(cc.away_message || awayMessage);
@@ -206,7 +206,7 @@ export function ChatConfig() {
 
       {/* Knowledge */}
       <div>
-        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">What River Knows in Chat</label>
+        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">Agent Knowledge Base</label>
         <p className="text-[10px] text-foreground-muted mt-0.5">Shared between voice and chat agents</p>
         <Textarea value={knowledge} onChange={(e) => setKnowledge(e.target.value)} className="mt-2 text-[12px] bg-background-elevated border-border resize-y" rows={5} placeholder="Services, pricing, FAQs..." />
       </div>

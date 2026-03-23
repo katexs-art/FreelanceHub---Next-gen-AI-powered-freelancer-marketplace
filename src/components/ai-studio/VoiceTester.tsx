@@ -157,7 +157,7 @@ export function VoiceTester() {
       .replace("{caller_name}", "there")
       .replace("{time_of_day}", "today")
       .replace("{day_of_week}", "");
-    const utterance = new SpeechSynthesisUtterance(text || "Hi, thanks for calling. This is River, how can I help you today?");
+    const utterance = new SpeechSynthesisUtterance(text || "Hi, thanks for calling. How can I help you today?");
     speechSynthesis.speak(utterance);
   };
 
@@ -184,9 +184,9 @@ export function VoiceTester() {
         {callState === "idle" && (
           <>
             <div>
-              <div className="text-[18px] font-bold text-foreground">Call River now</div>
+            <div className="text-[18px] font-bold text-foreground">Test your voice agent</div>
               <p className="text-[13px] text-foreground-secondary mt-1">
-                River will call your phone using your Vapi voice agent
+                Your AI agent will call your phone via Vapi
               </p>
             </div>
             <Input className="bg-background-elevated border-border text-center text-[15px] max-w-[280px] mx-auto"
@@ -209,7 +209,7 @@ export function VoiceTester() {
             <div className="w-10 h-10 rounded-full bg-accent-green/20 flex items-center justify-center mx-auto animate-pulse">
               <Phone className="w-5 h-5 text-accent-green" />
             </div>
-            <p className="text-[15px] text-foreground">River is calling your phone... Pick up!</p>
+            <p className="text-[15px] text-foreground">Your agent is calling... Pick up!</p>
           </div>
         )}
 

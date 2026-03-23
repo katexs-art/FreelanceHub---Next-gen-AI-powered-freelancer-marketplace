@@ -6,9 +6,8 @@ export function RiverStatusBar() {
   const navigate = useNavigate();
 
   const integrations = [
-    { name: "Vapi", key: "vapi", alwaysOn: true },
+    { name: "Vapi", key: "vapi" },
     { name: "Twilio", key: "twilio" },
-    { name: "Anthropic", key: "anthropic", alwaysOn: true },
   ];
 
   return (
@@ -16,11 +15,11 @@ export function RiverStatusBar() {
       style={{ background: "hsla(245,52%,67%,0.06)", border: "1px solid hsla(245,52%,67%,0.20)" }}>
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-accent-purple" />
-        <span className="text-[13px] text-accent-purple">River AI is powering your agents</span>
+        <span className="text-[13px] text-accent-purple">AI agents powered by Katexs</span>
       </div>
       <div className="flex items-center gap-2">
         {integrations.map((int) => {
-          const connected = int.alwaysOn || isConnected(int.key);
+          const connected = isConnected(int.key);
           return (
             <button
               key={int.key}

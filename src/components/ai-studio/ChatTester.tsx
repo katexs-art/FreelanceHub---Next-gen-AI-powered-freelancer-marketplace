@@ -14,10 +14,10 @@ export function ChatTester() {
   const [loading, setLoading] = useState(false);
   const [widgetOpen, setWidgetOpen] = useState(true);
   const [businessName, setBusinessName] = useState("Your Business");
-  const [agentName, setAgentName] = useState("River");
+  const [agentName, setAgentName] = useState("AI Assistant");
   const [primaryColor, setPrimaryColor] = useState("#020203");
   const [accentColor, setAccentColor] = useState("#4ade80");
-  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! I'm River. How can I help you today?");
+  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! How can I help you today?");
   const [knowledge, setKnowledge] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -27,7 +27,7 @@ export function ChatTester() {
       if (data?.business_name) setBusinessName(data.business_name);
       const cc = (data?.river_config as any)?.chat_config;
       if (cc) {
-        setAgentName(cc.agent_name || "River");
+        setAgentName(cc.agent_name || "AI Assistant");
         setPrimaryColor(cc.primary_color || "#020203");
         setAccentColor(cc.accent_color || "#4ade80");
         setWelcomeMessage((cc.welcome_message || welcomeMessage).replace("{business_name}", data?.business_name || "Your Business"));

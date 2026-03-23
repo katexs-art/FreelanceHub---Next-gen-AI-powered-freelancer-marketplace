@@ -32,7 +32,7 @@ export function VoiceConfig() {
   const [selectedVoice, setSelectedVoice] = useState("nova");
   const [personality, setPersonality] = useState("friendly");
   const [customPersonality, setCustomPersonality] = useState("");
-  const [greeting, setGreeting] = useState("Hi, thanks for calling {business_name}. This is River, how can I help you today?");
+  const [greeting, setGreeting] = useState("Hi, thanks for calling {business_name}. How can I help you today?");
   const [knowledge, setKnowledge] = useState("");
   const [recordCalls, setRecordCalls] = useState(false);
   const [transcribeCalls, setTranscribeCalls] = useState(true);
@@ -86,7 +86,7 @@ export function VoiceConfig() {
       return;
     }
     speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance("Hi, thanks for calling. This is River, how can I help you today?");
+    const utterance = new SpeechSynthesisUtterance("Hi, thanks for calling. How can I help you today?");
     utterance.rate = 1.0;
     utterance.onend = () => setPlayingVoice(null);
     setPlayingVoice(voiceId);
@@ -99,7 +99,7 @@ export function VoiceConfig() {
       personality === "friendly" ? "Be warm, conversational, and approachable." :
       "Be relaxed and natural, like talking to a friend.";
 
-    return `You are River, the AI phone assistant for ${businessName || "the business"}${industry ? `, a ${industry} company` : ""}.
+    return `You are the AI phone assistant for ${businessName || "the business"}${industry ? `, a ${industry} company` : ""}.
 
 ${personalityText}
 
@@ -108,7 +108,7 @@ ${knowledge ? `Here's what you know about the business:\n${knowledge}` : ""}
 ${bookAppointments ? "If the caller wants to book an appointment, collect their preferred date/time and confirm." : ""}
 ${collectInfo ? "Always collect the caller's name and best callback number." : ""}
 Keep responses concise and natural for a phone conversation.
-If asked if you are a robot or AI: say you are River, the virtual assistant for ${businessName || "the business"}.`;
+If asked if you are a robot or AI: say you are the virtual assistant for ${businessName || "the business"}.`;
   };
 
   const handleSave = async () => {
@@ -281,7 +281,7 @@ If asked if you are a robot or AI: say you are River, the virtual assistant for 
         </div>
         {personality === "custom" && (
           <Textarea className="mt-2 bg-background-elevated border-border text-foreground text-[13px]"
-            placeholder="Describe how River should speak and behave on calls..."
+            placeholder="Describe how your agent should speak and behave on calls..."
             value={customPersonality} onChange={(e) => setCustomPersonality(e.target.value)} rows={3} />
         )}
       </div>
@@ -304,7 +304,7 @@ If asked if you are a robot or AI: say you are River, the virtual assistant for 
 
       {/* Knowledge */}
       <div>
-        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">What River Knows</label>
+        <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">Agent Knowledge Base</label>
         <Textarea className="mt-2 bg-background-elevated border-border text-foreground text-[13px] resize-y"
           placeholder="Services you offer, pricing, service area, hours, common questions and answers..."
           value={knowledge} onChange={(e) => setKnowledge(e.target.value)} rows={6} />
