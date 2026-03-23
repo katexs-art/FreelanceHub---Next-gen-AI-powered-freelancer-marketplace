@@ -212,6 +212,33 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_studio_sessions: {
+        Row: {
+          config_snapshot: Json | null
+          created_at: string
+          feedback: string | null
+          id: string
+          session_type: string
+          user_id: string
+        }
+        Insert: {
+          config_snapshot?: Json | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          session_type?: string
+          user_id: string
+        }
+        Update: {
+          config_snapshot?: Json | null
+          created_at?: string
+          feedback?: string | null
+          id?: string
+          session_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_keys: {
         Row: {
           created_at: string
@@ -301,6 +328,42 @@ export type Database = {
           name?: string
           type?: string
           workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      chat_sessions: {
+        Row: {
+          business_id: string
+          contact_id: string | null
+          ended_at: string | null
+          id: string
+          lead_captured: boolean
+          messages: Json | null
+          source_url: string | null
+          started_at: string
+          visitor_id: string
+        }
+        Insert: {
+          business_id: string
+          contact_id?: string | null
+          ended_at?: string | null
+          id?: string
+          lead_captured?: boolean
+          messages?: Json | null
+          source_url?: string | null
+          started_at?: string
+          visitor_id?: string
+        }
+        Update: {
+          business_id?: string
+          contact_id?: string | null
+          ended_at?: string | null
+          id?: string
+          lead_captured?: boolean
+          messages?: Json | null
+          source_url?: string | null
+          started_at?: string
+          visitor_id?: string
         }
         Relationships: []
       }

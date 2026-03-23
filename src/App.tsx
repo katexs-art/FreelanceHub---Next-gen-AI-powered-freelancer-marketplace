@@ -36,6 +36,7 @@ const InboxPage = lazy(() => import("./pages/InboxPage"));
 const Contacts = lazy(() => import("./pages/Contacts"));
 const Pipeline = lazy(() => import("./pages/Pipeline"));
 const Workflows = lazy(() => import("./pages/Workflows"));
+const AIStudio = lazy(() => import("./pages/AIStudio"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const Messenger = lazy(() => import("./pages/Messenger"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/contacts" element={<AppShell><Contacts /></AppShell>} />
             <Route path="/pipeline" element={<AppShell><Pipeline /></AppShell>} />
             <Route path="/workflows" element={<AppShell><Workflows /></AppShell>} />
+            <Route path="/ai-studio" element={<AppShell><AIStudio /></AppShell>} />
             <Route path="/integrations" element={<AppShell><Integrations /></AppShell>} />
             <Route path="/messenger" element={<AppShell noPadding><Messenger /></AppShell>} />
             <Route path="/settings" element={<AppShell><SettingsPage /></AppShell>} />

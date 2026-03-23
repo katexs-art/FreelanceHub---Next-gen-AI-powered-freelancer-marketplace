@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Settings,
   Sparkles,
+  Star,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -21,6 +22,7 @@ const navItems = [
   { icon: Users, label: "Contacts", to: "/contacts" },
   { icon: GitBranch, label: "Pipeline", to: "/pipeline" },
   { icon: Workflow, label: "Workflows", to: "/workflows" },
+  { icon: Star, label: "AI Studio", to: "/ai-studio" },
   { icon: Plug, label: "Integrations", to: "/integrations" },
   { icon: MessageSquare, label: "Messenger", to: "/messenger" },
   { icon: Settings, label: "Settings", to: "/settings" },
