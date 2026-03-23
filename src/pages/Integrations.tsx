@@ -152,8 +152,8 @@ const Integrations = () => {
     setSyncing(true);
     setSyncProgress("Starting sync...");
     try {
-      const result = await fullVapiSync(user.id, vapiIntegration.api_key, (msg) => setSyncProgress(msg));
-      toast.success(`Synced: ${result.assistants.length} assistants, ${result.phoneNumbers.length} numbers, ${result.calls.length} calls`);
+      const result = await fullVapiSync(user.id, (msg) => setSyncProgress(msg));
+      toast.success(`Synced: ${result.assistants} assistants, ${result.phoneNumbers} numbers, ${result.calls} calls`);
       await refetch();
     } catch (err: any) {
       toast.error(err.message || "Sync failed");

@@ -156,9 +156,9 @@ If asked if you are a robot or AI: say you are the virtual assistant for ${busin
 
           let assistant;
           if (vapiAssistantId) {
-            assistant = await updateVapiAssistant(vapiAssistantId, config, vapiIntegration.api_key, user.id);
+            assistant = await updateVapiAssistant(vapiAssistantId, config, user.id);
           } else {
-            assistant = await createVapiAssistant(config, vapiIntegration.api_key, user.id);
+            assistant = await createVapiAssistant(config, user.id);
           }
 
           const newId = assistant?.id || vapiAssistantId;
