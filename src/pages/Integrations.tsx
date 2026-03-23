@@ -352,8 +352,18 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-background-elevated border border-border text-foreground-secondary">{def.category}</span>
       </div>
-      {connected && integration?.connected_at && (
-        <p className="text-[10px] text-accent-green mb-3">Connected {new Date(integration.connected_at).toLocaleDateString()}</p>
+      {connected && integration && (
+        <div className="mb-3 space-y-1">
+          {integration.connected_at && (
+            <p className="text-[10px] text-accent-green">Connected {new Date(integration.connected_at).toLocaleDateString()}</p>
+          )}
+          {(integration.config as Record<string, unknown>)?.phone_number && (
+            <p className="text-[10px] text-foreground-secondary">📞 {String((integration.config as Record<string, unknown>).phone_number)}</p>
+          )}
+          {(integration.config as Record<string, unknown>)?.from_email && (
+            <p className="text-[10px] text-foreground-secondary">✉️ {String((integration.config as Record<string, unknown>).from_email)}</p>
+          )}
+        </div>
       )}
       <div className="flex items-center gap-2">
         {def.comingSoon ? (
