@@ -1,13 +1,18 @@
 import { TopNav } from "./TopNav";
 import { Sidebar } from "./Sidebar";
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+interface AppShellProps {
+  children: React.ReactNode;
+  noPadding?: boolean;
+}
+
+export function AppShell({ children, noPadding }: AppShellProps) {
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
       <TopNav />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />
-        <main className="flex-1 overflow-auto bg-background p-6">
+        <main className={`flex-1 overflow-auto bg-background ${noPadding ? '' : 'p-6'}`}>
           {children}
         </main>
       </div>

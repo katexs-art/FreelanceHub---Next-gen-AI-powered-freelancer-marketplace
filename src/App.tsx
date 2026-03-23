@@ -39,7 +39,7 @@ const App = () => (
 
           {/* Protected routes (wrapped in AppShell) */}
           <Route path="/dashboard" element={<AppShell><Dashboard /></AppShell>} />
-          <Route path="/inbox" element={<AppShell><InboxPage /></AppShell>} />
+          <Route path="/inbox" element={<AppShell noPadding><InboxPage /></AppShell>} />
           <Route path="/contacts" element={<AppShell><Contacts /></AppShell>} />
           <Route path="/pipeline" element={<AppShell><Pipeline /></AppShell>} />
           <Route path="/workflows" element={<AppShell><Workflows /></AppShell>} />
