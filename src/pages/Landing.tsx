@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { PublicNav } from "@/components/layout/PublicNav";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import {
   Check,
   PhoneOff,
@@ -582,71 +584,19 @@ function Features() {
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  FOOTER                                                             */
-/* ------------------------------------------------------------------ */
-function Footer() {
-  return (
-    <footer
-      className="border-t"
-      style={{
-        background: "hsl(var(--background))",
-        borderColor: "rgba(255,255,255,0.06)",
-        padding: "40px 32px",
-      }}
-    >
-      <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-        <span className="text-foreground font-heading font-semibold" style={{ fontSize: "16px" }}>
-          Katex<span className="relative">s<span className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full" style={{ background: "hsl(var(--accent-green))" }} /></span>
-        </span>
-        <div className="flex items-center gap-6">
-          <Link to="/pricing" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Pricing</Link>
-          <Link to="/affiliates" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Affiliates</Link>
-          <Link to="/login" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Log in</Link>
-        </div>
-        <p className="text-foreground-muted" style={{ fontSize: "11px" }}>
-          © {new Date().getFullYear()} Katexs. All rights reserved.
-        </p>
-      </div>
-    </footer>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 /*  LANDING PAGE                                                       */
 /* ------------------------------------------------------------------ */
 const Landing = () => (
   <div className="min-h-screen" style={{ background: "hsl(var(--background))" }}>
-    {/* Navigation */}
-    <header
-      className="fixed top-0 left-0 right-0 z-50 h-14 border-b flex items-center justify-between px-6"
-      style={{
-        background: "rgba(2,2,3,0.85)",
-        backdropFilter: "blur(12px)",
-        borderColor: "rgba(255,255,255,0.06)",
-      }}
-    >
-      <span className="font-heading font-semibold text-foreground" style={{ fontSize: "18px", letterSpacing: "-0.02em" }}>
-        Katex<span className="relative">s<span className="absolute -top-0.5 -right-1 h-1.5 w-1.5 rounded-full" style={{ background: "hsl(var(--accent-green))" }} /></span>
-      </span>
-      <nav className="flex items-center gap-4">
-        <Link to="/pricing" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Pricing</Link>
-        <Link to="/affiliates" className="text-foreground-secondary hover:text-foreground" style={{ fontSize: "12px" }}>Affiliates</Link>
-        <Link to="/login">
-          <Button variant="ghost" size="sm">Log in</Button>
-        </Link>
-        <Link to="/signup">
-          <Button size="sm">Get Started</Button>
-        </Link>
-      </nav>
-    </header>
-
+    <PublicNav />
     <Hero />
     <DashboardPreview />
     <Marquee />
     <PainPoints />
     <Features />
-    <Footer />
+    <PublicFooter />
   </div>
 );
 
