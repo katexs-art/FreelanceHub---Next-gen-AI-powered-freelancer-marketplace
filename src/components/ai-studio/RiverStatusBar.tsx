@@ -16,7 +16,7 @@ export function RiverStatusBar() {
       style={{ background: "hsla(245,52%,67%,0.06)", border: "1px solid hsla(245,52%,67%,0.20)" }}>
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-accent-purple" />
-        <span className="text-[13px] text-accent-purple">River AI is powering your agents</span>
+        <span className="text-[13px] text-accent-purple">AI agents powered by Katexs</span>
       </div>
       <div className="flex items-center gap-2">
         {integrations.map((int) => {
