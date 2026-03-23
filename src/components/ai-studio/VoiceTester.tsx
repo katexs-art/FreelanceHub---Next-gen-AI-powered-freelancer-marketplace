@@ -34,7 +34,6 @@ export function VoiceTester() {
     return () => clearInterval(interval);
   }, [callState]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (pollingRef.current) clearInterval(pollingRef.current);
@@ -51,20 +50,7 @@ export function VoiceTester() {
     setCallState("initiating");
 
     try {
-      // Step 1: Get Vapi API key
-      const { data: vapiIntegration } = await supabase
-        .from("integration_settings")
-        .select("api_key, config")
-        .eq("user_id", user.id)
-        .eq("integration_name", "vapi")
-        .eq("status", "connected")
-        .single();
-
-      if (!vapiIntegration?.api_key) {
-        throw new Error("Connect Vapi first in Settings → Integrations");
-      }
-
-      // Step 2: Get active assistant
+      // Get active assistant
       const { data: activeAssistant } = await supabase
         .from("vapi_assistants")
         .select("vapi_id")
@@ -76,7 +62,7 @@ export function VoiceTester() {
         throw new Error("No active assistant found. Create one in AI Studio first.");
       }
 
-      // Step 3: Get primary phone number
+      // Get primary phone number
       const { data: primaryNumber } = await supabase
         .from("vapi_phone_numbers")
         .select("vapi_id, number")
@@ -88,10 +74,8 @@ export function VoiceTester() {
         throw new Error("No phone number found. Add a phone number in AI Studio first.");
       }
 
-      // Step 4: Tell Vapi to make the call
-      const vapiKey = vapiIntegration.api_key;
+      // Make call through edge function — no API key needed
       const callData = await makeVapiCall(
-        vapiKey,
         activeAssistant.vapi_id,
         primaryNumber.vapi_id,
         phone,
@@ -99,9 +83,7 @@ export function VoiceTester() {
       );
 
       setCallState("ringing");
-
-      // Step 5: Poll for call status
-      startPollingCallStatus(callData.id, vapiKey, user.id);
+      startPollingCallStatus(callData.id, user.id);
     } catch (err: any) {
       console.error("Test call error:", err);
       setCallState("failed");
@@ -110,10 +92,10 @@ export function VoiceTester() {
     }
   };
 
-  const startPollingCallStatus = (callId: string, vapiKey: string, userId: string) => {
+  const startPollingCallStatus = (callId: string, userId: string) => {
     pollingRef.current = setInterval(async () => {
       try {
-        const callStatus = await getVapiCallStatus(vapiKey, callId);
+        const callStatus = await getVapiCallStatus(callId);
 
         if (callStatus.status === "in-progress") {
           setCallState("in-progress");
@@ -127,8 +109,7 @@ export function VoiceTester() {
             ? Math.round((new Date(callStatus.endedAt).getTime() - new Date(callStatus.startedAt).getTime()) / 1000)
             : 0;
           setCallDuration(duration);
-          // Save to Supabase
-          syncCallToSupabase(userId, vapiKey, callId).catch(console.error);
+          syncCallToSupabase(userId, callId).catch(console.error);
         }
 
         if (["failed", "error"].includes(callStatus.status)) {
@@ -141,7 +122,6 @@ export function VoiceTester() {
       }
     }, 2000);
 
-    // Timeout after 2 minutes
     timeoutRef.current = setTimeout(() => {
       if (pollingRef.current) clearInterval(pollingRef.current);
       if (callState !== "completed" && callState !== "failed") {
