@@ -73,6 +73,7 @@ const App = () => (
             <Route path="/contacts" element={<AppShell><Contacts /></AppShell>} />
             <Route path="/pipeline" element={<AppShell><Pipeline /></AppShell>} />
             <Route path="/workflows" element={<AppShell><Workflows /></AppShell>} />
+            <Route path="/ai-studio" element={<AppShell><AIStudio /></AppShell>} />
             <Route path="/integrations" element={<AppShell><Integrations /></AppShell>} />
             <Route path="/messenger" element={<AppShell noPadding><Messenger /></AppShell>} />
             <Route path="/settings" element={<AppShell><SettingsPage /></AppShell>} />
