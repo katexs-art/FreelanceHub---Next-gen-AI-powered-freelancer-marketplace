@@ -574,6 +574,30 @@ export type Database = {
           },
         ]
       }
+      notification_settings: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          setting_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          setting_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          setting_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       platform_settings: {
         Row: {
           id: string
@@ -646,42 +670,129 @@ export type Database = {
           },
         ]
       }
+      team_invites: {
+        Row: {
+          accepted: boolean
+          created_at: string
+          expires_at: string
+          id: string
+          invitee_email: string
+          inviter_id: string
+          role: string
+          token: string
+        }
+        Insert: {
+          accepted?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitee_email: string
+          inviter_id: string
+          role?: string
+          token?: string
+        }
+        Update: {
+          accepted?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          invitee_email?: string
+          inviter_id?: string
+          role?: string
+          token?: string
+        }
+        Relationships: []
+      }
+      team_members: {
+        Row: {
+          id: string
+          joined_at: string
+          last_active: string | null
+          owner_id: string
+          permissions: Json | null
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          last_active?: string | null
+          owner_id: string
+          permissions?: Json | null
+          role?: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          last_active?: string | null
+          owner_id?: string
+          permissions?: Json | null
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       users: {
         Row: {
+          avatar_url: string | null
+          brand_color: string | null
+          business_address: Json | null
           business_name: string | null
           created_at: string
+          deleted_at: string | null
           email: string
           full_name: string | null
           id: string
           industry: string | null
+          language: string | null
           phone: string | null
           plan: Database["public"]["Enums"]["user_plan"]
+          river_config: Json | null
+          timezone: string | null
           trial_end_date: string | null
           user_id: string
+          working_hours: Json | null
         }
         Insert: {
+          avatar_url?: string | null
+          brand_color?: string | null
+          business_address?: Json | null
           business_name?: string | null
           created_at?: string
+          deleted_at?: string | null
           email: string
           full_name?: string | null
           id?: string
           industry?: string | null
+          language?: string | null
           phone?: string | null
           plan?: Database["public"]["Enums"]["user_plan"]
+          river_config?: Json | null
+          timezone?: string | null
           trial_end_date?: string | null
           user_id: string
+          working_hours?: Json | null
         }
         Update: {
+          avatar_url?: string | null
+          brand_color?: string | null
+          business_address?: Json | null
           business_name?: string | null
           created_at?: string
+          deleted_at?: string | null
           email?: string
           full_name?: string | null
           id?: string
           industry?: string | null
+          language?: string | null
           phone?: string | null
           plan?: Database["public"]["Enums"]["user_plan"]
+          river_config?: Json | null
+          timezone?: string | null
           trial_end_date?: string | null
           user_id?: string
+          working_hours?: Json | null
         }
         Relationships: []
       }
