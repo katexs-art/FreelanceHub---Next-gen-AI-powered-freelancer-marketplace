@@ -1,48 +1,59 @@
 
 
-# Fix Vapi Sync — Pull Real Voices & Full Two-Way Sync
+# Remove River Branding from AI Studio — Use Vapi for Voice, Clean Chat AI
 
-## Problem
-1. Voice options in AI Studio are hardcoded (6 OpenAI voices) instead of pulling from Vapi's actual voice catalog
-2. The `vapi-manage` edge function hardcodes `provider: "openai"` when creating/updating assistants
-3. The RiverStatusBar still checks `isConnected("vapi")` even though Vapi is now platform-managed (always shows red)
-4. No mechanism to pull existing assistants from Vapi back into Katexs
+## What's Happening Now
 
-## What Your Vapi API Key Gives Access To
-The screenshot shows your Vapi dashboard with Private + Public API keys. The **Private Key** is what's already stored as `VAPI_API_KEY` in the backend. This key is sufficient — no additional keys are needed. The issue is that the code doesn't use it to fetch voices or sync data back.
+"River" is hardcoded everywhere in the AI Studio as the agent name — greetings, system prompts, test call messages, UI labels. The user wants the AI Studio to feel like it's powered directly by Vapi (for voice) and the platform's own AI (for chat), not "River."
+
+River AI should remain as the internal business assistant (floating chat button, dashboard insights, pipeline analysis) but should NOT be the name/brand of the client-facing voice and chat agents.
 
 ## Changes
 
-### 1. Add `list-voices` action to `vapi-manage` edge function
-- Fetch Vapi's curated voices via `GET https://api.vapi.ai/voice` (or hardcode the Vapi-native voice catalog since Vapi doesn't have a list-voices endpoint — use their documented voices: Elliot, Lily, Rohan, Emma, Clara, Nico, Godfrey, Sagar, plus OpenAI voices)
-- Also add `sync-assistants` action that pulls ALL assistants from the master account and stores them in `vapi_assistants`, tagged by `katexs_user_id`
+### 1. `VoiceConfig.tsx` — Remove River from voice agent
+- Default greeting: change `"This is River"` → `"How can I help you today?"`
+- System prompt (`buildSystemPrompt`): change `"You are River, the AI phone assistant"` → `"You are the AI phone assistant for {businessName}"`
+- Custom personality placeholder: remove "River" reference
+- Knowledge label: `"What River Knows"` → `"Agent Knowledge Base"`
 
-### 2. Update `VoiceConfig.tsx` — Dynamic voice list
-- On mount, call `vapi-manage` with `action: "list-voices"` to get available voices
-- Show Vapi's native voices (Elliot, Lily, Rohan, Emma, Clara, Nico) alongside OpenAI voices (Alloy, Echo, Nova, etc.)
-- Group by provider: "Vapi Voices" section + "OpenAI Voices" section
-- Store selected `voice_provider` + `voice_id` (not just voice_id)
-- When creating/updating assistant, pass the correct provider
+### 2. `VoiceTester.tsx` — Remove River from test UI
+- `"Call River now"` → `"Test your voice agent"`
+- `"River will call your phone"` → `"Your AI agent will call your phone via Vapi"`
+- `"River is calling your phone"` → `"Your agent is calling..."`
+- Default preview utterance: remove "River" mention
+- Keep Vapi as the call engine (already correct)
 
-### 3. Update `vapi-manage` create/update to support multiple voice providers
-- Instead of hardcoding `{ provider: "openai", voiceId: voice }`, accept `voiceProvider` param
-- For Vapi voices: `{ provider: "vapi", voiceId: "Elliot" }`
-- For OpenAI voices: `{ provider: "openai", voiceId: "nova" }`
+### 3. `vapiSync.ts` — Remove River from Vapi assistant names
+- Assistant name: `"{businessName} — River AI"` → `"{businessName} — AI Agent"`
+- Test call firstMessage: `"test call from River AI"` → `"test call from your AI agent"`
 
-### 4. Fix `RiverStatusBar.tsx`
-- Mark Vapi as `alwaysOn: true` since it's platform-managed
-- Show green checkmark always
+### 4. `ChatConfig.tsx` — Remove River defaults from chat widget
+- Default agent name: `"River"` → `"AI Assistant"`
+- Default welcome message: remove "River" → use agent name variable
+- Default away message: remove "River"
+- Knowledge label: `"What River Knows in Chat"` → `"Agent Knowledge Base"`
 
-### 5. Add full sync on AI Studio load
-- When Voice AI tab loads, call `sync-assistants` to pull any assistants created on Vapi directly
-- Display synced assistants in a "Your Assistants" section above the config form
-- User can select an existing assistant to edit, or create new
+### 5. `ChatTester.tsx` — Keep using Lovable AI gateway but remove River name
+- Default agent name: `"River"` → `"AI Assistant"`
+- Default welcome message: remove "River"
+- Still uses `riverCall` from `river.ts` service — this is the Lovable AI gateway, which is correct for chat. Just the branding changes.
 
-## Files to modify
+### 6. `RiverStatusBar.tsx` — Rebrand for AI Studio context
+- `"River AI is powering your agents"` → `"AI agents powered by Katexs"`
+- Remove Anthropic from the status bar (it's Lovable AI gateway now, not user-facing)
+- Keep Vapi and Twilio status indicators
+
+### 7. `river-chat/index.ts` (edge function) — No changes needed
+- The system prompt there is for River as the internal business assistant (floating chat, dashboard insights). This is separate from the client-facing agents and should stay as "River."
+
+## Files to Modify
 
 | File | Change |
 |------|--------|
-| `supabase/functions/vapi-manage/index.ts` | Add `list-voices`, `sync-assistants` actions; fix voice provider in create/update |
-| `src/components/ai-studio/VoiceConfig.tsx` | Fetch real voices on mount; support multiple providers; show grouped voice cards |
-| `src/components/ai-studio/RiverStatusBar.tsx` | Set Vapi `alwaysOn: true` |
+| `src/components/ai-studio/VoiceConfig.tsx` | Remove "River" from defaults and system prompt |
+| `src/components/ai-studio/VoiceTester.tsx` | Remove "River" from UI labels |
+| `src/components/ai-studio/ChatConfig.tsx` | Remove "River" from defaults |
+| `src/components/ai-studio/ChatTester.tsx` | Remove "River" from defaults |
+| `src/components/ai-studio/RiverStatusBar.tsx` | Rebrand status bar |
+| `src/services/vapiSync.ts` | Remove "River AI" from assistant names and test messages |
 
