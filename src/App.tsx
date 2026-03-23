@@ -36,6 +36,7 @@ const InboxPage = lazy(() => import("./pages/InboxPage"));
 const Contacts = lazy(() => import("./pages/Contacts"));
 const Pipeline = lazy(() => import("./pages/Pipeline"));
 const Workflows = lazy(() => import("./pages/Workflows"));
+const AIStudio = lazy(() => import("./pages/AIStudio"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const Messenger = lazy(() => import("./pages/Messenger"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
