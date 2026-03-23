@@ -9,6 +9,8 @@ import { Modal, ModalContent } from "@/components/ui/modal";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { Search, Filter, Upload, Plus, MoreHorizontal, Phone, Mail, MessageSquare, StickyNote, ChevronUp, ChevronDown, X, FileText, Trash2 } from "lucide-react";
+import { RiverContactInsight } from "@/components/river/RiverContactInsight";
+import { buildBusinessContext } from "@/services/river";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Contact = Tables<"contacts">;
