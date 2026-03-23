@@ -267,12 +267,16 @@ function SignupForm({ formRef }: { formRef: React.RefObject<HTMLDivElement> }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.firstName || !form.email) { toast.error("First name and email are required"); return; }
+    if (!user) {
+      toast.error("Please sign up or log in first to become an affiliate");
+      navigate("/signup?redirect=affiliate");
+      return;
+    }
     setLoading(true);
     try {
-      const userId = user?.id || crypto.randomUUID();
-      const referralCode = userId.slice(0, 8) + Math.random().toString(36).slice(2, 6);
+      const referralCode = user.id.slice(0, 8) + Math.random().toString(36).slice(2, 6);
       const { error } = await supabase.from("affiliates").insert({
-        user_id: userId,
+        user_id: user.id,
         referral_code: referralCode,
         referred_count: 0,
         earnings: 0,
