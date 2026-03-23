@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { PublicNav } from "@/components/layout/PublicNav";
+import { PublicFooter } from "@/components/layout/PublicFooter";
 import {
   Check,
   PhoneOff,
