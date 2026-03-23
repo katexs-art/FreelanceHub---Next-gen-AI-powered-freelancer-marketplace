@@ -163,19 +163,9 @@ const Pipeline = () => {
         ))}
       </div>
 
-      {/* River insight */}
-      {showRiver && riverInsight && (
-        <div className="bg-accent-purple/[0.06] border border-accent-purple/15 border-t-2 border-t-accent-purple rounded-[10px] p-3 mb-4 flex items-start justify-between">
-          <div className="flex items-start gap-2">
-            <div className="w-2 h-2 rounded-full bg-accent-purple mt-1.5 shrink-0" />
-            <div>
-              <span className="text-[12px] font-semibold text-accent-purple">River AI</span>
-              <p className="text-[12px] text-foreground/70 mt-0.5">{riverInsight}</p>
-              <Button size="sm" className="h-6 text-[10px] mt-2 bg-accent-purple hover:bg-accent-purple/80 text-foreground">Yes, send follow-ups</Button>
-            </div>
-          </div>
-          <button onClick={() => setShowRiver(false)} className="text-foreground-secondary hover:text-foreground text-[11px]">×</button>
-        </div>
+      {/* River Pipeline Insight */}
+      {deals.length > 0 && (
+        <RiverPipelineInsight context={riverContext} dealData={dealSummary} />
       )}
 
       {/* Kanban */}
