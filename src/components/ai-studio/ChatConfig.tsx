@@ -37,10 +37,10 @@ export function ChatConfig() {
   const [launcherStyle, setLauncherStyle] = useState("icon");
   const [launcherText, setLauncherText] = useState("Chat with us");
   const [showAvatar, setShowAvatar] = useState(true);
-  const [agentName, setAgentName] = useState("River");
+  const [agentName, setAgentName] = useState("AI Assistant");
   const [agentTitle, setAgentTitle] = useState("AI Assistant");
-  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! I'm River, the AI assistant for {business_name}. How can I help you today?");
-  const [awayMessage, setAwayMessage] = useState("We're currently closed. Leave a message and River will follow up!");
+  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! I'm the AI assistant for {business_name}. How can I help you today?");
+  const [awayMessage, setAwayMessage] = useState("We're currently closed. Leave a message and we'll follow up!");
   const [responseStyle, setResponseStyle] = useState("conversational");
   const [autoOpen, setAutoOpen] = useState("never");
   const [knowledge, setKnowledge] = useState("");
