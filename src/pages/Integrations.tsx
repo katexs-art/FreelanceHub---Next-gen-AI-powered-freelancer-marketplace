@@ -327,6 +327,8 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
         </div>
         {def.comingSoon ? (
           <Badge className="bg-[hsl(36,90%,50%)/0.1] text-[hsl(36,90%,50%)] border-[hsl(36,90%,50%)/0.2] text-[9px]">Coming soon</Badge>
+        ) : def.key === "vapi" ? (
+          <Badge className="bg-[hsl(var(--accent-purple)/0.15)] text-[#AFA9EC] border-[hsl(var(--accent-purple)/0.25)] text-[9px]">Included</Badge>
         ) : connected ? (
           <Badge variant="green" className="text-[9px]">Connected</Badge>
         ) : (
@@ -337,7 +339,7 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-background-elevated border border-border text-foreground-secondary">{def.category}</span>
       </div>
-      {connected && integration && (
+      {connected && integration && def.key !== "vapi" && (
         <div className="mb-3 space-y-1">
           {integration.connected_at && (
             <p className="text-[10px] text-accent-green">Connected {new Date(integration.connected_at).toLocaleDateString()}</p>
@@ -348,32 +350,20 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
           {(integration.config as Record<string, unknown>)?.from_email && (
             <p className="text-[10px] text-foreground-secondary">✉️ {String((integration.config as Record<string, unknown>).from_email)}</p>
           )}
-          {def.key === "vapi" && vapiSyncInfo && (
-            <div className="text-[10px] text-foreground-secondary space-y-0.5">
-              <p>{String((integration.config as any)?.assistants_count || 0)} assistants · {String((integration.config as any)?.phone_numbers_count || 0)} numbers · {String((integration.config as any)?.calls_synced || 0)} calls</p>
-              {(integration.config as any)?.last_sync && (
-                <p>Last sync: {new Date((integration.config as any).last_sync).toLocaleString()}</p>
-              )}
-            </div>
-          )}
         </div>
       )}
       <div className="flex items-center gap-2">
         {def.comingSoon ? (
           <Button variant="ghost" size="sm" disabled className="flex-1 text-[12px]">Coming soon</Button>
+        ) : def.key === "vapi" ? (
+          <Button variant="ghost" size="sm" className="flex-1 text-[12px]" asChild>
+            <a href="/ai-studio">Open AI Studio →</a>
+          </Button>
         ) : connected ? (
-          <>
-            {def.key === "vapi" && (
-              <Button variant="ghost" size="sm" className="text-[12px]" asChild>
-                <a href="/ai-studio">AI Studio →</a>
-              </Button>
-            )}
-            <Button variant="destructive" size="sm" className="flex-1 text-[12px]" onClick={onDisconnect}>Disconnect</Button>
-          </>
+          <Button variant="destructive" size="sm" className="flex-1 text-[12px]" onClick={onDisconnect}>Disconnect</Button>
         ) : (
           <Button size="sm" className="flex-1 text-[12px]" onClick={onConnect}>Connect</Button>
         )}
-        <Button variant="ghost" size="sm" className="text-[12px]"><ExternalLink className="w-3 h-3" /></Button>
       </div>
     </div>
   );
