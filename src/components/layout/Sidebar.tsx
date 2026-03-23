@@ -10,6 +10,7 @@ import {
   MessageSquare,
   Settings,
   Sparkles,
+  Star,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
