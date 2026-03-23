@@ -258,7 +258,7 @@ contacts = res.json()`}
       </div>
 
       {/* Connect Modal — Standard (non-Vapi) */}
-      <Modal open={!!connectModal && connectModal.key !== "vapi"} onOpenChange={() => { setConnectModal(null); setFormValues({}); }}>
+      <Modal open={!!connectModal} onOpenChange={() => { setConnectModal(null); setFormValues({}); }}>
         <ModalContent className="max-w-md">
           <ModalTitle className="text-[18px] font-semibold text-foreground">Connect {connectModal?.name}</ModalTitle>
           <ModalDescription className="text-[12px] text-foreground-secondary mt-1">{connectModal?.description}</ModalDescription>
