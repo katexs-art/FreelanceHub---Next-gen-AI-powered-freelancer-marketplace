@@ -209,7 +209,7 @@ export function VoiceTester() {
             <div className="w-10 h-10 rounded-full bg-accent-green/20 flex items-center justify-center mx-auto animate-pulse">
               <Phone className="w-5 h-5 text-accent-green" />
             </div>
-            <p className="text-[15px] text-foreground">River is calling your phone... Pick up!</p>
+            <p className="text-[15px] text-foreground">Your agent is calling... Pick up!</p>
           </div>
         )}
 
