@@ -119,7 +119,7 @@ const Integrations = () => {
         await connectIntegration("vapi", apiKey, {});
         setSyncProgress("Starting full sync...");
 
-        await fullVapiSync(user.id, apiKey, (msg) => setSyncProgress(msg));
+        await fullVapiSync(user.id, (msg) => setSyncProgress(msg));
 
         toast.success("Vapi connected! All assistants, numbers, and calls synced.");
         setSyncProgress("");
