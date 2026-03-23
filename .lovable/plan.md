@@ -1,109 +1,48 @@
 
 
-# Master Vapi API Architecture — Keep Everything on Katexs
+# Fix Vapi Sync — Pull Real Voices & Full Two-Way Sync
 
-## The Problem
+## Problem
+1. Voice options in AI Studio are hardcoded (6 OpenAI voices) instead of pulling from Vapi's actual voice catalog
+2. The `vapi-manage` edge function hardcodes `provider: "openai"` when creating/updating assistants
+3. The RiverStatusBar still checks `isConnected("vapi")` even though Vapi is now platform-managed (always shows red)
+4. No mechanism to pull existing assistants from Vapi back into Katexs
 
-Right now, each client connects their own Vapi API key. This means:
-- Clients must create and manage their own Vapi account
-- Voice config saved in Katexs does NOT sync back to Vapi (no assistant create/update calls)
-- Chat AI runs through River (Lovable AI gateway) but voice still depends on the client's Vapi setup
-- Clients see a fragmented experience between two platforms
+## What Your Vapi API Key Gives Access To
+The screenshot shows your Vapi dashboard with Private + Public API keys. The **Private Key** is what's already stored as `VAPI_API_KEY` in the backend. This key is sufficient — no additional keys are needed. The issue is that the code doesn't use it to fetch voices or sync data back.
 
-## The Solution: Single Master Vapi Account
+## Changes
 
-You (as the platform owner) use ONE Vapi API key. All client assistants, phone numbers, and calls run under your master account. Clients never touch Vapi directly.
+### 1. Add `list-voices` action to `vapi-manage` edge function
+- Fetch Vapi's curated voices via `GET https://api.vapi.ai/voice` (or hardcode the Vapi-native voice catalog since Vapi doesn't have a list-voices endpoint — use their documented voices: Elliot, Lily, Rohan, Emma, Clara, Nico, Godfrey, Sagar, plus OpenAI voices)
+- Also add `sync-assistants` action that pulls ALL assistants from the master account and stores them in `vapi_assistants`, tagged by `katexs_user_id`
 
-```text
-┌─────────────────────────────────────────────┐
-│                  KATEXS                      │
-│                                              │
-│  Client A ─┐                                 │
-│  Client B ──┼─► Katexs Edge Function ─────► VAPI (your master key)
-│  Client C ─┘    (vapi-manage)                │
-│                                              │
-│  Voice config saved in Supabase              │
-│  Assistant created/updated via Vapi API      │
-│  Phone numbers purchased under your account  │
-│  Call costs tracked per-client in Supabase   │
-└─────────────────────────────────────────────┘
-```
+### 2. Update `VoiceConfig.tsx` — Dynamic voice list
+- On mount, call `vapi-manage` with `action: "list-voices"` to get available voices
+- Show Vapi's native voices (Elliot, Lily, Rohan, Emma, Clara, Nico) alongside OpenAI voices (Alloy, Echo, Nova, etc.)
+- Group by provider: "Vapi Voices" section + "OpenAI Voices" section
+- Store selected `voice_provider` + `voice_id` (not just voice_id)
+- When creating/updating assistant, pass the correct provider
 
-## What Changes
+### 3. Update `vapi-manage` create/update to support multiple voice providers
+- Instead of hardcoding `{ provider: "openai", voiceId: voice }`, accept `voiceProvider` param
+- For Vapi voices: `{ provider: "vapi", voiceId: "Elliot" }`
+- For OpenAI voices: `{ provider: "openai", voiceId: "nova" }`
 
-### 1. Remove client-side Vapi API key requirement
-- Clients no longer connect their own Vapi key in /integrations
-- Vapi becomes a platform-level integration, not a per-client one
-- The existing `VAPI_API_KEY` secret (already configured) becomes the master key
+### 4. Fix `RiverStatusBar.tsx`
+- Mark Vapi as `alwaysOn: true` since it's platform-managed
+- Show green checkmark always
 
-### 2. New Edge Function: `vapi-manage`
-Server-side function that uses the master `VAPI_API_KEY` to:
-- **Create assistant** when client saves voice config in AI Studio
-- **Update assistant** when client changes voice/personality/greeting/knowledge
-- **Purchase phone numbers** under the master account, tagged to the client
-- **Trigger test calls** from the platform
-- **Sync call history** for a specific client's assistants
+### 5. Add full sync on AI Studio load
+- When Voice AI tab loads, call `sync-assistants` to pull any assistants created on Vapi directly
+- Display synced assistants in a "Your Assistants" section above the config form
+- User can select an existing assistant to edit, or create new
 
-Endpoints:
-- `POST /create-assistant` — creates Vapi assistant from client's voice config
-- `POST /update-assistant` — patches existing assistant
-- `POST /purchase-number` — buys a number, assigns to client's assistant
-- `POST /test-call` — initiates outbound test call
-- `POST /sync-calls` — pulls recent calls for client's assistants
+## Files to modify
 
-### 3. Update AI Studio Voice Config save flow
-When client clicks "Save voice configuration":
-1. Save config to `users.river_config.voice_config` (already works)
-2. Call `vapi-manage/create-assistant` or `vapi-manage/update-assistant`
-3. Store returned `vapi_assistant_id` in the config
-4. Show "Voice agent live" confirmation
-
-### 4. Update AI Studio Phone Panel
-- "Get a number" searches available numbers via `vapi-manage`
-- Purchase happens server-side under your account
-- Number is stored in `vapi_phone_numbers` linked to the client
-- Client sees their number but never touches Vapi
-
-### 5. Per-client cost tracking
-- Vapi webhook already logs calls with `cost` field
-- Add a `client_vapi_balance` or track costs in `vapi_calls` aggregated per user
-- You bill clients through their Katexs subscription (Starter/Growth plans already include pricing)
-- Optional: add usage limits per plan tier
-
-### 6. Update Integrations page
-- Remove Vapi from client-facing integrations (or show it as "Included — powered by Katexs")
-- Voice AI is a platform feature, not an integration clients configure
-- Keep Twilio as a separate client integration (they bring their own SMS numbers)
-
-### 7. Chat AI stays as-is
-- Chat already runs through River (Lovable AI gateway) — no Vapi dependency
-- Chat widget uses the `river-chat` edge function with Gemini models
-- This is already fully on-platform
-
-## Implementation Steps
-
-1. **Create `vapi-manage` edge function** — CRUD operations against Vapi API using master key
-2. **Update `VoiceConfig.tsx`** — on save, call the edge function to create/update Vapi assistant
-3. **Update `VoicePhonePanel.tsx`** — purchase numbers through edge function
-4. **Update `VoiceTester.tsx`** — trigger test calls through edge function
-5. **Update Integrations page** — mark Vapi as platform-managed, remove client API key input
-6. **Update `vapi-webhook`** — already works with master key since it matches by assistant ID
-
-## What You Need to Do First
-
-- **Confirm your Vapi account is on a plan that supports sub-accounts or multiple assistants** — the master key approach works on any Vapi plan, but check your limits
-- **Top-ups**: Vapi charges per-minute for calls. With a master key, all client call costs come from YOUR Vapi balance. You'll need to either:
-  - Mark up the cost in your Katexs subscription pricing (simplest)
-  - Or build a prepaid credits system where clients top up within Katexs (more complex, later phase)
-
-## Files to Create/Modify
-
-| File | Action |
+| File | Change |
 |------|--------|
-| `supabase/functions/vapi-manage/index.ts` | Create — all Vapi API operations |
-| `src/components/ai-studio/VoiceConfig.tsx` | Modify — call edge function on save |
-| `src/components/ai-studio/VoicePhonePanel.tsx` | Modify — purchase via edge function |
-| `src/components/ai-studio/VoiceTester.tsx` | Modify — test call via edge function |
-| `src/pages/Integrations.tsx` | Modify — remove client Vapi key input, show as included |
-| `src/services/vapiSync.ts` | Modify — sync uses master key via edge function |
+| `supabase/functions/vapi-manage/index.ts` | Add `list-voices`, `sync-assistants` actions; fix voice provider in create/update |
+| `src/components/ai-studio/VoiceConfig.tsx` | Fetch real voices on mount; support multiple providers; show grouped voice cards |
+| `src/components/ai-studio/RiverStatusBar.tsx` | Set Vapi `alwaysOn: true` |
 
