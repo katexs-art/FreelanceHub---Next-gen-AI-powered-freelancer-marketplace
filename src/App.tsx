@@ -20,6 +20,7 @@ import SettingsPage from "./pages/SettingsPage";
 import Admin from "./pages/Admin";
 import Affiliates from "./pages/Affiliates";
 import AffiliateDashboard from "./pages/AffiliateDashboard";
+import Onboarding from "./pages/Onboarding";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
