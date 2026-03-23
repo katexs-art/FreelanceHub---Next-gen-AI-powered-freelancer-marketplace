@@ -91,13 +91,6 @@ const Integrations = () => {
   const [apiTab, setApiTab] = useState<"curl" | "js" | "python">("curl");
   const [copied, setCopied] = useState(false);
 
-  // Vapi sync state
-  const [vapiStep, setVapiStep] = useState<"input" | "syncing" | "review">("input");
-  const [vapiSyncProgress, setVapiSyncProgress] = useState(0);
-  const [vapiSyncResult, setVapiSyncResult] = useState<VapiSyncResult | null>(null);
-  const [vapiSelectedAssistant, setVapiSelectedAssistant] = useState<string | null>(null);
-  const [vapiError, setVapiError] = useState("");
-
   const connectedCount = integrations.filter(i => i.status === "connected").length;
   const webhooksToday = webhookLogs.filter(l => new Date(l.created_at).toDateString() === new Date().toDateString()).length;
 
