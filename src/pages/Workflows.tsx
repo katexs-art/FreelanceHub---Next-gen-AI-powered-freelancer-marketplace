@@ -414,7 +414,7 @@ const Workflows = () => {
   const [showTemplates, setShowTemplates] = useState(false);
 
   const fetchWorkflows = useCallback(async () => {
-    if (!user) return;
+    if (!user) { setLoading(false); return; }
     const { data } = await supabase
       .from("workflows")
       .select("*")
