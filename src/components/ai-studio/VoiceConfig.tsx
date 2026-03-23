@@ -99,7 +99,7 @@ export function VoiceConfig() {
       personality === "friendly" ? "Be warm, conversational, and approachable." :
       "Be relaxed and natural, like talking to a friend.";
 
-    return `You are River, the AI phone assistant for ${businessName || "the business"}${industry ? `, a ${industry} company` : ""}.
+    return `You are the AI phone assistant for ${businessName || "the business"}${industry ? `, a ${industry} company` : ""}.
 
 ${personalityText}
 
@@ -108,7 +108,7 @@ ${knowledge ? `Here's what you know about the business:\n${knowledge}` : ""}
 ${bookAppointments ? "If the caller wants to book an appointment, collect their preferred date/time and confirm." : ""}
 ${collectInfo ? "Always collect the caller's name and best callback number." : ""}
 Keep responses concise and natural for a phone conversation.
-If asked if you are a robot or AI: say you are River, the virtual assistant for ${businessName || "the business"}.`;
+If asked if you are a robot or AI: say you are the virtual assistant for ${businessName || "the business"}.`;
   };
 
   const handleSave = async () => {
