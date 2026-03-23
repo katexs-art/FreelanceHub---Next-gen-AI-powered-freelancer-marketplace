@@ -3,22 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
-import { Check, Play, Pause, Loader2 } from "lucide-react";
+import { Check, Play, Pause, Loader2, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
+import { createVapiAssistant, updateVapiAssistant } from "@/services/vapiSync";
 
-interface VoiceOption {
-  id: string;
-  name: string;
-  provider: string;
-  desc: string;
-}
-
-const FALLBACK_VOICES: VoiceOption[] = [
-  { id: "nova", name: "Nova", provider: "openai", desc: "Warm & friendly" },
-  { id: "alloy", name: "Alloy", provider: "openai", desc: "Neutral & professional" },
-  { id: "echo", name: "Echo", provider: "openai", desc: "Deep & authoritative" },
+const VOICES = [
+  { id: "alloy", name: "Alloy", desc: "Neutral & Professional" },
+  { id: "echo", name: "Echo", desc: "Deep & Authoritative" },
+  { id: "nova", name: "Nova", desc: "Warm & Friendly" },
+  { id: "shimmer", name: "Shimmer", desc: "Bright & Energetic" },
+  { id: "fable", name: "Fable", desc: "Calm & Reassuring" },
+  { id: "onyx", name: "Onyx", desc: "Rich & Confident" },
 ];
 
 const PERSONALITIES = [
@@ -32,10 +29,7 @@ const VARIABLES = ["{business_name}", "{caller_name}", "{time_of_day}", "{day_of
 
 export function VoiceConfig() {
   const { user } = useAuth();
-  const [voices, setVoices] = useState<VoiceOption[]>(FALLBACK_VOICES);
-  const [loadingVoices, setLoadingVoices] = useState(true);
   const [selectedVoice, setSelectedVoice] = useState("nova");
-  const [selectedProvider, setSelectedProvider] = useState("openai");
   const [personality, setPersonality] = useState("friendly");
   const [customPersonality, setCustomPersonality] = useState("");
   const [greeting, setGreeting] = useState("Hi, thanks for calling {business_name}. This is River, how can I help you today?");
@@ -51,35 +45,25 @@ export function VoiceConfig() {
   const [vapiAssistantId, setVapiAssistantId] = useState<string | null>(null);
   const [businessName, setBusinessName] = useState("");
   const [industry, setIndustry] = useState("");
+  const [assistants, setAssistants] = useState<any[]>([]);
+  const [vapiConnected, setVapiConnected] = useState(false);
 
-  // Fetch voices from edge function
-  useEffect(() => {
-    async function fetchVoices() {
-      try {
-        const { data, error } = await supabase.functions.invoke("vapi-manage", {
-          body: { action: "list-voices" },
-        });
-        if (!error && data?.data) {
-          setVoices(data.data);
-        }
-      } catch {
-        // keep fallback voices
-      }
-      setLoadingVoices(false);
-    }
-    fetchVoices();
-  }, []);
-
-  // Load saved config
   useEffect(() => {
     if (!user) return;
-    supabase.from("users").select("river_config, business_name, industry").eq("user_id", user.id).single().then(({ data }) => {
-      setBusinessName(data?.business_name || "");
-      setIndustry(data?.industry || "");
-      const vc = (data?.river_config as any)?.voice_config;
+    // Load user config + check Vapi connection + load assistants
+    Promise.all([
+      supabase.from("users").select("river_config, business_name, industry").eq("user_id", user.id).single(),
+      supabase.from("integration_settings").select("api_key, status").eq("user_id", user.id).eq("integration_name", "vapi").eq("status", "connected").single(),
+      supabase.from("vapi_assistants").select("*").eq("user_id", user.id).order("created_at_vapi", { ascending: false }),
+    ]).then(([userRes, vapiRes, asstRes]) => {
+      setBusinessName(userRes.data?.business_name || "");
+      setIndustry(userRes.data?.industry || "");
+      setVapiConnected(!!vapiRes.data?.api_key);
+      setAssistants((asstRes.data as any[]) || []);
+
+      const vc = (userRes.data?.river_config as any)?.voice_config;
       if (vc) {
         setSelectedVoice(vc.voice_id || "nova");
-        setSelectedProvider(vc.voice_provider || "openai");
         setPersonality(vc.personality || "friendly");
         setCustomPersonality(vc.custom_personality || "");
         setGreeting(vc.greeting_script || greeting);
@@ -94,17 +78,6 @@ export function VoiceConfig() {
       }
     });
   }, [user]);
-
-  // Sync assistants on load
-  useEffect(() => {
-    if (!user) return;
-    supabase.functions.invoke("vapi-manage", { body: { action: "sync-assistants" } }).catch(() => {});
-  }, [user]);
-
-  const selectVoice = (v: VoiceOption) => {
-    setSelectedVoice(v.id);
-    setSelectedProvider(v.provider);
-  };
 
   const playVoiceSample = (voiceId: string) => {
     if (playingVoice === voiceId) {
@@ -134,7 +107,8 @@ ${knowledge ? `Here's what you know about the business:\n${knowledge}` : ""}
 
 ${bookAppointments ? "If the caller wants to book an appointment, collect their preferred date/time and confirm." : ""}
 ${collectInfo ? "Always collect the caller's name and best callback number." : ""}
-Keep responses concise and natural for a phone conversation.`;
+Keep responses concise and natural for a phone conversation.
+If asked if you are a robot or AI: say you are River, the virtual assistant for ${businessName || "the business"}.`;
   };
 
   const handleSave = async () => {
@@ -142,9 +116,9 @@ Keep responses concise and natural for a phone conversation.`;
     setSaving(true);
 
     try {
+      const systemPrompt = buildSystemPrompt();
       const voiceConfig: Record<string, unknown> = {
         voice_id: selectedVoice,
-        voice_provider: selectedProvider,
         personality,
         custom_personality: customPersonality,
         greeting_script: greeting,
@@ -157,106 +131,138 @@ Keep responses concise and natural for a phone conversation.`;
         transfer_number: transferNumber,
       };
 
-      const systemPrompt = buildSystemPrompt();
-      const resolvedGreeting = greeting
-        .replace("{business_name}", businessName || "our business")
-        .replace("{caller_name}", "there")
-        .replace("{time_of_day}", "today")
-        .replace("{day_of_week}", "");
+      // Check if Vapi is connected
+      if (vapiConnected) {
+        const { data: vapiIntegration } = await supabase
+          .from("integration_settings")
+          .select("api_key")
+          .eq("user_id", user.id)
+          .eq("integration_name", "vapi")
+          .eq("status", "connected")
+          .single();
 
-      const { data: vapiResult, error: vapiError } = await supabase.functions.invoke("vapi-manage", {
-        body: {
-          action: vapiAssistantId ? "update-assistant" : "create-assistant",
-          assistantId: vapiAssistantId || undefined,
-          name: `River - ${businessName || "AI Assistant"}`,
-          firstMessage: resolvedGreeting,
-          voice: selectedVoice,
-          voiceProvider: selectedProvider,
-          systemPrompt,
-          recordCalls,
-          transcribeCalls,
-          transferNumber: transferEnabled ? transferNumber : undefined,
-        },
-      });
+        if (vapiIntegration?.api_key) {
+          const config = {
+            businessName: businessName || "AI Assistant",
+            industry: industry || "",
+            voiceId: selectedVoice,
+            personality,
+            greetingScript: greeting,
+            knowledgeBase: knowledge,
+            recordCalls,
+            transferEnabled,
+            systemPrompt,
+          };
 
-      if (vapiError) throw vapiError;
+          let assistant;
+          if (vapiAssistantId) {
+            assistant = await updateVapiAssistant(vapiAssistantId, config, vapiIntegration.api_key, user.id);
+          } else {
+            assistant = await createVapiAssistant(config, vapiIntegration.api_key, user.id);
+          }
 
-      const newAssistantId = vapiResult?.data?.id || vapiAssistantId;
-      voiceConfig.vapi_assistant_id = newAssistantId;
-      if (newAssistantId) setVapiAssistantId(newAssistantId);
+          const newId = assistant?.id || vapiAssistantId;
+          voiceConfig.vapi_assistant_id = newId;
+          if (newId) setVapiAssistantId(newId);
 
+          // Refresh assistants list
+          const { data: updatedAssistants } = await supabase
+            .from("vapi_assistants").select("*").eq("user_id", user.id).order("created_at_vapi", { ascending: false });
+          setAssistants((updatedAssistants as any[]) || []);
+
+          toast({ title: "Voice agent live!", description: vapiAssistantId ? "Updated on Vapi." : "Created and deployed to Vapi." });
+        }
+      } else {
+        voiceConfig.vapi_assistant_id = vapiAssistantId;
+        toast({ title: "Config saved locally", description: "Connect Vapi in Integrations to deploy your voice agent." });
+      }
+
+      // Save to user profile
       const { data: existing } = await supabase.from("users").select("river_config").eq("user_id", user.id).single();
       const currentConfig = (existing?.river_config as Record<string, unknown>) || {};
       await supabase.from("users").update({
         river_config: { ...currentConfig, voice_config: voiceConfig } as never,
       }).eq("user_id", user.id);
-
-      toast({ title: "Voice agent live!", description: vapiAssistantId ? "River voice agent updated on Vapi." : "River voice agent created and deployed." });
     } catch (err: any) {
-      console.error("Save voice config error:", err);
-      toast({ title: "Configuration saved locally", description: "Voice config saved. Vapi sync will retry automatically.", variant: "destructive" });
-
-      const { data: existing } = await supabase.from("users").select("river_config").eq("user_id", user.id).single();
-      const currentConfig = (existing?.river_config as Record<string, unknown>) || {};
-      const voiceConfig = {
-        voice_id: selectedVoice, voice_provider: selectedProvider, personality,
-        custom_personality: customPersonality, greeting_script: greeting,
-        knowledge_base: knowledge, record_calls: recordCalls, transcribe: transcribeCalls,
-        book_appointments: bookAppointments, collect_info: collectInfo,
-        transfer_enabled: transferEnabled, transfer_number: transferNumber,
-        vapi_assistant_id: vapiAssistantId,
-      };
-      await supabase.from("users").update({
-        river_config: { ...currentConfig, voice_config: voiceConfig } as never,
-      }).eq("user_id", user.id);
+      console.error("Save error:", err);
+      toast({ title: "Save failed", description: err.message, variant: "destructive" });
     }
     setSaving(false);
   };
 
-  const insertVariable = (v: string) => setGreeting((prev) => prev + " " + v);
+  const loadAssistant = (asst: any) => {
+    setVapiAssistantId(asst.vapi_id);
+    if (asst.voice_id) setSelectedVoice(asst.voice_id);
+    if (asst.first_message) setGreeting(asst.first_message);
+    if (asst.system_prompt) setKnowledge(asst.system_prompt);
+    toast({ title: `Loaded: ${asst.name}` });
+  };
 
-  const vapiVoices = voices.filter((v) => v.provider === "vapi");
-  const openaiVoices = voices.filter((v) => v.provider === "openai");
+  const setActiveAssistant = async (vapiId: string) => {
+    if (!user) return;
+    await supabase.from("vapi_assistants").update({ is_active: false } as any).eq("user_id", user.id);
+    await supabase.from("vapi_assistants").update({ is_active: true } as any).eq("user_id", user.id).eq("vapi_id", vapiId);
+    const { data } = await supabase.from("vapi_assistants").select("*").eq("user_id", user.id).order("created_at_vapi", { ascending: false });
+    setAssistants((data as any[]) || []);
+    toast({ title: "Active assistant updated" });
+  };
+
+  const insertVariable = (v: string) => setGreeting((prev) => prev + " " + v);
 
   return (
     <>
+      {/* Synced Assistants */}
+      {assistants.length > 0 && (
+        <div>
+          <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">Your Assistants</label>
+          <div className="space-y-2 mt-2">
+            {assistants.map((a) => (
+              <div key={a.id}
+                className={`p-3 rounded-[10px] border transition-all cursor-pointer ${
+                  a.is_active ? "border-accent-green bg-accent-green/5" : "border-border bg-background-card hover:border-border-subtle"
+                }`}
+                onClick={() => loadAssistant(a)}>
+                <div className="flex items-center justify-between">
+                  <div className="text-[12px] font-semibold text-foreground truncate">{a.name || "Unnamed"}</div>
+                  {a.is_active ? (
+                    <span className="text-[9px] text-accent-green font-medium">Active</span>
+                  ) : (
+                    <button onClick={(e) => { e.stopPropagation(); setActiveAssistant(a.vapi_id); }}
+                      className="text-[9px] text-foreground-secondary hover:text-foreground">Set active</button>
+                  )}
+                </div>
+                <div className="text-[10px] text-foreground-secondary mt-0.5">
+                  {a.voice_provider}/{a.voice_id} · {a.model || "gpt-4o-mini"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Voice Selection */}
       <div>
         <label className="text-[10px] text-foreground-secondary uppercase tracking-[0.1em] font-medium">Voice</label>
-
-        {loadingVoices ? (
-          <div className="flex items-center gap-2 mt-2 text-[12px] text-foreground-secondary">
-            <Loader2 className="w-3 h-3 animate-spin" /> Loading voices...
-          </div>
-        ) : (
-          <>
-            {vapiVoices.length > 0 && (
-              <div className="mt-2">
-                <span className="text-[10px] text-foreground-muted uppercase tracking-[0.08em]">Vapi Voices</span>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {vapiVoices.map((v) => (
-                    <VoiceCard key={`${v.provider}-${v.id}`} voice={v} selected={selectedVoice === v.id && selectedProvider === v.provider}
-                      playing={playingVoice === v.id} onSelect={() => selectVoice(v)}
-                      onPlay={() => playVoiceSample(v.id)} />
-                  ))}
+        <div className="grid grid-cols-2 gap-2 mt-2">
+          {VOICES.map((v) => (
+            <button key={v.id} onClick={() => setSelectedVoice(v.id)}
+              className={`relative text-left p-3 rounded-[10px] border transition-all ${
+                selectedVoice === v.id ? "border-border-strong bg-background-elevated" : "border-border bg-background-card hover:border-border-subtle"
+              }`}>
+              {selectedVoice === v.id && (
+                <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-foreground flex items-center justify-center">
+                  <Check className="w-2.5 h-2.5 text-background" />
                 </div>
-              </div>
-            )}
-
-            {openaiVoices.length > 0 && (
-              <div className="mt-3">
-                <span className="text-[10px] text-foreground-muted uppercase tracking-[0.08em]">OpenAI Voices</span>
-                <div className="grid grid-cols-2 gap-2 mt-1">
-                  {openaiVoices.map((v) => (
-                    <VoiceCard key={`${v.provider}-${v.id}`} voice={v} selected={selectedVoice === v.id && selectedProvider === v.provider}
-                      playing={playingVoice === v.id} onSelect={() => selectVoice(v)}
-                      onPlay={() => playVoiceSample(v.id)} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </>
-        )}
+              )}
+              <div className="text-[13px] font-semibold text-foreground">{v.name}</div>
+              <div className="text-[11px] text-foreground-secondary mt-0.5">{v.desc}</div>
+              <button onClick={(e) => { e.stopPropagation(); playVoiceSample(v.id); }}
+                className="mt-2 w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20">
+                {playingVoice === v.id ? <Pause className="w-3 h-3 text-foreground" /> : <Play className="w-3 h-3 text-foreground ml-0.5" />}
+              </button>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Personality */}
@@ -328,40 +334,22 @@ Keep responses concise and natural for a phone conversation.`;
         </div>
       </div>
 
-      {vapiAssistantId && (
+      {!vapiConnected && (
+        <div className="flex items-center gap-2 text-[11px] text-foreground-secondary bg-background-elevated border border-border rounded-lg p-3">
+          ⚠ Connect Vapi in Integrations to deploy your voice agent to a real phone number.
+        </div>
+      )}
+
+      {vapiAssistantId && vapiConnected && (
         <div className="flex items-center gap-2 text-[11px] text-accent-green">
           <Check className="w-3 h-3" />
-          <span>Vapi assistant synced ({selectedProvider}/{selectedVoice})</span>
+          <span>Vapi assistant synced</span>
         </div>
       )}
 
       <Button onClick={handleSave} className="w-full" disabled={saving}>
-        {saving ? <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Deploying to Vapi...</> : "Save & deploy voice agent"}
+        {saving ? <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />Deploying...</> : vapiConnected ? "Save & deploy voice agent" : "Save configuration"}
       </Button>
     </>
-  );
-}
-
-function VoiceCard({ voice, selected, playing, onSelect, onPlay }: {
-  voice: VoiceOption; selected: boolean; playing: boolean;
-  onSelect: () => void; onPlay: () => void;
-}) {
-  return (
-    <button onClick={onSelect}
-      className={`relative text-left p-3 rounded-[10px] border transition-all ${
-        selected ? "border-border-strong bg-background-elevated" : "border-border bg-background-card hover:border-border-subtle"
-      }`}>
-      {selected && (
-        <div className="absolute top-2 right-2 w-4 h-4 rounded-full bg-foreground flex items-center justify-center">
-          <Check className="w-2.5 h-2.5 text-background" />
-        </div>
-      )}
-      <div className="text-[13px] font-semibold text-foreground">{voice.name}</div>
-      <div className="text-[11px] text-foreground-secondary mt-0.5">{voice.desc}</div>
-      <button onClick={(e) => { e.stopPropagation(); onPlay(); }}
-        className="mt-2 w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center hover:bg-foreground/20">
-        {playing ? <Pause className="w-3 h-3 text-foreground" /> : <Play className="w-3 h-3 text-foreground ml-0.5" />}
-      </button>
-    </button>
   );
 }
