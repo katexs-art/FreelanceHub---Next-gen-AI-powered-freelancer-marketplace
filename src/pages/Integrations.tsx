@@ -69,15 +69,6 @@ const INTEGRATIONS: IntegrationDef[] = [
 const CATEGORIES = ["All", "Communication", "Voice AI", "Calendar", "Payments", "Marketing", "Automation", "Industry Specific", "Webhooks"];
 const WEBHOOK_EVENTS = ["contact_created", "deal_won", "deal_lost", "appointment_booked", "call_completed", "payment_received", "workflow_completed"];
 
-/* ── Vapi Sync Steps ── */
-const VAPI_SYNC_STEPS = [
-  "API key verified",
-  "Pulling your phone numbers...",
-  "Pulling your AI assistants...",
-  "Pulling your call history...",
-  "Pulling your analytics...",
-  "Everything imported successfully",
-];
 
 /* ── Page ── */
 const Integrations = () => {
