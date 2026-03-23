@@ -11,7 +11,6 @@ import { useIntegrations } from "@/hooks/useIntegrations";
 import { useAuth } from "@/hooks/useAuth";
 import { Modal, ModalContent, ModalTitle, ModalDescription } from "@/components/ui/modal";
 import { toast } from "@/components/ui/sonner";
-import { validateVapiKey, syncVapiData, VapiSyncResult } from "@/services/vapiSync";
 
 /* ── Integration definitions ── */
 interface IntegrationDef {
