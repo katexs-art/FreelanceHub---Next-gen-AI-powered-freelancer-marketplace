@@ -3,19 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Phone, CheckCircle, XCircle, Loader2, Play } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useIntegrations } from "@/hooks/useIntegrations";
 import { supabase } from "@/integrations/supabase/client";
 
 type CallState = "idle" | "initiating" | "ringing" | "in_progress" | "completed" | "failed";
 
 export function VoiceTester() {
   const { user } = useAuth();
-  const { isConnected } = useIntegrations();
   const [phone, setPhone] = useState("");
   const [callState, setCallState] = useState<CallState>("idle");
   const [callDuration, setCallDuration] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
   const [greeting, setGreeting] = useState("");
+  const [hasVapiAssistant, setHasVapiAssistant] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -23,6 +22,7 @@ export function VoiceTester() {
       if (data?.phone) setPhone(data.phone);
       const vc = (data?.river_config as any)?.voice_config;
       if (vc?.greeting_script) setGreeting(vc.greeting_script);
+      if (vc?.vapi_assistant_id) setHasVapiAssistant(true);
     });
   }, [user]);
 
@@ -41,9 +41,7 @@ export function VoiceTester() {
         setCallDuration(0);
         const text = greeting.replace("{business_name}", "your business").replace("{caller_name}", "there").replace("{time_of_day}", "today").replace("{day_of_week}", "");
         const utterance = new SpeechSynthesisUtterance(text || "Hi, thanks for calling. This is River, how can I help you today?");
-        utterance.onend = () => {
-          setTimeout(() => { setCallState("completed"); }, 1000);
-        };
+        utterance.onend = () => { setTimeout(() => { setCallState("completed"); }, 1000); };
         speechSynthesis.speak(utterance);
       }, 2000);
     }, 1500);
@@ -51,17 +49,32 @@ export function VoiceTester() {
 
   const handleCall = async () => {
     setErrorMsg("");
-    if (!isConnected("vapi")) {
+    if (!hasVapiAssistant || !phone) {
       simulateBrowserCall();
       return;
     }
     setCallState("initiating");
     try {
-      // Real Vapi call would go here via edge function
-      simulateBrowserCall();
+      const { data, error } = await supabase.functions.invoke("vapi-manage", {
+        body: { action: "test-call", phoneNumber: phone },
+      });
+      if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || "Call failed");
+
+      // Real call initiated — show ringing state
+      setCallState("ringing");
+      setTimeout(() => {
+        setCallState("in_progress");
+        setCallDuration(0);
+        // Auto-complete after 60s if no webhook
+        setTimeout(() => {
+          if (callState === "in_progress") setCallState("completed");
+        }, 60000);
+      }, 3000);
     } catch (err: any) {
-      setCallState("failed");
-      setErrorMsg(err.message || "Failed to initiate call");
+      console.error("Test call error:", err);
+      // Fallback to browser simulation
+      simulateBrowserCall();
     }
   };
 
@@ -82,7 +95,6 @@ export function VoiceTester() {
       </div>
 
       <div className="bg-background-card border border-border-subtle rounded-2xl p-8 text-center space-y-5">
-        {/* Phone Icon */}
         <div className="w-12 h-12 rounded-full bg-foreground/10 flex items-center justify-center mx-auto">
           <Phone className="w-6 h-6 text-foreground" />
         </div>
@@ -92,20 +104,16 @@ export function VoiceTester() {
             <div>
               <div className="text-[18px] font-bold text-foreground">Call River now</div>
               <p className="text-[13px] text-foreground-secondary mt-1">
-                {isConnected("vapi")
-                  ? "River will call your phone and demonstrate your configured agent"
-                  : "Vapi not connected — running browser simulation"}
+                {hasVapiAssistant
+                  ? "River will call your phone using your deployed voice agent"
+                  : "Save your voice config first to enable real calls — browser preview available"}
               </p>
             </div>
-            <Input
-              className="bg-background-elevated border-border text-center text-[15px] max-w-[280px] mx-auto"
-              placeholder="Your phone number"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-            />
-            <Button onClick={handleCall} className="w-full max-w-[280px] h-[52px] text-[15px] font-semibold" disabled={!phone && isConnected("vapi")}>
+            <Input className="bg-background-elevated border-border text-center text-[15px] max-w-[280px] mx-auto"
+              placeholder="Your phone number" value={phone} onChange={(e) => setPhone(e.target.value)} />
+            <Button onClick={handleCall} className="w-full max-w-[280px] h-[52px] text-[15px] font-semibold">
               <Phone className="w-4 h-4 mr-2" />
-              {isConnected("vapi") ? "Call me now" : "Simulate call"}
+              {hasVapiAssistant ? "Call me now" : "Simulate call"}
             </Button>
           </>
         )}
@@ -135,7 +143,6 @@ export function VoiceTester() {
             <div className="text-[32px] font-bold text-foreground tracking-wider">
               {Math.floor(callDuration / 60)}:{(callDuration % 60).toString().padStart(2, "0")}
             </div>
-            {/* Audio waveform */}
             <div className="flex items-end justify-center gap-1 h-8">
               {[0, 1, 2, 3, 4].map((i) => (
                 <div key={i} className="w-1 bg-accent-green rounded-full animate-pulse" style={{ height: `${12 + Math.random() * 20}px`, animationDelay: `${i * 150}ms` }} />
@@ -164,7 +171,6 @@ export function VoiceTester() {
         )}
       </div>
 
-      {/* Browser preview */}
       <div className="bg-background-card border border-border rounded-xl p-4">
         <div className="flex items-center justify-between">
           <span className="text-[13px] text-foreground-secondary">Preview greeting without a call</span>

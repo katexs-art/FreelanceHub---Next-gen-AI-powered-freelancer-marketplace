@@ -11,7 +11,6 @@ import { useIntegrations } from "@/hooks/useIntegrations";
 import { useAuth } from "@/hooks/useAuth";
 import { Modal, ModalContent, ModalTitle, ModalDescription } from "@/components/ui/modal";
 import { toast } from "@/components/ui/sonner";
-import { validateVapiKey, syncVapiData, VapiSyncResult } from "@/services/vapiSync";
 
 /* ── Integration definitions ── */
 interface IntegrationDef {
@@ -33,8 +32,8 @@ const INTEGRATIONS: IntegrationDef[] = [
     fields: [{ label: "API Key", key: "api_key", type: "password", placeholder: "Your API key" }] },
   { name: "WhatsApp Business", key: "whatsapp", category: "Communication", description: "WhatsApp messaging via Twilio. Requires Twilio connection first.", icon: "WA",
     fields: [{ label: "WhatsApp Business Number", key: "phone_number", type: "text", placeholder: "+1..." }] },
-  { name: "Vapi", key: "vapi", category: "Voice AI", description: "AI voice agents for inbound and outbound calls. Powers River's voice intelligence.", icon: "Va",
-    fields: [{ label: "API Key", key: "api_key", type: "password", placeholder: "Your Vapi API key" }] },
+  { name: "Vapi", key: "vapi", category: "Voice AI", description: "AI voice agents — powered by Katexs. Configure in AI Studio.", icon: "Va",
+    fields: [], comingSoon: false },
   { name: "ElevenLabs", key: "elevenlabs", category: "Voice AI", description: "Ultra-realistic voice cloning for branded AI voice agents.", icon: "EL", comingSoon: true, fields: [] },
   { name: "Google Calendar", key: "google_calendar", category: "Calendar", description: "Sync appointments and let River book directly onto your calendar.", icon: "GC",
     fields: [{ label: "OAuth Token", key: "oauth_token", type: "password", placeholder: "Connect via OAuth" }] },
@@ -70,15 +69,6 @@ const INTEGRATIONS: IntegrationDef[] = [
 const CATEGORIES = ["All", "Communication", "Voice AI", "Calendar", "Payments", "Marketing", "Automation", "Industry Specific", "Webhooks"];
 const WEBHOOK_EVENTS = ["contact_created", "deal_won", "deal_lost", "appointment_booked", "call_completed", "payment_received", "workflow_completed"];
 
-/* ── Vapi Sync Steps ── */
-const VAPI_SYNC_STEPS = [
-  "API key verified",
-  "Pulling your phone numbers...",
-  "Pulling your AI assistants...",
-  "Pulling your call history...",
-  "Pulling your analytics...",
-  "Everything imported successfully",
-];
 
 /* ── Page ── */
 const Integrations = () => {
@@ -91,13 +81,6 @@ const Integrations = () => {
   const [saving, setSaving] = useState(false);
   const [apiTab, setApiTab] = useState<"curl" | "js" | "python">("curl");
   const [copied, setCopied] = useState(false);
-
-  // Vapi sync state
-  const [vapiStep, setVapiStep] = useState<"input" | "syncing" | "review">("input");
-  const [vapiSyncProgress, setVapiSyncProgress] = useState(0);
-  const [vapiSyncResult, setVapiSyncResult] = useState<VapiSyncResult | null>(null);
-  const [vapiSelectedAssistant, setVapiSelectedAssistant] = useState<string | null>(null);
-  const [vapiError, setVapiError] = useState("");
 
   const connectedCount = integrations.filter(i => i.status === "connected").length;
   const webhooksToday = webhookLogs.filter(l => new Date(l.created_at).toDateString() === new Date().toDateString()).length;
@@ -120,61 +103,6 @@ const Integrations = () => {
     setFormValues({});
   };
 
-  const handleVapiConnect = async () => {
-    if (!user) return;
-    const apiKey = formValues["api_key"] || "";
-    if (!apiKey) { setVapiError("Please enter your Vapi API key"); return; }
-    setVapiError("");
-    setVapiStep("syncing");
-    setVapiSyncProgress(0);
-
-    // Validate
-    const valid = await validateVapiKey(apiKey);
-    if (!valid) {
-      setVapiError("Invalid API key — check your Vapi dashboard");
-      setVapiStep("input");
-      return;
-    }
-    setVapiSyncProgress(1);
-
-    // Save API key first
-    await connectIntegration("vapi", apiKey, { api_key: apiKey });
-
-    // Animate progress steps
-    const stepDelay = (step: number) => new Promise<void>(r => setTimeout(() => { setVapiSyncProgress(step); r(); }, 600));
-    await stepDelay(2);
-
-    // Sync all data
-    try {
-      const result = await syncVapiData(user.id, apiKey);
-      await stepDelay(3);
-      await stepDelay(4);
-      await stepDelay(5);
-      await stepDelay(6);
-      setVapiSyncResult(result);
-      setVapiStep("review");
-    } catch (err: any) {
-      setVapiError(err.message || "Sync failed. Please try again.");
-      setVapiStep("input");
-    }
-  };
-
-  const handleVapiFinish = async () => {
-    if (vapiSelectedAssistant && user) {
-      const { supabase } = await import("@/integrations/supabase/client");
-      // Set selected assistant as active
-      await supabase.from("vapi_assistants").update({ is_active: false } as any).eq("user_id", user.id);
-      await supabase.from("vapi_assistants").update({ is_active: true } as any).eq("vapi_id", vapiSelectedAssistant);
-    }
-    await refetch();
-    toast.success("Vapi connected and synced!");
-    setConnectModal(null);
-    setVapiStep("input");
-    setVapiSyncResult(null);
-    setVapiSelectedAssistant(null);
-    setFormValues({});
-  };
-
   const handleDisconnect = async (key: string, name: string) => {
     await disconnectIntegration(key);
     toast.success(`${name} disconnected`);
@@ -190,12 +118,6 @@ const Integrations = () => {
   const openConnectModal = (intg: IntegrationDef) => {
     setConnectModal(intg);
     setFormValues({});
-    if (intg.key === "vapi") {
-      setVapiStep("input");
-      setVapiError("");
-      setVapiSyncResult(null);
-      setVapiSelectedAssistant(null);
-    }
   };
 
   const webhookUrl = `https://app.katexs.com/webhooks/${user?.id || "your-id"}/wh_live_xxxx`;
@@ -336,7 +258,7 @@ contacts = res.json()`}
       </div>
 
       {/* Connect Modal — Standard (non-Vapi) */}
-      <Modal open={!!connectModal && connectModal.key !== "vapi"} onOpenChange={() => { setConnectModal(null); setFormValues({}); }}>
+      <Modal open={!!connectModal} onOpenChange={() => { setConnectModal(null); setFormValues({}); }}>
         <ModalContent className="max-w-md">
           <ModalTitle className="text-[18px] font-semibold text-foreground">Connect {connectModal?.name}</ModalTitle>
           <ModalDescription className="text-[12px] text-foreground-secondary mt-1">{connectModal?.description}</ModalDescription>
@@ -384,131 +306,6 @@ contacts = res.json()`}
         </ModalContent>
       </Modal>
 
-      {/* Vapi Connect Modal — Multi-step */}
-      <Modal open={!!connectModal && connectModal.key === "vapi"} onOpenChange={() => { setConnectModal(null); setFormValues({}); setVapiStep("input"); }}>
-        <ModalContent className="max-w-lg">
-          {vapiStep === "input" && (
-            <>
-              <ModalTitle className="text-[18px] font-semibold text-foreground">Connect Vapi</ModalTitle>
-              <ModalDescription className="text-[12px] text-foreground-secondary mt-1">
-                Enter your Vapi API key to sync all your voice agents, phone numbers, and call history into Katexs.
-              </ModalDescription>
-              <div className="space-y-4 mt-4">
-                <div>
-                  <label className="text-[12px] font-medium text-foreground mb-1.5 block">Vapi API Key</label>
-                  <Input type="password" placeholder="Your Vapi API key" value={formValues["api_key"] || ""}
-                    onChange={e => setFormValues(p => ({ ...p, api_key: e.target.value }))} className="text-[13px]" />
-                </div>
-                {vapiError && (
-                  <div className="bg-[hsl(var(--destructive)/0.1)] border border-[hsl(var(--destructive)/0.2)] rounded-lg p-3">
-                    <p className="text-[11px] text-[hsl(var(--destructive))]">{vapiError}</p>
-                  </div>
-                )}
-                <div className="flex gap-2 pt-2">
-                  <Button variant="ghost" className="flex-1" onClick={() => { setConnectModal(null); setFormValues({}); }}>Cancel</Button>
-                  <Button className="flex-1" onClick={handleVapiConnect}>Connect Vapi</Button>
-                </div>
-              </div>
-            </>
-          )}
-
-          {vapiStep === "syncing" && (
-            <div className="py-8 text-center space-y-6">
-              <div className="w-10 h-10 rounded-full bg-[hsl(var(--accent-purple)/0.2)] flex items-center justify-center mx-auto animate-pulse">
-                <div className="w-3 h-3 rounded-full bg-[hsl(var(--accent-purple))]" />
-              </div>
-              <p className="text-[15px] font-semibold text-foreground">River is importing your Vapi setup...</p>
-              <div className="space-y-3 text-left max-w-[320px] mx-auto">
-                {VAPI_SYNC_STEPS.map((step, i) => (
-                  <div key={i} className="flex items-center gap-3">
-                    {vapiSyncProgress > i ? (
-                      <div className="w-5 h-5 rounded-full bg-accent-green/20 flex items-center justify-center shrink-0">
-                        <Check className="w-3 h-3 text-accent-green" />
-                      </div>
-                    ) : vapiSyncProgress === i ? (
-                      <Loader2 className="w-5 h-5 text-foreground-secondary animate-spin shrink-0" />
-                    ) : (
-                      <div className="w-5 h-5 rounded-full border border-border shrink-0" />
-                    )}
-                    <span className={`text-[13px] ${vapiSyncProgress > i ? "text-accent-green" : vapiSyncProgress === i ? "text-foreground" : "text-foreground-secondary"}`}>
-                      {vapiSyncProgress > i ? step.replace("...", "") : step}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {vapiStep === "review" && vapiSyncResult && (
-            <>
-              <ModalTitle className="text-[18px] font-semibold text-foreground">Import Complete</ModalTitle>
-              <ModalDescription className="text-[12px] text-foreground-secondary mt-1">
-                Here's what River found in your Vapi account.
-              </ModalDescription>
-              <div className="space-y-4 mt-4">
-                {/* Summary */}
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { label: "Phone numbers", value: vapiSyncResult.phoneNumbers.length },
-                    { label: "AI assistants", value: vapiSyncResult.assistants.length },
-                    { label: "Calls synced", value: vapiSyncResult.calls.length },
-                  ].map(s => (
-                    <div key={s.label} className="bg-background-elevated border border-border rounded-lg p-3 text-center">
-                      <p className="text-[20px] font-bold text-foreground">{s.value}</p>
-                      <p className="text-[10px] text-foreground-secondary mt-0.5">{s.label}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Assistant Selection */}
-                {vapiSyncResult.assistants.length > 0 && (
-                  <div>
-                    <label className="text-[12px] font-medium text-foreground mb-2 block">Select your primary River assistant</label>
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                      {vapiSyncResult.assistants.map((a: any) => (
-                        <button key={a.id} onClick={() => setVapiSelectedAssistant(a.id)}
-                          className={`w-full text-left p-3 rounded-lg border transition-all ${
-                            vapiSelectedAssistant === a.id
-                              ? "border-foreground bg-background-elevated"
-                              : "border-border bg-background-card hover:border-border-subtle"
-                          }`}>
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-[13px] font-medium text-foreground">{a.name || "Unnamed"}</p>
-                              <p className="text-[11px] text-foreground-secondary">
-                                {a.voice?.provider || "Default voice"} · Created {a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "Unknown"}
-                              </p>
-                            </div>
-                            {vapiSelectedAssistant === a.id && (
-                              <div className="w-5 h-5 rounded-full bg-foreground flex items-center justify-center">
-                                <Check className="w-3 h-3 text-background" />
-                              </div>
-                            )}
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Webhook URL */}
-                <div className="bg-background-elevated border border-border rounded-lg p-3">
-                  <p className="text-[11px] text-foreground-secondary mb-1">Configure Vapi webhooks for real-time updates (optional)</p>
-                  <div className="flex items-center gap-2">
-                    <code className="text-[11px] text-accent-green bg-[hsl(240,12%,3%)] px-2 py-1 rounded flex-1 truncate">
-                      {import.meta.env.VITE_SUPABASE_URL}/functions/v1/vapi-webhook
-                    </code>
-                    <button onClick={() => copyToClipboard(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/vapi-webhook`)}
-                      className="text-foreground-secondary hover:text-foreground"><Copy className="w-3.5 h-3.5" /></button>
-                  </div>
-                </div>
-
-                <Button className="w-full" onClick={handleVapiFinish}>Finish setup</Button>
-              </div>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
     </div>
   );
 };
@@ -518,7 +315,7 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
   def: IntegrationDef; connected: boolean; integration?: { config: Record<string, unknown>; connected_at: string | null } | undefined;
   onConnect: () => void; onDisconnect: () => void;
 }) {
-  const vapiSyncInfo = connected && def.key === "vapi" && integration?.config;
+  
   return (
     <div className="bg-background-card border border-border rounded-[12px] p-5 hover:border-border-strong transition-colors group">
       <div className="flex items-start justify-between mb-3">
@@ -530,6 +327,8 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
         </div>
         {def.comingSoon ? (
           <Badge className="bg-[hsl(36,90%,50%)/0.1] text-[hsl(36,90%,50%)] border-[hsl(36,90%,50%)/0.2] text-[9px]">Coming soon</Badge>
+        ) : def.key === "vapi" ? (
+          <Badge className="bg-[hsl(var(--accent-purple)/0.15)] text-[#AFA9EC] border-[hsl(var(--accent-purple)/0.25)] text-[9px]">Included</Badge>
         ) : connected ? (
           <Badge variant="green" className="text-[9px]">Connected</Badge>
         ) : (
@@ -540,7 +339,7 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-background-elevated border border-border text-foreground-secondary">{def.category}</span>
       </div>
-      {connected && integration && (
+      {connected && integration && def.key !== "vapi" && (
         <div className="mb-3 space-y-1">
           {integration.connected_at && (
             <p className="text-[10px] text-accent-green">Connected {new Date(integration.connected_at).toLocaleDateString()}</p>
@@ -551,32 +350,20 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
           {(integration.config as Record<string, unknown>)?.from_email && (
             <p className="text-[10px] text-foreground-secondary">✉️ {String((integration.config as Record<string, unknown>).from_email)}</p>
           )}
-          {def.key === "vapi" && vapiSyncInfo && (
-            <div className="text-[10px] text-foreground-secondary space-y-0.5">
-              <p>{String((integration.config as any)?.assistants_count || 0)} assistants · {String((integration.config as any)?.phone_numbers_count || 0)} numbers · {String((integration.config as any)?.calls_synced || 0)} calls</p>
-              {(integration.config as any)?.last_sync && (
-                <p>Last sync: {new Date((integration.config as any).last_sync).toLocaleString()}</p>
-              )}
-            </div>
-          )}
         </div>
       )}
       <div className="flex items-center gap-2">
         {def.comingSoon ? (
           <Button variant="ghost" size="sm" disabled className="flex-1 text-[12px]">Coming soon</Button>
+        ) : def.key === "vapi" ? (
+          <Button variant="ghost" size="sm" className="flex-1 text-[12px]" asChild>
+            <a href="/ai-studio">Open AI Studio →</a>
+          </Button>
         ) : connected ? (
-          <>
-            {def.key === "vapi" && (
-              <Button variant="ghost" size="sm" className="text-[12px]" asChild>
-                <a href="/ai-studio">AI Studio →</a>
-              </Button>
-            )}
-            <Button variant="destructive" size="sm" className="flex-1 text-[12px]" onClick={onDisconnect}>Disconnect</Button>
-          </>
+          <Button variant="destructive" size="sm" className="flex-1 text-[12px]" onClick={onDisconnect}>Disconnect</Button>
         ) : (
           <Button size="sm" className="flex-1 text-[12px]" onClick={onConnect}>Connect</Button>
         )}
-        <Button variant="ghost" size="sm" className="text-[12px]"><ExternalLink className="w-3 h-3" /></Button>
       </div>
     </div>
   );
