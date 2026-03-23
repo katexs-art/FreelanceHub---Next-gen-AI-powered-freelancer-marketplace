@@ -70,6 +70,85 @@ export type Database = {
         }
         Relationships: []
       }
+      affiliate_clicks: {
+        Row: {
+          affiliate_id: string
+          clicked_at: string
+          converted: boolean
+          converted_at: string | null
+          id: string
+          ip_hash: string | null
+          source: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          clicked_at?: string
+          converted?: boolean
+          converted_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          source?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          clicked_at?: string
+          converted?: boolean
+          converted_at?: string | null
+          id?: string
+          ip_hash?: string | null
+          source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_clicks_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      affiliate_payouts: {
+        Row: {
+          affiliate_id: string
+          amount: number
+          created_at: string
+          id: string
+          period_end: string
+          period_start: string
+          status: string
+          stripe_payout_id: string | null
+        }
+        Insert: {
+          affiliate_id: string
+          amount?: number
+          created_at?: string
+          id?: string
+          period_end: string
+          period_start: string
+          status?: string
+          stripe_payout_id?: string | null
+        }
+        Update: {
+          affiliate_id?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          period_end?: string
+          period_start?: string
+          status?: string
+          stripe_payout_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       affiliates: {
         Row: {
           created_at: string
