@@ -309,9 +309,12 @@ const Contacts = () => {
                 </div>
                 {/* River score */}
                 <div className="mt-5 bg-accent-purple/[0.05] border border-accent-purple/10 rounded-md p-3">
-                  <span className="text-[10px] font-medium text-accent-purple uppercase tracking-[0.1em]">River conversion score</span>
-                  <div className="h-1.5 bg-background-elevated rounded-full overflow-hidden mt-2">
-                    <div className="h-full bg-foreground rounded-full" style={{ width: detailContact.status === "won" ? "95%" : detailContact.status === "booked" ? "80%" : detailContact.status === "hot" ? "65%" : "35%" }} />
+                  <span className="text-[10px] font-medium text-accent-purple uppercase tracking-[0.1em]">River Insights</span>
+                  <div className="mt-2">
+                    <RiverContactInsight
+                      contactData={`${detailContact.first_name} ${detailContact.last_name || ""}, status: ${detailContact.status}, source: ${detailContact.source || "unknown"}, created: ${detailContact.created_at}`}
+                      context={buildBusinessContext({ full_name: user?.email })}
+                    />
                   </div>
                 </div>
               </div>
