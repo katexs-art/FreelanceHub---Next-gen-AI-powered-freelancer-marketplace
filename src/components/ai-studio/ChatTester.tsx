@@ -14,7 +14,7 @@ export function ChatTester() {
   const [loading, setLoading] = useState(false);
   const [widgetOpen, setWidgetOpen] = useState(true);
   const [businessName, setBusinessName] = useState("Your Business");
-  const [agentName, setAgentName] = useState("River");
+  const [agentName, setAgentName] = useState("AI Assistant");
   const [primaryColor, setPrimaryColor] = useState("#020203");
   const [accentColor, setAccentColor] = useState("#4ade80");
   const [welcomeMessage, setWelcomeMessage] = useState("Hi there! I'm River. How can I help you today?");
