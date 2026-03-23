@@ -19,6 +19,7 @@ import Messenger from "./pages/Messenger";
 import SettingsPage from "./pages/SettingsPage";
 import Admin from "./pages/Admin";
 import Affiliates from "./pages/Affiliates";
+import AffiliateDashboard from "./pages/AffiliateDashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
