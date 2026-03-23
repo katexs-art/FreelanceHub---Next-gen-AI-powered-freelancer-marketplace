@@ -47,7 +47,7 @@ const App = () => (
           <Route path="/integrations" element={<AppShell><Integrations /></AppShell>} />
           <Route path="/messenger" element={<AppShell><Messenger /></AppShell>} />
           <Route path="/settings" element={<AppShell><SettingsPage /></AppShell>} />
-          <Route path="/admin" element={<AppShell><Admin /></AppShell>} />
+          <Route path="/admin/*" element={<Admin />} />
           <Route path="/affiliate-dashboard" element={<AppShell><AffiliateDashboard /></AppShell>} />
 
           <Route path="*" element={<NotFound />} />
