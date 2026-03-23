@@ -17,7 +17,7 @@ export function ChatTester() {
   const [agentName, setAgentName] = useState("AI Assistant");
   const [primaryColor, setPrimaryColor] = useState("#020203");
   const [accentColor, setAccentColor] = useState("#4ade80");
-  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! I'm River. How can I help you today?");
+  const [welcomeMessage, setWelcomeMessage] = useState("Hi there! How can I help you today?");
   const [knowledge, setKnowledge] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
