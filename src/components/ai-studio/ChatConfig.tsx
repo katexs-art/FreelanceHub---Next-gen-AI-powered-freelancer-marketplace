@@ -65,7 +65,7 @@ export function ChatConfig() {
         setLauncherStyle(cc.launcher_style || "icon");
         setLauncherText(cc.launcher_text || "Chat with us");
         setShowAvatar(cc.show_avatar ?? true);
-        setAgentName(cc.agent_name || "River");
+        setAgentName(cc.agent_name || "AI Assistant");
         setAgentTitle(cc.agent_title || "AI Assistant");
         setWelcomeMessage(cc.welcome_message || welcomeMessage);
         setAwayMessage(cc.away_message || awayMessage);
