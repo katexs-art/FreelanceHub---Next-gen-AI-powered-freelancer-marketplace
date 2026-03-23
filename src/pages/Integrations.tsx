@@ -315,7 +315,7 @@ function IntegrationCard({ def, connected, integration, onConnect, onDisconnect 
   def: IntegrationDef; connected: boolean; integration?: { config: Record<string, unknown>; connected_at: string | null } | undefined;
   onConnect: () => void; onDisconnect: () => void;
 }) {
-  const vapiSyncInfo = connected && def.key === "vapi" && integration?.config;
+  
   return (
     <div className="bg-background-card border border-border rounded-[12px] p-5 hover:border-border-strong transition-colors group">
       <div className="flex items-start justify-between mb-3">
