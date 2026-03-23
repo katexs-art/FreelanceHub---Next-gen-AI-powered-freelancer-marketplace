@@ -19,7 +19,7 @@ export function RiverStatusBar() {
       </div>
       <div className="flex items-center gap-2">
         {integrations.map((int) => {
-          const connected = int.alwaysOn || isConnected(int.key);
+          const connected = isConnected(int.key);
           return (
             <button
               key={int.key}

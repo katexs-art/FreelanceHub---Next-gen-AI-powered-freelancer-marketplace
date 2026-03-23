@@ -184,9 +184,9 @@ export function VoiceTester() {
         {callState === "idle" && (
           <>
             <div>
-              <div className="text-[18px] font-bold text-foreground">Call River now</div>
+            <div className="text-[18px] font-bold text-foreground">Test your voice agent</div>
               <p className="text-[13px] text-foreground-secondary mt-1">
-                River will call your phone using your Vapi voice agent
+                Your AI agent will call your phone via Vapi
               </p>
             </div>
             <Input className="bg-background-elevated border-border text-center text-[15px] max-w-[280px] mx-auto"
