@@ -1,5 +1,6 @@
 import { TopNav } from "./TopNav";
 import { Sidebar } from "./Sidebar";
+import { RiverFloatingButton } from "@/components/river/RiverFloatingButton";
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export function AppShell({ children, noPadding }: AppShellProps) {
           {children}
         </main>
       </div>
+      <RiverFloatingButton />
     </div>
   );
 }

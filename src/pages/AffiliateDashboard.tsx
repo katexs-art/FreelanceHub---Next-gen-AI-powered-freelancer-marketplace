@@ -352,7 +352,7 @@ const AffiliateDashboard = () => {
         </div>
       </div>
 
-      {/* River Tips */}
+      {/* River Tips - powered by AI */}
       <div className="bg-[hsl(var(--accent-purple)/0.06)] border border-[hsl(var(--accent-purple)/0.15)] border-t-2 border-t-[hsl(var(--accent-purple))] rounded-[10px] p-5">
         <div className="flex items-center gap-2 mb-3">
           <div className="w-5 h-5 rounded-full bg-[hsl(var(--accent-purple))] flex items-center justify-center">

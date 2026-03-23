@@ -8,6 +8,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Modal, ModalContent } from "@/components/ui/modal";
 import { toast } from "@/hooks/use-toast";
 import { Plus, MoreHorizontal, GripVertical, List, LayoutGrid, Trash2 } from "lucide-react";
+import { RiverPipelineInsight } from "@/components/river/RiverPipelineInsight";
+import { buildBusinessContext } from "@/services/river";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Deal = Tables<"deals">;
@@ -66,14 +68,20 @@ const Pipeline = () => {
     return () => { supabase.removeChannel(ch); };
   }, [fetch]);
 
-  // River insight
+  // River insight - use real AI
+  const [profile, setProfile] = useState<any>(null);
   useEffect(() => {
-    if (!deals.length || riverInsight) return;
-    const hotStale = deals.filter((d) => d.stage === "hot");
-    if (hotStale.length > 0) {
-      setRiverInsight(`You have ${hotStale.length} hot deal${hotStale.length > 1 ? "s" : ""} in your pipeline. Want me to send follow-up messages to keep momentum?`);
-    }
-  }, [deals, riverInsight]);
+    if (!user) return;
+    supabase.from("users").select("*").eq("user_id", user.id).maybeSingle().then(({ data }) => setProfile(data));
+  }, [user]);
+
+  const riverContext = useMemo(() => profile ? buildBusinessContext(profile, {
+    pipelineValue: deals.reduce((s, d) => s + (Number(d.value) || 0), 0),
+  }) : {}, [profile, deals]);
+
+  const dealSummary = useMemo(() => {
+    return STAGES.map(s => `${s}: ${deals.filter(d => d.stage === s).length} deals`).join(", ");
+  }, [deals]);
 
   const contactMap = useMemo(() => new Map(contacts.map((c) => [c.id, c])), [contacts]);
   const byStage = useMemo(() => {
@@ -155,19 +163,9 @@ const Pipeline = () => {
         ))}
       </div>
 
-      {/* River insight */}
-      {showRiver && riverInsight && (
-        <div className="bg-accent-purple/[0.06] border border-accent-purple/15 border-t-2 border-t-accent-purple rounded-[10px] p-3 mb-4 flex items-start justify-between">
-          <div className="flex items-start gap-2">
-            <div className="w-2 h-2 rounded-full bg-accent-purple mt-1.5 shrink-0" />
-            <div>
-              <span className="text-[12px] font-semibold text-accent-purple">River AI</span>
-              <p className="text-[12px] text-foreground/70 mt-0.5">{riverInsight}</p>
-              <Button size="sm" className="h-6 text-[10px] mt-2 bg-accent-purple hover:bg-accent-purple/80 text-foreground">Yes, send follow-ups</Button>
-            </div>
-          </div>
-          <button onClick={() => setShowRiver(false)} className="text-foreground-secondary hover:text-foreground text-[11px]">×</button>
-        </div>
+      {/* River Pipeline Insight */}
+      {deals.length > 0 && (
+        <RiverPipelineInsight context={riverContext} dealData={dealSummary} />
       )}
 
       {/* Kanban */}
