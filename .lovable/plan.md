@@ -1,59 +1,84 @@
 
 
-# Remove River Branding from AI Studio — Use Vapi for Voice, Clean Chat AI
+# Fix: Route Vapi Calls Through Backend (CORS Fix)
 
-## What's Happening Now
+## The Problem
 
-"River" is hardcoded everywhere in the AI Studio as the agent name — greetings, system prompts, test call messages, UI labels. The user wants the AI Studio to feel like it's powered directly by Vapi (for voice) and the platform's own AI (for chat), not "River."
+`VoiceTester.tsx` and `vapiSync.ts` call `https://api.vapi.ai/*` directly from the browser. Vapi's API does not set `Access-Control-Allow-Origin` headers, so browsers block these requests. The calls silently fail.
 
-River AI should remain as the internal business assistant (floating chat button, dashboard insights, pipeline analysis) but should NOT be the name/brand of the client-facing voice and chat agents.
+## The Fix
+
+Route ALL Vapi API calls through the existing `vapi-manage` edge function. The browser calls your backend, your backend calls Vapi — no CORS issues.
+
+```text
+Browser → vapi-manage edge function → api.vapi.ai
+```
 
 ## Changes
 
-### 1. `VoiceConfig.tsx` — Remove River from voice agent
-- Default greeting: change `"This is River"` → `"How can I help you today?"`
-- System prompt (`buildSystemPrompt`): change `"You are River, the AI phone assistant"` → `"You are the AI phone assistant for {businessName}"`
-- Custom personality placeholder: remove "River" reference
-- Knowledge label: `"What River Knows"` → `"Agent Knowledge Base"`
+### 1. Update `supabase/functions/vapi-manage/index.ts`
+Add these actions (some may already exist, verify and add missing ones):
+- `make-call` — POST to Vapi `/call` with assistantId, phoneNumberId, customer
+- `get-call-status` — GET from Vapi `/call/{callId}`
+- `full-sync` — fetch assistants, phone numbers, calls, analytics from Vapi and return them
+- `create-assistant` — POST to Vapi `/assistant`
+- `update-assistant` — PATCH to Vapi `/assistant/{id}`
 
-### 2. `VoiceTester.tsx` — Remove River from test UI
-- `"Call River now"` → `"Test your voice agent"`
-- `"River will call your phone"` → `"Your AI agent will call your phone via Vapi"`
-- `"River is calling your phone"` → `"Your agent is calling..."`
-- Default preview utterance: remove "River" mention
-- Keep Vapi as the call engine (already correct)
+Each action receives the user's Vapi API key from the request body (fetched from `integration_settings` on the client) OR the edge function reads it from `integration_settings` using the service role key (more secure — avoids sending API key to frontend).
 
-### 3. `vapiSync.ts` — Remove River from Vapi assistant names
-- Assistant name: `"{businessName} — River AI"` → `"{businessName} — AI Agent"`
-- Test call firstMessage: `"test call from River AI"` → `"test call from your AI agent"`
+**Preferred approach**: Edge function reads the Vapi key from `integration_settings` using the authenticated user's ID. The frontend never touches the raw API key.
 
-### 4. `ChatConfig.tsx` — Remove River defaults from chat widget
-- Default agent name: `"River"` → `"AI Assistant"`
-- Default welcome message: remove "River" → use agent name variable
-- Default away message: remove "River"
-- Knowledge label: `"What River Knows in Chat"` → `"Agent Knowledge Base"`
+### 2. Update `src/services/vapiSync.ts`
+Replace all `fetch("https://api.vapi.ai/...")` calls with `supabase.functions.invoke("vapi-manage", { body: { action, params } })`. Remove `vapiKey` parameter from all exported functions since the edge function handles it.
 
-### 5. `ChatTester.tsx` — Keep using Lovable AI gateway but remove River name
-- Default agent name: `"River"` → `"AI Assistant"`
-- Default welcome message: remove "River"
-- Still uses `riverCall` from `river.ts` service — this is the Lovable AI gateway, which is correct for chat. Just the branding changes.
+Functions to update:
+- `makeVapiCall()` → invoke `vapi-manage` with `action: "make-call"`
+- `getVapiCallStatus()` → invoke `vapi-manage` with `action: "get-call-status"`
+- `fullVapiSync()` → invoke `vapi-manage` with `action: "full-sync"`
+- `createVapiAssistant()` → invoke `vapi-manage` with `action: "create-assistant"`
+- `updateVapiAssistant()` → invoke `vapi-manage` with `action: "update-assistant"`
+- `syncVapiCalls()` → invoke `vapi-manage` with `action: "sync-calls"`
+- `validateVapiKey()` → invoke `vapi-manage` with `action: "validate-key"`
 
-### 6. `RiverStatusBar.tsx` — Rebrand for AI Studio context
-- `"River AI is powering your agents"` → `"AI agents powered by Katexs"`
-- Remove Anthropic from the status bar (it's Lovable AI gateway now, not user-facing)
-- Keep Vapi and Twilio status indicators
+### 3. Update `src/components/ai-studio/VoiceTester.tsx`
+- Remove `vapiKey` from the call flow
+- `handleCall` calls updated `makeVapiCall(assistantId, phoneNumberId, phone, name)` — no key param
+- `startPollingCallStatus` calls updated `getVapiCallStatus(callId)` — no key param
+- `syncCallToSupabase` calls updated version — no key param
 
-### 7. `river-chat/index.ts` (edge function) — No changes needed
-- The system prompt there is for River as the internal business assistant (floating chat, dashboard insights). This is separate from the client-facing agents and should stay as "River."
+### 4. Update `src/components/ai-studio/VoiceConfig.tsx`
+- Remove Vapi key fetch from save logic
+- Call updated `createVapiAssistant(config, userId)` and `updateVapiAssistant(vapiId, config, userId)` — no key param
 
-## Files to Modify
+### 5. Update `src/pages/Integrations.tsx`
+- Sync button calls updated `fullVapiSync(userId, onProgress)` — no key param
+
+## Edge Function Design (`vapi-manage`)
+
+```typescript
+// Pseudocode for the edge function
+const user = await getAuthenticatedUser(req);
+const { data: integration } = await supabase
+  .from("integration_settings")
+  .select("api_key")
+  .eq("user_id", user.id)
+  .eq("integration_name", "vapi")
+  .eq("status", "connected")
+  .single();
+
+if (!integration?.api_key) return error("Connect Vapi first");
+
+const vapiKey = integration.api_key;
+// Now use vapiKey to call Vapi API server-side — no CORS
+```
+
+## Files to modify
 
 | File | Change |
 |------|--------|
-| `src/components/ai-studio/VoiceConfig.tsx` | Remove "River" from defaults and system prompt |
-| `src/components/ai-studio/VoiceTester.tsx` | Remove "River" from UI labels |
-| `src/components/ai-studio/ChatConfig.tsx` | Remove "River" from defaults |
-| `src/components/ai-studio/ChatTester.tsx` | Remove "River" from defaults |
-| `src/components/ai-studio/RiverStatusBar.tsx` | Rebrand status bar |
-| `src/services/vapiSync.ts` | Remove "River AI" from assistant names and test messages |
+| `supabase/functions/vapi-manage/index.ts` | Add all Vapi proxy actions, read key from DB |
+| `src/services/vapiSync.ts` | Replace direct Vapi calls with edge function invocations |
+| `src/components/ai-studio/VoiceTester.tsx` | Remove vapiKey handling, use updated service |
+| `src/components/ai-studio/VoiceConfig.tsx` | Remove vapiKey handling, use updated service |
+| `src/pages/Integrations.tsx` | Remove vapiKey from sync call |
 
