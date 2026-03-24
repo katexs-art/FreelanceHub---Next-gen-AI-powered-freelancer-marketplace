@@ -447,7 +447,7 @@ const Workflows = () => {
       )}
 
       {/* Quick start templates */}
-      <div>
+      <div id="templates-section">
         <h3 className="text-[14px] font-semibold text-foreground mb-3">Quick start templates</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {TEMPLATES.map((tpl) => (
