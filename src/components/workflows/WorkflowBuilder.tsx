@@ -129,7 +129,7 @@ export function WorkflowBuilder({ workflow, onSave, onClose }: Props) {
                 toast.error("Add a trigger block to test this workflow");
                 return;
               }
-              const unconfigured = nodes.filter((n) => n.type !== "trigger" && Object.keys(n.config).length === 0);
+              const unconfigured = nodes.filter((n) => !isNodeConfigured(n));
               if (unconfigured.length > 0) {
                 toast.warning(`${unconfigured.length} block(s) need configuration before testing`);
                 return;

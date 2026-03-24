@@ -240,7 +240,7 @@ export function WorkflowCanvas({
           const isCondition = node.type === "condition";
           const isRiver = node.type === "river";
           const summary = getConfigSummary(node);
-          const hasConfig = Object.keys(node.config).length > 0;
+          const hasConfig = isNodeConfigured(node);
 
           return (
             <div

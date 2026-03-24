@@ -27,6 +27,20 @@ export interface WorkflowData {
   user_id?: string;
 }
 
+export function isNodeConfigured(node: WorkflowNode): boolean {
+  if (node.type === "trigger") return true;
+  switch (node.blockType) {
+    case "send_sms": return !!node.config.message;
+    case "send_email": return !!node.config.subject;
+    case "wait": return !!node.config.duration;
+    case "send_webhook": return !!node.config.url;
+    case "river_call": return !!node.config.script;
+    default:
+      if (node.type === "condition") return !!node.config.field;
+      return Object.keys(node.config).length > 0;
+  }
+}
+
 export interface WorkflowRow {
   id: string;
   name: string;

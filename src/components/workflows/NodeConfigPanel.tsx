@@ -278,9 +278,9 @@ export function NodeConfigPanel({ node, onUpdate, onClose, onDelete }: NodeConfi
 
         {/* Status indicator */}
         <div className="flex items-center gap-2 pt-2 border-t border-[hsl(var(--border))]">
-          <span className={`w-2 h-2 rounded-full ${Object.keys(node.config).length > 0 ? "bg-[hsl(var(--accent-green))]" : "bg-amber-400"}`} />
+          <span className={`w-2 h-2 rounded-full ${isNodeConfigured(node) ? "bg-[hsl(var(--accent-green))]" : "bg-amber-400"}`} />
           <span className="text-[11px] text-foreground-secondary">
-            {Object.keys(node.config).length > 0 ? "Configured" : "Needs configuration"}
+            {isNodeConfigured(node) ? "Configured" : "Needs configuration"}
           </span>
         </div>
       </div>
