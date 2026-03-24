@@ -251,7 +251,10 @@ const Workflows = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-2 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors">
+          <button
+            onClick={() => document.getElementById("templates-section")?.scrollIntoView({ behavior: "smooth" })}
+            className="px-3 py-2 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors"
+          >
             Templates
           </button>
           <button
