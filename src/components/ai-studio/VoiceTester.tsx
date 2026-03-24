@@ -230,15 +230,6 @@ export function VoiceTester() {
         )}
       </div>
 
-      <div className="bg-background-card border border-border rounded-xl p-4 space-y-1">
-        <div className="flex items-center justify-between">
-          <span className="text-[13px] text-foreground-secondary">Preview greeting text (browser voice)</span>
-          <Button variant="ghost" size="sm" onClick={previewGreeting}>
-            <Play className="w-3 h-3 mr-1" /> Play
-          </Button>
-        </div>
-        <p className="text-[11px] text-foreground-secondary/60">Use "Call me now" to hear your actual Vapi voice</p>
-      </div>
     </div>
   );
 }
