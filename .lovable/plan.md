@@ -1,38 +1,55 @@
 
 
-# Fix: Preview Greeting Using the Real Vapi Voice
+# Fix: "Needs configuration" Status Logic
 
 ## Problem
-The "Preview greeting without a call" button uses `window.speechSynthesis` (browser robot voice), not the actual Vapi assistant voice (e.g., vapi/Tara). Users expect to hear their configured voice.
+Every node shows "Needs configuration" (amber dot) unless it has config keys set. But trigger nodes don't need configuration — they're ready as-is. The status check is too simplistic.
 
-## Solution
-Route the preview through the `vapi-manage` edge function, which will call Vapi's playback/TTS endpoint or — since Vapi doesn't expose a standalone TTS preview API — use the assistant's voice provider directly. Two options:
+## Fix
 
-### Option A: Use ElevenLabs TTS (if voice provider is 11labs)
-If the assistant uses ElevenLabs, call the ElevenLabs TTS API through an edge function with the same voice ID configured in Vapi.
+Update the configuration status logic in two files:
 
-### Option B: Use browser SpeechSynthesis but label it clearly (quick fix)
-Keep the browser TTS but rename the button to "Preview text (browser voice)" and add a note: "To hear your actual AI voice, use 'Call me now'."
+### 1. `src/components/workflows/WorkflowCanvas.tsx` (line 242)
+Replace the simple `Object.keys(node.config).length > 0` check with a smarter `isNodeConfigured()` function:
+- **Trigger nodes**: Always configured (they just listen for events)
+- **Wait nodes**: Configured if `duration` is set
+- **SMS nodes**: Configured if `message` is set
+- **Email nodes**: Configured if `subject` is set
+- **Webhook nodes**: Configured if `url` is set
+- **River call nodes**: Configured if `script` is set
+- **Condition nodes**: Configured if `field` is set
+- **Generic action nodes** (create_contact, move_deal, etc.): Configured if `instruction` is set
+- **Fallback**: `Object.keys(config).length > 0`
 
-### Recommended: Option A with fallback to B
+### 2. `src/components/workflows/NodeConfigPanel.tsx` (line 280)
+Use the same `isNodeConfigured()` function for the status indicator at the bottom of the config panel.
 
-Since the active assistant's voice provider varies (vapi, openai, 11labs, etc.), the cleanest approach:
+### 3. `src/components/workflows/WorkflowTypes.ts`
+Export the `isNodeConfigured()` helper so both files share the same logic.
 
-1. **Add a `preview-voice` action to `vapi-manage` edge function** that:
-   - Reads the active assistant's `raw_config.voice` from `vapi_assistants`
-   - If provider is `11labs`: calls ElevenLabs TTS API with the voice ID (requires ElevenLabs API key — which may not be available)
-   - If provider is `openai`: calls OpenAI TTS API
-   - If provider is `vapi` (Vapi's built-in voices): no standalone TTS API available
+### Implementation
 
-2. **Problem**: Vapi doesn't expose a "generate audio sample" endpoint. The voice providers (11labs, OpenAI) each need their own API keys, which users may not have separately from Vapi.
-
-3. **Pragmatic fix**: Update the UI to be honest about what the preview does, and encourage using "Call me now" for real voice testing.
-
-### Changes
+```typescript
+// In WorkflowTypes.ts
+export function isNodeConfigured(node: WorkflowNode): boolean {
+  if (node.type === "trigger") return true;
+  switch (node.blockType) {
+    case "send_sms": return !!node.config.message;
+    case "send_email": return !!node.config.subject;
+    case "wait": return !!node.config.duration;
+    case "send_webhook": return !!node.config.url;
+    case "river_call": return !!node.config.script;
+    default:
+      if (node.type === "condition") return !!node.config.field;
+      return Object.keys(node.config).length > 0;
+  }
+}
+```
 
 | File | Change |
 |------|--------|
-| `src/components/ai-studio/VoiceTester.tsx` | Update preview section label to "Preview greeting text (browser voice)" and add helper text: "Use 'Call me now' to hear your actual Vapi voice" |
-
-This is a small cosmetic fix. A full voice preview would require separate TTS API keys beyond Vapi, which adds complexity without clear value since "Call me now" already tests the real voice.
+| `src/components/workflows/WorkflowTypes.ts` | Add `isNodeConfigured()` helper |
+| `src/components/workflows/WorkflowCanvas.tsx` | Import and use `isNodeConfigured()` for status dot |
+| `src/components/workflows/NodeConfigPanel.tsx` | Import and use `isNodeConfigured()` for status text |
+| `src/components/workflows/WorkflowBuilder.tsx` | Update Test button validation to use `isNodeConfigured()` |
 
