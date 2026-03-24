@@ -251,7 +251,10 @@ const Workflows = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button className="px-3 py-2 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors">
+          <button
+            onClick={() => document.getElementById("templates-section")?.scrollIntoView({ behavior: "smooth" })}
+            className="px-3 py-2 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors"
+          >
             Templates
           </button>
           <button
@@ -444,7 +447,7 @@ const Workflows = () => {
       )}
 
       {/* Quick start templates */}
-      <div>
+      <div id="templates-section">
         <h3 className="text-[14px] font-semibold text-foreground mb-3">Quick start templates</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {TEMPLATES.map((tpl) => (
