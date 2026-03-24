@@ -450,6 +450,27 @@ export type Database = {
           },
         ]
       }
+      error_logs: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          function_name: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          function_name: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          function_name?: string
+          id?: string
+        }
+        Relationships: []
+      }
       integration_settings: {
         Row: {
           api_key: string | null
@@ -1074,6 +1095,130 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      workflow_runs: {
+        Row: {
+          completed_at: string | null
+          contact_id: string
+          created_at: string | null
+          current_step: number | null
+          id: string
+          started_at: string | null
+          status: string
+          step_results: Json | null
+          steps_completed: number | null
+          trigger_data: Json | null
+          updated_at: string | null
+          user_id: string
+          wait_until: string | null
+          workflow_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          contact_id: string
+          created_at?: string | null
+          current_step?: number | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          step_results?: Json | null
+          steps_completed?: number | null
+          trigger_data?: Json | null
+          updated_at?: string | null
+          user_id: string
+          wait_until?: string | null
+          workflow_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          contact_id?: string
+          created_at?: string | null
+          current_step?: number | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          step_results?: Json | null
+          steps_completed?: number | null
+          trigger_data?: Json | null
+          updated_at?: string | null
+          user_id?: string
+          wait_until?: string | null
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_runs_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_runs_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workflow_scheduled: {
+        Row: {
+          contact_id: string
+          created_at: string | null
+          executed: boolean | null
+          id: string
+          resume_step: number
+          run_id: string
+          scheduled_for: string
+          user_id: string
+          workflow_id: string
+        }
+        Insert: {
+          contact_id: string
+          created_at?: string | null
+          executed?: boolean | null
+          id?: string
+          resume_step?: number
+          run_id: string
+          scheduled_for: string
+          user_id: string
+          workflow_id: string
+        }
+        Update: {
+          contact_id?: string
+          created_at?: string | null
+          executed?: boolean | null
+          id?: string
+          resume_step?: number
+          run_id?: string
+          scheduled_for?: string
+          user_id?: string
+          workflow_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflow_scheduled_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_scheduled_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "workflow_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workflow_scheduled_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workflows: {
         Row: {
