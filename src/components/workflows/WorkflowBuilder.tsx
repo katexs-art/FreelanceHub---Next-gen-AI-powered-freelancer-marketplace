@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { BlockLibrary } from "./BlockLibrary";
 import { WorkflowCanvas } from "./WorkflowCanvas";
 import { NodeConfigPanel } from "./NodeConfigPanel";
+import { isNodeConfigured } from "./WorkflowTypes";
 import type { WorkflowNode, WorkflowConnection, WorkflowData } from "./WorkflowTypes";
 import { useRiverChat } from "@/hooks/useRiverChat";
 
