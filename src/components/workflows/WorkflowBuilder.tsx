@@ -116,9 +116,6 @@ export function WorkflowBuilder({ workflow, onSave, onClose }: Props) {
           />
         </div>
         <div className="flex items-center gap-2">
-          <button className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors">
-            <PlayCircle size={13} /> Test
-          </button>
           <button
             onClick={handleSave}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors"
