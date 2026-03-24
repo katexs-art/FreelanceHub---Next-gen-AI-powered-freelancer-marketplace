@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
-import { ArrowLeft, Save, Zap, Upload } from "lucide-react";
+import { ArrowLeft, Save, Zap, PlayCircle, Upload } from "lucide-react";
+import { toast } from "sonner";
 import { BlockLibrary } from "./BlockLibrary";
 import { WorkflowCanvas } from "./WorkflowCanvas";
 import { NodeConfigPanel } from "./NodeConfigPanel";
