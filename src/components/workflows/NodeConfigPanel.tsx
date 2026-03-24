@@ -1,4 +1,5 @@
 import { X, MessageSquare, Mail, Phone, Clock, Globe, Zap } from "lucide-react";
+import { isNodeConfigured } from "./WorkflowTypes";
 import type { WorkflowNode } from "./WorkflowTypes";
 
 interface NodeConfigPanelProps {
