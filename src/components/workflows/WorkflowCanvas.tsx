@@ -4,6 +4,7 @@ import {
   MessageSquare, Mail, Phone, UserCheck, ArrowRightCircle, Bell, Calendar, GitBranch,
   MessageCircle, PhoneCall, MailOpen, Filter, Trash2, Copy, X, ZoomIn, ZoomOut, Maximize
 } from "lucide-react";
+import { isNodeConfigured } from "./WorkflowTypes";
 import type { WorkflowNode, WorkflowConnection } from "./WorkflowTypes";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
@@ -239,7 +240,7 @@ export function WorkflowCanvas({
           const isCondition = node.type === "condition";
           const isRiver = node.type === "river";
           const summary = getConfigSummary(node);
-          const hasConfig = Object.keys(node.config).length > 0;
+          const hasConfig = isNodeConfigured(node);
 
           return (
             <div
