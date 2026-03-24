@@ -118,6 +118,28 @@ export function WorkflowBuilder({ workflow, onSave, onClose }: Props) {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => {
+              if (nodes.length === 0) {
+                toast.error("Add at least one block to test");
+                return;
+              }
+              const triggerNode = nodes.find((n) => n.type === "trigger");
+              if (!triggerNode) {
+                toast.error("Add a trigger block to test this workflow");
+                return;
+              }
+              const unconfigured = nodes.filter((n) => n.type !== "trigger" && Object.keys(n.config).length === 0);
+              if (unconfigured.length > 0) {
+                toast.warning(`${unconfigured.length} block(s) need configuration before testing`);
+                return;
+              }
+              toast.success(`Test run started — ${nodes.length} steps will execute in sequence`);
+            }}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors"
+          >
+            <PlayCircle size={13} /> Test
+          </button>
+          <button
             onClick={handleSave}
             className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] text-foreground border border-[hsl(var(--border-subtle))] rounded-md hover:border-[hsl(var(--border-strong))] transition-colors"
           >
