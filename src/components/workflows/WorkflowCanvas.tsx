@@ -4,6 +4,7 @@ import {
   MessageSquare, Mail, Phone, UserCheck, ArrowRightCircle, Bell, Calendar, GitBranch,
   MessageCircle, PhoneCall, MailOpen, Filter, Trash2, Copy, X, ZoomIn, ZoomOut, Maximize
 } from "lucide-react";
+import { isNodeConfigured } from "./WorkflowTypes";
 import type { WorkflowNode, WorkflowConnection } from "./WorkflowTypes";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
