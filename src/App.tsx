@@ -30,6 +30,8 @@ const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
 const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
 const OrderWorkspace = lazy(() => import("./pages/orders/OrderWorkspace"));
 const Inbox = lazy(() => import("./pages/Inbox"));
+const Earnings = lazy(() => import("./pages/seller/Earnings"));
+const Admin = lazy(() => import("./pages/admin/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -69,7 +71,7 @@ const App = () => (
             <Route path="/seller/gigs/new" element={<ProtectedRoute roles={["seller","admin"]}><GigEditor /></ProtectedRoute>} />
             <Route path="/seller/gigs/:id/edit" element={<ProtectedRoute roles={["seller","admin"]}><GigEditor /></ProtectedRoute>} />
             <Route path="/seller/orders" element={<ProtectedRoute roles={["seller","admin"]}><OrdersList as="seller" /></ProtectedRoute>} />
-            <Route path="/seller/earnings" element={<ProtectedRoute roles={["seller","admin"]}><DashboardPlaceholder title="Earnings & withdrawals" /></ProtectedRoute>} />
+            <Route path="/seller/earnings" element={<ProtectedRoute roles={["seller","admin"]}><Earnings /></ProtectedRoute>} />
 
             {/* Shared (any signed-in user) */}
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
@@ -79,7 +81,7 @@ const App = () => (
             <Route path="/settings" element={<ProtectedRoute><DashboardPlaceholder title="Account settings" /></ProtectedRoute>} />
 
             {/* Admin */}
-            <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Placeholder title="Admin dashboard" /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

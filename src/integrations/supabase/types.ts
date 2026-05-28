@@ -1335,6 +1335,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      clear_due_seller_credits: { Args: never; Returns: undefined }
       get_or_create_conversation: {
         Args: { _gig_id?: string; _order_id?: string; _other: string }
         Returns: string
@@ -1343,6 +1344,10 @@ export type Database = {
       is_order_party: {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
+      }
+      recompute_seller_balance: {
+        Args: { _seller: string }
+        Returns: undefined
       }
     }
     Enums: {
