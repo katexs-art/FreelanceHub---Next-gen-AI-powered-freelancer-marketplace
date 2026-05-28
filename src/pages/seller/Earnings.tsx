@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Wallet, TrendingUp, Clock, ArrowDownToLine, CheckCircle2, AlertCircle, ExternalLink } from "lucide-react";
+import { Wallet, TrendingUp, Clock, ArrowDownToLine, CheckCircle2, Building2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { PayoutMethodCard } from "@/components/marketplace/PayoutMethodCard";
 
 interface Acct {
   available_balance: number; pending_balance: number; lifetime_earnings: number;
-  stripe_account_id: string | null; onboarding_complete: boolean; payouts_enabled: boolean;
+  payout_method: "stripe_bank" | "paypal" | null;
+  paypal_email: string | null;
+  bank_country: string | null;
+  bank_last4: string | null;
 }
 interface Tx { id: string; type: string; status: string; amount: number; created_at: string; clears_at: string | null; order_id: string | null; }
 interface Wd { id: string; amount: number; status: string; created_at: string; paid_at: string | null; }
@@ -25,13 +28,12 @@ export default function Earnings() {
   const [wds, setWds] = useState<Wd[]>([]);
   const [amount, setAmount] = useState("");
   const [busy, setBusy] = useState(false);
-  const [params, setParams] = useSearchParams();
 
   const load = async () => {
     if (!user) return;
     const [{ data: a }, { data: t }, { data: w }] = await Promise.all([
       supabase.from("seller_accounts")
-        .select("available_balance, pending_balance, lifetime_earnings, stripe_account_id, onboarding_complete, payouts_enabled")
+        .select("available_balance, pending_balance, lifetime_earnings, payout_method, paypal_email, bank_country, bank_last4")
         .eq("seller_id", user.id).maybeSingle(),
       supabase.from("transactions").select("*").eq("seller_id", user.id).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawals").select("*").eq("seller_id", user.id).order("created_at", { ascending: false }).limit(20),
@@ -40,34 +42,16 @@ export default function Earnings() {
   };
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id]);
 
-  // After return from Stripe, refresh status
-  useEffect(() => {
-    if (params.get("connect")) {
-      supabase.functions.invoke("stripe-connect-status").then(() => {
-        load();
-        params.delete("connect");
-        setParams(params, { replace: true });
-      });
-    }
-    // eslint-disable-next-line
-  }, []);
-
-  const startConnect = async () => {
-    setBusy(true);
-    const { data, error } = await supabase.functions.invoke("stripe-connect-onboard");
-    setBusy(false);
-    if (error || !data?.url) return toast.error(error?.message || "Could not start onboarding");
-    window.location.href = data.url;
-  };
+  const hasMethod = !!acct?.payout_method;
 
   const requestWithdrawal = async () => {
     if (!user || !acct) return;
-    if (!acct.payouts_enabled) return toast.error("Finish Stripe onboarding to withdraw");
+    if (!hasMethod) return toast.error("Add a payout method first");
     const cents = Math.round(parseFloat(amount) * 100);
     if (!cents || cents < 1000) return toast.error("Minimum withdrawal is $10");
     if (cents > acct.available_balance) return toast.error("Amount exceeds available balance");
     setBusy(true);
-    const { error } = await supabase.from("withdrawals").insert({ seller_id: user.id, amount: cents });
+    const { error } = await supabase.from("withdrawals").insert({ seller_id: user.id, amount: cents, method: acct.payout_method });
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Withdrawal requested — payout in 1–3 business days");
@@ -88,45 +72,26 @@ export default function Earnings() {
           <Card icon={TrendingUp} label="Lifetime" value={dollars(acct?.lifetime_earnings ?? 0)} />
         </div>
 
-        {/* Stripe Connect banner */}
-        {acct && !acct.payouts_enabled && (
-          <section className={cn("border rounded-xl p-5 flex items-start gap-4",
-            acct.stripe_account_id ? "border-warning/40 bg-warning/5" : "border-border bg-background")}>
-            <div className={cn("h-9 w-9 rounded-lg flex items-center justify-center shrink-0",
-              acct.stripe_account_id ? "bg-warning/10 text-warning" : "bg-primary/10 text-primary")}>
-              {acct.stripe_account_id ? <AlertCircle className="h-5 w-5" /> : <Wallet className="h-5 w-5" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold">
-                {acct.stripe_account_id ? "Finish your Stripe onboarding" : "Set up payouts"}
-              </h3>
-              <p className="text-sm text-foreground-muted mt-0.5">
-                {acct.stripe_account_id
-                  ? "A few more details are needed before we can release payouts."
-                  : "Connect your bank in a few minutes to receive earnings directly to your account."}
-              </p>
-            </div>
-            <Button onClick={startConnect} disabled={busy}>
-              <ExternalLink className="h-4 w-4" /> {acct.stripe_account_id ? "Continue setup" : "Connect with Stripe"}
-            </Button>
-          </section>
-        )}
-        {acct?.payouts_enabled && (
-          <section className="border border-success/40 bg-success/5 rounded-xl p-4 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-success" />
-            <span className="text-sm">Stripe payouts are active. Withdrawals are sent automatically.</span>
-          </section>
-        )}
+        <PayoutMethodCard
+          method={acct?.payout_method ?? null}
+          paypalEmail={acct?.paypal_email ?? null}
+          bankCountry={acct?.bank_country ?? null}
+          bankLast4={acct?.bank_last4 ?? null}
+          onSaved={load}
+        />
 
         <section className="bg-background border border-border rounded-xl p-6">
           <h2 className="font-semibold mb-1">Withdraw funds</h2>
           <p className="text-sm text-foreground-muted mb-4">Minimum $10. Payouts processed within 3 business days.</p>
           <div className="flex gap-2 max-w-sm">
             <Input type="number" placeholder="Amount ($)" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button onClick={requestWithdrawal} disabled={busy || !amount || !acct?.payouts_enabled}>
+            <Button onClick={requestWithdrawal} disabled={busy || !amount || !hasMethod}>
               <ArrowDownToLine className="h-4 w-4" /> Request
             </Button>
           </div>
+          {!hasMethod && (
+            <p className="text-xs text-foreground-muted mt-3">Add a payout method above to enable withdrawals.</p>
+          )}
         </section>
 
         <section>
@@ -174,8 +139,8 @@ export default function Earnings() {
                     <tr key={t.id} className="border-t border-border">
                       <td className="p-3">{new Date(t.created_at).toLocaleDateString()}</td>
                       <td className="p-3 capitalize">{t.type.replace("_", " ")}</td>
-                      <td className={cn("p-3 font-medium", t.type === "platform_fee" ? "text-destructive" : "")}>
-                        {t.type === "platform_fee" ? "-" : "+"}{dollars(Math.abs(t.amount))}
+                      <td className={cn("p-3 font-medium", (t.type === "platform_fee" || t.type === "refund" || t.amount < 0) ? "text-destructive" : "")}>
+                        {(t.type === "platform_fee" || t.type === "refund" || t.amount < 0) ? "-" : "+"}{dollars(Math.abs(t.amount))}
                       </td>
                       <td className="p-3 text-foreground-muted">{t.clears_at ? new Date(t.clears_at).toLocaleDateString() : "—"}</td>
                       <td className="p-3"><StatusPill status={t.status} /></td>
