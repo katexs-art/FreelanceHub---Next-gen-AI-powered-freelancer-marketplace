@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Button } from "@/components/ui/button";
+import { SEO } from "@/components/SEO";
 import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/components/ui/mono";
 import { ArrowUpRight, ArrowRight, Command } from "lucide-react";
 
@@ -40,6 +41,11 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="KATEXS — The AI Freelance Marketplace"
+        description="Hire AI-native freelancers. Find experts in seconds, ship work in days. The first marketplace built for the AI era."
+        jsonLd={{ "@context": "https://schema.org", "@type": "Organization", name: "Katexs", url: "https://katexs.lovable.app" }}
+      />
       <SiteHeader />
 
       {/* ───────────────────────────── HERO ───────────────────────────── */}

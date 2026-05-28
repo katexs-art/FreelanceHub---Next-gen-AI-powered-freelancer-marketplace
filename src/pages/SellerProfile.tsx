@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
+import { SEO } from "@/components/SEO";
 import { SellerLevelBadge } from "@/components/marketplace/SellerLevelBadge";
 import { FollowSellerButton } from "@/components/marketplace/FollowSellerButton";
 import { VerifiedBadge } from "@/components/marketplace/VerifiedBadge";
@@ -80,6 +81,10 @@ export default function SellerProfile() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={`${seller.full_name ?? seller.username ?? "Seller"} — Profile`}
+        description={(seller.bio ?? `Hire ${seller.full_name ?? seller.username} on Katexs.`).slice(0, 155)}
+      />
       <SiteHeader />
       <main className="flex-1 container py-10">
         <div className="grid lg:grid-cols-[280px_1fr] gap-10">

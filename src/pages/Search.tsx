@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { SEO } from "@/components/SEO";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,7 @@ export default function Search() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO title={q ? `${q} — Search` : "Search services"} description="Find AI-native freelancers across design, writing, dev, marketing and more." />
       <SiteHeader />
       <main className="flex-1 container py-10">
         <form onSubmit={(e) => { e.preventDefault(); updateParam("q", input); }}
