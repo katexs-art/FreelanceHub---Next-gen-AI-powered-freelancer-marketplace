@@ -10,56 +10,54 @@
 
 @layer base {
   :root {
-    /* Canvas — pure black ladder */
-    --background: 0 0% 0%;                /* #000 */
-    --background-subtle: 0 0% 3%;         /* #080808 */
-    --background-elevated: 0 0% 5%;       /* #0d0d0d */
+    /* Canvas — light, Fiverr-style */
+    --background: 0 0% 100%;
+    --background-subtle: 0 0% 98%;
+    --background-elevated: 0 0% 96%;
 
-    --foreground: 0 0% 100%;              /* #fff */
-    --foreground-muted: 0 0% 53%;         /* #888 */
-    --foreground-subtle: 0 0% 33%;        /* #555 */
+    --foreground: 0 0% 10%;
+    --foreground-muted: 220 9% 46%;
+    --foreground-subtle: 220 9% 60%;
 
-    /* Primary = signature #caff00 lime */
-    --primary: 73 100% 50%;               /* #caff00 */
-    --primary-foreground: 0 0% 0%;
-    --primary-hover: 73 100% 45%;         /* #b8e800 */
+    --primary: 156 74% 43%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 156 74% 38%;
 
-    --accent: 73 100% 50%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 156 74% 43%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Borders — hairline ladder */
-    --border: 0 0% 11%;                   /* #1c1c1c */
-    --border-strong: 0 0% 16%;            /* #2a2a2a */
-    --input: 0 0% 11%;
-    --ring: 73 100% 50%;
+    --border: 220 13% 91%;
+    --border-strong: 220 13% 82%;
+    --input: 220 13% 91%;
+    --ring: 156 74% 43%;
 
-    --success: 73 100% 50%;
+    --success: 142 71% 45%;
     --warning: 38 92% 50%;
-    --destructive: 0 73% 59%;             /* #e24b4a */
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 4%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 4%;
-    --muted-foreground: 0 0% 53%;
-    --card: 0 0% 3%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 3%;
-    --popover-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 220 9% 46%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
 
-    --radius: 8px;
+    --radius: 4px;
 
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 73 100% 50%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 4%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 11%;
-    --sidebar-ring: 73 100% 50%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 156 74% 43%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 156 74% 43%;
   }
 
-  .dark { color-scheme: dark; }
+  .dark { color-scheme: light; }
 }
 
 @layer base {
