@@ -8,6 +8,7 @@ import { Wallet, TrendingUp, Clock, ArrowDownToLine, CheckCircle2, Building2, Ma
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PayoutMethodCard } from "@/components/marketplace/PayoutMethodCard";
+import { StripeConnectCard } from "@/components/marketplace/StripeConnectCard";
 
 interface Acct {
   available_balance: number; pending_balance: number; lifetime_earnings: number;
