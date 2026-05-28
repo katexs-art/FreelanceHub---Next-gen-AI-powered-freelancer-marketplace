@@ -185,6 +185,10 @@ export default function OrderWorkspace() {
           <Stat icon={RotateCw} label="Revisions" value={`${order.revision_count}/${order.gig_packages?.revisions ?? 0}`} />
         </div>
 
+        <div className="mt-3"><DeliveryCountdown deadline={order.delivery_deadline} status={order.status} /></div>
+
+        <div className="mt-4"><OrderTimeline order={order as any} /></div>
+
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={async () => {
             const other = isBuyer ? order.seller_id : order.buyer_id;
