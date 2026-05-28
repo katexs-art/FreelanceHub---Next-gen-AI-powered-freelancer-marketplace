@@ -7,7 +7,8 @@ import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketp
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search as SearchIcon } from "lucide-react";
+import { Search as SearchIcon, Sparkles } from "lucide-react";
+import { toast } from "sonner";
 
 type SortKey = "best" | "newest" | "price_asc" | "price_desc" | "rating";
 
@@ -24,8 +25,31 @@ export default function Search() {
   const [gigs, setGigs] = useState<GigCardData[]>([]);
   const [promoted, setPromoted] = useState<GigCardData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [aiInsight, setAiInsight] = useState<{ refined: string; categories: string[] } | null>(null);
+  const [aiBusy, setAiBusy] = useState(false);
 
   useEffect(() => { setInput(q); }, [q]);
+
+  const runAISearch = async () => {
+    if (!input.trim()) return;
+    setAiBusy(true);
+    setAiInsight(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("ai-search", {
+        body: { query: input },
+      });
+      if (error) throw error;
+      setAiInsight({ refined: data.refined_query, categories: data.suggested_categories ?? [] });
+      // Reflect refined query in URL so the standard search re-runs with it
+      const next = new URLSearchParams(params);
+      next.set("q", data.refined_query || input);
+      setParams(next);
+    } catch (e: any) {
+      toast.error(e.message ?? "AI search failed");
+    } finally {
+      setAiBusy(false);
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -84,10 +108,27 @@ export default function Search() {
           <div className="relative flex-1">
             <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-subtle" />
             <Input value={input} onChange={(e) => setInput(e.target.value)}
-              placeholder='Try "logo design"' className="pl-11 h-12 rounded-full" />
+              placeholder='Try "I need a logo for my AI startup, budget $200"' className="pl-11 h-12 rounded-full" />
           </div>
           <Button type="submit" size="lg">Search</Button>
+          <Button type="button" size="lg" variant="outline" onClick={runAISearch} disabled={aiBusy || !input.trim()}>
+            <Sparkles className="h-4 w-4" /> {aiBusy ? "Thinking…" : "AI"}
+          </Button>
         </form>
+
+        {aiInsight && (
+          <div className="mt-4 max-w-2xl rounded-xl border border-primary/30 bg-primary/5 p-4 text-sm">
+            <div className="flex items-center gap-2 text-primary font-medium">
+              <Sparkles className="h-4 w-4" /> AI understood your search
+            </div>
+            <p className="mt-1.5 text-foreground">
+              Searching for <span className="font-medium">"{aiInsight.refined}"</span>
+              {aiInsight.categories.length > 0 && (
+                <> in <span className="font-medium">{aiInsight.categories.join(", ")}</span></>
+              )}.
+            </p>
+          </div>
+        )}
 
         <div className="mt-8 flex gap-8">
           <aside className="w-56 shrink-0 hidden md:block space-y-6">
