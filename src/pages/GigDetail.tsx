@@ -49,6 +49,12 @@ interface Seller {
   response_time_minutes: number | null;
 }
 
+function formatResponseTime(minutes: number): string {
+  if (minutes < 60) return `${Math.max(1, Math.round(minutes))}m`;
+  if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h`;
+  return `${Math.round(minutes / (60 * 24))}d`;
+}
+
 export default function GigDetail() {
   const { slug: gigId } = useParams();
   const nav = useNavigate();
