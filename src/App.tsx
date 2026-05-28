@@ -3,40 +3,19 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ProtectedRoute } from "@/components/marketplace/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { lazy, Suspense } from "react";
 
-// Loading fallback
 const Loading = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center">
-    <div className="text-center space-y-3">
-      <span className="font-heading font-[800] text-foreground" style={{ fontSize: "20px" }}>
-        katexs<span style={{ color: "hsl(var(--accent-green))" }}>.</span>
-      </span>
-      <div className="flex items-center justify-center gap-1">
-        {[0, 1, 2].map((i) => (
-          <span key={i} className="w-1.5 h-1.5 rounded-full bg-accent-green animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />
-        ))}
-      </div>
-    </div>
-  </div>
+  <div className="min-h-screen flex items-center justify-center text-sm text-foreground-muted">Loading…</div>
 );
 
-// Lazy loaded pages
 const Landing = lazy(() => import("./pages/Landing"));
-const ClientSignup = lazy(() => import("./pages/marketplace/ClientSignup"));
-const ExpertSignup = lazy(() => import("./pages/marketplace/ExpertSignup"));
-const MarketplaceLogin = lazy(() => import("./pages/marketplace/MarketplaceLogin"));
-const ResetPassword = lazy(() => import("./pages/marketplace/ResetPassword"));
-const ExpertPending = lazy(() => import("./pages/marketplace/ExpertPending"));
-const DashboardClient = lazy(() => import("./pages/marketplace/DashboardClient"));
-const DashboardExpert = lazy(() => import("./pages/marketplace/DashboardExpert"));
-const Browse = lazy(() => import("./pages/marketplace/Browse"));
-const ExpertProfile = lazy(() => import("./pages/marketplace/ExpertProfile"));
-const CategoryPage = lazy(() => import("./pages/marketplace/CategoryPage"));
-const ProjectDetail = lazy(() => import("./pages/marketplace/ProjectDetail"));
-const CheckoutSuccess = lazy(() => import("./pages/marketplace/CheckoutSuccess"));
-const MarketplaceAdmin = lazy(() => import("./pages/marketplace/AdminDashboard"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const Signup = lazy(() => import("./pages/auth/Signup"));
+const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const Placeholder = lazy(() => import("./pages/Placeholder"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -50,20 +29,39 @@ const App = () => (
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<Landing />} />
-            <Route path="/signup" element={<ClientSignup />} />
-            <Route path="/signup/client" element={<ClientSignup />} />
-            <Route path="/signup/expert" element={<ExpertSignup />} />
-            <Route path="/login" element={<MarketplaceLogin />} />
+
+            {/* Auth */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/expert/pending" element={<ExpertPending />} />
-            <Route path="/dashboard/client" element={<ProtectedRoute roles={["client","admin"]}><DashboardClient /></ProtectedRoute>} />
-            <Route path="/dashboard/expert" element={<ProtectedRoute roles={["expert","admin"]}><DashboardExpert /></ProtectedRoute>} />
-            <Route path="/browse" element={<Browse />} />
-            <Route path="/expert/:id" element={<ExpertProfile />} />
-            <Route path="/category/:slug" element={<CategoryPage />} />
-            <Route path="/project/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
-            <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
-            <Route path="/marketplace/admin" element={<ProtectedRoute><MarketplaceAdmin /></ProtectedRoute>} />
+
+            {/* Public marketplace (placeholders, built in next phase) */}
+            <Route path="/explore" element={<Placeholder title="Explore categories" />} />
+            <Route path="/search" element={<Placeholder title="Search results" />} />
+            <Route path="/gig/:slug" element={<Placeholder title="Gig detail" />} />
+            <Route path="/u/:username" element={<Placeholder title="Seller profile" />} />
+            <Route path="/become-a-seller" element={<Placeholder title="Become a seller" />} />
+
+            {/* Buyer */}
+            <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><Placeholder title="Buyer dashboard" /></ProtectedRoute>} />
+            <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","admin"]}><Placeholder title="My orders" /></ProtectedRoute>} />
+
+            {/* Seller */}
+            <Route path="/seller/dashboard" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Seller dashboard" /></ProtectedRoute>} />
+            <Route path="/seller/gigs" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="My gigs" /></ProtectedRoute>} />
+            <Route path="/seller/gigs/new" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Create a gig" /></ProtectedRoute>} />
+            <Route path="/seller/orders" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Active orders" /></ProtectedRoute>} />
+            <Route path="/seller/earnings" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Earnings & withdrawals" /></ProtectedRoute>} />
+
+            {/* Shared (any signed-in user) */}
+            <Route path="/orders/:id" element={<ProtectedRoute><Placeholder title="Order workspace" /></ProtectedRoute>} />
+            <Route path="/inbox" element={<ProtectedRoute><Placeholder title="Inbox" /></ProtectedRoute>} />
+            <Route path="/inbox/:conversationId" element={<ProtectedRoute><Placeholder title="Conversation" /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Placeholder title="Account settings" /></ProtectedRoute>} />
+
+            {/* Admin */}
+            <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Placeholder title="Admin dashboard" /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
