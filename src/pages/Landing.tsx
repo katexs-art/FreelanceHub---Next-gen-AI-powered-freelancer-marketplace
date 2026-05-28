@@ -35,10 +35,30 @@ export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [phIdx, setPhIdx] = useState(0);
+  const [featured, setFeatured] = useState<GigCardData[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
 
   useEffect(() => {
     const id = setInterval(() => setPhIdx((i) => (i + 1) % ROTATING.length), 2800);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("gigs")
+        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+        .eq("status", "active")
+        .order("total_orders", { ascending: false })
+        .limit(8);
+      const ids = [...new Set((data ?? []).map((g) => g.seller_id))];
+      const { data: sellers } = ids.length
+        ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
+        : { data: [] as any };
+      const byId = new Map((sellers ?? []).map((s: any) => [s.id, s]));
+      setFeatured((data ?? []).map((g) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
+      setFeaturedLoading(false);
+    })();
   }, []);
 
   return (
