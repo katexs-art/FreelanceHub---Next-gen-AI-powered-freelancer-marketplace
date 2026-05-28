@@ -46,7 +46,8 @@ export default function BecomeSeller() {
               {!user ? (
                 <Link to="/signup"><Button size="lg" variant="secondary">Become a seller</Button></Link>
               ) : isAlreadySeller ? (
-                <Link to="/seller/gigs/new"><Button size="lg" variant="secondary">Create your first gig</Button></Link>
+                <Link to="/seller/dashboard"><Button size="lg" variant="secondary">Go to seller dashboard</Button></Link>
+
               ) : (
                 <Button size="lg" variant="secondary" onClick={becomeSeller} disabled={loading}>
                   {loading ? "Setting up…" : "Activate seller mode"}
