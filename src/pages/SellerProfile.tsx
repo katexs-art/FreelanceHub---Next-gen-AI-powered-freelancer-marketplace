@@ -102,9 +102,6 @@ export default function SellerProfile() {
               {seller.bio && (
                 <p className="mt-5 text-sm text-left text-foreground-muted whitespace-pre-line">{seller.bio}</p>
               )}
-            </div>
-          </aside>
-
               {(seller.response_time_minutes != null || seller.response_rate != null) && (
                 <div className="mt-5 space-y-2 text-sm text-left border-t border-border pt-4">
                   {seller.response_time_minutes != null && (
