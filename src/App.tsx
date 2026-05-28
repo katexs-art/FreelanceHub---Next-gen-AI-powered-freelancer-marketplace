@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppShell } from "@/components/layout/AppShell";
+import { ProtectedRoute } from "@/components/marketplace/ProtectedRoute";
 import { lazy, Suspense } from "react";
 
 // Loading fallback
@@ -30,6 +31,13 @@ const IntegrationsOverview = lazy(() => import("./pages/IntegrationsOverview"));
 const WeGrow = lazy(() => import("./pages/WeGrow"));
 const Docs = lazy(() => import("./pages/Docs"));
 const Signup = lazy(() => import("./pages/Signup"));
+const ClientSignup = lazy(() => import("./pages/marketplace/ClientSignup"));
+const ExpertSignup = lazy(() => import("./pages/marketplace/ExpertSignup"));
+const MarketplaceLogin = lazy(() => import("./pages/marketplace/MarketplaceLogin"));
+const ResetPassword = lazy(() => import("./pages/marketplace/ResetPassword"));
+const ExpertPending = lazy(() => import("./pages/marketplace/ExpertPending"));
+const DashboardClient = lazy(() => import("./pages/marketplace/DashboardClient"));
+const DashboardExpert = lazy(() => import("./pages/marketplace/DashboardExpert"));
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const InboxPage = lazy(() => import("./pages/InboxPage"));
@@ -63,8 +71,14 @@ const App = () => (
             <Route path="/integrations-overview" element={<IntegrationsOverview />} />
             <Route path="/wegrow" element={<WeGrow />} />
             <Route path="/docs" element={<Docs />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<ClientSignup />} />
+            <Route path="/signup/client" element={<ClientSignup />} />
+            <Route path="/signup/expert" element={<ExpertSignup />} />
+            <Route path="/login" element={<MarketplaceLogin />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/expert/pending" element={<ExpertPending />} />
+            <Route path="/dashboard/client" element={<ProtectedRoute roles={["client","admin"]}><DashboardClient /></ProtectedRoute>} />
+            <Route path="/dashboard/expert" element={<ProtectedRoute roles={["expert","admin"]}><DashboardExpert /></ProtectedRoute>} />
             <Route path="/affiliates" element={<Affiliates />} />
 
             {/* Protected routes (wrapped in AppShell) */}

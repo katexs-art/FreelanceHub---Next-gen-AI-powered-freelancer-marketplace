@@ -266,6 +266,39 @@ export type Database = {
         }
         Relationships: []
       }
+      categories: {
+        Row: {
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          listing_count: number | null
+          name: string
+          slug: string
+          sort_order: number | null
+        }
+        Insert: {
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          listing_count?: number | null
+          name: string
+          slug: string
+          sort_order?: number | null
+        }
+        Update: {
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          listing_count?: number | null
+          name?: string
+          slug?: string
+          sort_order?: number | null
+        }
+        Relationships: []
+      }
       channel_members: {
         Row: {
           channel_id: string
@@ -470,6 +503,71 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      experts: {
+        Row: {
+          bio: string | null
+          created_at: string
+          delivery_time: string | null
+          featured: boolean | null
+          id: string
+          languages: string[] | null
+          portfolio_links: string[] | null
+          rating: number | null
+          repeat_rate: number | null
+          response_time: string | null
+          specialty: string | null
+          starting_price: number | null
+          status: string
+          tier: string
+          total_jobs: number | null
+          years_experience: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          delivery_time?: string | null
+          featured?: boolean | null
+          id: string
+          languages?: string[] | null
+          portfolio_links?: string[] | null
+          rating?: number | null
+          repeat_rate?: number | null
+          response_time?: string | null
+          specialty?: string | null
+          starting_price?: number | null
+          status?: string
+          tier?: string
+          total_jobs?: number | null
+          years_experience?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          delivery_time?: string | null
+          featured?: boolean | null
+          id?: string
+          languages?: string[] | null
+          portfolio_links?: string[] | null
+          rating?: number | null
+          repeat_rate?: number | null
+          response_time?: string | null
+          specialty?: string | null
+          starting_price?: number | null
+          status?: string
+          tier?: string
+          total_jobs?: number | null
+          years_experience?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "experts_id_fkey"
+            columns: ["id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       integration_settings: {
         Row: {
@@ -706,6 +804,300 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          business_name: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          industry: string | null
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          business_name?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          industry?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          business_name?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          industry?: string | null
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      project_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_read: boolean | null
+          project_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          project_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_read?: boolean | null
+          project_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          client_id: string
+          created_at: string
+          delivery_deadline: string | null
+          description: string | null
+          expert_id: string
+          expert_payout: number
+          id: string
+          platform_fee: number
+          price: number
+          review_deadline: string | null
+          service_id: string | null
+          status: string
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          delivery_deadline?: string | null
+          description?: string | null
+          expert_id: string
+          expert_payout: number
+          id?: string
+          platform_fee: number
+          price: number
+          review_deadline?: string | null
+          service_id?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          delivery_deadline?: string | null
+          description?: string | null
+          expert_id?: string
+          expert_payout?: number
+          id?: string
+          platform_fee?: number
+          price?: number
+          review_deadline?: string | null
+          service_id?: string | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          client_id: string
+          created_at: string
+          expert_id: string
+          id: string
+          project_id: string
+          rating: number
+          review_text: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          expert_id: string
+          id?: string
+          project_id: string
+          rating: number
+          review_text?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          expert_id?: string
+          id?: string
+          project_id?: string
+          rating?: number
+          review_text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      river_sessions: {
+        Row: {
+          converted: boolean | null
+          created_at: string
+          id: string
+          intent: string | null
+          matched_expert_ids: string[] | null
+          messages: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          converted?: boolean | null
+          created_at?: string
+          id?: string
+          intent?: string | null
+          matched_expert_ids?: string[] | null
+          messages?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          converted?: boolean | null
+          created_at?: string
+          id?: string
+          intent?: string | null
+          matched_expert_ids?: string[] | null
+          messages?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "river_sessions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      services: {
+        Row: {
+          category: string | null
+          created_at: string
+          delivery_days: number | null
+          description: string | null
+          expert_id: string
+          id: string
+          is_active: boolean | null
+          price: number
+          revisions: number | null
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          delivery_days?: number | null
+          description?: string | null
+          expert_id: string
+          id?: string
+          is_active?: boolean | null
+          price: number
+          revisions?: number | null
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          delivery_days?: number | null
+          description?: string | null
+          expert_id?: string
+          id?: string
+          is_active?: boolean | null
+          price?: number
+          revisions?: number | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "services_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
           assigned_to: string | null
@@ -816,6 +1208,70 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          client_id: string
+          created_at: string
+          expert_id: string
+          expert_payout: number
+          id: string
+          platform_fee: number
+          project_id: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          amount: number
+          client_id: string
+          created_at?: string
+          expert_id: string
+          expert_payout: number
+          id?: string
+          platform_fee: number
+          project_id: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          amount?: number
+          client_id?: string
+          created_at?: string
+          expert_id?: string
+          expert_payout?: number
+          id?: string
+          platform_fee?: number
+          project_id?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_transfer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_expert_id_fkey"
+            columns: ["expert_id"]
+            isOneToOne: false
+            referencedRelation: "experts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       users: {
         Row: {
@@ -1259,6 +1715,11 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_marketplace_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_project_participant: {
+        Args: { _project_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       activity_type: "call" | "sms" | "email" | "chat" | "note"
