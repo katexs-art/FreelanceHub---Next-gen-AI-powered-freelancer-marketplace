@@ -171,6 +171,29 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ───────────────────────────── FEATURED GIGS ───────────────────────────── */}
+      <section className="border-b-hairline">
+        <div className="container-page py-24">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <Eyebrow>02 / Featured</Eyebrow>
+              <h2 className="display-md mt-3">Top-rated gigs, live now.</h2>
+            </div>
+            <Link to="/explore" className="hidden md:inline-flex items-center gap-1 eyebrow hover:text-foreground transition-colors">
+              Browse all <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {featuredLoading
+              ? Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)
+              : featured.length === 0
+                ? <p className="text-foreground-muted col-span-full">No gigs published yet.</p>
+                : featured.map((g) => <GigCard key={g.id} gig={g} />)}
+          </div>
+        </div>
+      </section>
+
       {/* ───────────────────────────── HOW IT WORKS ───────────────────────────── */}
       <section className="border-b-hairline">
         <div className="container-page py-24">
