@@ -16,7 +16,12 @@ type Template =
   | "project_cancelled"
   | "expert_approved"
   | "welcome_client"
-  | "welcome_expert";
+  | "welcome_expert"
+  | "order_placed"
+  | "order_delivered"
+  | "order_completed"
+  | "order_refunded"
+  | "new_message";
 
 interface Payload {
   template: Template;
@@ -111,6 +116,65 @@ function render(t: Template, d: Record<string, any> = {}): { subject: string; ht
           "Your expert application is under review. We'll email you the moment it's approved (usually within 24 hours).",
         ),
       };
+    case "order_placed": {
+      const url = d.order_id ? `${APP_URL}/orders/${d.order_id}` : APP_URL;
+      return {
+        subject: `Order ${d.order_number ?? ""} placed`,
+        html: shell(
+          d.is_seller ? "You have a new order" : "Your order is confirmed",
+          d.is_seller
+            ? `<b>${d.buyer_name ?? "A buyer"}</b> just placed order <b>${d.order_number ?? ""}</b> for <b>${d.gig_title ?? "your gig"}</b> ($${d.price ?? 0}).`
+            : `Payment received for <b>${d.gig_title ?? "your order"}</b>. Send your requirements so the seller can start.`,
+          { href: url, label: "Open order" },
+        ),
+      };
+    }
+    case "order_delivered": {
+      const url = d.order_id ? `${APP_URL}/orders/${d.order_id}` : APP_URL;
+      return {
+        subject: `Delivery for ${d.order_number ?? "your order"}`,
+        html: shell(
+          "Your order was delivered",
+          `<b>${d.seller_name ?? "The seller"}</b> just delivered <b>${d.gig_title ?? "your order"}</b>. Review the work and accept to release payment.`,
+          { href: url, label: "Review delivery" },
+        ),
+      };
+    }
+    case "order_completed": {
+      const url = d.order_id ? `${APP_URL}/orders/${d.order_id}` : APP_URL;
+      return {
+        subject: `Order ${d.order_number ?? ""} completed`,
+        html: shell(
+          "Order completed",
+          d.is_seller
+            ? `<b>${d.buyer_name ?? "Your buyer"}</b> accepted the delivery. Funds will clear in 14 days.`
+            : `Thanks for confirming. We'd love your review on <b>${d.gig_title ?? "this order"}</b>.`,
+          { href: url, label: "View order" },
+        ),
+      };
+    }
+    case "order_refunded": {
+      const url = d.order_id ? `${APP_URL}/orders/${d.order_id}` : APP_URL;
+      return {
+        subject: `Refund issued for ${d.order_number ?? "your order"}`,
+        html: shell(
+          "A refund was issued",
+          `Order <b>${d.order_number ?? ""}</b> was cancelled and <b>$${d.amount ?? 0}</b> has been refunded to the original payment method.`,
+          { href: url, label: "View order" },
+        ),
+      };
+    }
+    case "new_message": {
+      const url = d.conversation_id ? `${APP_URL}/inbox/${d.conversation_id}` : `${APP_URL}/inbox`;
+      return {
+        subject: `New message from ${d.sender_name ?? "someone"}`,
+        html: shell(
+          "You have a new message",
+          `<b>${d.sender_name ?? "Someone"}</b> sent you a message:<br/><br/><i>${(d.preview ?? "").slice(0, 200)}</i>`,
+          { href: url, label: "Open inbox" },
+        ),
+      };
+    }
   }
 }
 

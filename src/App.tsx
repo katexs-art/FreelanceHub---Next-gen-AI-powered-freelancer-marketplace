@@ -32,6 +32,7 @@ const OrderWorkspace = lazy(() => import("./pages/orders/OrderWorkspace"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const Earnings = lazy(() => import("./pages/seller/Earnings"));
 const Admin = lazy(() => import("./pages/admin/Admin"));
+const NotificationPreferences = lazy(() => import("./pages/account/NotificationPreferences"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -79,6 +80,7 @@ const App = () => (
             <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/inbox/:conversationId" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><DashboardPlaceholder title="Account settings" /></ProtectedRoute>} />
+            <Route path="/settings/notifications" element={<ProtectedRoute><NotificationPreferences /></ProtectedRoute>} />
 
             {/* Admin */}
             <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />

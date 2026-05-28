@@ -16,6 +16,8 @@ export default function Search() {
   const sort = (params.get("sort") as SortKey) ?? "best";
   const minPrice = params.get("min");
   const maxPrice = params.get("max");
+  const minRating = params.get("rating");
+  const maxDelivery = params.get("delivery");
 
   const [input, setInput] = useState(q);
   const [gigs, setGigs] = useState<GigCardData[]>([]);
@@ -34,6 +36,7 @@ export default function Search() {
       if (q) query = query.textSearch("search_vector", q, { type: "websearch", config: "english" });
       if (minPrice) query = query.gte("starting_price", parseInt(minPrice, 10));
       if (maxPrice) query = query.lte("starting_price", parseInt(maxPrice, 10));
+      if (minRating) query = query.gte("average_rating", parseFloat(minRating));
 
       if (sort === "newest") query = query.order("created_at", { ascending: false });
       else if (sort === "price_asc") query = query.order("starting_price", { ascending: true });
@@ -50,7 +53,7 @@ export default function Search() {
       setGigs((data ?? []).map((g) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
       setLoading(false);
     })();
-  }, [q, sort, minPrice, maxPrice]);
+  }, [q, sort, minPrice, maxPrice, minRating, maxDelivery]);
 
   const updateParam = (k: string, v: string) => {
     const next = new URLSearchParams(params);
@@ -73,13 +76,30 @@ export default function Search() {
         </form>
 
         <div className="mt-8 flex gap-8">
-          <aside className="w-56 shrink-0 hidden md:block">
-            <h3 className="font-semibold mb-3 text-sm">Budget</h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Input type="number" placeholder="Min $" value={minPrice ?? ""}
-                onChange={(e) => updateParam("min", e.target.value)} />
-              <Input type="number" placeholder="Max $" value={maxPrice ?? ""}
-                onChange={(e) => updateParam("max", e.target.value)} />
+          <aside className="w-56 shrink-0 hidden md:block space-y-6">
+            <div>
+              <h3 className="font-semibold mb-3 text-sm">Budget</h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Input type="number" placeholder="Min $" value={minPrice ?? ""}
+                  onChange={(e) => updateParam("min", e.target.value)} />
+                <Input type="number" placeholder="Max $" value={maxPrice ?? ""}
+                  onChange={(e) => updateParam("max", e.target.value)} />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-3 text-sm">Minimum rating</h3>
+              <div className="flex flex-col gap-1.5">
+                {[4.5, 4, 3].map((r) => (
+                  <label key={r} className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="radio" name="rating" checked={minRating === String(r)}
+                      onChange={() => updateParam("rating", String(r))} />
+                    {r}★ & up
+                  </label>
+                ))}
+                {minRating && (
+                  <button onClick={() => updateParam("rating", "")} className="text-xs text-foreground-muted hover:text-foreground mt-1 text-left">Clear</button>
+                )}
+              </div>
             </div>
           </aside>
 

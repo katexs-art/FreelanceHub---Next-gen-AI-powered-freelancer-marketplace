@@ -10,16 +10,19 @@ import { toast } from "sonner";
 import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare } from "lucide-react";
 import { LeaveReview } from "@/components/marketplace/LeaveReview";
 import { OrderResolutionActions } from "@/components/marketplace/OrderResolutionActions";
+import { OrderTimeline, DeliveryCountdown } from "@/components/marketplace/OrderTimeline";
+import { shouldEmail } from "@/lib/emailPrefs";
 
 interface Order {
   id: string; order_number: string; status: string; price: number;
   buyer_id: string; seller_id: string; gig_id: string; package_id: string | null;
   delivery_deadline: string | null; delivered_at: string | null;
-  requirements_submitted: boolean; revision_count: number;
+  requirements_submitted: boolean; requirements_submitted_at: string | null;
+  revision_count: number; created_at: string; completed_at: string | null;
   gigs: { title: string; thumbnail_url: string | null } | null;
   gig_packages: { title: string | null; delivery_days: number; revisions: number } | null;
-  buyer: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
-  seller: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+  buyer: { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string } | null;
+  seller: { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string } | null;
 }
 interface Requirement { id: string; question: string; field_type: string; is_required: boolean; sort_order: number; }
 interface Delivery { id: string; message: string | null; file_urls: string[]; created_at: string; is_revision: boolean; }
@@ -41,11 +44,12 @@ export default function OrderWorkspace() {
     if (!id) return;
     const { data } = await supabase.from("orders").select(`
       id, order_number, status, price, buyer_id, seller_id, gig_id, package_id,
-      delivery_deadline, delivered_at, requirements_submitted, revision_count,
+      delivery_deadline, delivered_at, requirements_submitted, requirements_submitted_at,
+      revision_count, created_at, completed_at,
       gigs:gig_id (title, thumbnail_url),
       gig_packages:package_id (title, delivery_days, revisions),
-      buyer:buyer_id (full_name, username, avatar_url),
-      seller:seller_id (full_name, username, avatar_url)
+      buyer:buyer_id (full_name, username, avatar_url, email),
+      seller:seller_id (full_name, username, avatar_url, email)
     `).eq("id", id).maybeSingle();
     setOrder(data as any);
     if (data) {
@@ -110,6 +114,15 @@ export default function OrderWorkspace() {
       }).eq("id", order.id);
       setDeliveryMsg(""); setDeliveryFiles([]);
       toast.success("Delivery sent");
+      // best-effort email to buyer
+      if (order.buyer?.email && shouldEmail("orders")) {
+        supabase.functions.invoke("send-marketplace-email", {
+          body: {
+            template: "order_delivered", to: order.buyer.email,
+            data: { order_id: order.id, order_number: order.order_number, gig_title: order.gigs?.title, seller_name: order.seller?.full_name ?? order.seller?.username },
+          },
+        });
+      }
       load();
     } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
   };
@@ -122,6 +135,14 @@ export default function OrderWorkspace() {
     setBusy(false);
     if (error) return toast.error(error.message);
     toast.success("Order completed");
+    if (order.seller?.email && shouldEmail("orders")) {
+      supabase.functions.invoke("send-marketplace-email", {
+        body: {
+          template: "order_completed", to: order.seller.email,
+          data: { order_id: order.id, order_number: order.order_number, is_seller: true, buyer_name: order.buyer?.full_name ?? order.buyer?.username },
+        },
+      });
+    }
     load();
   };
 
@@ -163,6 +184,10 @@ export default function OrderWorkspace() {
           <Stat icon={Clock} label="Deadline" value={order.delivery_deadline ? new Date(order.delivery_deadline).toLocaleDateString() : "—"} />
           <Stat icon={RotateCw} label="Revisions" value={`${order.revision_count}/${order.gig_packages?.revisions ?? 0}`} />
         </div>
+
+        <div className="mt-3"><DeliveryCountdown deadline={order.delivery_deadline} status={order.status} /></div>
+
+        <div className="mt-4"><OrderTimeline order={order as any} /></div>
 
         <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={async () => {

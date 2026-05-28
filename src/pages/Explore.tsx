@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -53,6 +54,8 @@ export default function Explore() {
               ? <p className="text-foreground-muted col-span-full">No gigs published yet.</p>
               : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
         </div>
+
+        <RecentlyViewed />
       </main>
       <SiteFooter />
     </div>

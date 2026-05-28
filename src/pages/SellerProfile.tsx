@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
+import { SellerLevelBadge } from "@/components/marketplace/SellerLevelBadge";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Calendar, Clock, MessageCircle } from "lucide-react";
 
@@ -88,6 +89,13 @@ export default function SellerProfile() {
               </div>
               <h1 className="font-bold text-lg mt-4">{name}</h1>
               {seller.username && <p className="text-sm text-foreground-muted">@{seller.username}</p>}
+              <div className="mt-2">
+                <SellerLevelBadge
+                  orders={gigs.reduce((s, g) => s + ((g as any).total_orders ?? 0), 0)}
+                  rating={gigs.reduce((s, g) => s + Number(g.average_rating ?? 0) * (g.total_reviews ?? 0), 0) / Math.max(1, gigs.reduce((s, g) => s + (g.total_reviews ?? 0), 0))}
+                  reviews={gigs.reduce((s, g) => s + (g.total_reviews ?? 0), 0)}
+                />
+              </div>
               {seller.is_online && <p className="mt-1 text-xs text-success">● Online</p>}
               <div className="mt-5 space-y-2 text-sm text-left">
                 {seller.country && (
