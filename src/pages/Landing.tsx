@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/components/ui/mono";
 import { ArrowUpRight, ArrowRight, Command } from "lucide-react";
+import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { supabase } from "@/integrations/supabase/client";
 
 const CATEGORIES = [
   { label: "Graphics & Design", count: "12.4K" },
@@ -33,10 +35,30 @@ export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [phIdx, setPhIdx] = useState(0);
+  const [featured, setFeatured] = useState<GigCardData[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
 
   useEffect(() => {
     const id = setInterval(() => setPhIdx((i) => (i + 1) % ROTATING.length), 2800);
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("gigs")
+        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+        .eq("status", "active")
+        .order("total_orders", { ascending: false })
+        .limit(8);
+      const ids = [...new Set((data ?? []).map((g) => g.seller_id))];
+      const { data: sellers } = ids.length
+        ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
+        : { data: [] as any };
+      const byId = new Map((sellers ?? []).map((s: any) => [s.id, s]));
+      setFeatured((data ?? []).map((g) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
+      setFeaturedLoading(false);
+    })();
   }, []);
 
   return (
@@ -149,11 +171,34 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ───────────────────────────── FEATURED GIGS ───────────────────────────── */}
+      <section className="border-b-hairline">
+        <div className="container-page py-24">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <Eyebrow>02 / Featured</Eyebrow>
+              <h2 className="display-md mt-3">Top-rated gigs, live now.</h2>
+            </div>
+            <Link to="/explore" className="hidden md:inline-flex items-center gap-1 eyebrow hover:text-foreground transition-colors">
+              Browse all <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {featuredLoading
+              ? Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)
+              : featured.length === 0
+                ? <p className="text-foreground-muted col-span-full">No gigs published yet.</p>
+                : featured.map((g) => <GigCard key={g.id} gig={g} />)}
+          </div>
+        </div>
+      </section>
+
       {/* ───────────────────────────── HOW IT WORKS ───────────────────────────── */}
       <section className="border-b-hairline">
         <div className="container-page py-24">
           <div className="text-center mb-16">
-            <Eyebrow>02 / Workflow</Eyebrow>
+            <Eyebrow>03 / Workflow</Eyebrow>
             <h2 className="display-md mt-3 max-w-2xl mx-auto">Three moves. Zero ceremony.</h2>
           </div>
 
@@ -177,7 +222,7 @@ export default function Landing() {
       <section className="border-b-hairline">
         <div className="container-page py-24 grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <Eyebrow>03 / Trust</Eyebrow>
+            <Eyebrow>04 / Trust</Eyebrow>
             <h2 className="display-md mt-3">Built for serious work.</h2>
             <p className="mt-6 text-foreground-muted max-w-md leading-relaxed">
               Verified sellers, escrowed payments, dispute resolution, KYC, and an admin layer that operates at platform scale.
@@ -219,7 +264,7 @@ export default function Landing() {
       {/* ───────────────────────────── FINAL CTA ───────────────────────────── */}
       <section>
         <div className="container-page py-32 text-center">
-          <Eyebrow>04 / Begin</Eyebrow>
+          <Eyebrow>05 / Begin</Eyebrow>
           <h2 className="display-lg mt-4 max-w-3xl mx-auto">
             The next decade of work
             <br />
