@@ -99,7 +99,7 @@ export default function GigEditor() {
     }
   };
 
-  const upsertGig = async (status: "draft" | "pending_review"): Promise<string | null> => {
+  const upsertGig = async (status: "draft" | "pending_review" | "active"): Promise<string | null> => {
     if (!user) return null;
     const basic = packages[0];
     const startingPrice = parseInt(basic.price || "0", 10) || 0;
