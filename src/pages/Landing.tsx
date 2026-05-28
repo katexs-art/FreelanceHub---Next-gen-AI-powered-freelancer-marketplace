@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Search, ArrowRight, Send } from "lucide-react";
 import logo from "@/assets/katexs-logo-white.jpg";
+import { useExperts } from "@/hooks/useExperts";
+import { ExpertCard } from "@/components/marketplace/ExpertCard";
 
 const C = {
   black: "#000000",
