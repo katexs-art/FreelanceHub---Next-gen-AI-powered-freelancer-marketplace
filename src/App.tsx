@@ -70,8 +70,14 @@ const App = () => (
             <Route path="/integrations-overview" element={<IntegrationsOverview />} />
             <Route path="/wegrow" element={<WeGrow />} />
             <Route path="/docs" element={<Docs />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<ClientSignup />} />
+            <Route path="/signup/client" element={<ClientSignup />} />
+            <Route path="/signup/expert" element={<ExpertSignup />} />
+            <Route path="/login" element={<MarketplaceLogin />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/expert/pending" element={<ExpertPending />} />
+            <Route path="/dashboard/client" element={<ProtectedRoute roles={["client","admin"]}><DashboardClient /></ProtectedRoute>} />
+            <Route path="/dashboard/expert" element={<ProtectedRoute roles={["expert","admin"]}><DashboardExpert /></ProtectedRoute>} />
             <Route path="/affiliates" element={<Affiliates />} />
 
             {/* Protected routes (wrapped in AppShell) */}
