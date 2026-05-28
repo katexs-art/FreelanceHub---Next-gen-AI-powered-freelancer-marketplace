@@ -15,6 +15,7 @@ const Login = lazy(() => import("./pages/auth/Login"));
 const Signup = lazy(() => import("./pages/auth/Signup"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const AuthCallback = lazy(() => import("./pages/auth/AuthCallback"));
 const Placeholder = lazy(() => import("./pages/Placeholder"));
 const DashboardPlaceholder = lazy(() => import("./pages/DashboardPlaceholder"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/signup" element={<Signup />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             {/* Public marketplace */}
             <Route path="/explore" element={<Explore />} />

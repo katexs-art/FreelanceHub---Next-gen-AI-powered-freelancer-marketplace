@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
+import { RoleSwitcher } from "@/components/layout/RoleSwitcher";
 import { Search, Menu, Command } from "lucide-react";
 import { useState } from "react";
 
@@ -51,6 +52,8 @@ export function SiteHeader() {
         </form>
 
         <div className="flex-1 lg:hidden" />
+
+        {user && <RoleSwitcher />}
 
         <div className="hidden md:flex items-center gap-2">
           {user ? (
