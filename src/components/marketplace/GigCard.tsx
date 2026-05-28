@@ -19,12 +19,17 @@ export function GigCard({ gig }: { gig: GigCardData }) {
   const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Seller";
   return (
     <Link to={`/gig/${gig.id}`} className="group block">
-      <div className="aspect-[4/3] rounded-xl overflow-hidden bg-background-elevated border border-border">
+      <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-background-elevated border border-border">
         {gig.thumbnail_url ? (
           <img src={gig.thumbnail_url} alt={gig.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-foreground-subtle text-xs">No image</div>
+        )}
+        {Number(gig.average_rating) >= 4.8 && gig.total_reviews >= 10 && (
+          <span className="absolute top-2 left-2 text-[10px] uppercase tracking-wide font-semibold bg-background/90 text-foreground border border-border rounded-full px-2 py-0.5">
+            Top Rated
+          </span>
         )}
       </div>
       <div className="mt-3 space-y-1.5">
