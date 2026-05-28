@@ -229,8 +229,6 @@ export default function GigDetail() {
               <ReviewsList gigId={gig.id} />
             </section>
           </div>
-        </div>
-        <RecentlyViewed excludeId={gig.id} />
 
           {/* Pricing panel */}
           <aside className="lg:sticky lg:top-20 lg:self-start">
@@ -302,6 +300,7 @@ export default function GigDetail() {
             </div>
           </aside>
         </div>
+        <RecentlyViewed excludeId={gig.id} />
       </main>
       <SiteFooter />
     </div>
