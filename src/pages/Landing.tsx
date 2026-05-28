@@ -4,6 +4,7 @@ import { Sparkles, Search, ArrowRight, Send } from "lucide-react";
 import logo from "@/assets/katexs-logo-white.jpg";
 import { useExperts } from "@/hooks/useExperts";
 import { ExpertCard } from "@/components/marketplace/ExpertCard";
+import { RiverChat } from "@/components/marketplace/RiverChat";
 
 const C = {
   black: "#000000",
@@ -616,26 +617,7 @@ function RiverSection() {
             <Sparkles size={14} /> Talk to River
           </button>
         </div>
-        <div style={{ background: C.card, padding: "1.6rem", display: "flex", flexDirection: "column", gap: "0.55rem" }}>
-          <Msg from="river">
-            <span style={{ color: C.neon }}>River:</span> What do you need built today? Tell me about your project and I will find the right expert.
-          </Msg>
-          <Msg from="user">
-            I need a full GHL account built for a dental office — automations, booking, and reporting.
-          </Msg>
-          <Msg from="river">
-            <span style={{ color: C.neon }}>River:</span> Got it. Found 3 GHL specialists who have built for dental practices. Jordan K. has 47 completed builds starting at $297. Want to see all three?
-          </Msg>
-          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
-            <input
-              placeholder="Type your project..."
-              style={{ flex: 1, background: "#0a0a0a", border: "0.5px solid #1a1a1a", borderRadius: 999, padding: "0.5rem 1rem", color: C.gray, fontSize: "0.78rem", outline: "none", fontFamily: FONT }}
-            />
-            <button style={{ background: C.white, color: C.black, borderRadius: 999, fontSize: "0.72rem", fontWeight: 600, padding: "0.5rem 1rem", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontFamily: FONT }}>
-              <Send size={12} /> Send
-            </button>
-          </div>
-        </div>
+        <RiverChat />
       </div>
     </section>
   );
