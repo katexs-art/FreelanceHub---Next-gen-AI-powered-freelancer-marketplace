@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Star, Clock, RefreshCw, Check, Heart, MessageSquare } from "lucide-react";
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
+import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -44,6 +45,8 @@ interface Seller {
   country: string | null;
   member_since: string;
   is_online: boolean;
+  response_rate: number | null;
+  response_time_minutes: number | null;
 }
 
 export default function GigDetail() {
@@ -157,7 +160,13 @@ export default function GigDetail() {
                   </div>
                   <div>
                     <div className="text-sm font-medium">{seller.full_name ?? seller.username}</div>
-                    {seller.is_online && <div className="text-xs text-success">● Online</div>}
+                    <div className="flex items-center gap-2 text-xs text-foreground-muted">
+                      {seller.is_online && <span className="text-success">● Online</span>}
+                      {seller.response_time_minutes != null && (
+                        <span>Responds in ~{formatResponseTime(seller.response_time_minutes)}</span>
+                      )}
+                      {seller.response_rate != null && <span>· {Number(seller.response_rate).toFixed(0)}% response rate</span>}
+                    </div>
                   </div>
                 </Link>
                 {gig.total_reviews > 0 && (
@@ -207,6 +216,7 @@ export default function GigDetail() {
             </section>
             <section className="mt-10">
               <h2 className="text-xl font-bold mb-4">Reviews {gig.total_reviews > 0 && <span className="text-foreground-muted font-normal">({gig.total_reviews})</span>}</h2>
+              <div className="mb-5"><RatingBreakdown gigId={gig.id} /></div>
               <ReviewsList gigId={gig.id} />
             </section>
           </div>
