@@ -16,6 +16,7 @@ const STEPS = [
 
 export default function BecomeSeller() {
   const { user, profile, refresh } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const isAlreadySeller = profile?.role === "seller" || profile?.role === "admin";
 
@@ -28,9 +29,11 @@ export default function BecomeSeller() {
       await supabase.from("seller_accounts").upsert({ seller_id: user.id }, { onConflict: "seller_id" });
       toast.success("Welcome aboard! You're now a seller.");
       await refresh();
+      navigate("/seller/dashboard");
     } else toast.error(error.message);
     setLoading(false);
   };
+
 
   return (
     <div className="min-h-screen flex flex-col">
