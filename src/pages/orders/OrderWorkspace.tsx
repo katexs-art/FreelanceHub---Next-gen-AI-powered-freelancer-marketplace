@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Clock, Package, CheckCircle2, Upload, RotateCw } from "lucide-react";
+import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare } from "lucide-react";
+import { LeaveReview } from "@/components/marketplace/LeaveReview";
 
 interface Order {
   id: string; order_number: string; status: string; price: number;
