@@ -5,11 +5,14 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { useCategories } from "@/hooks/useCategories";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function Explore() {
   const { data: categories } = useCategories();
+  const { user } = useAuth();
   const [gigs, setGigs] = useState<GigCardData[]>([]);
+  const [followed, setFollowed] = useState<GigCardData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,9 +29,26 @@ export default function Explore() {
         : { data: [] as any };
       const byId = new Map((sellers ?? []).map((s: any) => [s.id, s]));
       setGigs((data ?? []).map((g) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
+
+      if (user) {
+        const { data: f } = await supabase.from("seller_follows").select("seller_id").eq("follower_id", user.id);
+        const sellerIds = (f ?? []).map((r: any) => r.seller_id);
+        if (sellerIds.length) {
+          const { data: fg } = await supabase.from("gigs")
+            .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+            .in("seller_id", sellerIds).eq("status", "active")
+            .order("created_at", { ascending: false }).limit(8);
+          const fIds = [...new Set((fg ?? []).map((g: any) => g.seller_id))];
+          const { data: fs } = fIds.length
+            ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", fIds)
+            : { data: [] as any };
+          const fById = new Map((fs ?? []).map((s: any) => [s.id, s]));
+          setFollowed(((fg ?? []) as any).map((g: any) => ({ ...g, seller: fById.get(g.seller_id) ?? null })));
+        }
+      }
       setLoading(false);
     })();
-  }, []);
+  }, [user?.id]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -45,6 +65,15 @@ export default function Explore() {
             </Link>
           ))}
         </div>
+
+        {followed.length > 0 && (
+          <section className="mt-10">
+            <h2 className="text-xl font-bold mb-6">From sellers you follow</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {followed.map((g) => <GigCard key={g.id} gig={g} />)}
+            </div>
+          </section>
+        )}
 
         <h2 className="text-xl font-bold mt-12 mb-6">Trending right now</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
