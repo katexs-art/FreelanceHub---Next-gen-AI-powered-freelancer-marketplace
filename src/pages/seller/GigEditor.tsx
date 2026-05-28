@@ -36,13 +36,7 @@ export default function GigEditor() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [gigId, setGigId] = useState<string | null>(id ?? null);
-  const [payoutsEnabled, setPayoutsEnabled] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("seller_accounts").select("payouts_enabled").eq("seller_id", user.id).maybeSingle()
-      .then(({ data }) => setPayoutsEnabled(!!data?.payouts_enabled));
-  }, [user]);
 
   const [overview, setOverview] = useState({
     title: "",
@@ -163,7 +157,7 @@ export default function GigEditor() {
     if (!overview.title || !overview.category) return toast.error("Add a title and category first");
     if (!packages[0].price || !packages[0].title) return toast.error("Basic package needs a title and price");
     if (!description) return toast.error("Add a description");
-    if (!payoutsEnabled) return toast.error("Finish payout setup in Earnings before publishing");
+    
     setSaving(true);
     const id = await upsertGig("active"); // auto-approve for now
     setSaving(false);
@@ -301,14 +295,8 @@ export default function GigEditor() {
               <p className="text-sm text-foreground-muted mb-6">
                 Double-check the basics. You can edit your gig any time after publishing.
               </p>
-              {payoutsEnabled === false && (
-                <div className="mb-6 rounded-lg border border-border bg-background-elevated p-4 text-sm">
-                  <p className="font-medium mb-1">Payout setup required</p>
-                  <p className="text-foreground-muted">
-                    Finish connecting your bank in <a href="/seller/earnings" className="underline">Earnings</a> before publishing. Buyers can only check out from sellers with payouts enabled.
-                  </p>
-                </div>
-              )}
+
+
               <div className="space-y-2 text-sm">
                 <Row k="Title" v={overview.title || "—"} />
                 <Row k="Category" v={overview.category || "—"} />
