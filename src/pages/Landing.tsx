@@ -1,603 +1,799 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { PublicNav } from "@/components/layout/PublicNav";
-import { PublicFooter } from "@/components/layout/PublicFooter";
-import {
-  Check,
-  PhoneOff,
-  Clock,
-  Layers,
-  BarChart3,
-  Phone,
-  MessageSquare,
-  Users,
-  Workflow,
-  Inbox,
-  Zap,
-  Bot,
-  Webhook,
-  CalendarCheck,
-} from "lucide-react";
+import { Sparkles, Search, ArrowRight, Send } from "lucide-react";
+import logo from "@/assets/katexs-logo-white.jpg";
 
-/* ------------------------------------------------------------------ */
-/*  HERO                                                               */
-/* ------------------------------------------------------------------ */
+const C = {
+  black: "#000000",
+  white: "#ffffff",
+  gray: "#888888",
+  dim: "#444444",
+  border: "#1c1c1c",
+  border2: "#2a2a2a",
+  card: "#050505",
+  cardHover: "#0c0c0c",
+  neon: "#caff00",
+  neonDim: "rgba(202,255,0,0.12)",
+};
+
+const FONT = `'DM Sans', system-ui, sans-serif`;
+const MONO = `'Space Mono', ui-monospace, monospace`;
+
+// ───── Buttons ─────
+const btnOutline: React.CSSProperties = {
+  border: "1px solid #333",
+  color: C.white,
+  background: "transparent",
+  borderRadius: 999,
+  fontSize: "0.82rem",
+  padding: "0.55rem 1.4rem",
+  cursor: "pointer",
+  fontFamily: FONT,
+  transition: "all 0.2s",
+};
+const btnFilled: React.CSSProperties = {
+  border: `1px solid ${C.white}`,
+  color: C.black,
+  background: C.white,
+  borderRadius: 999,
+  fontSize: "0.82rem",
+  padding: "0.55rem 1.4rem",
+  cursor: "pointer",
+  fontFamily: FONT,
+  fontWeight: 600,
+  transition: "opacity 0.2s",
+};
+const btnNeon: React.CSSProperties = {
+  border: `1px solid ${C.neon}`,
+  color: C.black,
+  background: C.neon,
+  borderRadius: 999,
+  fontWeight: 600,
+  cursor: "pointer",
+  fontFamily: FONT,
+  transition: "opacity 0.2s",
+};
+
+// ───── Nav ─────
+function Nav() {
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll);
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+  const links = ["Find talent", "Post a job", "Sell", "Enterprise", "Pricing"];
+  return (
+    <nav
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        height: 64,
+        background: "rgba(0,0,0,0.95)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: `0.5px solid ${scrolled ? "#2a2a2a" : C.border}`,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "0 2rem",
+      }}
+    >
+      <Link to="/" aria-label="Katexs home">
+        <img src={logo} alt="Katexs" style={{ height: 26, display: "block" }} />
+      </Link>
+      <div className="katexs-nav-links" style={{ display: "flex", gap: "1.75rem" }}>
+        {links.map((l) => (
+          <a
+            key={l}
+            href="#"
+            style={{
+              color: C.gray,
+              fontSize: "0.8rem",
+              letterSpacing: "0.01em",
+              textDecoration: "none",
+              transition: "color 0.15s",
+              fontFamily: FONT,
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.color = C.white)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = C.gray)}
+          >
+            {l}
+          </a>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <Link to="/login" style={btnOutline as any}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#555"; (e.currentTarget as HTMLElement).style.background = "#111"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#333"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >Log in</Link>
+        <Link to="/signup" style={btnFilled as any}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "0.88")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
+        >Join free</Link>
+      </div>
+    </nav>
+  );
+}
+
+// ───── Hero ─────
 function Hero() {
   return (
     <section
-      className="relative min-h-screen flex flex-col items-center justify-center px-6 overflow-hidden"
-      style={{ background: "hsl(var(--background))" }}
-    >
-      {/* grid overlay */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)",
-          backgroundSize: "56px 56px",
-          mask: "radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 100%)",
-          WebkitMask:
-            "radial-gradient(ellipse 70% 60% at 50% 50%, black 30%, transparent 100%)",
-        }}
-      />
-
-      <div className="relative z-10 flex flex-col items-center text-center max-w-3xl">
-        {/* top badge */}
-        <div
-          className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-8 border"
-          style={{
-            background: "#111114",
-            borderColor: "rgba(255,255,255,0.10)",
-            fontSize: "11px",
-            color: "hsl(var(--foreground-secondary))",
-          }}
-        >
-          <span
-            className="h-1.5 w-1.5 rounded-full"
-            style={{ background: "hsl(var(--accent-green))" }}
-          />
-          RIVER AI — THE OPERATING SYSTEM FOR SERVICE BUSINESSES
-        </div>
-
-        {/* headline */}
-        <h1
-          className="font-heading text-foreground"
-          style={{
-            fontSize: "clamp(40px,6vw,72px)",
-            fontWeight: 700,
-            letterSpacing: "-0.04em",
-            lineHeight: 1.05,
-          }}
-        >
-          Run your entire business
-          <br />
-          on one{" "}
-          <span
-            className="relative inline-block"
-            style={{
-              textDecorationLine: "underline",
-              textDecorationColor: "hsl(var(--accent-green))",
-              textUnderlineOffset: "6px",
-              textDecorationThickness: "3px",
-            }}
-          >
-            platform
-          </span>
-          .
-        </h1>
-
-        {/* subheadline */}
-        <p
-          className="text-foreground-secondary mt-6 mx-auto"
-          style={{ fontSize: "16px", maxWidth: "500px", lineHeight: 1.7 }}
-        >
-          Voice AI, Chat AI, CRM, workflows, automations, and a unified inbox —
-          all in one place. River handles everything. You focus on the work.
-        </p>
-
-        {/* price strip */}
-        <div
-          className="mt-8 inline-flex items-center gap-4 rounded-[10px] border"
-          style={{
-            background: "#111114",
-            borderColor: "rgba(255,255,255,0.10)",
-            padding: "14px 24px",
-          }}
-        >
-          <span
-            className="font-semibold uppercase"
-            style={{
-              fontSize: "11px",
-              letterSpacing: "0.08em",
-              color: "hsl(var(--accent-green))",
-            }}
-          >
-            FREE SETUP
-          </span>
-          <span
-            className="h-5"
-            style={{
-              width: "1px",
-              background: "rgba(255,255,255,0.12)",
-            }}
-          />
-          <span className="text-foreground font-bold" style={{ fontSize: "20px" }}>
-            $50/mo
-          </span>
-          <span
-            className="h-5"
-            style={{
-              width: "1px",
-              background: "rgba(255,255,255,0.12)",
-            }}
-          />
-          <span className="text-foreground-secondary" style={{ fontSize: "12px" }}>
-            14-day free trial / Cancel anytime
-          </span>
-        </div>
-
-        {/* cta buttons */}
-        <div className="mt-8 flex items-center gap-3">
-          <Link to="/signup">
-            <Button size="lg">Start free trial →</Button>
-          </Link>
-          <Link to="/pricing">
-            <Button variant="ghost" size="lg">
-              See how it works
-            </Button>
-          </Link>
-        </div>
-
-        {/* proof row */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
-          {[
-            "24/7 AI call answering",
-            "Live in 24 hours",
-            "No tech skills needed",
-            "30-day money back",
-          ].map((item) => (
-            <span
-              key={item}
-              className="inline-flex items-center gap-1.5"
-              style={{ fontSize: "12px", color: "hsl(var(--foreground-secondary))" }}
-            >
-              <Check
-                className="h-3.5 w-3.5"
-                style={{ color: "hsl(var(--accent-green))" }}
-              />
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  DASHBOARD PREVIEW                                                  */
-/* ------------------------------------------------------------------ */
-function DashboardPreview() {
-  const metrics = [
-    { label: "Calls today", value: "12", delta: "+4" },
-    { label: "New leads", value: "8", delta: "+3" },
-    { label: "Booked", value: "6", delta: "+2" },
-    { label: "Won this week", value: "$4.2k", delta: "+$1.1k" },
-  ];
-
-  return (
-    <section className="pb-20" style={{ background: "hsl(var(--background))" }}>
-      <div className="mx-auto" style={{ maxWidth: "860px", padding: "0 32px" }}>
-        <div
-          className="border rounded-[10px] overflow-hidden"
-          style={{ borderColor: "rgba(255,255,255,0.10)" }}
-        >
-          {/* browser chrome */}
-          <div
-            className="flex items-center gap-2 px-4"
-            style={{
-              background: "#08080a",
-              height: "32px",
-              borderRadius: "10px 10px 0 0",
-            }}
-          >
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: "#f09595" }}
-            />
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: "#EF9F27" }}
-            />
-            <span
-              className="h-2.5 w-2.5 rounded-full"
-              style={{ background: "hsl(var(--accent-green))" }}
-            />
-            <span
-              className="ml-3 text-foreground-muted"
-              style={{ fontSize: "11px" }}
-            >
-              katexs.com/dashboard
-            </span>
-          </div>
-
-          {/* preview body */}
-          <div
-            className="p-4"
-            style={{
-              background: "hsl(var(--background-card))",
-            }}
-          >
-            {/* metric cards */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {metrics.map((m) => (
-                <div
-                  key={m.label}
-                  className="rounded-lg border p-3"
-                  style={{
-                    background: "hsl(var(--background-elevated))",
-                    borderColor: "rgba(255,255,255,0.06)",
-                  }}
-                >
-                  <p
-                    className="text-foreground-secondary"
-                    style={{ fontSize: "11px" }}
-                  >
-                    {m.label}
-                  </p>
-                  <p
-                    className="text-foreground font-bold mt-1"
-                    style={{ fontSize: "20px" }}
-                  >
-                    {m.value}
-                  </p>
-                  <span
-                    style={{
-                      fontSize: "11px",
-                      color: "hsl(var(--accent-green))",
-                    }}
-                  >
-                    {m.delta}
-                  </span>
-                </div>
-              ))}
-            </div>
-
-            {/* River AI widget */}
-            <div
-              className="mt-4 rounded-lg p-3 flex items-start gap-3"
-              style={{
-                background: "rgba(127,119,221,0.08)",
-                borderTop: "2px solid hsl(var(--accent-purple))",
-              }}
-            >
-              <span
-                className="font-semibold shrink-0"
-                style={{
-                  fontSize: "11px",
-                  color: "hsl(var(--accent-purple))",
-                  letterSpacing: "0.04em",
-                }}
-              >
-                River AI
-              </span>
-              <p className="text-foreground-secondary" style={{ fontSize: "12px" }}>
-                You missed 3 calls last night. River sent SMS callbacks to all 3
-                within 60 seconds — 2 booked. $1,800 recovered while you slept.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  SCROLLING MARQUEE                                                  */
-/* ------------------------------------------------------------------ */
-function Marquee() {
-  const items = [
-    "Voice AI",
-    "Chat AI",
-    "Free CRM",
-    "Missed call text-back",
-    "Workflow builder",
-    "Unified inbox",
-    "Webhooks",
-    "Automations",
-    "River AI",
-    "14-day free trial",
-  ];
-  const doubled = [...items, ...items];
-
-  return (
-    <section
-      className="overflow-hidden border-y"
       style={{
-        background: "#08080a",
-        borderColor: "rgba(255,255,255,0.06)",
-        padding: "12px 0",
+        minHeight: "calc(100vh - 64px)",
+        background: C.black,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "4rem 1.5rem",
+        textAlign: "center",
       }}
     >
-      <div className="flex animate-marquee whitespace-nowrap">
-        {doubled.map((item, i) => (
-          <span key={i} className="inline-flex items-center gap-4 mx-4">
-            <span
-              className="uppercase"
-              style={{
-                fontSize: "11px",
-                color: "hsl(var(--foreground-secondary))",
-                letterSpacing: "0.1em",
-              }}
-            >
-              {item}
-            </span>
-            <span
-              className="h-[3px] w-[3px] rounded-full"
-              style={{ background: "hsl(var(--foreground-muted))" }}
-            />
-          </span>
+      <div
+        style={{
+          border: "0.5px solid #222",
+          background: "transparent",
+          padding: "0.3rem 1rem",
+          borderRadius: 999,
+          color: C.gray,
+          fontSize: "0.78rem",
+          marginBottom: "2rem",
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "0.5rem",
+          fontFamily: FONT,
+        }}
+      >
+        <span
+          style={{
+            background: C.neon,
+            color: C.black,
+            fontWeight: 700,
+            fontSize: "0.62rem",
+            padding: "0.1rem 0.4rem",
+            borderRadius: 999,
+            letterSpacing: "0.04em",
+          }}
+        >
+          NEW
+        </span>
+        World's first AI-only marketplace — live now →
+      </div>
+
+      <h1
+        className="katexs-hero-headline"
+        style={{
+          fontFamily: FONT,
+          fontWeight: 700,
+          letterSpacing: "-0.03em",
+          lineHeight: 0.96,
+          fontSize: "clamp(3rem, 8.5vw, 7.5rem)",
+          margin: 0,
+        }}
+      >
+        <div style={{ color: C.white }}>Every AI Expert.</div>
+        <div style={{ color: C.neon }}>One Marketplace.</div>
+        <div style={{ color: C.border2 }}>Built Different.</div>
+      </h1>
+
+      <div style={{ marginTop: "2rem", marginBottom: "2.5rem", maxWidth: 720 }}>
+        <p style={{ color: C.white, fontWeight: 600, fontSize: "1rem", margin: 0, fontFamily: FONT }}>
+          Services. Tools. Agents. Consulting. Education.
+        </p>
+        <p style={{ color: C.gray, fontWeight: 300, fontSize: "0.95rem", marginTop: "0.5rem", fontFamily: FONT }}>
+          River finds the right expert for your business in seconds — not days.
+        </p>
+      </div>
+
+      <div className="katexs-hero-buttons" style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
+        <button
+          style={{ ...btnNeon, fontSize: "0.85rem", padding: "0.85rem 2rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700, display: "inline-flex", alignItems: "center", gap: "0.5rem" }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "0.88")}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
+        >
+          <Sparkles size={16} /> Find My Expert
+        </button>
+        <button
+          style={{ ...btnOutline, fontSize: "0.85rem", padding: "0.85rem 2rem", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600 }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#555"; (e.currentTarget as HTMLElement).style.background = "#111"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.borderColor = "#333"; (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+        >
+          Sell on Katexs →
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ───── Search ─────
+function SearchSection() {
+  const tags = ["GHL full build", "Voice AI setup", "Automation workflows", "AI consulting", "Chat agents", "Prompt engineering"];
+  return (
+    <section style={{ padding: "1.5rem 2.5rem", background: C.black }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "0.6rem",
+          border: "0.5px solid #222",
+          background: C.card,
+          borderRadius: 999,
+          padding: "0.5rem 0.5rem 0.5rem 1.25rem",
+          maxWidth: 580,
+          margin: "0 auto",
+        }}
+      >
+        <Search size={16} color={C.gray} />
+        <input
+          placeholder="Search 2,400+ AI & GHL experts..."
+          style={{
+            flex: 1,
+            background: "transparent",
+            border: "none",
+            outline: "none",
+            color: C.gray,
+            fontSize: "0.88rem",
+            fontFamily: FONT,
+          }}
+        />
+        <button style={{ ...btnFilled, padding: "0.5rem 1.2rem", fontSize: "0.78rem" }}>Search</button>
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "0.5rem", marginTop: "1.2rem" }}>
+        {tags.map((t) => (
+          <button
+            key={t}
+            style={{
+              border: "0.5px solid #1a1a1a",
+              color: C.dim,
+              borderRadius: 999,
+              padding: "0.25rem 0.85rem",
+              fontSize: "0.72rem",
+              background: "transparent",
+              cursor: "pointer",
+              fontFamily: FONT,
+              transition: "all 0.15s",
+            }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = C.gray; (e.currentTarget as HTMLElement).style.borderColor = "#333"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = C.dim; (e.currentTarget as HTMLElement).style.borderColor = "#1a1a1a"; }}
+          >
+            {t}
+          </button>
         ))}
       </div>
     </section>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  PAIN POINTS                                                        */
-/* ------------------------------------------------------------------ */
-function PainPoints() {
-  const cards = [
-    {
-      icon: PhoneOff,
-      title: "Missing calls after hours",
-      desc: "Every missed call is a job going to your competitor.",
-      fix: "→ River answers every call 24/7",
-    },
-    {
-      icon: Clock,
-      title: "Slow lead follow-up",
-      desc: "Leads go cold in 5 minutes. Speed wins.",
-      fix: "→ River responds in under 60 seconds",
-    },
-    {
-      icon: Layers,
-      title: "Too many disconnected tools",
-      desc: "7 apps you can't keep up with wastes hours daily.",
-      fix: "→ Everything in one platform",
-    },
-    {
-      icon: BarChart3,
-      title: "No visibility into revenue",
-      desc: "You don't know what's working or what River recovered.",
-      fix: "→ Live ROI dashboard shows everything",
-    },
+// ───── Stats ─────
+function Stats() {
+  const stats = [
+    { num: "2,400", suf: "+", label: "Verified experts" },
+    { num: "14", suf: "K+", label: "Projects completed" },
+    { num: "4.9", suf: "★", label: "Average rating" },
+    { num: "47", suf: "sec", label: "River match time" },
   ];
-
   return (
     <section
-      className="border-t"
+      className="katexs-stats"
       style={{
-        background: "hsl(var(--background))",
-        borderColor: "rgba(255,255,255,0.06)",
-        padding: "80px 32px",
+        display: "grid",
+        gridTemplateColumns: "repeat(4, 1fr)",
+        borderTop: `0.5px solid ${C.border}`,
+        borderBottom: `0.5px solid ${C.border}`,
+        background: C.black,
       }}
     >
-      <div className="max-w-5xl mx-auto">
-        <p
-          className="uppercase"
+      {stats.map((s, i) => (
+        <div
+          key={s.label}
           style={{
-            fontSize: "10px",
-            color: "hsl(var(--foreground-secondary))",
-            letterSpacing: "0.12em",
-            marginBottom: "12px",
+            padding: "1.6rem 1.5rem",
+            textAlign: "center",
+            borderRight: i < stats.length - 1 ? `0.5px solid ${C.border}` : "none",
           }}
         >
-          {"// the problem"}
-        </p>
-        <h2
-          className="font-heading text-foreground"
-          style={{
-            fontSize: "28px",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            maxWidth: "520px",
-            lineHeight: 1.2,
-            marginBottom: "40px",
-          }}
-        >
-          Service businesses lose money every day from the same 4 problems.
-        </h2>
+          <div style={{ fontSize: "2rem", fontWeight: 700, color: C.white, letterSpacing: "-0.03em", fontFamily: FONT }}>
+            {s.num}
+            <span style={{ color: C.neon }}>{s.suf}</span>
+          </div>
+          <div style={{ fontSize: "0.72rem", color: C.gray, marginTop: "0.3rem", fontFamily: FONT }}>{s.label}</div>
+        </div>
+      ))}
+    </section>
+  );
+}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {cards.map((c) => (
-            <div
-              key={c.title}
-              className="rounded-[10px] border"
+// ───── Eyebrow ─────
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ fontSize: "0.72rem", color: C.gray, letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: "1.2rem", fontFamily: FONT }}>
+      {children}
+    </div>
+  );
+}
+
+// ───── Categories ─────
+function Categories() {
+  const cats = [
+    { icon: "ti-robot", name: "AI Services", desc: "Implementation, agents, voice, chat", count: "840 listings" },
+    { icon: "ti-settings-automation", name: "GHL Builds", desc: "Accounts, snapshots, workflows, SaaS", count: "510 listings" },
+    { icon: "ti-brain", name: "Consulting", desc: "Strategy, audits, roadmaps, advisory", count: "290 listings" },
+    { icon: "ti-school", name: "Education", desc: "Courses, certifications, training", count: "180 listings" },
+    { icon: "ti-code", name: "Integrations", desc: "API, Zapier, Make, webhooks", count: "220 listings" },
+    { icon: "ti-device-desktop-analytics", name: "AI Tools", desc: "Software, agents, prompt packs", count: "150 listings" },
+    { icon: "ti-megaphone", name: "Funnels & Pages", desc: "Landing pages, booking pages", count: "175 listings" },
+    { icon: "ti-chart-bar", name: "Reporting", desc: "Dashboards, analytics, pipelines", count: "130 listings" },
+  ];
+  return (
+    <section style={{ padding: "4rem 2.5rem", background: C.black }}>
+      <Eyebrow>Browse by category</Eyebrow>
+      <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 700, letterSpacing: "-0.02em", color: C.white, marginBottom: "2rem", fontFamily: FONT }}>
+        Every AI service. All in one place.
+      </h2>
+      <div className="katexs-cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
+        {cats.map((c) => (
+          <div
+            key={c.name}
+            style={{
+              border: `0.5px solid ${C.border}`,
+              borderRadius: 12,
+              padding: "1.3rem 1.1rem",
+              background: C.card,
+              cursor: "pointer",
+              transition: "all 0.25s",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.background = C.cardHover; }}
+            onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card; }}
+          >
+            <i className={`ti ${c.icon}`} style={{ fontSize: "1.3rem", color: C.white, marginBottom: "0.7rem", display: "block" }} />
+            <div style={{ fontSize: "0.88rem", fontWeight: 500, color: C.white, fontFamily: FONT }}>{c.name}</div>
+            <div style={{ fontSize: "0.75rem", color: C.gray, lineHeight: 1.5, marginTop: "0.25rem", fontFamily: FONT }}>{c.desc}</div>
+            <div style={{ fontSize: "0.68rem", color: "#333", marginTop: "0.5rem", fontFamily: MONO }}>{c.count}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ───── Listings ─────
+type Expert = {
+  initials: string;
+  bg: string; bd: string; col: string;
+  online: boolean;
+  name: string; role: string;
+  category: string;
+  service: string;
+  respond: string; done: string; repeat: string;
+  price: string; rating: string; reviews: string;
+};
+
+const experts: Expert[] = [
+  { initials: "JK", bg: "#111100", bd: "#2a2a00", col: C.neon, online: true, name: "Jordan K.", role: "GHL Specialist", category: "GHL", service: "Full GHL account build with custom workflows, automations, and industry-specific snapshot — delivered and tested", respond: "1 hr", done: "47", repeat: "94%", price: "297", rating: "4.9", reviews: "47" },
+  { initials: "MS", bg: "#001810", bd: "#002a1a", col: "#1d9e75", online: true, name: "Maya S.", role: "AI Architect", category: "Voice AI", service: "Voice AI agent built, deployed, and tested for your business — fully live and answering calls within days", respond: "30 min", done: "83", repeat: "97%", price: "497", rating: "5.0", reviews: "83" },
+  { initials: "RL", bg: "#180e00", bd: "#2a1800", col: "#ba7517", online: false, name: "Ryan L.", role: "AI Consultant", category: "Strategy", service: "AI strategy session and full infrastructure roadmap for your business — 60-minute working session", respond: "2 hrs", done: "31", repeat: "88%", price: "197", rating: "4.8", reviews: "31" },
+  { initials: "TW", bg: "#00101a", bd: "#00182a", col: "#378add", online: false, name: "Tom W.", role: "Automation Specialist", category: "Automation", service: "Complex GHL workflow architecture and multi-step automation buildout — any business, any niche, any complexity", respond: "3 hrs", done: "22", repeat: "90%", price: "347", rating: "4.9", reviews: "22" },
+  { initials: "AK", bg: "#1a0019", bd: "#2a0028", col: "#d4537e", online: true, name: "Aisha K.", role: "Chat AI Developer", category: "Chat AI", service: "Intelligent chat agent built for your website, SMS, and social channels — fully automated, 24/7", respond: "1 hr", done: "61", repeat: "96%", price: "397", rating: "4.9", reviews: "61" },
+  { initials: "DM", bg: "#091500", bd: "#142300", col: "#639922", online: false, name: "Daniel M.", role: "GHL SaaS Expert", category: "GHL SaaS", service: "Full GHL SaaS mode setup — pricing tiers, rebilling, branded interface, sub-account templates, and onboarding flows", respond: "4 hrs", done: "38", repeat: "91%", price: "597", rating: "4.8", reviews: "38" },
+];
+
+function Listings() {
+  const filters = ["All", "GHL Builds", "Voice AI", "Automations", "Consulting", "Chat AI", "Education", "Integrations"];
+  const [active, setActive] = useState("All");
+  return (
+    <section style={{ padding: "0 2.5rem 4rem", background: C.black }}>
+      <Eyebrow>Top rated this week</Eyebrow>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem", marginBottom: "1.5rem" }}>
+        {filters.map((f) => {
+          const isActive = active === f;
+          return (
+            <button
+              key={f}
+              onClick={() => setActive(f)}
               style={{
-                background: "hsl(var(--background-card))",
-                borderColor: "rgba(255,255,255,0.06)",
-                padding: "20px",
+                border: `1px solid ${isActive ? "#444" : C.border}`,
+                color: isActive ? C.white : C.gray,
+                background: isActive ? "#111" : "transparent",
+                borderRadius: 999,
+                padding: "0.3rem 0.9rem",
+                fontSize: "0.72rem",
+                cursor: "pointer",
+                fontFamily: FONT,
+                transition: "all 0.15s",
               }}
             >
-              <div
-                className="h-7 w-7 rounded-md flex items-center justify-center border mb-3"
-                style={{
-                  background: "hsl(var(--background-elevated))",
-                  borderColor: "rgba(255,255,255,0.10)",
-                }}
-              >
-                <c.icon className="h-3.5 w-3.5 text-foreground-secondary" />
-              </div>
-              <p
-                className="text-foreground font-semibold"
-                style={{ fontSize: "13px", marginBottom: "4px" }}
-              >
-                {c.title}
-              </p>
-              <p
-                className="text-foreground-secondary"
-                style={{ fontSize: "12px", marginBottom: "10px" }}
-              >
-                {c.desc}
-              </p>
-              <p style={{ fontSize: "11px", color: "hsl(var(--accent-green))" }}>
-                {c.fix}
-              </p>
+              {f}
+            </button>
+          );
+        })}
+      </div>
+      <div className="katexs-listings-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
+        {experts.map((e, i) => (
+          <ListingCard key={i} e={e} />
+        ))}
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}>
+        <button
+          style={{ ...btnOutline, color: C.gray, borderColor: "#222" }}
+          onMouseEnter={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = "#444"; (ev.currentTarget as HTMLElement).style.color = C.white; }}
+          onMouseLeave={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = "#222"; (ev.currentTarget as HTMLElement).style.color = C.gray; }}
+        >
+          Load more experts →
+        </button>
+      </div>
+    </section>
+  );
+}
+
+function ListingCard({ e }: { e: Expert }) {
+  const isTopSeller = e.role !== "Automation Specialist";
+  return (
+    <div
+      style={{
+        border: `0.5px solid ${C.border}`,
+        borderRadius: 12,
+        padding: "1.3rem",
+        background: C.card,
+        cursor: "pointer",
+        display: "flex",
+        flexDirection: "column",
+        transition: "all 0.25s",
+      }}
+      onMouseEnter={(ev) => { ev.currentTarget.style.borderColor = C.border2; ev.currentTarget.style.background = C.cardHover; }}
+      onMouseLeave={(ev) => { ev.currentTarget.style.borderColor = C.border; ev.currentTarget.style.background = C.card; }}
+    >
+      {/* Top row */}
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.9rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.65rem" }}>
+          <div style={{ position: "relative", width: 38, height: 38 }}>
+            <div style={{
+              width: 38, height: 38, borderRadius: "50%",
+              background: e.bg, border: `1px solid ${e.bd}`,
+              color: e.col, display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: "0.78rem", fontWeight: 700, fontFamily: FONT,
+            }}>{e.initials}</div>
+            {e.online && (
+              <span style={{ position: "absolute", bottom: 1, right: 1, width: 8, height: 8, background: C.neon, borderRadius: "50%", border: `1.5px solid ${C.card}` }} />
+            )}
+          </div>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <span style={{ color: C.white, fontSize: "0.82rem", fontWeight: 600, fontFamily: FONT }}>{e.name}</span>
+              <i className="ti ti-circle-check-filled" style={{ color: C.neon, fontSize: "0.85rem" }} />
             </div>
-          ))}
+            <div style={{ color: C.gray, fontSize: "0.7rem", fontFamily: FONT }}>{e.role}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "0.3rem" }}>
+          {isTopSeller ? (
+            <span style={{ border: "1px solid rgba(202,255,0,0.2)", color: C.neon, fontSize: "0.6rem", padding: "0.15rem 0.5rem", borderRadius: 999, fontFamily: MONO, letterSpacing: "0.05em" }}>TOP SELLER</span>
+          ) : (
+            <span style={{ border: "1px solid #222", color: C.gray, fontSize: "0.6rem", padding: "0.15rem 0.5rem", borderRadius: 999, fontFamily: MONO, letterSpacing: "0.05em" }}>RISING</span>
+          )}
+          <span style={{ border: "1px solid #222", color: C.gray, fontSize: "0.6rem", padding: "0.15rem 0.5rem", borderRadius: 999, fontFamily: MONO, letterSpacing: "0.05em" }}>{e.category.toUpperCase()}</span>
+        </div>
+      </div>
+
+      <div style={{ fontSize: "0.83rem", fontWeight: 300, color: "#555", lineHeight: 1.65, marginBottom: "0.85rem", flex: 1, fontFamily: FONT }}>
+        {e.service}
+      </div>
+
+      {/* Portfolio thumbs */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", marginBottom: "0.9rem" }}>
+        {[0, 1, 2].map((k) => (
+          <div key={k} style={{ width: 32, height: 32, background: "#0f0f0f", border: "1px solid #1a1a1a", borderRadius: 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <i className="ti ti-photo" style={{ color: "#333", fontSize: "0.85rem" }} />
+          </div>
+        ))}
+        <span style={{ color: "#333", fontSize: "0.65rem", fontFamily: MONO, marginLeft: "0.25rem" }}>+5 more</span>
+      </div>
+
+      {/* Trust row */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.65rem", marginBottom: "0.85rem" }}>
+        {[
+          { icon: "ti-clock", t: e.respond },
+          { icon: "ti-check", t: `${e.done} done` },
+          { icon: "ti-repeat", t: `${e.repeat} repeat` },
+        ].map((it, idx) => (
+          <div key={idx} style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.65rem", color: C.dim, fontFamily: FONT, paddingRight: idx < 2 ? "0.65rem" : 0, borderRight: idx < 2 ? "1px solid #1a1a1a" : "none" }}>
+            <i className={`ti ${it.icon}`} style={{ color: C.border2, fontSize: "0.8rem" }} /> {it.t}
+          </div>
+        ))}
+      </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: `0.5px solid ${C.border}`, paddingTop: "0.85rem", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+        <div>
+          <div style={{ fontSize: "0.62rem", color: C.dim, fontFamily: MONO, textTransform: "uppercase", letterSpacing: "0.05em" }}>Starting at</div>
+          <div style={{ fontSize: "1.5rem", fontWeight: 700, color: C.white, letterSpacing: "-0.02em", fontFamily: FONT }}>${e.price}</div>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <div style={{ color: C.neon, fontSize: "0.8rem" }}>★★★★★</div>
+          <div style={{ color: C.dim, fontSize: "0.65rem", fontFamily: MONO }}>{e.reviews} reviews</div>
+        </div>
+      </div>
+
+      <button
+        style={{
+          marginTop: "0.75rem",
+          width: "100%",
+          border: `0.5px solid ${C.border}`,
+          color: C.dim,
+          background: "transparent",
+          borderRadius: 999,
+          fontSize: "0.72rem",
+          padding: "0.5rem 1rem",
+          cursor: "pointer",
+          fontFamily: FONT,
+          transition: "all 0.2s",
+        }}
+        onMouseEnter={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = "#333"; (ev.currentTarget as HTMLElement).style.color = C.white; }}
+        onMouseLeave={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = C.border; (ev.currentTarget as HTMLElement).style.color = C.dim; }}
+      >
+        Hire {e.name.split(" ")[0]} →
+      </button>
+    </div>
+  );
+}
+
+// ───── How it works ─────
+function HowItWorks() {
+  const steps = [
+    { n: "01 —", t: "Tell River", d: "Describe your project in plain language. No forms. No filters. Just say what you need.", tag: "Free · Instant" },
+    { n: "02 —", t: "Get matched", d: "River finds your top 3 expert matches in seconds — not hours, not days.", tag: "47 sec avg" },
+    { n: "03 —", t: "Pay securely", d: "Funds held until you approve delivery. 3-day review window. Zero risk to you.", tag: "Protected" },
+    { n: "04 —", t: "Get it done", d: "Expert delivers. You approve. Funds release. Your business is better.", tag: "Guaranteed" },
+  ];
+  return (
+    <section style={{ background: C.card, borderTop: `0.5px solid ${C.border}`, borderBottom: `0.5px solid ${C.border}`, padding: "4rem 2.5rem" }}>
+      <Eyebrow>How it works</Eyebrow>
+      <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 3rem)", fontWeight: 700, letterSpacing: "-0.02em", color: C.white, marginBottom: "2rem", fontFamily: FONT }}>
+        Simple process. Serious results.
+      </h2>
+      <div className="katexs-how-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
+        {steps.map((s) => (
+          <div key={s.n} style={{ border: `0.5px solid ${C.border}`, borderRadius: 12, padding: "1.4rem", background: C.black }}>
+            <div style={{ fontFamily: MONO, fontSize: "0.72rem", color: "#222", marginBottom: "1rem" }}>{s.n}</div>
+            <div style={{ fontSize: "0.9rem", fontWeight: 600, color: C.white, marginBottom: "0.5rem", fontFamily: FONT }}>{s.t}</div>
+            <div style={{ fontSize: "0.8rem", color: C.gray, lineHeight: 1.65, fontWeight: 300, marginBottom: "0.9rem", fontFamily: FONT }}>{s.d}</div>
+            <span style={{ border: "0.5px solid #1a1a1a", color: C.dim, borderRadius: 999, fontSize: "0.65rem", padding: "0.2rem 0.7rem", fontFamily: FONT }}>{s.tag}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+// ───── River AI ─────
+function RiverSection() {
+  return (
+    <section style={{ padding: "4rem 2.5rem", background: C.black }}>
+      <Eyebrow>Powered by River</Eyebrow>
+      <div
+        className="katexs-river-grid"
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          border: `0.5px solid ${C.border}`,
+          borderRadius: 16,
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ padding: "2.2rem", borderRight: `0.5px solid ${C.border}`, display: "flex", flexDirection: "column", justifyContent: "center" }} className="katexs-river-left">
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.9rem" }}>
+            <span style={{ width: 8, height: 8, background: C.neon, borderRadius: "50%", animation: "katexsPulse 1.5s ease-in-out infinite" }} />
+            <span style={{ color: C.neon, textTransform: "uppercase", fontFamily: MONO, fontSize: "0.68rem", letterSpacing: "0.12em" }}>
+              River AI — online now
+            </span>
+          </div>
+          <h3 style={{ fontSize: "2rem", fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.05, color: C.white, margin: 0, fontFamily: FONT }}>
+            Don't search. Just tell River.
+          </h3>
+          <p style={{ fontSize: "0.85rem", color: C.gray, lineHeight: 1.7, fontWeight: 300, marginTop: "1rem", marginBottom: "1.4rem", fontFamily: FONT }}>
+            Describe your project in plain language. River reads it, finds the right expert, and presents your top 3 matches in seconds. No browsing. No guessing.
+          </p>
+          <button
+            style={{ ...btnNeon, padding: "0.7rem 1.4rem", fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: "0.45rem", width: "fit-content" }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "0.88")}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
+          >
+            <Sparkles size={14} /> Talk to River
+          </button>
+        </div>
+        <div style={{ background: C.card, padding: "1.6rem", display: "flex", flexDirection: "column", gap: "0.55rem" }}>
+          <Msg from="river">
+            <span style={{ color: C.neon }}>River:</span> What do you need built today? Tell me about your project and I will find the right expert.
+          </Msg>
+          <Msg from="user">
+            I need a full GHL account built for a dental office — automations, booking, and reporting.
+          </Msg>
+          <Msg from="river">
+            <span style={{ color: C.neon }}>River:</span> Got it. Found 3 GHL specialists who have built for dental practices. Jordan K. has 47 completed builds starting at $297. Want to see all three?
+          </Msg>
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <input
+              placeholder="Type your project..."
+              style={{ flex: 1, background: "#0a0a0a", border: "0.5px solid #1a1a1a", borderRadius: 999, padding: "0.5rem 1rem", color: C.gray, fontSize: "0.78rem", outline: "none", fontFamily: FONT }}
+            />
+            <button style={{ background: C.white, color: C.black, borderRadius: 999, fontSize: "0.72rem", fontWeight: 600, padding: "0.5rem 1rem", border: "none", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontFamily: FONT }}>
+              <Send size={12} /> Send
+            </button>
+          </div>
         </div>
       </div>
     </section>
   );
 }
 
-/* ------------------------------------------------------------------ */
-/*  FEATURES                                                           */
-/* ------------------------------------------------------------------ */
-function Features() {
-  const features = [
-    {
-      icon: Phone,
-      title: "Voice AI",
-      desc: "AI answers calls 24/7, qualifies leads, and books appointments on your calendar.",
-    },
-    {
-      icon: MessageSquare,
-      title: "Chat AI",
-      desc: "Respond to website visitors and social DMs instantly with AI-powered conversations.",
-    },
-    {
-      icon: Users,
-      title: "Free CRM",
-      desc: "Track every contact, deal, and conversation in one place. No per-seat fees.",
-    },
-    {
-      icon: Inbox,
-      title: "Unified Inbox",
-      desc: "SMS, email, Facebook, Instagram, and chat — every message in a single feed.",
-    },
-    {
-      icon: Workflow,
-      title: "Workflow Builder",
-      desc: "Automate follow-ups, reminders, and sequences with a visual drag-and-drop builder.",
-    },
-    {
-      icon: Zap,
-      title: "Automations",
-      desc: "Trigger actions based on events — missed calls, new leads, deal stage changes.",
-    },
-    {
-      icon: CalendarCheck,
-      title: "Appointment Booking",
-      desc: "Let leads self-book from any channel. Syncs to your Google or Outlook calendar.",
-    },
-    {
-      icon: Webhook,
-      title: "Webhooks & API",
-      desc: "Connect to any tool. Push data to Zapier, Make, or your own backend.",
-    },
-    {
-      icon: Bot,
-      title: "River AI",
-      desc: "Your AI co-pilot that monitors your business, surfaces insights, and takes action.",
-    },
-  ];
-
+function Msg({ from, children }: { from: "river" | "user"; children: React.ReactNode }) {
+  const isRiver = from === "river";
   return (
-    <section
-      className="border-t"
+    <div
       style={{
-        background: "#08080a",
-        borderColor: "rgba(255,255,255,0.06)",
-        padding: "80px 32px",
+        background: isRiver ? "#0a0a0a" : "#111",
+        border: "0.5px solid #1a1a1a",
+        borderRadius: 8,
+        padding: "0.7rem 1rem",
+        fontSize: "0.8rem",
+        color: isRiver ? "#666" : C.gray,
+        alignSelf: isRiver ? "flex-start" : "flex-end",
+        maxWidth: "90%",
+        fontFamily: FONT,
       }}
     >
-      <div className="max-w-5xl mx-auto">
-        <p
-          className="uppercase"
-          style={{
-            fontSize: "10px",
-            color: "hsl(var(--foreground-secondary))",
-            letterSpacing: "0.12em",
-            marginBottom: "12px",
-          }}
-        >
-          {"// what you get"}
-        </p>
-        <h2
-          className="font-heading text-foreground mb-10"
-          style={{
-            fontSize: "28px",
-            fontWeight: 700,
-            letterSpacing: "-0.03em",
-            lineHeight: 1.2,
-          }}
-        >
-          Every tool your service business needs.
-        </h2>
+      {children}
+    </div>
+  );
+}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {features.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-[10px] border"
-              style={{
-                background: "hsl(var(--background-card))",
-                borderColor: "rgba(255,255,255,0.06)",
-                padding: "20px",
-              }}
-            >
-              <div
-                className="h-7 w-7 rounded-md flex items-center justify-center border mb-3"
-                style={{
-                  background: "hsl(var(--background-elevated))",
-                  borderColor: "rgba(255,255,255,0.10)",
-                }}
-              >
-                <f.icon
-                  className="h-3.5 w-3.5"
-                  style={{
-                    color:
-                      f.title === "River AI"
-                        ? "hsl(var(--accent-purple))"
-                        : "hsl(var(--foreground-secondary))",
-                  }}
-                />
-              </div>
-              <p
-                className="text-foreground font-semibold"
-                style={{ fontSize: "13px", marginBottom: "4px" }}
-              >
-                {f.title}
-              </p>
-              <p className="text-foreground-secondary" style={{ fontSize: "12px" }}>
-                {f.desc}
-              </p>
-            </div>
-          ))}
+// ───── Sell Banner ─────
+function SellBanner() {
+  return (
+    <section
+      style={{
+        background: C.card,
+        borderTop: `0.5px solid ${C.border}`,
+        borderBottom: `0.5px solid ${C.border}`,
+        padding: "1.4rem 2.5rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: "1rem",
+      }}
+    >
+      <div>
+        <div style={{ fontSize: "0.95rem", fontWeight: 500, color: C.white, fontFamily: FONT }}>
+          Are you an AI or GHL expert? Sell on Katexs.
+        </div>
+        <div style={{ fontSize: "0.8rem", color: C.gray, fontWeight: 300, marginTop: "0.15rem", fontFamily: FONT }}>
+          Join 2,400+ specialists already earning on the world's first AI-only marketplace.
         </div>
       </div>
+      <button
+        style={{ ...btnFilled, padding: "0.65rem 1.5rem", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}
+        onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.opacity = "0.88")}
+        onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.opacity = "1")}
+      >
+        Apply to sell <ArrowRight size={14} />
+      </button>
     </section>
   );
 }
 
+// ───── Footer ─────
+function Footer() {
+  const links = ["About", "Pricing", "Enterprise", "How it works", "Support", "Privacy"];
+  return (
+    <footer
+      style={{
+        borderTop: `0.5px solid ${C.border}`,
+        padding: "1.8rem 2.5rem",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        flexWrap: "wrap",
+        gap: "1rem",
+        background: C.black,
+      }}
+    >
+      <div>
+        <img src={logo} alt="Katexs" style={{ height: 20, display: "block" }} />
+        <div style={{ fontFamily: MONO, fontSize: "0.65rem", color: "#333", textTransform: "uppercase", letterSpacing: "0.08em", marginTop: "0.4rem" }}>
+          World's first AI marketplace
+        </div>
+      </div>
+      <div style={{ display: "flex", gap: "1.5rem", flexWrap: "wrap" }}>
+        {links.map((l) => (
+          <a
+            key={l}
+            href="#"
+            style={{ fontSize: "0.72rem", color: C.dim, textDecoration: "none", fontFamily: FONT, transition: "color 0.15s" }}
+            onMouseEnter={(e) => ((e.currentTarget as HTMLElement).style.color = C.gray)}
+            onMouseLeave={(e) => ((e.currentTarget as HTMLElement).style.color = C.dim)}
+          >
+            {l}
+          </a>
+        ))}
+      </div>
+      <div style={{ fontSize: "0.68rem", color: "#222", fontFamily: FONT }}>
+        © 2026 Katexs. All rights reserved.
+      </div>
+    </footer>
+  );
+}
 
-/* ------------------------------------------------------------------ */
-/*  LANDING PAGE                                                       */
-/* ------------------------------------------------------------------ */
-const Landing = () => (
-  <div className="min-h-screen" style={{ background: "hsl(var(--background))" }}>
-    <PublicNav />
-    <Hero />
-    <DashboardPreview />
-    <Marquee />
-    <PainPoints />
-    <Features />
-    <PublicFooter />
-  </div>
-);
+// ───── Scroll reveal helper ─────
+function useReveal() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const els = ref.current?.querySelectorAll<HTMLElement>("section");
+    if (!els) return;
+    els.forEach((el) => {
+      el.style.opacity = "0";
+      el.style.transform = "translateY(16px)";
+      el.style.transition = "opacity 0.6s ease, transform 0.6s ease";
+    });
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            (entry.target as HTMLElement).style.opacity = "1";
+            (entry.target as HTMLElement).style.transform = "translateY(0)";
+            io.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.08 },
+    );
+    els.forEach((el) => io.observe(el));
+    return () => io.disconnect();
+  }, []);
+  return ref;
+}
+
+// ───── Page ─────
+const Landing = () => {
+  const ref = useReveal();
+  return (
+    <div style={{ background: C.black, color: C.white, fontFamily: FONT, minHeight: "100vh" }}>
+      <style>{`
+        @keyframes katexsPulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.3; }
+        }
+        @media (max-width: 900px) {
+          .katexs-stats { grid-template-columns: repeat(2, 1fr) !important; }
+          .katexs-stats > div:nth-child(2) { border-right: none !important; }
+          .katexs-cat-grid, .katexs-how-grid, .katexs-listings-grid { grid-template-columns: repeat(2, 1fr) !important; }
+          .katexs-river-grid { grid-template-columns: 1fr !important; }
+          .katexs-river-left { border-right: none !important; border-bottom: 0.5px solid ${C.border} !important; }
+          .katexs-nav-links { display: none !important; }
+        }
+        @media (max-width: 600px) {
+          .katexs-listings-grid { grid-template-columns: 1fr !important; }
+          .katexs-hero-headline { font-size: 3rem !important; }
+          .katexs-hero-buttons { flex-direction: column !important; width: 100%; }
+          .katexs-hero-buttons button { width: 100%; }
+        }
+      `}</style>
+      <Nav />
+      <main ref={ref}>
+        <Hero />
+        <SearchSection />
+        <Stats />
+        <Categories />
+        <Listings />
+        <HowItWorks />
+        <RiverSection />
+        <SellBanner />
+      </main>
+      <Footer />
+    </div>
+  );
+};
 
 export default Landing;
