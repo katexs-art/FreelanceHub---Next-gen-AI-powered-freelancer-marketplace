@@ -159,7 +159,7 @@ export default function BuyerDashboard() {
         )}
 
         <section>
-          <Eyebrow className="mb-4">Recommended</Eyebrow>
+          <Eyebrow className="mb-4">{personalized ? "Recommended for you" : "Recommended"}</Eyebrow>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {recs.map((g) => <GigCard key={g.id} gig={g} />)}
           </div>
