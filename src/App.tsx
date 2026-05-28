@@ -90,6 +90,7 @@ const App = () => (
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/project/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
+            <Route path="/marketplace/admin" element={<ProtectedRoute><MarketplaceAdmin /></ProtectedRoute>} />
             <Route path="/affiliates" element={<Affiliates />} />
 
             {/* Protected routes (wrapped in AppShell) */}
