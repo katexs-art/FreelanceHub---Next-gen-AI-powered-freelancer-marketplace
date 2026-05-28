@@ -26,7 +26,7 @@ export default function Admin() {
       supabase.from("orders").select("price").eq("status", "completed"),
       supabase.from("profiles").select("id, full_name, username, email, role, created_at").order("created_at", { ascending: false }).limit(25),
       supabase.from("orders").select("id, order_number, status, price, created_at, buyer:buyer_id(username), seller:seller_id(username)").order("created_at", { ascending: false }).limit(25),
-      supabase.from("withdrawals").select("id, amount, status, created_at, seller:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(25),
+      supabase.from("withdrawals").select("id, amount, status, created_at, method, failure_reason, seller_id, seller:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(25),
       supabase.from("disputes").select("id, status, reason, created_at, order_id").order("created_at", { ascending: false }).limit(25),
     ]);
     setStats({
@@ -49,7 +49,14 @@ export default function Admin() {
   const processStripePayout = async (id: string) => {
     const { data, error } = await supabase.functions.invoke("stripe-payout", { body: { withdrawal_id: id } });
     if (error || data?.error) return toast.error(error?.message || data?.error || "Payout failed");
-    toast.success("Payout sent via Stripe");
+    toast.success(data?.manual ? `Send manually to ${data.paypal_email}` : "Payout sent via Stripe");
+    load();
+  };
+
+  const refundOrder = async (orderId: string) => {
+    const { data, error } = await supabase.functions.invoke("stripe-refund", { body: { order_id: orderId } });
+    if (error || data?.error) return toast.error(error?.message || data?.error || "Refund failed");
+    toast.success("Refund issued");
     load();
   };
 
@@ -109,19 +116,21 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="withdrawals">
-            <Table headers={["Seller", "Amount", "Status", "Requested", "Actions"]}>
+            <Table headers={["Seller", "Method", "Amount", "Status", "Requested", "Actions"]}>
               {withdrawals.map((w) => (
                 <tr key={w.id} className="border-t border-border">
                   <td className="p-3">{w.seller?.full_name ?? w.seller?.username ?? "—"}</td>
+                  <td className="p-3 text-xs">
+                    <span className="px-2 py-0.5 rounded-full bg-background-elevated capitalize">
+                      {w.method?.replace("_", " ") ?? "—"}
+                    </span>
+                  </td>
                   <td className="p-3 font-medium">{dollars(w.amount)}</td>
-                  <td className="p-3 capitalize">{w.status}</td>
+                  <td className="p-3 capitalize" title={w.failure_reason ?? ""}>{w.status}</td>
                   <td className="p-3 text-foreground-muted">{new Date(w.created_at).toLocaleDateString()}</td>
                   <td className="p-3 flex gap-1.5">
                     {(w.status === "requested" || w.status === "processing") && (
-                      <Button size="sm" onClick={() => processStripePayout(w.id)}>Pay via Stripe</Button>
-                    )}
-                    {w.status === "requested" && (
-                      <Button size="sm" variant="outline" onClick={() => updateWithdrawal(w.id, "processing")}>Mark processing</Button>
+                      <Button size="sm" onClick={() => processStripePayout(w.id)}>Pay out</Button>
                     )}
                     {(w.status === "requested" || w.status === "processing") && (
                       <>
@@ -136,8 +145,8 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="disputes">
-            <Table headers={["Order", "Reason", "Status", "Opened"]}>
-              {disputes.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
+            <Table headers={["Order", "Reason", "Status", "Opened", "Actions"]}>
+              {disputes.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
               {disputes.map((d) => (
                 <tr key={d.id} className="border-t border-border">
                   <td className="p-3 font-mono text-xs">{d.order_id.slice(0, 8)}</td>
@@ -145,6 +154,11 @@ export default function Admin() {
                   <td className="p-3"><span className={cn("text-xs px-2 py-0.5 rounded-full capitalize",
                     d.status === "open" ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}>{d.status}</span></td>
                   <td className="p-3 text-foreground-muted">{new Date(d.created_at).toLocaleDateString()}</td>
+                  <td className="p-3">
+                    {d.status === "open" && (
+                      <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id)}>Refund buyer</Button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </Table>

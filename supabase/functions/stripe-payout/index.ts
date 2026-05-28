@@ -1,5 +1,7 @@
-// Processes a pending withdrawal by transferring funds to the seller's connected Stripe account.
-// Admin-only (caller must be admin). Marks withdrawal paid on success.
+// Processes a pending withdrawal. Routes by the seller's chosen payout method:
+//  - stripe_bank → Stripe transfer to the seller's connected account
+//  - paypal      → flagged for manual sending by admin (status='processing')
+// Admin-only.
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -34,14 +36,24 @@ Deno.serve(async (req) => {
     if (w.status === "paid") throw new Error("Already paid");
 
     const { data: acct } = await admin.from("seller_accounts").select("*").eq("seller_id", w.seller_id).maybeSingle();
-    if (!acct?.stripe_account_id || !acct.payouts_enabled) {
-      throw new Error("Seller has not completed Stripe Connect onboarding");
+    if (!acct?.payout_method) throw new Error("Seller hasn't set a payout method");
+
+    if (acct.payout_method === "paypal") {
+      await admin.from("withdrawals").update({
+        status: "processing",
+        method: "paypal",
+        failure_reason: `Send manually to PayPal: ${acct.paypal_email}`,
+      }).eq("id", withdrawal_id);
+      return new Response(JSON.stringify({
+        ok: true, manual: true, paypal_email: acct.paypal_email,
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-11-20.acacia" });
+    // stripe_bank
+    if (!acct.stripe_account_id) throw new Error("Seller has no Stripe account on file");
 
-    // Mark processing first
-    await admin.from("withdrawals").update({ status: "processing" }).eq("id", withdrawal_id);
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-11-20.acacia" });
+    await admin.from("withdrawals").update({ status: "processing", method: "stripe_bank" }).eq("id", withdrawal_id);
 
     const transfer = await stripe.transfers.create({
       amount: w.amount,

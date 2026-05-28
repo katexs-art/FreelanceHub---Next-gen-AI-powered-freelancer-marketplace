@@ -731,6 +731,8 @@ export type Database = {
           package_id: string | null
           platform_fee: number
           price: number
+          refund_id: string | null
+          refunded_at: string | null
           requirements_submitted: boolean
           requirements_submitted_at: string | null
           revision_count: number
@@ -738,6 +740,7 @@ export type Database = {
           seller_earnings: number
           seller_id: string
           status: Database["public"]["Enums"]["order_status"]
+          stripe_charge_id: string | null
           stripe_payment_intent_id: string | null
           updated_at: string
         }
@@ -754,6 +757,8 @@ export type Database = {
           package_id?: string | null
           platform_fee: number
           price: number
+          refund_id?: string | null
+          refunded_at?: string | null
           requirements_submitted?: boolean
           requirements_submitted_at?: string | null
           revision_count?: number
@@ -761,6 +766,7 @@ export type Database = {
           seller_earnings: number
           seller_id: string
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
           updated_at?: string
         }
@@ -777,6 +783,8 @@ export type Database = {
           package_id?: string | null
           platform_fee?: number
           price?: number
+          refund_id?: string | null
+          refunded_at?: string | null
           requirements_submitted?: boolean
           requirements_submitted_at?: string | null
           revision_count?: number
@@ -784,6 +792,7 @@ export type Database = {
           seller_earnings?: number
           seller_id?: string
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_charge_id?: string | null
           stripe_payment_intent_id?: string | null
           updated_at?: string
         }
@@ -1015,12 +1024,16 @@ export type Database = {
       seller_accounts: {
         Row: {
           available_balance: number
+          bank_country: string | null
+          bank_last4: string | null
           charges_enabled: boolean
           created_at: string
           id: string
           lifetime_earnings: number
           onboarding_complete: boolean
+          payout_method: string | null
           payouts_enabled: boolean
+          paypal_email: string | null
           pending_balance: number
           seller_id: string
           stripe_account_id: string | null
@@ -1028,12 +1041,16 @@ export type Database = {
         }
         Insert: {
           available_balance?: number
+          bank_country?: string | null
+          bank_last4?: string | null
           charges_enabled?: boolean
           created_at?: string
           id?: string
           lifetime_earnings?: number
           onboarding_complete?: boolean
+          payout_method?: string | null
           payouts_enabled?: boolean
+          paypal_email?: string | null
           pending_balance?: number
           seller_id: string
           stripe_account_id?: string | null
@@ -1041,12 +1058,16 @@ export type Database = {
         }
         Update: {
           available_balance?: number
+          bank_country?: string | null
+          bank_last4?: string | null
           charges_enabled?: boolean
           created_at?: string
           id?: string
           lifetime_earnings?: number
           onboarding_complete?: boolean
+          payout_method?: string | null
           payouts_enabled?: boolean
+          paypal_email?: string | null
           pending_balance?: number
           seller_id?: string
           stripe_account_id?: string | null
@@ -1153,7 +1174,9 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          failure_reason: string | null
           id: string
+          method: string | null
           paid_at: string | null
           seller_id: string
           status: Database["public"]["Enums"]["withdrawal_status"]
@@ -1162,7 +1185,9 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          failure_reason?: string | null
           id?: string
+          method?: string | null
           paid_at?: string | null
           seller_id: string
           status?: Database["public"]["Enums"]["withdrawal_status"]
@@ -1171,7 +1196,9 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          failure_reason?: string | null
           id?: string
+          method?: string | null
           paid_at?: string | null
           seller_id?: string
           status?: Database["public"]["Enums"]["withdrawal_status"]

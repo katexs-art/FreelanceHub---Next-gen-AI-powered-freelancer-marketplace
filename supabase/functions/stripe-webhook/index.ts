@@ -1,5 +1,6 @@
-// Handles Stripe webhook events. On checkout.session.completed it creates the
-// order + transaction records.
+// Handles Stripe webhook events:
+//  - checkout.session.completed → create order + transactions, capture charge_id
+//  - charge.refunded            → mark order cancelled, reverse transactions, refund recorded
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
@@ -9,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const FEE_PCT = 0.20; // 20% platform fee
+const FEE_PCT = 0.20;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -49,6 +50,13 @@ Deno.serve(async (req) => {
       const sellerEarnings = price - platformFee;
       const extraIds = md.extra_ids ? JSON.parse(md.extra_ids) : [];
 
+      // Resolve charge id from the payment intent
+      let chargeId: string | null = null;
+      if (session.payment_intent) {
+        const pi = await stripe.paymentIntents.retrieve(session.payment_intent as string);
+        chargeId = (pi.latest_charge as string) ?? null;
+      }
+
       const { data: order, error: orderErr } = await admin
         .from("orders")
         .insert({
@@ -62,6 +70,7 @@ Deno.serve(async (req) => {
           seller_earnings: sellerEarnings,
           status: "pending_requirements",
           stripe_payment_intent_id: session.payment_intent as string,
+          stripe_charge_id: chargeId,
           delivery_deadline: new Date(Date.now() + deliveryDays * 86400000).toISOString(),
         })
         .select()
@@ -75,6 +84,31 @@ Deno.serve(async (req) => {
       ]);
 
       console.log("order created", order.id, order.order_number);
+    }
+
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const chargeId = charge.id;
+      const { data: order } = await admin.from("orders")
+        .select("*")
+        .or(`stripe_charge_id.eq.${chargeId},stripe_payment_intent_id.eq.${charge.payment_intent as string}`)
+        .maybeSingle();
+      if (!order) {
+        console.warn("refund for unknown order", chargeId);
+      } else if (!order.refunded_at) {
+        await admin.from("orders").update({
+          status: "cancelled",
+          refunded_at: new Date().toISOString(),
+          stripe_charge_id: chargeId,
+        }).eq("id", order.id);
+
+        // Reverse seller credit: void any pending credit, insert negative if cleared
+        await admin.from("transactions").insert([
+          { order_id: order.id, seller_id: order.seller_id, type: "refund", amount: order.price, status: "cleared" },
+          { order_id: order.id, seller_id: order.seller_id, type: "seller_credit", amount: -order.seller_earnings, status: "cleared" },
+        ]);
+        console.log("order refunded", order.id);
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {
