@@ -1,5 +1,5 @@
 // Lifecycle actions on a project: deliver (expert), approve (client),
-// cancel (client). On approve, the held transaction is marked completed.
+// cancel (client). On approve the held transaction is released; emails sent.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -9,6 +9,12 @@ const corsHeaders = {
 };
 
 type Action = "deliver" | "approve" | "cancel";
+
+async function notify(admin: any, template: string, to: string, data: Record<string, any>) {
+  try {
+    await admin.functions.invoke("send-marketplace-email", { body: { template, to, data } });
+  } catch (e) { console.error("email notify failed", template, e); }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -36,10 +42,7 @@ Deno.serve(async (req) => {
     );
 
     const { data: project, error: pErr } = await admin
-      .from("projects")
-      .select("*")
-      .eq("id", project_id)
-      .maybeSingle();
+      .from("projects").select("*").eq("id", project_id).maybeSingle();
     if (pErr || !project) throw new Error("Project not found");
 
     const isClient = project.client_id === user.id;
@@ -64,16 +67,34 @@ Deno.serve(async (req) => {
     await admin.from("projects").update({ status: nextStatus, updated_at: new Date().toISOString() }).eq("id", project_id);
 
     if (action === "approve") {
-      await admin
-        .from("transactions")
-        .update({ status: "released" })
-        .eq("project_id", project_id);
+      await admin.from("transactions").update({ status: "released" }).eq("project_id", project_id);
     }
     if (action === "cancel") {
-      await admin
-        .from("transactions")
-        .update({ status: "refunded" })
-        .eq("project_id", project_id);
+      await admin.from("transactions").update({ status: "refunded" }).eq("project_id", project_id);
+    }
+
+    // Send emails
+    const { data: parties } = await admin
+      .from("profiles").select("id,email,full_name")
+      .in("id", [project.client_id, project.expert_id]);
+    const client = parties?.find((p: any) => p.id === project.client_id);
+    const expert = parties?.find((p: any) => p.id === project.expert_id);
+    const common = {
+      project_id: project.id,
+      title: project.title || project.description || "Untitled project",
+      client_name: client?.full_name,
+      expert_name: expert?.full_name,
+      expert_payout: project.expert_payout,
+    };
+
+    if (action === "deliver" && client?.email) {
+      await notify(admin, "project_delivered", client.email, common);
+    }
+    if (action === "approve" && expert?.email) {
+      await notify(admin, "project_approved", expert.email, common);
+    }
+    if (action === "cancel" && expert?.email) {
+      await notify(admin, "project_cancelled", expert.email, common);
     }
 
     return new Response(JSON.stringify({ ok: true, status: nextStatus }), {
