@@ -7,9 +7,11 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { useOnlineHeartbeat } from "@/hooks/useOnlineHeartbeat";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { profile, signOut } = useAuth();
+  useOnlineHeartbeat(!!profile);
   const nav = useNavigate();
   const isSeller = profile?.role === "seller" || profile?.role === "admin";
 

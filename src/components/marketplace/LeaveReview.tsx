@@ -79,6 +79,11 @@ export function LeaveReview({ orderId, gigId, buyerId, sellerId, currentUserId, 
         <p className="text-sm">
           {existing.review_text || <span className="italic text-foreground-muted">No comment</span>}
         </p>
+        {!existing.is_public && (
+          <p className="mt-3 text-xs font-mono uppercase tracking-[0.14em] text-foreground-muted">
+            Waiting on counterpart — review publishes once both sides post, or after 14 days.
+          </p>
+        )}
       </div>
     );
   }
@@ -92,7 +97,6 @@ export function LeaveReview({ orderId, gigId, buyerId, sellerId, currentUserId, 
         seller_id: sellerId,
         reviewer_role: role,
         review_text: text || null,
-        is_public: true,
       };
       if (role === "buyer") {
         const parsed = buyerSchema.parse({ communication, service, recommend, text });

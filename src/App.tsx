@@ -35,6 +35,8 @@ const Admin = lazy(() => import("./pages/admin/Admin"));
 const NotificationPreferences = lazy(() => import("./pages/account/NotificationPreferences"));
 const Saved = lazy(() => import("./pages/account/Saved"));
 const Verification = lazy(() => import("./pages/seller/Verification"));
+const BuyerDashboard = lazy(() => import("./pages/buyer/BuyerDashboard"));
+const Settings = lazy(() => import("./pages/account/Settings"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -57,6 +59,7 @@ const App = () => (
 
             {/* Public marketplace */}
             <Route path="/explore" element={<Explore />} />
+            <Route path="/browse" element={<Explore />} />
             <Route path="/search" element={<Search />} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/gig/:slug" element={<GigDetail />} />
@@ -65,7 +68,7 @@ const App = () => (
             <Route path="/become-a-seller" element={<BecomeSeller />} />
 
             {/* Buyer */}
-            <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><DashboardPlaceholder title="Buyer dashboard" /></ProtectedRoute>} />
+            <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><BuyerDashboard /></ProtectedRoute>} />
             <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","seller","admin"]}><OrdersList as="buyer" /></ProtectedRoute>} />
 
             {/* Seller */}
@@ -83,7 +86,7 @@ const App = () => (
             <Route path="/orders/:id" element={<ProtectedRoute><OrderWorkspace /></ProtectedRoute>} />
             <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/inbox/:conversationId" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><DashboardPlaceholder title="Account settings" /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
             <Route path="/settings/notifications" element={<ProtectedRoute><NotificationPreferences /></ProtectedRoute>} />
 
             {/* Admin */}
