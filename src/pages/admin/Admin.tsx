@@ -49,7 +49,14 @@ export default function Admin() {
   const processStripePayout = async (id: string) => {
     const { data, error } = await supabase.functions.invoke("stripe-payout", { body: { withdrawal_id: id } });
     if (error || data?.error) return toast.error(error?.message || data?.error || "Payout failed");
-    toast.success("Payout sent via Stripe");
+    toast.success(data?.manual ? `Send manually to ${data.paypal_email}` : "Payout sent via Stripe");
+    load();
+  };
+
+  const refundOrder = async (orderId: string) => {
+    const { data, error } = await supabase.functions.invoke("stripe-refund", { body: { order_id: orderId } });
+    if (error || data?.error) return toast.error(error?.message || data?.error || "Refund failed");
+    toast.success("Refund issued");
     load();
   };
 
