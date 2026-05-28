@@ -53,6 +53,8 @@ export function SiteHeader() {
 
         <div className="flex-1 lg:hidden" />
 
+        {user && <RoleSwitcher />}
+
         <div className="hidden md:flex items-center gap-2">
           {user ? (
             <>
