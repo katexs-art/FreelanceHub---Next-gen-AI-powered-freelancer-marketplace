@@ -116,19 +116,21 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="withdrawals">
-            <Table headers={["Seller", "Amount", "Status", "Requested", "Actions"]}>
+            <Table headers={["Seller", "Method", "Amount", "Status", "Requested", "Actions"]}>
               {withdrawals.map((w) => (
                 <tr key={w.id} className="border-t border-border">
                   <td className="p-3">{w.seller?.full_name ?? w.seller?.username ?? "—"}</td>
+                  <td className="p-3 text-xs">
+                    <span className="px-2 py-0.5 rounded-full bg-background-elevated capitalize">
+                      {w.method?.replace("_", " ") ?? "—"}
+                    </span>
+                  </td>
                   <td className="p-3 font-medium">{dollars(w.amount)}</td>
-                  <td className="p-3 capitalize">{w.status}</td>
+                  <td className="p-3 capitalize" title={w.failure_reason ?? ""}>{w.status}</td>
                   <td className="p-3 text-foreground-muted">{new Date(w.created_at).toLocaleDateString()}</td>
                   <td className="p-3 flex gap-1.5">
                     {(w.status === "requested" || w.status === "processing") && (
-                      <Button size="sm" onClick={() => processStripePayout(w.id)}>Pay via Stripe</Button>
-                    )}
-                    {w.status === "requested" && (
-                      <Button size="sm" variant="outline" onClick={() => updateWithdrawal(w.id, "processing")}>Mark processing</Button>
+                      <Button size="sm" onClick={() => processStripePayout(w.id)}>Pay out</Button>
                     )}
                     {(w.status === "requested" || w.status === "processing") && (
                       <>
@@ -143,8 +145,8 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="disputes">
-            <Table headers={["Order", "Reason", "Status", "Opened"]}>
-              {disputes.length === 0 && <tr><td colSpan={4} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
+            <Table headers={["Order", "Reason", "Status", "Opened", "Actions"]}>
+              {disputes.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
               {disputes.map((d) => (
                 <tr key={d.id} className="border-t border-border">
                   <td className="p-3 font-mono text-xs">{d.order_id.slice(0, 8)}</td>
