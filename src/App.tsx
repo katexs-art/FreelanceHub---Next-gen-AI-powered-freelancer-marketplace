@@ -43,6 +43,7 @@ const ExpertProfile = lazy(() => import("./pages/marketplace/ExpertProfile"));
 const CategoryPage = lazy(() => import("./pages/marketplace/CategoryPage"));
 const ProjectDetail = lazy(() => import("./pages/marketplace/ProjectDetail"));
 const CheckoutSuccess = lazy(() => import("./pages/marketplace/CheckoutSuccess"));
+const MarketplaceAdmin = lazy(() => import("./pages/marketplace/AdminDashboard"));
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const InboxPage = lazy(() => import("./pages/InboxPage"));
@@ -89,6 +90,7 @@ const App = () => (
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/project/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
+            <Route path="/marketplace/admin" element={<ProtectedRoute><MarketplaceAdmin /></ProtectedRoute>} />
             <Route path="/affiliates" element={<Affiliates />} />
 
             {/* Protected routes (wrapped in AppShell) */}
