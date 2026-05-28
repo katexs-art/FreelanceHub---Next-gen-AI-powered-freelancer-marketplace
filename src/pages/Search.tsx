@@ -21,6 +21,7 @@ export default function Search() {
 
   const [input, setInput] = useState(q);
   const [gigs, setGigs] = useState<GigCardData[]>([]);
+  const [promoted, setPromoted] = useState<GigCardData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { setInput(q); }, [q]);
@@ -50,7 +51,17 @@ export default function Search() {
         ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
         : { data: [] as any };
       const byId = new Map((sellers ?? []).map((s: any) => [s.id, s]));
-      setGigs((data ?? []).map((g) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
+      const mapped = (data ?? []).map((g) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[];
+
+      // Promoted: active promotions, exclude already-shown ids
+      const { data: proms } = await supabase.from("gig_promotions")
+        .select("gig_id, gigs:gig_id(id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id)")
+        .eq("status", "active").gt("ends_at", new Date().toISOString()).limit(3);
+      const pRows = (proms ?? []).map((p: any) => p.gigs).filter(Boolean)
+        .map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null }));
+      const shownIds = new Set(pRows.map((g: any) => g.id));
+      setPromoted(pRows);
+      setGigs(mapped.filter((g) => !shownIds.has(g.id)));
       setLoading(false);
     })();
   }, [q, sort, minPrice, maxPrice, minRating, maxDelivery]);
@@ -121,9 +132,12 @@ export default function Search() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => <GigCardSkeleton key={i} />)
-                : gigs.length === 0
+                : (promoted.length === 0 && gigs.length === 0)
                   ? <p className="col-span-full text-foreground-muted">No gigs match those filters.</p>
-                  : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+                  : <>
+                      {promoted.map((g) => <GigCard key={`p-${g.id}`} gig={g} promoted />)}
+                      {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+                    </>}
             </div>
           </div>
         </div>

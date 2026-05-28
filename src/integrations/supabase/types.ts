@@ -274,6 +274,7 @@ export type Database = {
       }
       disputes: {
         Row: {
+          admin_notes: string | null
           created_at: string
           description: string | null
           id: string
@@ -281,11 +282,13 @@ export type Database = {
           raised_by: string
           reason: string | null
           resolution_note: string | null
+          resolution_outcome: string | null
           resolved_at: string | null
           resolved_by: string | null
           status: Database["public"]["Enums"]["dispute_status"]
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -293,11 +296,13 @@ export type Database = {
           raised_by: string
           reason?: string | null
           resolution_note?: string | null
+          resolution_outcome?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           status?: Database["public"]["Enums"]["dispute_status"]
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -305,6 +310,7 @@ export type Database = {
           raised_by?: string
           reason?: string | null
           resolution_note?: string | null
+          resolution_outcome?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
           status?: Database["public"]["Enums"]["dispute_status"]
@@ -408,6 +414,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gig_promotions: {
+        Row: {
+          clicks: number
+          created_at: string
+          daily_budget_cents: number
+          ends_at: string
+          gig_id: string
+          id: string
+          impressions: number
+          seller_id: string
+          spend_cents: number
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          clicks?: number
+          created_at?: string
+          daily_budget_cents: number
+          ends_at: string
+          gig_id: string
+          id?: string
+          impressions?: number
+          seller_id: string
+          spend_cents?: number
+          starts_at?: string
+          status?: string
+        }
+        Update: {
+          clicks?: number
+          created_at?: string
+          daily_budget_cents?: number
+          ends_at?: string
+          gig_id?: string
+          id?: string
+          impressions?: number
+          seller_id?: string
+          spend_cents?: number
+          starts_at?: string
+          status?: string
+        }
+        Relationships: []
       }
       gig_requirements: {
         Row: {
@@ -864,6 +912,7 @@ export type Database = {
           response_rate: number | null
           response_time_minutes: number | null
           role: Database["public"]["Enums"]["user_role"]
+          suspended_at: string | null
           updated_at: string
           username: string | null
         }
@@ -882,6 +931,7 @@ export type Database = {
           response_rate?: number | null
           response_time_minutes?: number | null
           role?: Database["public"]["Enums"]["user_role"]
+          suspended_at?: string | null
           updated_at?: string
           username?: string | null
         }
@@ -900,8 +950,48 @@ export type Database = {
           response_rate?: number | null
           response_time_minutes?: number | null
           role?: Database["public"]["Enums"]["user_role"]
+          suspended_at?: string | null
           updated_at?: string
           username?: string | null
+        }
+        Relationships: []
+      }
+      reports: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          target_id: string
+          target_type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id: string
+          target_type: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          target_id?: string
+          target_type?: string
         }
         Relationships: []
       }
@@ -1082,6 +1172,69 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      seller_follows: {
+        Row: {
+          created_at: string
+          follower_id: string
+          id: string
+          seller_id: string
+        }
+        Insert: {
+          created_at?: string
+          follower_id: string
+          id?: string
+          seller_id: string
+        }
+        Update: {
+          created_at?: string
+          follower_id?: string
+          id?: string
+          seller_id?: string
+        }
+        Relationships: []
+      }
+      seller_verifications: {
+        Row: {
+          created_at: string
+          id: string
+          id_document_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          selfie_url: string | null
+          seller_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          id_document_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          seller_id: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          id_document_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          selfie_url?: string | null
+          seller_id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       transactions: {
         Row: {
@@ -1391,6 +1544,12 @@ export type Database = {
         Args: { _seller: string }
         Returns: undefined
       }
+      seller_follower_count: { Args: { _seller: string }; Returns: number }
+      suspend_seller: { Args: { _seller: string }; Returns: undefined }
+      track_promotion_event: {
+        Args: { _event: string; _promotion_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       cancellation_status: "pending" | "accepted" | "declined"
@@ -1412,6 +1571,7 @@ export type Database = {
         | "message"
         | "dispute"
         | "payout"
+        | "system"
       offer_status:
         | "pending"
         | "accepted"
@@ -1435,6 +1595,7 @@ export type Database = {
         | "seller_credit"
         | "refund"
         | "withdrawal"
+        | "promotion_charge"
       user_role: "client" | "seller" | "admin"
       withdrawal_status: "requested" | "processing" | "paid" | "failed"
     }
@@ -1584,6 +1745,7 @@ export const Constants = {
         "message",
         "dispute",
         "payout",
+        "system",
       ],
       offer_status: ["pending", "accepted", "declined", "withdrawn", "expired"],
       order_status: [
@@ -1604,6 +1766,7 @@ export const Constants = {
         "seller_credit",
         "refund",
         "withdrawal",
+        "promotion_charge",
       ],
       user_role: ["client", "seller", "admin"],
       withdrawal_status: ["requested", "processing", "paid", "failed"],

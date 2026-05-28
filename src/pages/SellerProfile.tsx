@@ -6,6 +6,9 @@ import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketp
 import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
 import { SellerLevelBadge } from "@/components/marketplace/SellerLevelBadge";
+import { FollowSellerButton } from "@/components/marketplace/FollowSellerButton";
+import { VerifiedBadge } from "@/components/marketplace/VerifiedBadge";
+import { ReportDialog } from "@/components/marketplace/ReportDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { MapPin, Calendar, Clock, MessageCircle } from "lucide-react";
 
@@ -89,14 +92,19 @@ export default function SellerProfile() {
               </div>
               <h1 className="font-bold text-lg mt-4">{name}</h1>
               {seller.username && <p className="text-sm text-foreground-muted">@{seller.username}</p>}
-              <div className="mt-2">
+              <div className="mt-2 flex flex-col items-center gap-1.5">
                 <SellerLevelBadge
                   orders={gigs.reduce((s, g) => s + ((g as any).total_orders ?? 0), 0)}
                   rating={gigs.reduce((s, g) => s + Number(g.average_rating ?? 0) * (g.total_reviews ?? 0), 0) / Math.max(1, gigs.reduce((s, g) => s + (g.total_reviews ?? 0), 0))}
                   reviews={gigs.reduce((s, g) => s + (g.total_reviews ?? 0), 0)}
                 />
+                <VerifiedBadge sellerId={seller.id} />
               </div>
               {seller.is_online && <p className="mt-1 text-xs text-success">● Online</p>}
+              <div className="mt-4 flex flex-col items-center gap-2">
+                <FollowSellerButton sellerId={seller.id} />
+                <ReportDialog targetType="user" targetId={seller.id} label="Report seller" />
+              </div>
               <div className="mt-5 space-y-2 text-sm text-left">
                 {seller.country && (
                   <div className="flex items-center gap-2 text-foreground-muted">

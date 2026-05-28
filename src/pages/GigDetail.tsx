@@ -8,6 +8,8 @@ import { Star, Clock, RefreshCw, Check, Heart, MessageSquare } from "lucide-reac
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
 import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
+import { ReportDialog } from "@/components/marketplace/ReportDialog";
+import { VerifiedBadge } from "@/components/marketplace/VerifiedBadge";
 import { trackRecentlyViewed } from "@/lib/recentlyViewed";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -168,7 +170,10 @@ export default function GigDetail() {
                       : (seller.full_name ?? seller.username ?? "?")[0]?.toUpperCase()}
                   </div>
                   <div>
-                    <div className="text-sm font-medium">{seller.full_name ?? seller.username}</div>
+                    <div className="text-sm font-medium flex items-center gap-2">
+                      {seller.full_name ?? seller.username}
+                      <VerifiedBadge sellerId={seller.id} />
+                    </div>
                     <div className="flex items-center gap-2 text-xs text-foreground-muted">
                       {seller.is_online && <span className="text-success">● Online</span>}
                       {seller.response_time_minutes != null && (
@@ -224,7 +229,10 @@ export default function GigDetail() {
               )}
             </section>
             <section className="mt-10">
-              <h2 className="text-xl font-bold mb-4">Reviews {gig.total_reviews > 0 && <span className="text-foreground-muted font-normal">({gig.total_reviews})</span>}</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold">Reviews {gig.total_reviews > 0 && <span className="text-foreground-muted font-normal">({gig.total_reviews})</span>}</h2>
+                <ReportDialog targetType="gig" targetId={gig.id} label="Report gig" />
+              </div>
               <div className="mb-5"><RatingBreakdown gigId={gig.id} /></div>
               <ReviewsList gigId={gig.id} />
             </section>
