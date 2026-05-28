@@ -38,6 +38,9 @@ const ResetPassword = lazy(() => import("./pages/marketplace/ResetPassword"));
 const ExpertPending = lazy(() => import("./pages/marketplace/ExpertPending"));
 const DashboardClient = lazy(() => import("./pages/marketplace/DashboardClient"));
 const DashboardExpert = lazy(() => import("./pages/marketplace/DashboardExpert"));
+const Browse = lazy(() => import("./pages/marketplace/Browse"));
+const ExpertProfile = lazy(() => import("./pages/marketplace/ExpertProfile"));
+const CategoryPage = lazy(() => import("./pages/marketplace/CategoryPage"));
 const Login = lazy(() => import("./pages/Login"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const InboxPage = lazy(() => import("./pages/InboxPage"));
@@ -79,6 +82,9 @@ const App = () => (
             <Route path="/expert/pending" element={<ExpertPending />} />
             <Route path="/dashboard/client" element={<ProtectedRoute roles={["client","admin"]}><DashboardClient /></ProtectedRoute>} />
             <Route path="/dashboard/expert" element={<ProtectedRoute roles={["expert","admin"]}><DashboardExpert /></ProtectedRoute>} />
+            <Route path="/browse" element={<Browse />} />
+            <Route path="/expert/:id" element={<ExpertProfile />} />
+            <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/affiliates" element={<Affiliates />} />
 
             {/* Protected routes (wrapped in AppShell) */}

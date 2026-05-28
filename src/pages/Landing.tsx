@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Sparkles, Search, ArrowRight, Send } from "lucide-react";
 import logo from "@/assets/katexs-logo-white.jpg";
+import { useExperts } from "@/hooks/useExperts";
+import { ExpertCard } from "@/components/marketplace/ExpertCard";
 
 const C = {
   black: "#000000",
@@ -334,26 +336,32 @@ function Categories() {
         Every AI service. All in one place.
       </h2>
       <div className="katexs-cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "0.75rem" }}>
-        {cats.map((c) => (
-          <div
-            key={c.name}
-            style={{
-              border: `0.5px solid ${C.border}`,
-              borderRadius: 12,
-              padding: "1.3rem 1.1rem",
-              background: C.card,
-              cursor: "pointer",
-              transition: "all 0.25s",
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.background = C.cardHover; }}
-            onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card; }}
-          >
-            <i className={`ti ${c.icon}`} style={{ fontSize: "1.3rem", color: C.white, marginBottom: "0.7rem", display: "block" }} />
-            <div style={{ fontSize: "0.88rem", fontWeight: 500, color: C.white, fontFamily: FONT }}>{c.name}</div>
-            <div style={{ fontSize: "0.75rem", color: C.gray, lineHeight: 1.5, marginTop: "0.25rem", fontFamily: FONT }}>{c.desc}</div>
-            <div style={{ fontSize: "0.68rem", color: "#333", marginTop: "0.5rem", fontFamily: MONO }}>{c.count}</div>
-          </div>
-        ))}
+        {cats.map((c) => {
+          const slug = c.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+          return (
+            <Link
+              key={c.name}
+              to={`/category/${slug}`}
+              style={{
+                border: `0.5px solid ${C.border}`,
+                borderRadius: 12,
+                padding: "1.3rem 1.1rem",
+                background: C.card,
+                cursor: "pointer",
+                transition: "all 0.25s",
+                textDecoration: "none",
+                display: "block",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = "#333"; e.currentTarget.style.background = C.cardHover; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = C.card; }}
+            >
+              <i className={`ti ${c.icon}`} style={{ fontSize: "1.3rem", color: C.white, marginBottom: "0.7rem", display: "block" }} />
+              <div style={{ fontSize: "0.88rem", fontWeight: 500, color: C.white, fontFamily: FONT }}>{c.name}</div>
+              <div style={{ fontSize: "0.75rem", color: C.gray, lineHeight: 1.5, marginTop: "0.25rem", fontFamily: FONT }}>{c.desc}</div>
+              <div style={{ fontSize: "0.68rem", color: "#333", marginTop: "0.5rem", fontFamily: MONO }}>{c.count}</div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
@@ -383,6 +391,12 @@ const experts: Expert[] = [
 function Listings() {
   const filters = ["All", "GHL Builds", "Voice AI", "Automations", "Consulting", "Chat AI", "Education", "Integrations"];
   const [active, setActive] = useState("All");
+  const { data: liveExperts, loading } = useExperts({
+    category: active,
+    limit: 6,
+  });
+  const showLive = !loading && liveExperts.length > 0;
+  const visibleMocks = active === "All" ? experts : experts.filter((e) => e.category.toLowerCase().includes(active.toLowerCase().split(" ")[0]));
   return (
     <section style={{ padding: "0 2.5rem 4rem", background: C.black }}>
       <Eyebrow>Top rated this week</Eyebrow>
@@ -411,18 +425,17 @@ function Listings() {
         })}
       </div>
       <div className="katexs-listings-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-        {experts.map((e, i) => (
-          <ListingCard key={i} e={e} />
-        ))}
+        {showLive
+          ? liveExperts.map((e) => <ExpertCard key={e.id} e={e} />)
+          : visibleMocks.map((e, i) => <ListingCard key={i} e={e} />)}
       </div>
       <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}>
-        <button
-          style={{ ...btnOutline, color: C.gray, borderColor: "#222" }}
-          onMouseEnter={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = "#444"; (ev.currentTarget as HTMLElement).style.color = C.white; }}
-          onMouseLeave={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = "#222"; (ev.currentTarget as HTMLElement).style.color = C.gray; }}
+        <Link
+          to="/browse"
+          style={{ ...btnOutline, color: C.gray, borderColor: "#222", textDecoration: "none", display: "inline-block" }}
         >
           Load more experts →
-        </button>
+        </Link>
       </div>
     </section>
   );
