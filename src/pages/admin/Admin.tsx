@@ -7,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, ShoppingBag, Wallet, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { VerificationsQueue } from "@/pages/admin/sections/VerificationsQueue";
+import { ReportsQueue } from "@/pages/admin/sections/ReportsQueue";
 
 const dollars = (c: number) => `$${(c / 100).toFixed(2)}`;
 
@@ -85,6 +87,8 @@ export default function Admin() {
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="withdrawals">Withdrawals</TabsTrigger>
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
+            <TabsTrigger value="verifications">Verifications</TabsTrigger>
+            <TabsTrigger value="reports">Reports</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -154,15 +158,25 @@ export default function Admin() {
                   <td className="p-3"><span className={cn("text-xs px-2 py-0.5 rounded-full capitalize",
                     d.status === "open" ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}>{d.status}</span></td>
                   <td className="p-3 text-foreground-muted">{new Date(d.created_at).toLocaleDateString()}</td>
-                  <td className="p-3">
+                  <td className="p-3 flex gap-1.5">
                     {d.status === "open" && (
-                      <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id)}>Refund buyer</Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id)}>Refund buyer</Button>
+                        <Button size="sm" variant="ghost" onClick={async () => {
+                          await supabase.from("orders").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", d.order_id);
+                          await supabase.from("disputes").update({ status: "resolved", resolution_outcome: "released", resolved_at: new Date().toISOString() }).eq("id", d.id);
+                          toast.success("Released to seller"); load();
+                        }}>Release to seller</Button>
+                      </>
                     )}
                   </td>
                 </tr>
               ))}
             </Table>
           </TabsContent>
+
+          <TabsContent value="verifications"><VerificationsQueue /></TabsContent>
+          <TabsContent value="reports"><ReportsQueue /></TabsContent>
         </Tabs>
       </div>
     </AppShell>
