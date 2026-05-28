@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
 
