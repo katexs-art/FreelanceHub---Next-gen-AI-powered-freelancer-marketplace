@@ -46,6 +46,13 @@ export default function Admin() {
     toast.success(`Withdrawal ${status}`); load();
   };
 
+  const processStripePayout = async (id: string) => {
+    const { data, error } = await supabase.functions.invoke("stripe-payout", { body: { withdrawal_id: id } });
+    if (error || data?.error) return toast.error(error?.message || data?.error || "Payout failed");
+    toast.success("Payout sent via Stripe");
+    load();
+  };
+
   if (profile && profile.role !== "admin") {
     return <AppShell><div className="text-sm">Admin access required.</div></AppShell>;
   }
@@ -110,12 +117,15 @@ export default function Admin() {
                   <td className="p-3 capitalize">{w.status}</td>
                   <td className="p-3 text-foreground-muted">{new Date(w.created_at).toLocaleDateString()}</td>
                   <td className="p-3 flex gap-1.5">
+                    {(w.status === "requested" || w.status === "processing") && (
+                      <Button size="sm" onClick={() => processStripePayout(w.id)}>Pay via Stripe</Button>
+                    )}
                     {w.status === "requested" && (
-                      <Button size="sm" variant="outline" onClick={() => updateWithdrawal(w.id, "processing")}>Process</Button>
+                      <Button size="sm" variant="outline" onClick={() => updateWithdrawal(w.id, "processing")}>Mark processing</Button>
                     )}
                     {(w.status === "requested" || w.status === "processing") && (
                       <>
-                        <Button size="sm" onClick={() => updateWithdrawal(w.id, "paid")}>Mark paid</Button>
+                        <Button size="sm" variant="ghost" onClick={() => updateWithdrawal(w.id, "paid")}>Mark paid</Button>
                         <Button size="sm" variant="ghost" onClick={() => updateWithdrawal(w.id, "failed")}>Fail</Button>
                       </>
                     )}
