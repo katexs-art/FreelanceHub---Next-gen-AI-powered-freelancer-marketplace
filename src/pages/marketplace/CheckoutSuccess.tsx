@@ -27,9 +27,9 @@ export default function CheckoutSuccess() {
         .eq("client_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1);
-      const found = (data ?? [])[0];
+      const found = ((data ?? []) as any[])[0];
       if (found) {
-        setProjectId(found.id);
+        setProjectId(found.id as string);
         setStatus("found");
         clearInterval(interval);
         setTimeout(() => navigate(`/project/${found.id}`), 1200);
