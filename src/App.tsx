@@ -30,6 +30,8 @@ const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
 const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
 const OrderWorkspace = lazy(() => import("./pages/orders/OrderWorkspace"));
 const Inbox = lazy(() => import("./pages/Inbox"));
+const Earnings = lazy(() => import("./pages/seller/Earnings"));
+const Admin = lazy(() => import("./pages/admin/Admin"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
