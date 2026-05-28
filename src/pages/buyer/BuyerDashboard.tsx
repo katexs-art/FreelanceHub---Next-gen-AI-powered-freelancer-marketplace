@@ -47,15 +47,54 @@ export default function BuyerDashboard() {
       const byId = new Map((sellers ?? []).map((s: any) => [s.id, s]));
       setSaved(sgGigs.map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null })));
 
-      const { data: rec } = await supabase.from("gigs")
-        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
-        .eq("status", "active").order("total_orders", { ascending: false }).limit(4);
-      const rIds = [...new Set((rec ?? []).map((g) => g.seller_id))];
+      // --- Personalized recommendations ---
+      // Signal 1: categories from gigs the buyer has ordered
+      const orderedGigIds = [...new Set(rows.map((o) => (o as any).gig_id).filter(Boolean))];
+      const { data: orderedGigs } = await supabase.from("orders")
+        .select("gig_id, gigs:gig_id(category)").eq("buyer_id", user.id);
+      const catSet = new Set<string>();
+      ((orderedGigs ?? []) as any[]).forEach((o) => { if (o.gigs?.category) catSet.add(o.gigs.category); });
+
+      // Signal 2: AI search history (suggested categories + clicked gigs)
+      const { data: aiSessions } = await supabase.from("ai_search_sessions")
+        .select("suggested_categories, clicked_gig_id")
+        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
+      const excludeGigIds = new Set<string>();
+      ((aiSessions ?? []) as any[]).forEach((s) => {
+        (s.suggested_categories ?? []).forEach((c: string) => c && catSet.add(c));
+      });
+      ((orderedGigs ?? []) as any[]).forEach((o) => o.gig_id && excludeGigIds.add(o.gig_id));
+
+      const cats = [...catSet];
+      let recQuery = supabase.from("gigs")
+        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id,category")
+        .eq("status", "active");
+      if (cats.length > 0) recQuery = recQuery.in("category", cats);
+      const { data: recRaw } = await recQuery
+        .order("average_rating", { ascending: false })
+        .order("total_orders", { ascending: false })
+        .limit(12);
+
+      let rec = ((recRaw ?? []) as any[]).filter((g) => !excludeGigIds.has(g.id));
+      // Fallback to popular gigs if personalization yields too few
+      if (rec.length < 4) {
+        const { data: popRaw } = await supabase.from("gigs")
+          .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id,category")
+          .eq("status", "active").order("total_orders", { ascending: false }).limit(12);
+        const seen = new Set(rec.map((g) => g.id));
+        ((popRaw ?? []) as any[]).forEach((g) => {
+          if (!seen.has(g.id) && !excludeGigIds.has(g.id) && rec.length < 4) { rec.push(g); seen.add(g.id); }
+        });
+      }
+      rec = rec.slice(0, 4);
+
+      const rIds = [...new Set(rec.map((g) => g.seller_id))];
       const { data: rs } = rIds.length
         ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", rIds)
         : { data: [] as any };
       const rById = new Map((rs ?? []).map((s: any) => [s.id, s]));
-      setRecs(((rec ?? []) as any).map((g: any) => ({ ...g, seller: rById.get(g.seller_id) ?? null })));
+      setRecs(rec.map((g: any) => ({ ...g, seller: rById.get(g.seller_id) ?? null })));
+      setPersonalized(cats.length > 0);
     })();
   }, [user?.id]);
 
