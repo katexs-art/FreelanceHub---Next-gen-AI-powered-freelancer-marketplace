@@ -7,45 +7,54 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-const DEFAULT_PROMPT = `You are River, the matchmaking AI for Katexs — the AI-only marketplace for GoHighLevel & AI experts.
+const DEFAULT_PROMPT = `You are River, the matchmaking AI for KATEXS — a marketplace where buyers hire sellers for services (gigs).
 
 Your job:
 1. Ask 1-2 short clarifying questions if the user's request is vague (budget, timeline, scope).
-2. Once you understand the project, recommend the top experts from the list provided.
-3. Keep replies short (max ~80 words). Friendly, sharp, no fluff. Never invent experts.
+2. Once you understand the project, recommend the best matching gigs from the list provided.
+3. Keep replies short (max ~80 words). Friendly, sharp, no fluff. Never invent gigs.
 
-When recommending, mention 1-3 experts by name, their specialty, starting price, and rating.`;
+When recommending, mention 1-3 gigs by title, their category, starting price, and rating. Refer to gigs by their title.`;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    const { messages, sessionId } = await req.json();
+    const { messages } = await req.json();
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Fetch live experts to ground the model
-    const { data: experts } = await supabase
-      .from('experts')
-      .select('id, specialty, bio, starting_price, rating, total_jobs, response_time, profiles!inner(full_name)')
+    // Fetch live, active gigs to ground the model
+    const { data: gigs } = await supabase
+      .from('gigs')
+      .select('id, title, category, subcategory, starting_price, average_rating, total_reviews, total_orders, seller_id')
       .eq('status', 'active')
-      .order('rating', { ascending: false })
-      .limit(20);
+      .order('total_orders', { ascending: false })
+      .limit(30);
+
+    // Resolve seller names for context
+    const sellerIds = [...new Set((gigs ?? []).map((g: any) => g.seller_id))];
+    const { data: sellers } = sellerIds.length
+      ? await supabase.from('profiles').select('id, full_name, username').in('id', sellerIds)
+      : { data: [] as any };
+    const sellerById = new Map((sellers ?? []).map((s: any) => [s.id, s]));
 
     // Load custom system prompt if admin set one
     const { data: settings } = await supabase
       .from('platform_settings').select('value').eq('key', 'river_system_prompt').maybeSingle();
-    const basePrompt = (settings?.value as any)?.prompt || DEFAULT_PROMPT;
+    const basePrompt = (settings as any)?.value || DEFAULT_PROMPT;
 
-    const expertList = (experts ?? []).map((e: any) => {
-      const name = e.profiles?.full_name || 'Expert';
-      return `- ${name} (${e.id}) — ${e.specialty || 'general'} · from $${e.starting_price ?? 0} · ★${e.rating ?? 0} · ${e.total_jobs ?? 0} jobs`;
-    }).join('\n') || '- (no experts available yet)';
+    const gigList = (gigs ?? []).map((g: any) => {
+      const s = sellerById.get(g.seller_id);
+      const name = s?.full_name || s?.username || 'Seller';
+      const cat = [g.category, g.subcategory].filter(Boolean).join(' / ') || 'general';
+      return `- "${g.title}" (${g.id}) — ${cat} · by ${name} · from $${g.starting_price ?? 0} · ★${g.average_rating ?? 0} (${g.total_reviews ?? 0} reviews) · ${g.total_orders ?? 0} orders`;
+    }).join('\n') || '- (no gigs available yet)';
 
-    const system = `${basePrompt}\n\nAvailable experts:\n${expertList}`;
+    const system = `${basePrompt}\n\nAvailable gigs:\n${gigList}`;
 
     const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -66,6 +75,16 @@ Deno.serve(async (req) => {
       }),
     });
 
+    if (res.status === 429) {
+      return new Response(JSON.stringify({ error: 'Rate limit exceeded, please try again shortly.' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+    if (res.status === 402) {
+      return new Response(JSON.stringify({ error: 'AI credits exhausted. Please add credits.' }), {
+        status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
     if (!res.ok) {
       const txt = await res.text();
       return new Response(JSON.stringify({ error: 'AI gateway error', details: txt }), {
@@ -75,23 +94,7 @@ Deno.serve(async (req) => {
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content ?? '';
 
-    // Persist session (best-effort)
-    try {
-      const updatedMessages = [...messages, { role: 'assistant', content: reply }];
-      if (sessionId) {
-        await supabase.from('river_sessions').update({ messages: updatedMessages }).eq('id', sessionId);
-      } else {
-        const { data: created } = await supabase
-          .from('river_sessions')
-          .insert({ messages: updatedMessages })
-          .select('id').single();
-        return new Response(JSON.stringify({ reply, sessionId: created?.id }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    } catch (_) { /* ignore logging errors */ }
-
-    return new Response(JSON.stringify({ reply, sessionId }), {
+    return new Response(JSON.stringify({ reply }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
