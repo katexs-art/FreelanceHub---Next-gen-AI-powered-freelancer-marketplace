@@ -42,7 +42,7 @@ function LinkWrap({ to, onClick, children }: { to: string; onClick: () => void; 
 function renderCard(gig: GigCardData, promoted?: boolean) {
   const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Seller";
   return (
-    <Link to={`/gig/${gig.id}`} className="group block">
+    <></>
       <div className="relative aspect-[4/3] overflow-hidden border-hairline bg-background-subtle transition-colors group-hover:border-white/20">
         {gig.thumbnail_url ? (
           <img src={gig.thumbnail_url} alt={gig.title}
@@ -86,7 +86,7 @@ function renderCard(gig: GigCardData, promoted?: boolean) {
           </div>
         </div>
       </div>
-    </Link>
+    </>
   );
 }
 
