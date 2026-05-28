@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { RiverWidget } from "@/components/layout/RiverWidget";
 import { useOnlineHeartbeat } from "@/hooks/useOnlineHeartbeat";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -88,6 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
         <main className="flex-1 p-10 min-w-0">{children}</main>
       </div>
+      <RiverWidget />
     </div>
   );
 }
