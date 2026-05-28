@@ -1,40 +1,21 @@
-# Ready-for-First-Test Hardening
+## Revert to light theme with green accent
 
-Close the remaining Fiverr-parity gaps and prep the app for a real end-to-end test run.
+Switch the global theme from the current dark monochrome back to the Fiverr-style light palette shown in the screenshot:
 
-## 1. Stripe Connect Express (automated payouts)
-- New edge functions `stripe-connect-onboard` and `stripe-connect-refresh`: create/fetch Express account, return onboarding link, sync `charges_enabled` / `payouts_enabled` / `onboarding_complete` into `seller_accounts`
-- Extend `stripe-webhook` to handle `account.updated` and `payout.*` events
-- New `request-payout` edge function: validate `available_balance` ≥ amount, create Stripe Transfer to connected account, write `withdrawals` row as `processing`
-- Seller Earnings page: replace manual withdrawal UI with "Connect bank" (when not onboarded) → "Withdraw" (when ready); show payout status
+- **Background:** white / light gray (`#ffffff`, subtle `#f5f5f5`)
+- **Foreground:** near-black (`#1a1a1a`) with muted gray (`#6b7280`)
+- **Primary accent:** Fiverr green (`#1dbf73` / hover `#19a463`)
+- **Borders:** light gray (`#e5e7eb`)
 
-## 2. SEO pass
-- Install `react-helmet-async`, wrap app in `<HelmetProvider>`
-- Per-route `<Helmet>` on Landing, Search, GigDetail, SellerProfile (title, description, canonical, og:*)
-- JSON-LD: Organization on Landing, Product on GigDetail (price, rating, seller), BreadcrumbList on category
-- Clean `index.html` sitewide tags (remove duplicate canonical)
+### Changes
+1. **`src/index.css`** — replace the `:root` HSL tokens (background, foreground, primary, border, muted, card, popover, sidebar) with the light palette above. Remove/override the `.dark` defaults so the app renders light by default.
+2. **No component edits needed** — all surfaces use semantic tokens (`bg-background`, `text-foreground`, `bg-primary`, etc.), so swapping tokens cascades everywhere (landing, header, search, gig cards, dashboards, admin).
+3. **Leave typography, spacing, radii, and layout untouched** — only colors change.
 
-## 3. Seller Analytics charts
-- New `/seller/analytics` page with Recharts: orders trend (30d line), earnings trend (30d bar), funnel (impressions→clicks→orders), top gigs table
-- Link from Seller Dashboard
+### Out of scope
+- No structural/layout changes
+- No logo change (katexs. stays as-is)
+- No per-component restyling
 
-## 4. Multi-step gig wizard
-- Refactor `GigEditor` into 5 steps: Overview → Pricing (3 packages + extras) → Description & FAQ → Requirements → Gallery & Publish
-- Step nav with validation per step, draft autosave
-
-## 5. Smoke-test prep
-- Seed 1 buyer + 1 seller account with master credentials documented
-- Seed 3 sample gigs across categories with packages, extras, requirements
-- Verify cron jobs run, realtime channels connect, email templates send (Resend)
-- Manual walk: signup → publish gig → admin approve → checkout → requirements → deliver → review → withdraw
-
-## Explicitly out of scope
-- Real KYC automation, video calls, multi-currency, native mobile
-
-## Technical notes
-- Stripe Connect needs `STRIPE_SECRET_KEY` (already set) plus `STRIPE_WEBHOOK_SECRET` (already set); no new secrets required
-- Recharts already in dependency tree
-- Helmet is the only new dep
-- All work is additive; no destructive migrations
-
-After build I'll run the smoke walk in the browser and report any defects before you start your test.
+### Note on memory
+The project memory currently pins "Minimalist dark (#020203 bg, #f8f7f4 text). Absolutely no gradients…". After you approve, I'll update `mem://style/visual-identity` and the index Core line to reflect the new light + green direction so future changes stay consistent.
