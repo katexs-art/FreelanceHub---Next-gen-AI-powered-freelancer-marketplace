@@ -55,10 +55,11 @@ export default function Search() {
 
       // Promoted: active promotions, exclude already-shown ids
       const { data: proms } = await supabase.from("gig_promotions")
-        .select("gig_id, gigs:gig_id(id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id)")
+        .select("id, gig_id, gigs:gig_id(id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id)")
         .eq("status", "active").gt("ends_at", new Date().toISOString()).limit(3);
-      const pRows = (proms ?? []).map((p: any) => p.gigs).filter(Boolean)
-        .map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null }));
+      const pRows = (proms ?? [])
+        .filter((p: any) => p.gigs)
+        .map((p: any) => ({ ...p.gigs, promotion_id: p.id, seller: byId.get(p.gigs.seller_id) ?? null }));
       const shownIds = new Set(pRows.map((g: any) => g.id));
       setPromoted(pRows);
       setGigs(mapped.filter((g) => !shownIds.has(g.id)));
