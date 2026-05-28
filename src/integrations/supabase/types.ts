@@ -1335,7 +1335,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_custom_offer: { Args: { _offer_id: string }; Returns: string }
       clear_due_seller_credits: { Args: never; Returns: undefined }
+      create_notification: {
+        Args: {
+          _body: string
+          _link: string
+          _title: string
+          _type: Database["public"]["Enums"]["notification_type"]
+          _user: string
+        }
+        Returns: undefined
+      }
       get_or_create_conversation: {
         Args: { _gig_id?: string; _order_id?: string; _other: string }
         Returns: string

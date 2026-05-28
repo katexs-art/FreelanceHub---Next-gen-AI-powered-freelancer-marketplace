@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare } from "lucide-react";
 import { LeaveReview } from "@/components/marketplace/LeaveReview";
+import { OrderResolutionActions } from "@/components/marketplace/OrderResolutionActions";
 
 interface Order {
   id: string; order_number: string; status: string; price: number;
@@ -163,7 +164,7 @@ export default function OrderWorkspace() {
           <Stat icon={RotateCw} label="Revisions" value={`${order.revision_count}/${order.gig_packages?.revisions ?? 0}`} />
         </div>
 
-        <div className="mt-4">
+        <div className="mt-4 flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={async () => {
             const other = isBuyer ? order.seller_id : order.buyer_id;
             const { data, error } = await supabase.rpc("get_or_create_conversation", {
@@ -174,6 +175,9 @@ export default function OrderWorkspace() {
           }}>
             <MessageSquare className="h-4 w-4" /> Message {isBuyer ? "seller" : "buyer"}
           </Button>
+          {!["completed","cancelled","refunded"].includes(order.status) && (
+            <OrderResolutionActions orderId={order.id} onChange={load} />
+          )}
         </div>
 
         {order.status === "completed" && (
