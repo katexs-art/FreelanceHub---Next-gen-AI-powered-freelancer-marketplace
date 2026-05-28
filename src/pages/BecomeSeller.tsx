@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ const STEPS = [
 
 export default function BecomeSeller() {
   const { user, profile, refresh } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const isAlreadySeller = profile?.role === "seller" || profile?.role === "admin";
 
@@ -28,9 +29,11 @@ export default function BecomeSeller() {
       await supabase.from("seller_accounts").upsert({ seller_id: user.id }, { onConflict: "seller_id" });
       toast.success("Welcome aboard! You're now a seller.");
       await refresh();
+      navigate("/seller/dashboard");
     } else toast.error(error.message);
     setLoading(false);
   };
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -46,7 +49,8 @@ export default function BecomeSeller() {
               {!user ? (
                 <Link to="/signup"><Button size="lg" variant="secondary">Become a seller</Button></Link>
               ) : isAlreadySeller ? (
-                <Link to="/seller/gigs/new"><Button size="lg" variant="secondary">Create your first gig</Button></Link>
+                <Link to="/seller/dashboard"><Button size="lg" variant="secondary">Go to seller dashboard</Button></Link>
+
               ) : (
                 <Button size="lg" variant="secondary" onClick={becomeSeller} disabled={loading}>
                   {loading ? "Setting up…" : "Activate seller mode"}
