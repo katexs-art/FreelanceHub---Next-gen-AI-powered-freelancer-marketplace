@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
+import { SaveGigButton } from "@/components/marketplace/SaveGigButton";
 
 export interface GigCardData {
   id: string;
@@ -15,7 +16,7 @@ export interface GigCardData {
   } | null;
 }
 
-export function GigCard({ gig }: { gig: GigCardData }) {
+export function GigCard({ gig, promoted }: { gig: GigCardData; promoted?: boolean }) {
   const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Seller";
   return (
     <Link to={`/gig/${gig.id}`} className="group block">
@@ -31,6 +32,12 @@ export function GigCard({ gig }: { gig: GigCardData }) {
             Top Rated
           </span>
         )}
+        {promoted && (
+          <span className="absolute bottom-2 left-2 text-[10px] uppercase tracking-wide font-semibold bg-foreground/90 text-background rounded-full px-2 py-0.5">
+            Promoted
+          </span>
+        )}
+        <SaveGigButton gigId={gig.id} className="absolute top-2 right-2" />
       </div>
       <div className="mt-3 space-y-1.5">
         <div className="flex items-center gap-2">
