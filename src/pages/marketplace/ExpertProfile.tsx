@@ -106,14 +106,27 @@ export default function ExpertProfile() {
               {services.map((s) => (
                 <div key={s.id} style={{ border: `1px solid ${C.border}`, borderRadius: 12, padding: "1.2rem", background: C.card }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-                    <div>
+                    <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: 600, marginBottom: 4 }}>{s.title}</div>
                       <div style={{ color: C.gray, fontSize: "0.85rem", marginBottom: 8 }}>{s.description}</div>
                       <div style={{ color: C.gray, fontSize: "0.7rem", fontFamily: MONO }}>
                         DELIVERY {s.delivery_days}D · {s.revisions} REVISIONS
                       </div>
                     </div>
-                    <div style={{ fontSize: "1.2rem", fontWeight: 600 }}>${s.price}</div>
+                    <div style={{ textAlign: "right" }}>
+                      <div style={{ fontSize: "1.2rem", fontWeight: 600, marginBottom: 8 }}>${s.price}</div>
+                      <button
+                        onClick={() => hire(s.id)}
+                        disabled={busyServiceId === s.id || user?.id === e.id}
+                        title={user?.id === e.id ? "You can't buy your own service" : ""}
+                        style={{
+                          background: C.neon, color: C.black, border: "none",
+                          borderRadius: 999, padding: "0.5rem 1.1rem", fontWeight: 600,
+                          cursor: busyServiceId === s.id ? "wait" : "pointer",
+                          opacity: user?.id === e.id ? 0.4 : 1,
+                        }}
+                      >{busyServiceId === s.id ? "Redirecting…" : "Hire now"}</button>
+                    </div>
                   </div>
                 </div>
               ))}
