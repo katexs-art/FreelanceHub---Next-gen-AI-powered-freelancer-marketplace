@@ -10,65 +10,59 @@
 
 @layer base {
   :root {
-    /* Canvas — pure black, hairline-stratified surfaces */
-    --background: 0 0% 0%;             /* #000000 */
-    --background-subtle: 0 0% 4%;      /* #0a0a0a */
-    --background-elevated: 0 0% 11%;   /* #1c1c1c */
+    /* Canvas — light, Fiverr-style */
+    --background: 0 0% 100%;
+    --background-subtle: 0 0% 98%;
+    --background-elevated: 0 0% 96%;
 
-    /* Type */
-    --foreground: 0 0% 100%;           /* #ffffff */
-    --foreground-muted: 0 0% 64%;      /* secondary */
-    --foreground-subtle: 0 0% 40%;     /* muted */
+    --foreground: 0 0% 10%;
+    --foreground-muted: 220 9% 46%;
+    --foreground-subtle: 220 9% 60%;
 
-    /* Primary = inverted (white on black canvas) */
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
-    --primary-hover: 0 0% 90%;
+    --primary: 156 74% 43%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 156 74% 38%;
 
-    --accent: 0 0% 100%;
-    --accent-foreground: 0 0% 0%;
+    --accent: 156 74% 43%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Hairline borders — barely-there white */
-    --border: 0 0% 100%;               /* used with /8 opacity via utility */
-    --border-strong: 0 0% 100%;        /* used with /16 opacity */
-    --input: 0 0% 11%;
-    --ring: 0 0% 100%;
+    --border: 220 13% 91%;
+    --border-strong: 220 13% 82%;
+    --input: 220 13% 91%;
+    --ring: 156 74% 43%;
 
-    /* Status */
     --success: 142 71% 45%;
     --warning: 38 92% 50%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* shadcn aliases — all anchored to the black canvas */
-    --secondary: 0 0% 11%;
-    --secondary-foreground: 0 0% 100%;
-    --muted: 0 0% 7%;
-    --muted-foreground: 0 0% 64%;
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 220 9% 46%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
 
     --radius: 4px;
 
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 7%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 11%;
-    --sidebar-ring: 0 0% 100%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 156 74% 43%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 156 74% 43%;
   }
 
-  /* Force-dark: this app does not have a light mode */
-  .dark { color-scheme: dark; }
+  .dark { color-scheme: light; }
 }
 
 @layer base {
-  * { border-color: hsl(var(--border) / 0.08); }
-  html { color-scheme: dark; }
+  * { border-color: hsl(var(--border)); }
+  html { color-scheme: light; }
   html, body {
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "ss01", "cv11";
@@ -76,7 +70,6 @@
   }
   body { min-height: 100vh; }
 
-  /* Display type — JetBrains Mono, tight, white */
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
     letter-spacing: -0.01em;
@@ -84,24 +77,20 @@
     font-weight: 500;
   }
 
-  /* Tabular numerals everywhere by default — marketplaces show numbers */
   .tabular, [class*="StatNumber"], .font-mono { font-variant-numeric: tabular-nums; }
 
-  /* Selection */
-  ::selection { background: hsl(0 0% 100%); color: hsl(0 0% 0%); }
+  ::selection { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); }
 
-  /* Focus ring — single hairline white, no shadow */
   *:focus-visible { outline: none; }
   :where(button, a, input, textarea, select, [role="button"]):focus-visible {
-    box-shadow: 0 0 0 1px hsl(0 0% 0%), 0 0 0 2px hsl(0 0% 100%);
+    box-shadow: 0 0 0 1px hsl(0 0% 100%), 0 0 0 2px hsl(var(--ring));
     border-radius: 4px;
   }
 
-  /* Scrollbar — minimal monochrome */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(0 0% 100% / 0.08); border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 100% / 0.16); }
+  ::-webkit-scrollbar-thumb { background: hsl(0 0% 0% / 0.12); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 0% / 0.24); }
 }
 
 @layer components {
