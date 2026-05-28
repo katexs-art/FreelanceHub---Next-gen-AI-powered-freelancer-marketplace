@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Send, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
+import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
 
 interface Conv {
   id: string;
@@ -22,6 +24,7 @@ interface Conv {
 interface Msg {
   id: string; conversation_id: string; sender_id: string; recipient_id: string;
   content: string | null; created_at: string; is_read: boolean;
+  custom_offer_id: string | null;
 }
 
 export default function Inbox() {
@@ -149,7 +152,7 @@ export default function Inbox() {
                 <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">
                   {(active.other?.full_name?.[0] ?? active.other?.username?.[0] ?? "?").toUpperCase()}
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold truncate">{active.other?.full_name ?? active.other?.username}</div>
                   {active.other?.username && (
                     <Link to={`/u/${active.other.username}`} className="text-xs text-foreground-muted hover:text-foreground">
@@ -157,11 +160,25 @@ export default function Inbox() {
                     </Link>
                   )}
                 </div>
+                {user && active.other?.id && (
+                  <CustomOfferComposer
+                    conversationId={active.id}
+                    sellerId={user.id}
+                    buyerId={active.participant_one === user.id ? active.participant_two : active.participant_one}
+                  />
+                )}
               </header>
 
               <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
                 {messages.map((m) => {
                   const mine = m.sender_id === user?.id;
+                  if (m.custom_offer_id) {
+                    return (
+                      <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+                        <CustomOfferCard offerId={m.custom_offer_id} />
+                      </div>
+                    );
+                  }
                   return (
                     <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                       <div className={cn("max-w-[70%] rounded-2xl px-4 py-2 text-sm",
