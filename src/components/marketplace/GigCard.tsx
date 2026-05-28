@@ -1,6 +1,8 @@
+import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Star } from "lucide-react";
 import { SaveGigButton } from "@/components/marketplace/SaveGigButton";
+import { trackPromotionEvent } from "@/lib/promotions";
 
 export interface GigCardData {
   id: string;
@@ -9,6 +11,7 @@ export interface GigCardData {
   starting_price: number;
   average_rating: number;
   total_reviews: number;
+  promotion_id?: string | null;
   seller?: {
     username: string | null;
     full_name: string | null;
@@ -17,6 +20,26 @@ export interface GigCardData {
 }
 
 export function GigCard({ gig, promoted }: { gig: GigCardData; promoted?: boolean }) {
+  const impressed = useRef(false);
+  useEffect(() => {
+    if (promoted && gig.promotion_id && !impressed.current) {
+      impressed.current = true;
+      trackPromotionEvent(gig.promotion_id, "impression");
+    }
+  }, [promoted, gig.promotion_id]);
+  const handleClick = () => {
+    if (promoted && gig.promotion_id) trackPromotionEvent(gig.promotion_id, "click");
+  };
+  return (
+    <LinkWrap onClick={handleClick} to={`/gig/${gig.id}`}>{renderCard(gig, promoted)}</LinkWrap>
+  );
+}
+
+function LinkWrap({ to, onClick, children }: { to: string; onClick: () => void; children: React.ReactNode }) {
+  return <Link to={to} onClick={onClick} className="group block">{children}</Link>;
+}
+
+function renderCard(gig: GigCardData, promoted?: boolean) {
   const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Seller";
   return (
     <Link to={`/gig/${gig.id}`} className="group block">
