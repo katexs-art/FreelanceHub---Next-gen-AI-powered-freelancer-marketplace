@@ -1,101 +1,93 @@
-## Phase 11 — Trust, growth, and discovery polish (all four)
+## Locked design tokens (from your picks)
 
-Builds out the remaining marketplace pillars in one pass: a real dispute flow, social signals (saves + follows), paid placement, and trust & safety (KYC + reporting).
+- **Canvas**: `#000000` page, `#0a0a0a` surface, `#1c1c1c` elevated, hairline borders `rgba(255,255,255,0.08)`.
+- **Type**: `#ffffff` primary, `rgba(255,255,255,0.64)` secondary, `rgba(255,255,255,0.4)` muted. No colored text except status (success/danger/warn).
+- **Fonts**: JetBrains Mono (display, all-caps tracked, numerics, eyebrows, badges) + Work Sans (body, UI, long-form). No serifs.
+- **Geometry**: 1px borders, 4px radii on inputs/cards, 999px on pills. No shadows, no gradients, no glows — depth comes from borders + spacing only.
+- **Motion**: ≤200ms ease-out, opacity + 2-4px translate only. No bounce, no parallax, no scroll-jacking.
+- **Memory update**: overwrite the prior `katexs.` purple/green identity with this monochrome x.ai system; River AI keeps purple only inside its own panel.
 
-### 1. Disputes & resolution center
+This becomes the new `index.css` token layer + Tailwind theme. Every existing semantic token (`--background`, `--foreground`, `--primary`, `--card`, `--border`, etc.) is rewritten so existing components inherit the new look without touching their JSX.
 
-- Buyer/seller can open a dispute from the order workspace when status is `delivered`, `in_revision`, or `pending_acceptance`. New `OpenDisputeDialog` writes to existing `disputes` table.
-- `OrderWorkspace` shows a "Dispute open" banner with timeline of admin notes once raised; both parties can post replies via `messages` thread tied to that order.
-- Admin queue at `/admin` → new "Disputes" tab listing open disputes with order context, two resolution actions:
-  - **Refund buyer** → calls existing `stripe-refund` function, sets dispute `resolved`, order `refunded`.
-  - **Release to seller** → marks order `completed`, dispute `resolved`.
-- Adds `resolution_outcome` column (`refunded` | `released` | `mutual`) and `admin_notes` text on `disputes`.
+---
 
-### 2. Saved gigs & follow sellers
+## Phase A — Design system rewrite (foundation)
 
-- Use existing `saved_gigs` table; add a heart toggle on `GigCard` + `GigDetail`. New `/saved` page lists the user's saved gigs.
-- New `seller_follows` table (`follower_id`, `seller_id`, unique). "Follow" button on `SellerProfile`.
-- Inbox bell already exists — add a `new_gig` notification fanned out to followers when a seller publishes a gig (trigger on `gigs` insert with `status='active'`).
-- Add a "From sellers you follow" rail at the top of `Explore` (auth-only, hidden when empty).
+1. Rewrite `src/index.css` tokens + base layer: pure-black canvas, mono eyebrow class `.eyebrow` (JetBrains Mono, 11px, 0.18em tracking, uppercase), hairline `.divider`, `.surface` / `.surface-2` utilities, focus ring `1px solid #fff`.
+2. Rewrite `tailwind.config.ts` font families, container (max-w 1200, centered), and spacing scale tuned to 8px grid.
+3. Update shadcn primitives' variants only (Button, Input, Card, Tabs, Dialog, Badge, Select, DropdownMenu, Tooltip, Toast): monochrome, hairline borders, mono labels on Button. Default Button = white bg / black text; secondary = transparent + 1px white border; ghost = transparent + hover surface.
+4. New atoms in `src/components/ui/`: `Eyebrow`, `StatNumber` (large mono tabular numerals), `HairlineDivider`, `KeycapHint`, `Marquee` (logos/keywords), `MonoTag`.
 
-### 3. Promoted gigs & seller boosts
+## Phase B — Global chrome
 
-- New `gig_promotions` table: `gig_id`, `seller_id`, `daily_budget_cents`, `starts_at`, `ends_at`, `status` (`active`|`paused`|`ended`), `impressions`, `clicks`, `spend_cents`.
-- Seller dashboard: "Promote" action on each active gig → modal sets daily budget + duration. Charges flat $5/day from seller `available_balance` upfront via a new `transactions` row of type `promotion_charge` (added to enum).
-- `Search.tsx` + `Explore.tsx`: query promoted gigs first (limit 3, sorted by remaining budget), render with a small "Promoted" pill, then the normal results minus those ids.
-- Click + impression counters on the promoted slot bump `gig_promotions` counters via a `track_promotion_event` RPC.
+5. Rebuild `AppShell` top bar: black, hairline bottom, mono wordmark `KATEXS`, centered nav (Browse · Sell · Messages · Orders), right-side icon-only auth/cart/notifications, command-K search trigger.
+6. New `CommandPalette` (cmd-k) for global search + jump-to with mono styling.
+7. Rebuild footer: 4-column hairline grid, mono section headers, legal row with status dot ("All systems nominal").
 
-### 4. Trust & safety — KYC + reporting
+## Phase C — Public marketing pages (centered manifesto)
 
-- New `seller_verifications` table: `seller_id`, `status` (`unverified`|`pending`|`verified`|`rejected`), `id_document_url`, `selfie_url`, `submitted_at`, `reviewed_by`, `reviewed_at`, `rejection_reason`.
-- Seller settings → new "Verification" card with a 2-file upload flow into a new private `kyc-documents` bucket. Status badge on `SellerProfile` ("Verified seller" pill) when `verified`.
-- New `reports` table: `reporter_id`, `target_type` (`gig`|`user`|`message`), `target_id`, `reason` (enum), `description`, `status` (`open`|`reviewing`|`actioned`|`dismissed`).
-- "Report" item in the `…` menu on `GigDetail`, `SellerProfile`, and each inbox message bubble. Submits to `reports`.
-- Admin panel gains "Verification queue" and "Reports" tabs with approve/reject and take-action flows (hide gig, suspend seller via a new `profiles.suspended_at` column — suspended sellers' gigs are hidden by extending `gigs_public_read`).
+8. **Home `/`** (full rebuild to x.ai feel):
+   - Massive centered headline (clamp 56–112px, JetBrains Mono, tight leading), one-line sub in Work Sans, single AI search input pill underneath with rotating placeholder.
+   - Below: hairline-bordered "popular" mono chip row.
+   - Section bands (all centered, max-w 1100): Featured gigs (3-up), Categories (8-up icon grid, mono labels), "How Katexs works" 3-step with monospace numerals, Top sellers rail, Trust stats strip (StatNumber row: gigs delivered / avg rating / countries / payout volume), AI search demo block, Press/Logos marquee, Final CTA.
+9. **Browse / Explore / Search / Category / Subcategory**: shared `MarketShell` with mono filter rail (left on desktop, sheet on mobile), result grid using redesigned `GigCard` (square thumb, 1px border, mono price, hover = border whitens).
+10. **GigDetail**: two-column → hero image gallery + sticky package selector card (mono tabs Basic/Standard/Premium, tabular-num prices), seller strip, FAQ, reviews. Increments `clicks` on mount for promoted gigs.
+11. **SellerProfile**: centered identity block, mono stats row, gig grid, reviews. Verified + level badges in new monochrome style.
+12. **Static pages**: About, Trust & Safety, Pricing/Fees, Terms, Privacy, Help — single-column long-form with editorial measure (max-w 720), mono section eyebrows.
 
-## Technical details
+## Phase D — Authenticated app surfaces
 
-### New tables / columns
+13. Auth pages (`/login`, `/signup`, `/forgot`, `/reset`): centered card, hairline border, mono labels, single white CTA.
+14. Buyer dashboard (`/dashboard`): stat row + active orders + saved gigs + recommendations, all monochrome.
+15. **Seller dashboard `/selling`**: Overview (StatNumbers: earnings, active orders, response rate, completion rate), gigs table, orders table, analytics link.
+16. **Seller Analytics `/selling/analytics`** (new): impressions/clicks/orders/conversion charts (Recharts, monochrome lines, mono axis), date range.
+17. **My Gigs / Gig Editor**: multi-step editor (Overview → Pricing → Description → Requirements → Gallery → Publish) with mono step indicator; `pending_review` status surfaced.
+18. **Orders `/orders` + `/orders/:id` Workspace**: redesigned timeline, realtime chat panel, custom offers, delivery, accept/revision/dispute/cancellation, requirements gate before start.
+19. **Messages `/messages`**: 3-pane (threads / conversation / context), realtime, mono timestamps, attachment chips.
+20. **Account**: Profile, Notification prefs, Security, Payment methods, Saved, Following, Verification (KYC).
+21. **Earnings + Withdrawals `/selling/earnings`**: available / pending / clearing, withdrawal request UI tied to Connect payout.
 
-- `disputes`: add `resolution_outcome text`, `admin_notes text`.
-- `seller_follows(follower_id uuid, seller_id uuid, created_at timestamptz, unique(follower_id, seller_id))`.
-- `gig_promotions(... as above)`.
-- `seller_verifications(... as above)`.
-- `reports(... as above)`.
-- `profiles`: add `suspended_at timestamptz`.
-- Enum `transaction_type`: add `promotion_charge`.
-- Enum `notification_type`: add `system` (used for verification + report status pings) if not already present.
+## Phase E — Admin
 
-Every new public table gets explicit `GRANT`s (authenticated full CRUD where policies allow, `service_role ALL`, no `anon` grants — all are auth-only) plus RLS:
-- `seller_follows`: follower can insert/delete own rows; anyone can read counts via a `seller_follower_count(uuid)` SQL function.
-- `gig_promotions`: seller owns rows; public read of `active` rows (for the Promoted rail).
-- `seller_verifications`: seller reads/writes own; admin reads all + updates status.
-- `reports`: reporter inserts/reads own; admin reads/updates all.
+22. Redesign `/admin` with mono left rail + sections: Overview (KPIs), Users, Gigs (moderation incl. `pending_review`), Orders, Disputes, Revenue, Categories CRUD, Verifications, Reports, Settings.
 
-### New SQL functions / triggers
+## Phase F — Functional gap closure (Fiverr parity)
 
-- `track_promotion_event(_promotion_id uuid, _event text)` security-definer — bumps `impressions`/`clicks`.
-- `notify_followers_on_new_gig()` trigger on `gigs` (after insert/update where new status='active').
-- `suspend_seller(_seller uuid)` admin-only helper that sets `profiles.suspended_at` and flips all seller gigs to `paused`.
-- Extend `gigs_public_read` policy: also require `profiles.suspended_at IS NULL`.
+Backend/logic work performed alongside the visual rewrite:
 
-### Storage
+- **Profiles**: add `is_online` heartbeat (writes every 60s while tab focused) + live username availability check on signup/edit.
+- **Catalog**: add `pending_review` gig status; admin queue approves/rejects; route aliases `/browse`, `/categories/:slug`, `/categories/:slug/:sub`.
+- **Stripe**: migrate to Stripe Connect Express. New edge functions `stripe-connect-onboard`, `stripe-connect-refresh`, extend `stripe-webhook` for `account.updated` / `payout.*` / `charge.refunded`. Destination charges with application_fee for marketplace cut. Requirements gate blocks `start_order` until buyer submits requirements.
+- **Cron (pg_cron, hourly)**: `clear_due_seller_credits` (move pending→available after clearance window), `auto_complete_orders` (3 days post-delivery), `auto_publish_reviews` (14-day window), `expire_promotions` (zero remaining budget or past `ends_at`).
+- **Reviews**: enforce two-way gating (buyer can review after delivery accepted; seller can review after buyer review or auto-publish window).
+- **Notifications**: ensure every state transition fans out (new message, offer, delivery, revision, dispute, payout, follow, KYC result).
+- **Promoted gigs**: wire impression/click tracking on GigCard + GigDetail through `track_promotion_event`; daily budget enforcement via cron.
+- **Search**: full-text on `gigs.title + description + tags`, filters (price, delivery time, seller level, rating, online now), promoted-first ordering.
+- **Realtime**: enable on `messages`, `orders`, `notifications`, `disputes`.
+- **Responsive pass**: every page audited at 360 / 768 / 1280 / 1600.
+- **E2E smoke**: scripted walk — signup → become seller → create gig → admin approves → buyer searches → orders → submits requirements → chat → delivery → accept → review → seller withdrawal.
 
-- New private bucket `kyc-documents` with policies restricting read to the owning seller and admins; writes restricted to owner.
+## Phase G — Polish
 
-### Edge functions
+- Empty states (mono illustration-free, eyebrow + sentence + single CTA) on every list surface.
+- Skeleton loaders using hairline shimmer (opacity pulse, no gradient).
+- 404 / 500 pages in centered manifesto style.
+- SEO pass: per-page title/description, JSON-LD for gigs (Product) and sellers (Person), sitemap.xml, robots.txt, canonical tags.
 
-- `stripe-refund` already exists — reused from the admin dispute action.
-- New `promotion-charge` function: validates seller balance, inserts a `transactions` row, activates the `gig_promotions` row. (Lives separately so we can swap in real Stripe later without touching UI.)
+---
 
-### Frontend files
+## Technical notes
 
-New:
-- `src/components/marketplace/OpenDisputeDialog.tsx`
-- `src/components/marketplace/SaveGigButton.tsx`
-- `src/components/marketplace/FollowSellerButton.tsx`
-- `src/components/marketplace/ReportDialog.tsx`
-- `src/components/marketplace/PromoteGigDialog.tsx`
-- `src/components/marketplace/VerifiedBadge.tsx`
-- `src/pages/account/Saved.tsx`
-- `src/pages/seller/Verification.tsx`
-- `src/pages/admin/sections/DisputesQueue.tsx`
-- `src/pages/admin/sections/VerificationsQueue.tsx`
-- `src/pages/admin/sections/ReportsQueue.tsx`
-- `src/lib/promotions.ts` (impression/click tracking helper)
+- Token rewrite is non-destructive: components already consume `bg-background`, `text-foreground`, `border-border`, etc., so the visual flip is mostly CSS-layer.
+- Stripe Connect requires `STRIPE_SECRET_KEY` (already present per prior phases) — no new secret unless using a different account.
+- pg_cron + pg_net are enabled by Lovable Cloud; schedules added via migration.
+- Memory file `mem://style/visual-identity` will be overwritten to reflect the x.ai monochrome system; River AI exception kept.
+- Out of scope: native mobile apps, AI-generated gig images, video calls, multi-currency display (USD only), real KYC provider (manual admin review remains).
 
-Edited:
-- `src/App.tsx` — routes for `/saved`, `/seller/verification`.
-- `src/pages/orders/OrderWorkspace.tsx` — dispute banner + open-dispute entry.
-- `src/pages/admin/Admin.tsx` — three new tabs.
-- `src/pages/GigDetail.tsx`, `src/pages/SellerProfile.tsx`, `src/components/marketplace/GigCard.tsx` — heart, follow, verified badge, report menu.
-- `src/pages/Search.tsx`, `src/pages/Explore.tsx` — promoted rail + follow-feed.
-- `src/pages/seller/MyGigs.tsx` — Promote action per gig.
-- `src/components/layout/AppShell.tsx` — "Saved" link in buyer nav.
+## Sequencing
 
-### Out of scope (future)
+```text
+A (tokens) → B (chrome) → C (public) → D (app) → E (admin) → F (logic) → G (polish)
+```
 
-- Per-impression billing (we use a flat daily charge for now).
-- Messaging report auto-redaction.
-- Buyer KYC.
-- Real document verification provider integration (Stripe Identity / Persona) — current flow stores docs for manual admin review.
+Phases A+B are prerequisites; C–F can interleave per route. Estimated as one large build cycle; I'll work top-down and report at each phase boundary.
