@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { RiverWidget } from "@/components/layout/RiverWidget";
 import { useOnlineHeartbeat } from "@/hooks/useOnlineHeartbeat";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
