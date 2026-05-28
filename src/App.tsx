@@ -21,6 +21,11 @@ const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
 const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
 const MyGigs = lazy(() => import("./pages/seller/MyGigs"));
 const GigEditor = lazy(() => import("./pages/seller/GigEditor"));
+const Explore = lazy(() => import("./pages/Explore"));
+const Search = lazy(() => import("./pages/Search"));
+const CategoryPage = lazy(() => import("./pages/CategoryPage"));
+const GigDetail = lazy(() => import("./pages/GigDetail"));
+const SellerProfile = lazy(() => import("./pages/SellerProfile"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -41,11 +46,13 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Public marketplace (placeholders, built in next phase) */}
-            <Route path="/explore" element={<Placeholder title="Explore categories" />} />
-            <Route path="/search" element={<Placeholder title="Search results" />} />
-            <Route path="/gig/:slug" element={<Placeholder title="Gig detail" />} />
-            <Route path="/u/:username" element={<Placeholder title="Seller profile" />} />
+            {/* Public marketplace */}
+            <Route path="/explore" element={<Explore />} />
+            <Route path="/search" element={<Search />} />
+            <Route path="/category/:slug" element={<CategoryPage />} />
+            <Route path="/gig/:slug" element={<GigDetail />} />
+            <Route path="/u/:username" element={<SellerProfile />} />
+            <Route path="/become-a-seller" element={<BecomeSeller />} />
             <Route path="/become-a-seller" element={<BecomeSeller />} />
 
             {/* Buyer */}
