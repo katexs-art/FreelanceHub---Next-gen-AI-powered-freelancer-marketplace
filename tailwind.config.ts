@@ -12,11 +12,11 @@ export default {
     },
     extend: {
       fontFamily: {
-        // x.ai aesthetic: mono headlines + clean sans body
-        heading: ['"JetBrains Mono"', "ui-monospace", "monospace"],
-        body: ['"Work Sans"', "system-ui", "sans-serif"],
-        mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
-        sans: ['"Work Sans"', "system-ui", "sans-serif"],
+        // Katexs master: DM Sans body + Space Mono accents
+        heading: ['"DM Sans"', "system-ui", "sans-serif"],
+        body: ['"DM Sans"', "system-ui", "sans-serif"],
+        mono: ['"Space Mono"', '"JetBrains Mono"', "ui-monospace", "monospace"],
+        sans: ['"DM Sans"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
