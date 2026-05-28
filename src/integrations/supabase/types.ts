@@ -14,1036 +14,59 @@ export type Database = {
   }
   public: {
     Tables: {
-      activities: {
+      ai_search_sessions: {
         Row: {
-          contact_id: string | null
+          budget_filter: string | null
+          clicked_gig_id: string | null
+          confidence: number | null
           created_at: string
-          description: string | null
+          delivery_filter: string | null
           id: string
-          type: Database["public"]["Enums"]["activity_type"]
-          user_id: string
-        }
-        Insert: {
-          contact_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          type: Database["public"]["Enums"]["activity_type"]
-          user_id: string
-        }
-        Update: {
-          contact_id?: string | null
-          created_at?: string
-          description?: string | null
-          id?: string
-          type?: Database["public"]["Enums"]["activity_type"]
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "activities_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      admin_activity_logs: {
-        Row: {
-          action_type: string
-          admin_user_id: string
-          created_at: string
-          details: Json | null
-          id: string
-          ip_address: string | null
-          target_id: string | null
-          target_type: string | null
-        }
-        Insert: {
-          action_type: string
-          admin_user_id: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: string | null
-          target_id?: string | null
-          target_type?: string | null
-        }
-        Update: {
-          action_type?: string
-          admin_user_id?: string
-          created_at?: string
-          details?: Json | null
-          id?: string
-          ip_address?: string | null
-          target_id?: string | null
-          target_type?: string | null
-        }
-        Relationships: []
-      }
-      admin_users: {
-        Row: {
-          created_at: string
-          id: string
-          role: Database["public"]["Enums"]["admin_role"]
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["admin_role"]
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          role?: Database["public"]["Enums"]["admin_role"]
-          user_id?: string
-        }
-        Relationships: []
-      }
-      affiliate_clicks: {
-        Row: {
-          affiliate_id: string
-          clicked_at: string
-          converted: boolean
-          converted_at: string | null
-          id: string
-          ip_hash: string | null
-          source: string | null
-        }
-        Insert: {
-          affiliate_id: string
-          clicked_at?: string
-          converted?: boolean
-          converted_at?: string | null
-          id?: string
-          ip_hash?: string | null
-          source?: string | null
-        }
-        Update: {
-          affiliate_id?: string
-          clicked_at?: string
-          converted?: boolean
-          converted_at?: string | null
-          id?: string
-          ip_hash?: string | null
-          source?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_clicks_affiliate_id_fkey"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      affiliate_payouts: {
-        Row: {
-          affiliate_id: string
-          amount: number
-          created_at: string
-          id: string
-          period_end: string
-          period_start: string
-          status: string
-          stripe_payout_id: string | null
-        }
-        Insert: {
-          affiliate_id: string
-          amount?: number
-          created_at?: string
-          id?: string
-          period_end: string
-          period_start: string
-          status?: string
-          stripe_payout_id?: string | null
-        }
-        Update: {
-          affiliate_id?: string
-          amount?: number
-          created_at?: string
-          id?: string
-          period_end?: string
-          period_start?: string
-          status?: string
-          stripe_payout_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "affiliate_payouts_affiliate_id_fkey"
-            columns: ["affiliate_id"]
-            isOneToOne: false
-            referencedRelation: "affiliates"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      affiliates: {
-        Row: {
-          created_at: string
-          earnings: number
-          id: string
-          payout_status: Database["public"]["Enums"]["payout_status"]
-          referral_code: string
-          referred_count: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          earnings?: number
-          id?: string
-          payout_status?: Database["public"]["Enums"]["payout_status"]
-          referral_code: string
-          referred_count?: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          earnings?: number
-          id?: string
-          payout_status?: Database["public"]["Enums"]["payout_status"]
-          referral_code?: string
-          referred_count?: number
-          user_id?: string
-        }
-        Relationships: []
-      }
-      ai_studio_sessions: {
-        Row: {
-          config_snapshot: Json | null
-          created_at: string
-          feedback: string | null
-          id: string
-          session_type: string
-          user_id: string
-        }
-        Insert: {
-          config_snapshot?: Json | null
-          created_at?: string
-          feedback?: string | null
-          id?: string
-          session_type?: string
-          user_id: string
-        }
-        Update: {
-          config_snapshot?: Json | null
-          created_at?: string
-          feedback?: string | null
-          id?: string
-          session_type?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      api_keys: {
-        Row: {
-          created_at: string
-          id: string
-          key_hash: string
-          last_used: string | null
-          name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          key_hash: string
-          last_used?: string | null
-          name?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          key_hash?: string
-          last_used?: string | null
-          name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      categories: {
-        Row: {
-          description: string | null
-          icon: string | null
-          id: string
-          is_active: boolean | null
-          listing_count: number | null
-          name: string
-          slug: string
-          sort_order: number | null
-        }
-        Insert: {
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          listing_count?: number | null
-          name: string
-          slug: string
-          sort_order?: number | null
-        }
-        Update: {
-          description?: string | null
-          icon?: string | null
-          id?: string
-          is_active?: boolean | null
-          listing_count?: number | null
-          name?: string
-          slug?: string
-          sort_order?: number | null
-        }
-        Relationships: []
-      }
-      channel_members: {
-        Row: {
-          channel_id: string
-          id: string
-          joined_at: string
-          last_read_at: string | null
-          role: string
-          user_id: string
-        }
-        Insert: {
-          channel_id: string
-          id?: string
-          joined_at?: string
-          last_read_at?: string | null
-          role?: string
-          user_id: string
-        }
-        Update: {
-          channel_id?: string
-          id?: string
-          joined_at?: string
-          last_read_at?: string | null
-          role?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "channel_members_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "channels"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      channels: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          description: string | null
-          id: string
-          name: string
-          type: string
-          workspace_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          name: string
-          type?: string
-          workspace_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          id?: string
-          name?: string
-          type?: string
-          workspace_id?: string | null
-        }
-        Relationships: []
-      }
-      chat_sessions: {
-        Row: {
-          business_id: string
-          contact_id: string | null
-          ended_at: string | null
-          id: string
-          lead_captured: boolean
-          messages: Json | null
-          source_url: string | null
-          started_at: string
-          visitor_id: string
-        }
-        Insert: {
-          business_id: string
-          contact_id?: string | null
-          ended_at?: string | null
-          id?: string
-          lead_captured?: boolean
-          messages?: Json | null
-          source_url?: string | null
-          started_at?: string
-          visitor_id?: string
-        }
-        Update: {
-          business_id?: string
-          contact_id?: string | null
-          ended_at?: string | null
-          id?: string
-          lead_captured?: boolean
-          messages?: Json | null
-          source_url?: string | null
-          started_at?: string
-          visitor_id?: string
-        }
-        Relationships: []
-      }
-      contacts: {
-        Row: {
-          created_at: string
-          email: string | null
-          first_name: string
-          id: string
-          last_name: string | null
-          notes: string | null
-          phone: string | null
-          source: string | null
-          status: Database["public"]["Enums"]["contact_status"]
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          email?: string | null
-          first_name: string
-          id?: string
-          last_name?: string | null
-          notes?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: Database["public"]["Enums"]["contact_status"]
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          email?: string | null
-          first_name?: string
-          id?: string
-          last_name?: string | null
-          notes?: string | null
-          phone?: string | null
-          source?: string | null
-          status?: Database["public"]["Enums"]["contact_status"]
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      deals: {
-        Row: {
-          contact_id: string | null
-          created_at: string
-          id: string
-          stage: Database["public"]["Enums"]["deal_stage"]
-          title: string
-          updated_at: string
-          user_id: string
-          value: number | null
-        }
-        Insert: {
-          contact_id?: string | null
-          created_at?: string
-          id?: string
-          stage?: Database["public"]["Enums"]["deal_stage"]
-          title: string
-          updated_at?: string
-          user_id: string
-          value?: number | null
-        }
-        Update: {
-          contact_id?: string | null
-          created_at?: string
-          id?: string
-          stage?: Database["public"]["Enums"]["deal_stage"]
-          title?: string
-          updated_at?: string
-          user_id?: string
-          value?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "deals_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      error_logs: {
-        Row: {
-          created_at: string | null
-          error_message: string | null
-          function_name: string
-          id: string
-        }
-        Insert: {
-          created_at?: string | null
-          error_message?: string | null
-          function_name: string
-          id?: string
-        }
-        Update: {
-          created_at?: string | null
-          error_message?: string | null
-          function_name?: string
-          id?: string
-        }
-        Relationships: []
-      }
-      experts: {
-        Row: {
-          bio: string | null
-          created_at: string
-          delivery_time: string | null
-          featured: boolean | null
-          id: string
-          languages: string[] | null
-          portfolio_links: string[] | null
-          rating: number | null
-          repeat_rate: number | null
-          response_time: string | null
-          specialty: string | null
-          starting_price: number | null
-          status: string
-          tier: string
-          total_jobs: number | null
-          years_experience: string | null
-        }
-        Insert: {
-          bio?: string | null
-          created_at?: string
-          delivery_time?: string | null
-          featured?: boolean | null
-          id: string
-          languages?: string[] | null
-          portfolio_links?: string[] | null
-          rating?: number | null
-          repeat_rate?: number | null
-          response_time?: string | null
-          specialty?: string | null
-          starting_price?: number | null
-          status?: string
-          tier?: string
-          total_jobs?: number | null
-          years_experience?: string | null
-        }
-        Update: {
-          bio?: string | null
-          created_at?: string
-          delivery_time?: string | null
-          featured?: boolean | null
-          id?: string
-          languages?: string[] | null
-          portfolio_links?: string[] | null
-          rating?: number | null
-          repeat_rate?: number | null
-          response_time?: string | null
-          specialty?: string | null
-          starting_price?: number | null
-          status?: string
-          tier?: string
-          total_jobs?: number | null
-          years_experience?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "experts_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      integration_settings: {
-        Row: {
-          api_key: string | null
-          config: Json | null
-          connected_at: string | null
-          created_at: string
-          id: string
-          integration_name: string
-          last_tested: string | null
-          status: string
-          user_id: string
-        }
-        Insert: {
-          api_key?: string | null
-          config?: Json | null
-          connected_at?: string | null
-          created_at?: string
-          id?: string
-          integration_name: string
-          last_tested?: string | null
-          status?: string
-          user_id: string
-        }
-        Update: {
-          api_key?: string | null
-          config?: Json | null
-          connected_at?: string | null
-          created_at?: string
-          id?: string
-          integration_name?: string
-          last_tested?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      message_files: {
-        Row: {
-          created_at: string
-          file_name: string
-          file_size: number | null
-          file_type: string | null
-          file_url: string
-          id: string
-          message_id: string
-        }
-        Insert: {
-          created_at?: string
-          file_name: string
-          file_size?: number | null
-          file_type?: string | null
-          file_url: string
-          id?: string
-          message_id: string
-        }
-        Update: {
-          created_at?: string
-          file_name?: string
-          file_size?: number | null
-          file_type?: string | null
-          file_url?: string
-          id?: string
-          message_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "message_files_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messenger_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      message_reactions: {
-        Row: {
-          created_at: string
-          emoji: string
-          id: string
-          message_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          emoji: string
-          id?: string
-          message_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          emoji?: string
-          id?: string
-          message_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "message_reactions_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messenger_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      messages: {
-        Row: {
-          channel: Database["public"]["Enums"]["message_channel"]
-          content: string
-          created_at: string
-          id: string
-          read: boolean
-          receiver_id: string
-          sender_id: string
-        }
-        Insert: {
-          channel?: Database["public"]["Enums"]["message_channel"]
-          content: string
-          created_at?: string
-          id?: string
-          read?: boolean
-          receiver_id: string
-          sender_id: string
-        }
-        Update: {
-          channel?: Database["public"]["Enums"]["message_channel"]
-          content?: string
-          created_at?: string
-          id?: string
-          read?: boolean
-          receiver_id?: string
-          sender_id?: string
-        }
-        Relationships: []
-      }
-      messenger_messages: {
-        Row: {
-          channel_id: string
-          content: string
-          created_at: string
-          deleted_at: string | null
-          edited_at: string | null
-          id: string
-          message_type: string
-          sender_id: string
-          thread_id: string | null
-        }
-        Insert: {
-          channel_id: string
-          content: string
-          created_at?: string
-          deleted_at?: string | null
-          edited_at?: string | null
-          id?: string
-          message_type?: string
-          sender_id: string
-          thread_id?: string | null
-        }
-        Update: {
-          channel_id?: string
-          content?: string
-          created_at?: string
-          deleted_at?: string | null
-          edited_at?: string | null
-          id?: string
-          message_type?: string
-          sender_id?: string
-          thread_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "messenger_messages_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "channels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "messenger_messages_thread_id_fkey"
-            columns: ["thread_id"]
-            isOneToOne: false
-            referencedRelation: "messenger_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      notification_settings: {
-        Row: {
-          created_at: string
-          enabled: boolean
-          id: string
-          setting_key: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          setting_key: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          enabled?: boolean
-          id?: string
-          setting_key?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      platform_settings: {
-        Row: {
-          id: string
-          key: string
-          updated_at: string
-          updated_by: string | null
-          value: Json | null
-        }
-        Insert: {
-          id?: string
-          key: string
-          updated_at?: string
-          updated_by?: string | null
-          value?: Json | null
-        }
-        Update: {
-          id?: string
-          key?: string
-          updated_at?: string
-          updated_by?: string | null
-          value?: Json | null
-        }
-        Relationships: []
-      }
-      profiles: {
-        Row: {
-          avatar_url: string | null
-          business_name: string | null
-          created_at: string
-          email: string
-          full_name: string | null
-          id: string
-          industry: string | null
-          role: string
-          updated_at: string
-        }
-        Insert: {
-          avatar_url?: string | null
-          business_name?: string | null
-          created_at?: string
-          email: string
-          full_name?: string | null
-          id: string
-          industry?: string | null
-          role?: string
-          updated_at?: string
-        }
-        Update: {
-          avatar_url?: string | null
-          business_name?: string | null
-          created_at?: string
-          email?: string
-          full_name?: string | null
-          id?: string
-          industry?: string | null
-          role?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      project_messages: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          is_read: boolean | null
-          project_id: string
-          sender_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          project_id: string
-          sender_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
-          project_id?: string
-          sender_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "project_messages_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "project_messages_sender_id_fkey"
-            columns: ["sender_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      projects: {
-        Row: {
-          client_id: string
-          created_at: string
-          delivery_deadline: string | null
-          description: string | null
-          expert_id: string
-          expert_payout: number
-          id: string
-          platform_fee: number
-          price: number
-          review_deadline: string | null
-          service_id: string | null
-          status: string
-          stripe_charge_id: string | null
-          stripe_payment_intent_id: string | null
-          title: string | null
-          updated_at: string
-        }
-        Insert: {
-          client_id: string
-          created_at?: string
-          delivery_deadline?: string | null
-          description?: string | null
-          expert_id: string
-          expert_payout: number
-          id?: string
-          platform_fee: number
-          price: number
-          review_deadline?: string | null
-          service_id?: string | null
-          status?: string
-          stripe_charge_id?: string | null
-          stripe_payment_intent_id?: string | null
-          title?: string | null
-          updated_at?: string
-        }
-        Update: {
-          client_id?: string
-          created_at?: string
-          delivery_deadline?: string | null
-          description?: string | null
-          expert_id?: string
-          expert_payout?: number
-          id?: string
-          platform_fee?: number
-          price?: number
-          review_deadline?: string | null
-          service_id?: string | null
-          status?: string
-          stripe_charge_id?: string | null
-          stripe_payment_intent_id?: string | null
-          title?: string | null
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "projects_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_expert_id_fkey"
-            columns: ["expert_id"]
-            isOneToOne: false
-            referencedRelation: "experts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "projects_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      reviews: {
-        Row: {
-          client_id: string
-          created_at: string
-          expert_id: string
-          id: string
-          project_id: string
-          rating: number
-          review_text: string | null
-        }
-        Insert: {
-          client_id: string
-          created_at?: string
-          expert_id: string
-          id?: string
-          project_id: string
-          rating: number
-          review_text?: string | null
-        }
-        Update: {
-          client_id?: string
-          created_at?: string
-          expert_id?: string
-          id?: string
-          project_id?: string
-          rating?: number
-          review_text?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "reviews_client_id_fkey"
-            columns: ["client_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_expert_id_fkey"
-            columns: ["expert_id"]
-            isOneToOne: false
-            referencedRelation: "experts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "reviews_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      river_sessions: {
-        Row: {
-          converted: boolean | null
-          created_at: string
-          id: string
-          intent: string | null
-          matched_expert_ids: string[] | null
-          messages: Json | null
+          query: string | null
+          refined_query: string | null
+          result_gig_ids: string[] | null
+          session_id: string | null
+          suggested_categories: string[] | null
           user_id: string | null
         }
         Insert: {
-          converted?: boolean | null
+          budget_filter?: string | null
+          clicked_gig_id?: string | null
+          confidence?: number | null
           created_at?: string
+          delivery_filter?: string | null
           id?: string
-          intent?: string | null
-          matched_expert_ids?: string[] | null
-          messages?: Json | null
+          query?: string | null
+          refined_query?: string | null
+          result_gig_ids?: string[] | null
+          session_id?: string | null
+          suggested_categories?: string[] | null
           user_id?: string | null
         }
         Update: {
-          converted?: boolean | null
+          budget_filter?: string | null
+          clicked_gig_id?: string | null
+          confidence?: number | null
           created_at?: string
+          delivery_filter?: string | null
           id?: string
-          intent?: string | null
-          matched_expert_ids?: string[] | null
-          messages?: Json | null
+          query?: string | null
+          refined_query?: string | null
+          result_gig_ids?: string[] | null
+          session_id?: string | null
+          suggested_categories?: string[] | null
           user_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "river_sessions_user_id_fkey"
+            foreignKeyName: "ai_search_sessions_clicked_gig_id_fkey"
+            columns: ["clicked_gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_search_sessions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -1051,467 +74,993 @@ export type Database = {
           },
         ]
       }
-      services: {
+      cancellation_requests: {
         Row: {
-          category: string | null
           created_at: string
-          delivery_days: number | null
+          id: string
+          order_id: string
+          reason: string | null
+          requested_by: string
+          status: Database["public"]["Enums"]["cancellation_status"]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          order_id: string
+          reason?: string | null
+          requested_by: string
+          status?: Database["public"]["Enums"]["cancellation_status"]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          order_id?: string
+          reason?: string | null
+          requested_by?: string
+          status?: Database["public"]["Enums"]["cancellation_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cancellation_requests_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cancellation_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          created_at: string
+          icon: string | null
+          id: string
+          is_active: boolean
+          name: string
+          parent_id: string | null
+          slug: string
+          sort_order: number | null
+        }
+        Insert: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number | null
+        }
+        Update: {
+          created_at?: string
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_offers: {
+        Row: {
+          buyer_id: string
+          conversation_id: string
+          created_at: string
+          delivery_days: number
           description: string | null
-          expert_id: string
+          expires_at: string | null
+          gig_id: string | null
           id: string
-          is_active: boolean | null
           price: number
-          revisions: number | null
-          title: string
+          revisions: number
+          seller_id: string
+          status: Database["public"]["Enums"]["offer_status"]
         }
         Insert: {
-          category?: string | null
+          buyer_id: string
+          conversation_id: string
           created_at?: string
-          delivery_days?: number | null
+          delivery_days: number
           description?: string | null
-          expert_id: string
+          expires_at?: string | null
+          gig_id?: string | null
           id?: string
-          is_active?: boolean | null
           price: number
-          revisions?: number | null
-          title: string
+          revisions?: number
+          seller_id: string
+          status?: Database["public"]["Enums"]["offer_status"]
         }
         Update: {
-          category?: string | null
+          buyer_id?: string
+          conversation_id?: string
           created_at?: string
-          delivery_days?: number | null
+          delivery_days?: number
           description?: string | null
-          expert_id?: string
+          expires_at?: string | null
+          gig_id?: string | null
           id?: string
-          is_active?: boolean | null
           price?: number
-          revisions?: number | null
-          title?: string
+          revisions?: number
+          seller_id?: string
+          status?: Database["public"]["Enums"]["offer_status"]
         }
         Relationships: [
           {
-            foreignKeyName: "services_expert_id_fkey"
-            columns: ["expert_id"]
-            isOneToOne: false
-            referencedRelation: "experts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      support_tickets: {
-        Row: {
-          assigned_to: string | null
-          channel_id: string
-          created_at: string
-          id: string
-          message_id: string | null
-          priority: string
-          resolved_at: string | null
-          status: string
-        }
-        Insert: {
-          assigned_to?: string | null
-          channel_id: string
-          created_at?: string
-          id?: string
-          message_id?: string | null
-          priority?: string
-          resolved_at?: string | null
-          status?: string
-        }
-        Update: {
-          assigned_to?: string | null
-          channel_id?: string
-          created_at?: string
-          id?: string
-          message_id?: string | null
-          priority?: string
-          resolved_at?: string | null
-          status?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "support_tickets_channel_id_fkey"
-            columns: ["channel_id"]
-            isOneToOne: false
-            referencedRelation: "channels"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "support_tickets_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messenger_messages"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      team_invites: {
-        Row: {
-          accepted: boolean
-          created_at: string
-          expires_at: string
-          id: string
-          invitee_email: string
-          inviter_id: string
-          role: string
-          token: string
-        }
-        Insert: {
-          accepted?: boolean
-          created_at?: string
-          expires_at?: string
-          id?: string
-          invitee_email: string
-          inviter_id: string
-          role?: string
-          token?: string
-        }
-        Update: {
-          accepted?: boolean
-          created_at?: string
-          expires_at?: string
-          id?: string
-          invitee_email?: string
-          inviter_id?: string
-          role?: string
-          token?: string
-        }
-        Relationships: []
-      }
-      team_members: {
-        Row: {
-          id: string
-          joined_at: string
-          last_active: string | null
-          owner_id: string
-          permissions: Json | null
-          role: string
-          user_id: string | null
-        }
-        Insert: {
-          id?: string
-          joined_at?: string
-          last_active?: string | null
-          owner_id: string
-          permissions?: Json | null
-          role?: string
-          user_id?: string | null
-        }
-        Update: {
-          id?: string
-          joined_at?: string
-          last_active?: string | null
-          owner_id?: string
-          permissions?: Json | null
-          role?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
-      transactions: {
-        Row: {
-          amount: number
-          client_id: string
-          created_at: string
-          expert_id: string
-          expert_payout: number
-          id: string
-          platform_fee: number
-          project_id: string
-          status: string
-          stripe_payment_intent_id: string | null
-          stripe_transfer_id: string | null
-        }
-        Insert: {
-          amount: number
-          client_id: string
-          created_at?: string
-          expert_id: string
-          expert_payout: number
-          id?: string
-          platform_fee: number
-          project_id: string
-          status?: string
-          stripe_payment_intent_id?: string | null
-          stripe_transfer_id?: string | null
-        }
-        Update: {
-          amount?: number
-          client_id?: string
-          created_at?: string
-          expert_id?: string
-          expert_payout?: number
-          id?: string
-          platform_fee?: number
-          project_id?: string
-          status?: string
-          stripe_payment_intent_id?: string | null
-          stripe_transfer_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transactions_client_id_fkey"
-            columns: ["client_id"]
+            foreignKeyName: "custom_offers_buyer_id_fkey"
+            columns: ["buyer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transactions_expert_id_fkey"
-            columns: ["expert_id"]
+            foreignKeyName: "custom_offers_gig_id_fkey"
+            columns: ["gig_id"]
             isOneToOne: false
-            referencedRelation: "experts"
+            referencedRelation: "gigs"
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "transactions_project_id_fkey"
-            columns: ["project_id"]
+            foreignKeyName: "custom_offers_seller_id_fkey"
+            columns: ["seller_id"]
             isOneToOne: false
-            referencedRelation: "projects"
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
       }
-      users: {
+      disputes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          order_id: string
+          raised_by: string
+          reason: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["dispute_status"]
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id: string
+          raised_by: string
+          reason?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          order_id?: string
+          raised_by?: string
+          reason?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["dispute_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_raised_by_fkey"
+            columns: ["raised_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "disputes_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gig_extras: {
+        Row: {
+          extra_delivery_days: number
+          gig_id: string
+          id: string
+          price: number
+          title: string
+        }
+        Insert: {
+          extra_delivery_days?: number
+          gig_id: string
+          id?: string
+          price: number
+          title: string
+        }
+        Update: {
+          extra_delivery_days?: number
+          gig_id?: string
+          id?: string
+          price?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gig_extras_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gig_packages: {
+        Row: {
+          delivery_days: number
+          description: string | null
+          features: string[] | null
+          gig_id: string
+          id: string
+          package_type: Database["public"]["Enums"]["package_type"]
+          price: number
+          revisions: number
+          title: string | null
+        }
+        Insert: {
+          delivery_days?: number
+          description?: string | null
+          features?: string[] | null
+          gig_id: string
+          id?: string
+          package_type: Database["public"]["Enums"]["package_type"]
+          price: number
+          revisions?: number
+          title?: string | null
+        }
+        Update: {
+          delivery_days?: number
+          description?: string | null
+          features?: string[] | null
+          gig_id?: string
+          id?: string
+          package_type?: Database["public"]["Enums"]["package_type"]
+          price?: number
+          revisions?: number
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gig_packages_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gig_requirements: {
+        Row: {
+          field_type: string
+          gig_id: string
+          id: string
+          is_required: boolean
+          options: string[] | null
+          question: string
+          sort_order: number | null
+        }
+        Insert: {
+          field_type?: string
+          gig_id: string
+          id?: string
+          is_required?: boolean
+          options?: string[] | null
+          question: string
+          sort_order?: number | null
+        }
+        Update: {
+          field_type?: string
+          gig_id?: string
+          id?: string
+          is_required?: boolean
+          options?: string[] | null
+          question?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gig_requirements_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gigs: {
+        Row: {
+          average_rating: number
+          category: string
+          clicks: number
+          created_at: string
+          description: string | null
+          gallery_urls: string[] | null
+          id: string
+          impressions: number
+          search_vector: unknown
+          seller_id: string
+          starting_price: number
+          status: Database["public"]["Enums"]["gig_status"]
+          subcategory: string | null
+          tags: string[] | null
+          thumbnail_url: string | null
+          title: string
+          total_orders: number
+          total_reviews: number
+          updated_at: string
+        }
+        Insert: {
+          average_rating?: number
+          category: string
+          clicks?: number
+          created_at?: string
+          description?: string | null
+          gallery_urls?: string[] | null
+          id?: string
+          impressions?: number
+          search_vector?: unknown
+          seller_id: string
+          starting_price: number
+          status?: Database["public"]["Enums"]["gig_status"]
+          subcategory?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title: string
+          total_orders?: number
+          total_reviews?: number
+          updated_at?: string
+        }
+        Update: {
+          average_rating?: number
+          category?: string
+          clicks?: number
+          created_at?: string
+          description?: string | null
+          gallery_urls?: string[] | null
+          id?: string
+          impressions?: number
+          search_vector?: unknown
+          seller_id?: string
+          starting_price?: number
+          status?: Database["public"]["Enums"]["gig_status"]
+          subcategory?: string | null
+          tags?: string[] | null
+          thumbnail_url?: string | null
+          title?: string
+          total_orders?: number
+          total_reviews?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gigs_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachment_url: string | null
+          content: string | null
+          conversation_id: string
+          created_at: string
+          custom_offer_id: string | null
+          id: string
+          is_read: boolean
+          order_id: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Insert: {
+          attachment_url?: string | null
+          content?: string | null
+          conversation_id: string
+          created_at?: string
+          custom_offer_id?: string | null
+          id?: string
+          is_read?: boolean
+          order_id?: string | null
+          recipient_id: string
+          sender_id: string
+        }
+        Update: {
+          attachment_url?: string | null
+          content?: string | null
+          conversation_id?: string
+          created_at?: string
+          custom_offer_id?: string | null
+          id?: string
+          is_read?: boolean
+          order_id?: string | null
+          recipient_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_custom_offer_id_fkey"
+            columns: ["custom_offer_id"]
+            isOneToOne: false
+            referencedRelation: "custom_offers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          is_read: boolean
+          link: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title: string
+          type: Database["public"]["Enums"]["notification_type"]
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link?: string | null
+          title?: string
+          type?: Database["public"]["Enums"]["notification_type"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_deliveries: {
+        Row: {
+          created_at: string
+          delivered_by: string
+          file_urls: string[] | null
+          id: string
+          is_revision: boolean
+          message: string | null
+          order_id: string
+        }
+        Insert: {
+          created_at?: string
+          delivered_by: string
+          file_urls?: string[] | null
+          id?: string
+          is_revision?: boolean
+          message?: string | null
+          order_id: string
+        }
+        Update: {
+          created_at?: string
+          delivered_by?: string
+          file_urls?: string[] | null
+          id?: string
+          is_revision?: boolean
+          message?: string | null
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_deliveries_delivered_by_fkey"
+            columns: ["delivered_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_deliveries_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_requirements_answers: {
+        Row: {
+          answer: string | null
+          created_at: string
+          file_url: string | null
+          id: string
+          order_id: string
+          requirement_id: string
+        }
+        Insert: {
+          answer?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          order_id: string
+          requirement_id: string
+        }
+        Update: {
+          answer?: string | null
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          order_id?: string
+          requirement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_requirements_answers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_requirements_answers_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "gig_requirements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          auto_complete_at: string | null
+          buyer_id: string
+          completed_at: string | null
+          created_at: string
+          delivered_at: string | null
+          delivery_deadline: string | null
+          gig_id: string
+          id: string
+          order_number: string
+          package_id: string | null
+          platform_fee: number
+          price: number
+          requirements_submitted: boolean
+          requirements_submitted_at: string | null
+          revision_count: number
+          selected_extra_ids: string[] | null
+          seller_earnings: number
+          seller_id: string
+          status: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_complete_at?: string | null
+          buyer_id: string
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_deadline?: string | null
+          gig_id: string
+          id?: string
+          order_number?: string
+          package_id?: string | null
+          platform_fee: number
+          price: number
+          requirements_submitted?: boolean
+          requirements_submitted_at?: string | null
+          revision_count?: number
+          selected_extra_ids?: string[] | null
+          seller_earnings: number
+          seller_id: string
+          status?: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_complete_at?: string | null
+          buyer_id?: string
+          completed_at?: string | null
+          created_at?: string
+          delivered_at?: string | null
+          delivery_deadline?: string | null
+          gig_id?: string
+          id?: string
+          order_number?: string
+          package_id?: string | null
+          platform_fee?: number
+          price?: number
+          requirements_submitted?: boolean
+          requirements_submitted_at?: string | null
+          revision_count?: number
+          selected_extra_ids?: string[] | null
+          seller_earnings?: number
+          seller_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "gig_packages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_settings: {
+        Row: {
+          id: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      profiles: {
         Row: {
           avatar_url: string | null
-          brand_color: string | null
-          business_address: Json | null
-          business_name: string | null
+          bio: string | null
+          country: string | null
           created_at: string
-          deleted_at: string | null
           email: string
           full_name: string | null
           id: string
-          industry: string | null
-          language: string | null
-          phone: string | null
-          plan: Database["public"]["Enums"]["user_plan"]
-          river_config: Json | null
-          timezone: string | null
-          trial_end_date: string | null
-          user_id: string
-          working_hours: Json | null
+          is_online: boolean
+          languages: string[] | null
+          last_seen: string | null
+          member_since: string
+          response_rate: number | null
+          response_time_minutes: number | null
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          username: string | null
         }
         Insert: {
           avatar_url?: string | null
-          brand_color?: string | null
-          business_address?: Json | null
-          business_name?: string | null
+          bio?: string | null
+          country?: string | null
           created_at?: string
-          deleted_at?: string | null
           email: string
           full_name?: string | null
-          id?: string
-          industry?: string | null
-          language?: string | null
-          phone?: string | null
-          plan?: Database["public"]["Enums"]["user_plan"]
-          river_config?: Json | null
-          timezone?: string | null
-          trial_end_date?: string | null
-          user_id: string
-          working_hours?: Json | null
+          id: string
+          is_online?: boolean
+          languages?: string[] | null
+          last_seen?: string | null
+          member_since?: string
+          response_rate?: number | null
+          response_time_minutes?: number | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          username?: string | null
         }
         Update: {
           avatar_url?: string | null
-          brand_color?: string | null
-          business_address?: Json | null
-          business_name?: string | null
+          bio?: string | null
+          country?: string | null
           created_at?: string
-          deleted_at?: string | null
           email?: string
           full_name?: string | null
           id?: string
-          industry?: string | null
-          language?: string | null
-          phone?: string | null
-          plan?: Database["public"]["Enums"]["user_plan"]
-          river_config?: Json | null
-          timezone?: string | null
-          trial_end_date?: string | null
-          user_id?: string
-          working_hours?: Json | null
+          is_online?: boolean
+          languages?: string[] | null
+          last_seen?: string | null
+          member_since?: string
+          response_rate?: number | null
+          response_time_minutes?: number | null
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          username?: string | null
         }
         Relationships: []
       }
-      vapi_analytics: {
+      reviews: {
         Row: {
-          data: Json | null
+          buyer_id: string
+          communication_rating: number | null
+          created_at: string
+          gig_id: string
           id: string
-          synced_at: string | null
-          user_id: string
+          is_public: boolean
+          order_id: string
+          rating: number
+          recommend_rating: number | null
+          reply: string | null
+          review_text: string | null
+          reviewer_role: string
+          seller_id: string
+          service_rating: number | null
         }
         Insert: {
-          data?: Json | null
+          buyer_id: string
+          communication_rating?: number | null
+          created_at?: string
+          gig_id: string
           id?: string
-          synced_at?: string | null
-          user_id: string
+          is_public?: boolean
+          order_id: string
+          rating: number
+          recommend_rating?: number | null
+          reply?: string | null
+          review_text?: string | null
+          reviewer_role: string
+          seller_id: string
+          service_rating?: number | null
         }
         Update: {
-          data?: Json | null
+          buyer_id?: string
+          communication_rating?: number | null
+          created_at?: string
+          gig_id?: string
           id?: string
-          synced_at?: string | null
-          user_id?: string
+          is_public?: boolean
+          order_id?: string
+          rating?: number
+          recommend_rating?: number | null
+          reply?: string | null
+          review_text?: string | null
+          reviewer_role?: string
+          seller_id?: string
+          service_rating?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "reviews_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      vapi_assistants: {
+      saved_gigs: {
         Row: {
-          created_at_vapi: string | null
-          first_message: string | null
+          created_at: string
+          gig_id: string
           id: string
-          is_active: boolean | null
-          model: string | null
-          name: string | null
-          raw_config: Json | null
-          synced_at: string | null
-          system_prompt: string | null
           user_id: string
-          vapi_id: string
-          voice_id: string | null
-          voice_provider: string | null
         }
         Insert: {
-          created_at_vapi?: string | null
-          first_message?: string | null
+          created_at?: string
+          gig_id: string
           id?: string
-          is_active?: boolean | null
-          model?: string | null
-          name?: string | null
-          raw_config?: Json | null
-          synced_at?: string | null
-          system_prompt?: string | null
           user_id: string
-          vapi_id: string
-          voice_id?: string | null
-          voice_provider?: string | null
         }
         Update: {
-          created_at_vapi?: string | null
-          first_message?: string | null
+          created_at?: string
+          gig_id?: string
           id?: string
-          is_active?: boolean | null
-          model?: string | null
-          name?: string | null
-          raw_config?: Json | null
-          synced_at?: string | null
-          system_prompt?: string | null
           user_id?: string
-          vapi_id?: string
-          voice_id?: string | null
-          voice_provider?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "saved_gigs_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_gigs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      vapi_calls: {
+      seller_accounts: {
         Row: {
-          assistant_id: string | null
-          caller_number: string | null
-          cost: number | null
-          duration_seconds: number | null
-          ended_at: string | null
-          ended_reason: string | null
+          available_balance: number
+          charges_enabled: boolean
+          created_at: string
           id: string
-          phone_number_id: string | null
-          raw_data: Json | null
-          recording_url: string | null
-          started_at: string | null
-          status: string | null
-          summary: string | null
-          synced_at: string | null
-          transcript: string | null
-          type: string | null
-          user_id: string
-          vapi_id: string
+          lifetime_earnings: number
+          onboarding_complete: boolean
+          payouts_enabled: boolean
+          pending_balance: number
+          seller_id: string
+          stripe_account_id: string | null
+          updated_at: string
         }
         Insert: {
-          assistant_id?: string | null
-          caller_number?: string | null
-          cost?: number | null
-          duration_seconds?: number | null
-          ended_at?: string | null
-          ended_reason?: string | null
+          available_balance?: number
+          charges_enabled?: boolean
+          created_at?: string
           id?: string
-          phone_number_id?: string | null
-          raw_data?: Json | null
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string | null
-          summary?: string | null
-          synced_at?: string | null
-          transcript?: string | null
-          type?: string | null
-          user_id: string
-          vapi_id: string
+          lifetime_earnings?: number
+          onboarding_complete?: boolean
+          payouts_enabled?: boolean
+          pending_balance?: number
+          seller_id: string
+          stripe_account_id?: string | null
+          updated_at?: string
         }
         Update: {
-          assistant_id?: string | null
-          caller_number?: string | null
-          cost?: number | null
-          duration_seconds?: number | null
-          ended_at?: string | null
-          ended_reason?: string | null
+          available_balance?: number
+          charges_enabled?: boolean
+          created_at?: string
           id?: string
-          phone_number_id?: string | null
-          raw_data?: Json | null
-          recording_url?: string | null
-          started_at?: string | null
-          status?: string | null
-          summary?: string | null
-          synced_at?: string | null
-          transcript?: string | null
-          type?: string | null
-          user_id?: string
-          vapi_id?: string
+          lifetime_earnings?: number
+          onboarding_complete?: boolean
+          payouts_enabled?: boolean
+          pending_balance?: number
+          seller_id?: string
+          stripe_account_id?: string | null
+          updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "seller_accounts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      vapi_phone_numbers: {
+      transactions: {
         Row: {
-          area_code: string | null
-          assistant_id: string | null
-          created_at_vapi: string | null
+          amount: number
+          clears_at: string | null
+          created_at: string
           id: string
-          is_primary: boolean | null
-          name: string | null
-          number: string | null
-          provider: string | null
-          raw_config: Json | null
-          synced_at: string | null
-          user_id: string
-          vapi_id: string
+          order_id: string | null
+          seller_id: string | null
+          status: Database["public"]["Enums"]["transaction_status"]
+          type: Database["public"]["Enums"]["transaction_type"]
         }
         Insert: {
-          area_code?: string | null
-          assistant_id?: string | null
-          created_at_vapi?: string | null
+          amount: number
+          clears_at?: string | null
+          created_at?: string
           id?: string
-          is_primary?: boolean | null
-          name?: string | null
-          number?: string | null
-          provider?: string | null
-          raw_config?: Json | null
-          synced_at?: string | null
-          user_id: string
-          vapi_id: string
+          order_id?: string | null
+          seller_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          type: Database["public"]["Enums"]["transaction_type"]
         }
         Update: {
-          area_code?: string | null
-          assistant_id?: string | null
-          created_at_vapi?: string | null
+          amount?: number
+          clears_at?: string | null
+          created_at?: string
           id?: string
-          is_primary?: boolean | null
-          name?: string | null
-          number?: string | null
-          provider?: string | null
-          raw_config?: Json | null
-          synced_at?: string | null
-          user_id?: string
-          vapi_id?: string
+          order_id?: string | null
+          seller_id?: string | null
+          status?: Database["public"]["Enums"]["transaction_status"]
+          type?: Database["public"]["Enums"]["transaction_type"]
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       webhook_logs: {
         Row: {
@@ -1551,6 +1100,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          paid_at: string | null
+          seller_id: string
+          status: Database["public"]["Enums"]["withdrawal_status"]
+          stripe_payout_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          seller_id: string
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+          stripe_payout_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          paid_at?: string | null
+          seller_id?: string
+          status?: Database["public"]["Enums"]["withdrawal_status"]
+          stripe_payout_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawals_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       workflow_runs: {
         Row: {
@@ -1603,13 +1190,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "workflow_runs_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "workflow_runs_workflow_id_fkey"
             columns: ["workflow_id"]
             isOneToOne: false
@@ -1653,13 +1233,6 @@ export type Database = {
           workflow_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "workflow_scheduled_contact_id_fkey"
-            columns: ["contact_id"]
-            isOneToOne: false
-            referencedRelation: "contacts"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "workflow_scheduled_run_id_fkey"
             columns: ["run_id"]
@@ -1715,27 +1288,56 @@ export type Database = {
     }
     Functions: {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
-      is_marketplace_admin: { Args: { _user_id: string }; Returns: boolean }
-      is_project_participant: {
-        Args: { _project_id: string; _user_id: string }
+      is_order_party: {
+        Args: { _order_id: string; _user_id: string }
         Returns: boolean
       }
     }
     Enums: {
-      activity_type: "call" | "sms" | "email" | "chat" | "note"
-      admin_role: "admin" | "support" | "sales"
-      contact_status:
-        | "new"
-        | "hot"
-        | "warm"
-        | "cold"
-        | "booked"
-        | "won"
-        | "lost"
-      deal_stage: "new" | "hot" | "booked" | "won" | "lost"
-      message_channel: "sms" | "email" | "chat" | "facebook" | "instagram"
-      payout_status: "pending" | "paid" | "failed"
-      user_plan: "starter" | "growth" | "enterprise"
+      cancellation_status: "pending" | "accepted" | "declined"
+      dispute_status:
+        | "open"
+        | "under_review"
+        | "resolved_refund"
+        | "resolved_release"
+        | "resolved_partial"
+      gig_status: "draft" | "pending_review" | "active" | "paused" | "denied"
+      notification_type:
+        | "order_placed"
+        | "requirements_submitted"
+        | "order_delivered"
+        | "order_completed"
+        | "revision_requested"
+        | "review_received"
+        | "custom_offer"
+        | "message"
+        | "dispute"
+        | "payout"
+      offer_status:
+        | "pending"
+        | "accepted"
+        | "declined"
+        | "withdrawn"
+        | "expired"
+      order_status:
+        | "pending_payment"
+        | "pending_requirements"
+        | "active"
+        | "delivered"
+        | "revision_requested"
+        | "completed"
+        | "cancelled"
+        | "disputed"
+      package_type: "basic" | "standard" | "premium"
+      transaction_status: "pending" | "cleared" | "reversed"
+      transaction_type:
+        | "charge"
+        | "platform_fee"
+        | "seller_credit"
+        | "refund"
+        | "withdrawal"
+      user_role: "client" | "seller" | "admin"
+      withdrawal_status: "requested" | "processing" | "paid" | "failed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1863,13 +1465,49 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      activity_type: ["call", "sms", "email", "chat", "note"],
-      admin_role: ["admin", "support", "sales"],
-      contact_status: ["new", "hot", "warm", "cold", "booked", "won", "lost"],
-      deal_stage: ["new", "hot", "booked", "won", "lost"],
-      message_channel: ["sms", "email", "chat", "facebook", "instagram"],
-      payout_status: ["pending", "paid", "failed"],
-      user_plan: ["starter", "growth", "enterprise"],
+      cancellation_status: ["pending", "accepted", "declined"],
+      dispute_status: [
+        "open",
+        "under_review",
+        "resolved_refund",
+        "resolved_release",
+        "resolved_partial",
+      ],
+      gig_status: ["draft", "pending_review", "active", "paused", "denied"],
+      notification_type: [
+        "order_placed",
+        "requirements_submitted",
+        "order_delivered",
+        "order_completed",
+        "revision_requested",
+        "review_received",
+        "custom_offer",
+        "message",
+        "dispute",
+        "payout",
+      ],
+      offer_status: ["pending", "accepted", "declined", "withdrawn", "expired"],
+      order_status: [
+        "pending_payment",
+        "pending_requirements",
+        "active",
+        "delivered",
+        "revision_requested",
+        "completed",
+        "cancelled",
+        "disputed",
+      ],
+      package_type: ["basic", "standard", "premium"],
+      transaction_status: ["pending", "cleared", "reversed"],
+      transaction_type: [
+        "charge",
+        "platform_fee",
+        "seller_credit",
+        "refund",
+        "withdrawal",
+      ],
+      user_role: ["client", "seller", "admin"],
+      withdrawal_status: ["requested", "processing", "paid", "failed"],
     },
   },
 } as const
