@@ -1,11 +1,33 @@
-import { useParams, Link } from "react-router-dom";
+import { useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { MarketplaceNav } from "@/components/marketplace/MarketplaceNav";
 import { useExpert } from "@/hooks/useExperts";
+import { useMarketplaceAuth } from "@/hooks/useMarketplaceAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { C, FONT, MONO, initialsOf } from "@/lib/marketplace/theme";
 
 export default function ExpertProfile() {
   const { id } = useParams<{ id: string }>();
   const { data: e, services, reviews, loading } = useExpert(id);
+  const { user } = useMarketplaceAuth();
+  const navigate = useNavigate();
+  const [busyServiceId, setBusyServiceId] = useState<string | null>(null);
+
+  async function hire(serviceId: string) {
+    if (!user) { navigate("/login"); return; }
+    setBusyServiceId(serviceId);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+        body: { service_id: serviceId },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (err: any) {
+      alert(err.message || "Checkout failed. Please try again.");
+    } finally {
+      setBusyServiceId(null);
+    }
+  }
 
   if (loading) {
     return (
