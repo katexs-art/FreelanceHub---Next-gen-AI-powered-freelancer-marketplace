@@ -89,6 +89,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </aside>
         <main className="flex-1 p-10 min-w-0">{children}</main>
       </div>
+      <RiverWidget />
+    </div>
     </div>
   );
 }
