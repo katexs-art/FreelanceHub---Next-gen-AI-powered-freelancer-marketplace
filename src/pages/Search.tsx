@@ -132,9 +132,12 @@ export default function Search() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => <GigCardSkeleton key={i} />)
-                : gigs.length === 0
+                : (promoted.length === 0 && gigs.length === 0)
                   ? <p className="col-span-full text-foreground-muted">No gigs match those filters.</p>
-                  : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+                  : <>
+                      {promoted.map((g) => <GigCard key={`p-${g.id}`} gig={g} promoted />)}
+                      {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+                    </>}
             </div>
           </div>
         </div>
