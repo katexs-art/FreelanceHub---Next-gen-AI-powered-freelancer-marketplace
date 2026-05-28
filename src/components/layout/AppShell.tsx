@@ -91,6 +91,5 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
       <RiverWidget />
     </div>
-    </div>
   );
 }
