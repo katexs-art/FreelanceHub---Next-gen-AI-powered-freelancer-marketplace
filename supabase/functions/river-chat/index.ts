@@ -1,7 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const ANTHROPIC_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
+const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
@@ -47,32 +47,33 @@ Deno.serve(async (req) => {
 
     const system = `${basePrompt}\n\nAvailable experts:\n${expertList}`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_KEY,
-        'anthropic-version': '2023-06-01',
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'claude-3-5-sonnet-20241022',
+        model: 'google/gemini-2.5-flash',
         max_tokens: 400,
-        system,
-        messages: messages.map((m: any) => ({
-          role: m.role === 'user' ? 'user' : 'assistant',
-          content: String(m.content ?? ''),
-        })),
+        messages: [
+          { role: 'system', content: system },
+          ...messages.map((m: any) => ({
+            role: m.role === 'user' ? 'user' : 'assistant',
+            content: String(m.content ?? ''),
+          })),
+        ],
       }),
     });
 
     if (!res.ok) {
       const txt = await res.text();
-      return new Response(JSON.stringify({ error: 'Anthropic error', details: txt }), {
+      return new Response(JSON.stringify({ error: 'AI gateway error', details: txt }), {
         status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
     const data = await res.json();
-    const reply = data.content?.[0]?.text ?? '';
+    const reply = data.choices?.[0]?.message?.content ?? '';
 
     // Persist session (best-effort)
     try {
