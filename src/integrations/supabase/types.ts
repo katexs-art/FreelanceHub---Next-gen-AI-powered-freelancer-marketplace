@@ -1335,6 +1335,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_custom_offer: { Args: { _offer_id: string }; Returns: string }
       clear_due_seller_credits: { Args: never; Returns: undefined }
       create_notification: {
         Args: {
