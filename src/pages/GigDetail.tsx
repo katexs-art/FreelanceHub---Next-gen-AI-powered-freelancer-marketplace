@@ -242,8 +242,18 @@ export default function GigDetail() {
                     </ul>
                   )}
 
-                  <Button className="w-full" size="lg"
-                    onClick={() => user ? toast.message("Checkout coming in Phase 4") : nav("/login")}>
+                  <Button className="w-full" size="lg" disabled={!selected}
+                    onClick={async () => {
+                      if (!user) return nav("/login");
+                      if (!selected) return;
+                      toast.loading("Redirecting to checkout…", { id: "co" });
+                      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+                        body: { package_id: selected.id, extra_ids: [] },
+                      });
+                      toast.dismiss("co");
+                      if (error || !data?.url) return toast.error(error?.message ?? "Checkout failed");
+                      window.location.href = data.url;
+                    }}>
                     Continue (${selected.price})
                   </Button>
                   <div className="grid grid-cols-2 gap-2">
