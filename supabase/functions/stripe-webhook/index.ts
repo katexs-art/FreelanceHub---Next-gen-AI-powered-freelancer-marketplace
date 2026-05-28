@@ -74,18 +74,7 @@ Deno.serve(async (req) => {
         { order_id: order.id, seller_id: md.seller_id, type: "seller_credit", amount: sellerEarnings, status: "pending" },
       ]);
 
-      // Notify both parties (best-effort)
-      const { data: parties } = await admin
-        .from("profiles").select("id,email,full_name").in("id", [md.buyer_id, md.seller_id]);
-      for (const p of parties ?? []) {
-        await admin.from("notifications").insert({
-          user_id: p.id,
-          type: "order_placed" as any,
-          title: "New order",
-          body: `Order ${order.order_number}`,
-          link: `/orders/${order.id}`,
-        }).then(() => {}).catch(() => {});
-      }
+      console.log("order created", order.id, order.order_number);
     }
 
     return new Response(JSON.stringify({ received: true }), {
