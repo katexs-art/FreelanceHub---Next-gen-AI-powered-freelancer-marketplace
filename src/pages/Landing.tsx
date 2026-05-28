@@ -1,52 +1,92 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Button } from "@/components/ui/button";
-import { Search, Star, Shield, Clock } from "lucide-react";
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/components/ui/mono";
+import { ArrowUpRight, ArrowRight, Command } from "lucide-react";
 
 const CATEGORIES = [
-  "Graphics & Design", "Programming & Tech", "Digital Marketing",
-  "Writing & Translation", "Video & Animation", "Music & Audio",
-  "Business", "AI Services",
+  { label: "Graphics & Design", count: "12.4K" },
+  { label: "Programming & Tech", count: "9.8K" },
+  { label: "Digital Marketing", count: "7.1K" },
+  { label: "Writing & Translation", count: "6.3K" },
+  { label: "Video & Animation", count: "5.9K" },
+  { label: "Music & Audio", count: "4.2K" },
+  { label: "AI Services", count: "3.6K" },
+  { label: "Business", count: "2.8K" },
 ];
+
+const ROTATING = [
+  "build a landing page in React",
+  "design a brand identity system",
+  "write a 90-day content plan",
+  "edit a 60-second product film",
+  "ship a Shopify storefront",
+  "compose a sonic logo",
+];
+
+const POPULAR = ["Logo Design", "WordPress", "Voice Over", "Video Editing", "AI Artists", "SEO"];
 
 export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
+  const [phIdx, setPhIdx] = useState(0);
+
+  useEffect(() => {
+    const id = setInterval(() => setPhIdx((i) => (i + 1) % ROTATING.length), 2800);
+    return () => clearInterval(id);
+  }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-background">
       <SiteHeader />
 
-      <section className="bg-background-elevated border-b border-border">
-        <div className="container py-20 md:py-28">
-          <h1 className="text-4xl md:text-6xl font-bold tracking-tight max-w-3xl">
-            Find the perfect <span className="text-primary">freelance services</span> for your business.
+      {/* ───────────────────────────── HERO ───────────────────────────── */}
+      <section className="relative border-b-hairline">
+        <div className="container-page pt-28 pb-24 md:pt-40 md:pb-32 text-center">
+          <div className="inline-flex items-center gap-2 mono-tag mb-10">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+            <span>KATEXS / V1 — LIVE 2026</span>
+          </div>
+
+          <h1 className="display-xl mx-auto max-w-5xl">
+            The freelance market,
+            <br />
+            <span className="text-foreground-muted">rebuilt from first principles.</span>
           </h1>
-          <p className="text-lg text-foreground-muted mt-4 max-w-xl">
-            Work with talented people at the most affordable price to get the most out of your time and cost.
+
+          <p className="mt-8 text-base md:text-lg text-foreground-muted max-w-xl mx-auto leading-relaxed">
+            A precision marketplace where talent and intent meet through intelligence — not noise.
           </p>
 
+          {/* AI search pill */}
           <form
             onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/search?q=${encodeURIComponent(q)}`); }}
-            className="mt-8 max-w-2xl relative"
+            className="mt-12 max-w-2xl mx-auto"
           >
-            <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-foreground-subtle" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder='Try "logo design"'
-              className="w-full h-14 pl-14 pr-32 rounded-full border border-input bg-background text-base focus:outline-none focus:border-ring shadow-sm"
-            />
-            <Button type="submit" className="absolute right-1.5 top-1/2 -translate-y-1/2">Search</Button>
+            <div className="surface flex items-center gap-3 rounded-full px-2 py-2 h-14 transition-colors hover:border-white/20">
+              <span className="eyebrow pl-4 hidden sm:inline">ASK</span>
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder={`Try: ${ROTATING[phIdx]}`}
+                className="flex-1 bg-transparent text-sm md:text-base focus:outline-none placeholder:text-foreground-subtle"
+              />
+              <span className="hidden md:inline-flex items-center gap-1 text-foreground-subtle">
+                <span className="keycap"><Command className="h-3 w-3" /></span>
+                <span className="keycap">K</span>
+              </span>
+              <Button type="submit" size="sm" className="h-10 rounded-full">
+                Search <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </form>
 
-          <div className="mt-6 text-sm text-foreground-muted flex flex-wrap gap-x-4 gap-y-2 items-center">
-            <span>Popular:</span>
-            {["Logo Design", "WordPress", "Voice Over", "Video Editing"].map((p) => (
-              <Link key={p} to={`/search?q=${encodeURIComponent(p)}`} className="px-3 py-1 rounded-full border border-border-strong hover:border-foreground transition-colors">
+          {/* Popular chips */}
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
+            {POPULAR.map((p) => (
+              <Link key={p} to={`/search?q=${encodeURIComponent(p)}`} className="mono-tag hover:border-white/30 hover:text-foreground transition-colors">
                 {p}
               </Link>
             ))}
@@ -54,47 +94,135 @@ export default function Landing() {
         </div>
       </section>
 
-      <section className="container py-16">
-        <h2 className="text-2xl font-bold mb-8">You need it, we've got it</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {CATEGORIES.map((c) => (
-            <Link key={c} to={`/explore?category=${encodeURIComponent(c)}`}
-              className="p-6 rounded-xl border border-border bg-background hover:border-primary hover:shadow-sm transition-all">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 mb-3" />
-              <div className="font-medium text-sm">{c}</div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-background-subtle border-y border-border py-16">
-        <div className="container grid md:grid-cols-3 gap-8">
+      {/* ───────────────────────────── STATS STRIP ───────────────────────────── */}
+      <section className="border-b-hairline">
+        <div className="container-page py-14 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06]">
           {[
-            { icon: Star, title: "Quality work", desc: "Hand-vetted experts and reviews you can trust." },
-            { icon: Shield, title: "Secure payments", desc: "Money in escrow until you approve the work." },
-            { icon: Clock, title: "Fast delivery", desc: "Clear deadlines, milestones, and on-time delivery." },
-          ].map(({ icon: Icon, title, desc }) => (
-            <div key={title} className="flex gap-4">
-              <div className="w-12 h-12 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <Icon className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-semibold">{title}</div>
-                <p className="text-sm text-foreground-muted mt-1">{desc}</p>
-              </div>
+            { label: "GIGS DELIVERED", value: "2.4M" },
+            { label: "AVG. RATING", value: "4.9" },
+            { label: "COUNTRIES", value: "164" },
+            { label: "PAID TO TALENT", value: "$1.2B" },
+          ].map((s) => (
+            <div key={s.label} className="bg-background px-6 py-8">
+              <div className="eyebrow mb-3">{s.label}</div>
+              <div className="font-mono text-3xl md:text-4xl text-foreground tabular">{s.value}</div>
             </div>
           ))}
         </div>
       </section>
 
-      <section className="container py-20 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Suddenly everything's possible.</h2>
-        <p className="text-foreground-muted mt-3 max-w-xl mx-auto">
-          Join thousands of buyers and sellers shaping the next generation of work.
-        </p>
-        <div className="mt-8 flex justify-center gap-3">
-          <Link to="/signup"><Button size="lg">Get started</Button></Link>
-          <Link to="/become-a-seller"><Button size="lg" variant="outline">Become a seller</Button></Link>
+      {/* ───────────────────────────── CATEGORIES ───────────────────────────── */}
+      <section className="border-b-hairline">
+        <div className="container-page py-24">
+          <div className="flex items-end justify-between mb-12">
+            <div>
+              <Eyebrow>01 / Catalog</Eyebrow>
+              <h2 className="display-md mt-3">Every craft. One surface.</h2>
+            </div>
+            <Link to="/explore" className="hidden md:inline-flex items-center gap-1 eyebrow hover:text-foreground transition-colors">
+              All categories <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06]">
+            {CATEGORIES.map((c, i) => (
+              <Link
+                key={c.label}
+                to={`/explore?category=${encodeURIComponent(c.label)}`}
+                className="bg-background p-6 md:p-8 group hover:bg-background-subtle transition-colors"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="font-mono text-xs text-foreground-subtle tabular">{String(i + 1).padStart(2, "0")}</span>
+                  <ArrowUpRight className="h-4 w-4 text-foreground-subtle group-hover:text-foreground transition-colors" />
+                </div>
+                <div className="mt-12 font-heading text-base md:text-lg leading-tight">{c.label}</div>
+                <div className="mt-2 eyebrow">{c.count} GIGS</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────────── HOW IT WORKS ───────────────────────────── */}
+      <section className="border-b-hairline">
+        <div className="container-page py-24">
+          <div className="text-center mb-16">
+            <Eyebrow>02 / Workflow</Eyebrow>
+            <h2 className="display-md mt-3 max-w-2xl mx-auto">Three moves. Zero ceremony.</h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-px bg-white/[0.06]">
+            {[
+              { n: "01", t: "Search with intent", d: "Describe the outcome. Our AI matches gigs, packages, and sellers in milliseconds — ranked by signal, not ads." },
+              { n: "02", t: "Brief & buy in escrow", d: "Pick a package, submit requirements, fund the order. Money sits in escrow until you accept the delivery." },
+              { n: "03", t: "Ship, review, repeat", d: "Realtime chat, custom offers, revisions, disputes — all in one workspace. Two-way reviews keep the bar high." },
+            ].map((s) => (
+              <div key={s.n} className="bg-background p-8 md:p-10">
+                <div className="font-mono text-5xl tabular text-foreground-subtle">{s.n}</div>
+                <div className="mt-8 font-heading text-xl">{s.t}</div>
+                <p className="mt-3 text-sm text-foreground-muted leading-relaxed">{s.d}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────────── TRUST / FOR BUSINESS ───────────────────────────── */}
+      <section className="border-b-hairline">
+        <div className="container-page py-24 grid md:grid-cols-2 gap-16 items-center">
+          <div>
+            <Eyebrow>03 / Trust</Eyebrow>
+            <h2 className="display-md mt-3">Built for serious work.</h2>
+            <p className="mt-6 text-foreground-muted max-w-md leading-relaxed">
+              Verified sellers, escrowed payments, dispute resolution, KYC, and an admin layer that operates at platform scale.
+              Every gig is screened. Every dollar is accounted for.
+            </p>
+            <div className="mt-10 flex flex-wrap gap-3">
+              <Link to="/become-a-seller"><Button variant="outline">Become a seller</Button></Link>
+              <Link to="/explore"><Button variant="ghost">Browse the catalog</Button></Link>
+            </div>
+          </div>
+          <div className="surface p-10 grid grid-cols-2 gap-px bg-white/[0.06]">
+            {[
+              { l: "ESCROW", v: "100%" },
+              { l: "DISPUTE SLA", v: "24H" },
+              { l: "KYC TIERS", v: "3" },
+              { l: "UPTIME", v: "99.99%" },
+            ].map((s) => (
+              <div key={s.l} className="bg-background-subtle p-6">
+                <div className="eyebrow">{s.l}</div>
+                <div className="mt-4 font-mono text-3xl tabular">{s.v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───────────────────────────── PRESS MARQUEE ───────────────────────────── */}
+      <section className="border-b-hairline py-14">
+        <div className="container-page mb-8 text-center">
+          <Eyebrow>TRUSTED BY OPERATORS AT</Eyebrow>
+        </div>
+        <Marquee>
+          {["STRIPE", "LINEAR", "VERCEL", "FIGMA", "NOTION", "RAYCAST", "SUPERHUMAN", "RAMP", "ARC", "MERCURY"].map((b) => (
+            <span key={b} className="font-mono text-xl text-foreground-subtle tracking-[0.18em] mx-10">{b}</span>
+          ))}
+        </Marquee>
+      </section>
+
+      {/* ───────────────────────────── FINAL CTA ───────────────────────────── */}
+      <section>
+        <div className="container-page py-32 text-center">
+          <Eyebrow>04 / Begin</Eyebrow>
+          <h2 className="display-lg mt-4 max-w-3xl mx-auto">
+            The next decade of work
+            <br />
+            <span className="text-foreground-muted">starts on Katexs.</span>
+          </h2>
+          <div className="mt-12 flex justify-center gap-3">
+            <Link to="/signup"><Button size="lg">Open an account</Button></Link>
+            <Link to="/become-a-seller"><Button size="lg" variant="outline">Sell on Katexs</Button></Link>
+          </div>
         </div>
       </section>
 
