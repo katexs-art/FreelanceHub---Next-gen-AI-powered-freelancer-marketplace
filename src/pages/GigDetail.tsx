@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Star, Clock, RefreshCw, Check, Heart, MessageSquare } from "lucide-react";
+import { ReviewsList } from "@/components/marketplace/ReviewsList";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -95,10 +96,14 @@ export default function GigDetail() {
     }
   };
 
-  const contactSeller = () => {
+  const contactSeller = async () => {
     if (!user) return nav("/login");
-    if (!seller) return;
-    nav(`/inbox?to=${seller.id}&gig=${gig?.id}`);
+    if (!seller || !gig) return;
+    const { data, error } = await supabase.rpc("get_or_create_conversation", {
+      _other: seller.id, _gig_id: gig.id, _order_id: null,
+    });
+    if (error) return toast.error(error.message);
+    nav(`/inbox/${data}`);
   };
 
   const selected = packages.find((p) => p.package_type === selectedTier) ?? packages[0];
@@ -199,6 +204,10 @@ export default function GigDetail() {
                   ))}
                 </div>
               )}
+            </section>
+            <section className="mt-10">
+              <h2 className="text-xl font-bold mb-4">Reviews {gig.total_reviews > 0 && <span className="text-foreground-muted font-normal">({gig.total_reviews})</span>}</h2>
+              <ReviewsList gigId={gig.id} />
             </section>
           </div>
 
