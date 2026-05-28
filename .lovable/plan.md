@@ -1,49 +1,28 @@
+# Enable admin access
 
+## Problem
+`admin@katexs.com` logs in successfully but has no row in `profiles`, so `useMarketplaceAuth` returns `profile = null`. As a result:
+- The "Admin" link never appears in the nav
+- Login redirects to `/dashboard/client` instead of `/admin`
+- `MarketplaceAdmin` page bounces back to `/` because `profile?.role !== "admin"`
 
-# Deploy Workflow Engine Edge Function + Wire Test Button
+The root cause is that the `handle_new_user()` function exists but is not attached to `auth.users`, so no profile is ever created on signup.
 
-## What We're Building
-A real workflow execution engine as a backend function, plus the database tables it needs, and wiring the "Test" button to actually execute workflows against a selected contact.
+## Fix
 
-## Database Changes (3 new tables)
+1. **Backfill profile for the admin user**
+   Insert a row into `public.profiles` for user id `ff9e32b8-8407-4a70-af4a-3a83560b42c1` with:
+   - `email = 'admin@katexs.com'`
+   - `full_name = 'Katexs Admin'`
+   - `role = 'admin'`
 
-**`workflow_runs`** — tracks each workflow execution
-- `id`, `workflow_id`, `contact_id`, `user_id`, `status` (running/waiting/completed/failed), `trigger_data` (jsonb), `step_results` (jsonb), `steps_completed` (int), `current_step` (int), `wait_until` (timestamptz), `started_at`, `completed_at`, `updated_at`, `created_at`
-- RLS: users can CRUD own runs
+2. **Attach `handle_new_user` trigger to `auth.users`**
+   `CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();`
+   This ensures every future signup (client or expert) automatically gets a `profiles` row with the correct role from signup metadata — so no one else hits the same blank-profile issue.
 
-**`workflow_scheduled`** — queues delayed steps for resumption
-- `id`, `workflow_id`, `run_id`, `contact_id`, `user_id`, `resume_step` (int), `scheduled_for` (timestamptz), `executed` (bool), `created_at`
-- RLS: users can view/insert own scheduled items
+3. **Backfill profiles for any other existing auth users without one** (safety net for accounts created before the trigger existed).
 
-**`error_logs`** — captures edge function errors
-- `id`, `function_name`, `error_message`, `created_at`
-- No RLS needed (service role only writes)
-
-## Edge Function
-
-**`supabase/functions/workflow-engine/index.ts`** — the code you provided, with one fix: adding CORS headers so the frontend can call it.
-
-Two actions:
-- `execute_workflow` — runs a specific workflow against a contact
-- `trigger` — finds all active workflows matching a trigger type and executes them
-
-## Secrets
-Most secrets already exist. **SENDGRID_API_KEY** is referenced but not yet added — we'll add it (or gracefully skip email steps if not set).
-
-## Frontend Changes
-
-**`WorkflowBuilder.tsx`** — Update Test button to:
-1. Show a contact picker dialog (select from user's contacts)
-2. Call the `workflow-engine` edge function with `action: "execute_workflow"`
-3. Show real results (success/failure per step)
-
-**`WorkflowBuilder.tsx`** — Add a `TestContactPicker` modal component inline that fetches contacts and lets user pick one before executing.
-
-## Technical Details
-
-| File | Change |
-|------|--------|
-| Migration | Create `workflow_runs`, `workflow_scheduled`, `error_logs` tables with RLS |
-| `supabase/functions/workflow-engine/index.ts` | Deploy the engine with CORS headers added |
-| `src/components/workflows/WorkflowBuilder.tsx` | Wire Test button to call edge function with contact picker |
-
+## Result
+- Log out and log back in as `admin@katexs.com` → routed to `/marketplace/admin`
+- Admin nav link appears (neon green)
+- Future signups work end-to-end without manual profile creation
