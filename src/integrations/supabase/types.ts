@@ -1516,6 +1516,8 @@ export type Database = {
     }
     Functions: {
       accept_custom_offer: { Args: { _offer_id: string }; Returns: string }
+      auto_complete_orders: { Args: never; Returns: undefined }
+      auto_publish_reviews: { Args: never; Returns: undefined }
       clear_due_seller_credits: { Args: never; Returns: undefined }
       create_notification: {
         Args: {
@@ -1527,15 +1529,18 @@ export type Database = {
         }
         Returns: undefined
       }
+      expire_promotions: { Args: never; Returns: undefined }
       get_or_create_conversation: {
         Args: { _gig_id?: string; _order_id?: string; _other: string }
         Returns: string
       }
+      heartbeat_online: { Args: never; Returns: undefined }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_order_party: {
         Args: { _order_id: string; _user_id: string }
         Returns: boolean
       }
+      mark_offline_stale: { Args: never; Returns: undefined }
       recompute_seller_balance: {
         Args: { _seller: string }
         Returns: undefined
