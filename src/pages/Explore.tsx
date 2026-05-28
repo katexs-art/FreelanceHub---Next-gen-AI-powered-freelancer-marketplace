@@ -54,6 +54,8 @@ export default function Explore() {
               ? <p className="text-foreground-muted col-span-full">No gigs published yet.</p>
               : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
         </div>
+
+        <RecentlyViewed />
       </main>
       <SiteFooter />
     </div>
