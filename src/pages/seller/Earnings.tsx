@@ -72,6 +72,9 @@ export default function Earnings() {
           <Card icon={TrendingUp} label="Lifetime" value={dollars(acct?.lifetime_earnings ?? 0)} />
         </div>
 
+        <StripeConnectCard />
+
+
         <PayoutMethodCard
           method={acct?.payout_method ?? null}
           paypalEmail={acct?.paypal_email ?? null}
