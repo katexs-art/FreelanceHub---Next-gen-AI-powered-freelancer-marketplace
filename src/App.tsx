@@ -37,6 +37,7 @@ const Saved = lazy(() => import("./pages/account/Saved"));
 const Verification = lazy(() => import("./pages/seller/Verification"));
 const BuyerDashboard = lazy(() => import("./pages/buyer/BuyerDashboard"));
 const Settings = lazy(() => import("./pages/account/Settings"));
+const SellerAnalytics = lazy(() => import("./pages/seller/SellerAnalytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -77,6 +78,7 @@ const App = () => (
             <Route path="/seller/gigs/:id/edit" element={<ProtectedRoute roles={["seller","admin"]}><GigEditor /></ProtectedRoute>} />
             <Route path="/seller/orders" element={<ProtectedRoute roles={["seller","admin"]}><OrdersList as="seller" /></ProtectedRoute>} />
             <Route path="/seller/earnings" element={<ProtectedRoute roles={["seller","admin"]}><Earnings /></ProtectedRoute>} />
+            <Route path="/seller/analytics" element={<ProtectedRoute roles={["seller","admin"]}><SellerAnalytics /></ProtectedRoute>} />
             <Route path="/seller/verification" element={<ProtectedRoute roles={["seller","admin"]}><Verification /></ProtectedRoute>} />
             <Route path="/saved" element={<ProtectedRoute><Saved /></ProtectedRoute>} />
 

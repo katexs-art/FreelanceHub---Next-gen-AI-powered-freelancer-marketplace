@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Package, ShoppingBag, Wallet, MessageSquare,
-  Settings, ShoppingCart, Search, LogOut, Plus, Heart, BadgeCheck,
+  Settings, ShoppingCart, Search, LogOut, Plus, Heart, BadgeCheck, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
@@ -20,6 +20,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { to: "/seller/gigs", icon: Package, label: "My gigs" },
     { to: "/seller/orders", icon: ShoppingBag, label: "Orders" },
     { to: "/seller/earnings", icon: Wallet, label: "Earnings" },
+    { to: "/seller/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/seller/verification", icon: BadgeCheck, label: "Verification" },
   ];
   const buyerLinks = [

@@ -1,50 +1,40 @@
-# Final Fiverr-Parity QA & Fix Pass
+# Ready-for-First-Test Hardening
 
-The prior cycle landed the backend automation (cron, review gating, presence), Buyer Dashboard, Settings, and promotion tracking. This pass closes the remaining gaps in one build cycle.
+Close the remaining Fiverr-parity gaps and prep the app for a real end-to-end test run.
 
-## Scope
+## 1. Stripe Connect Express (automated payouts)
+- New edge functions `stripe-connect-onboard` and `stripe-connect-refresh`: create/fetch Express account, return onboarding link, sync `charges_enabled` / `payouts_enabled` / `onboarding_complete` into `seller_accounts`
+- Extend `stripe-webhook` to handle `account.updated` and `payout.*` events
+- New `request-payout` edge function: validate `available_balance` ≥ amount, create Stripe Transfer to connected account, write `withdrawals` row as `processing`
+- Seller Earnings page: replace manual withdrawal UI with "Connect bank" (when not onboarded) → "Withdraw" (when ready); show payout status
 
-### 1. Route & navigation completeness
-- Add `/browse` alias → Explore (verify wired)
-- Add `/categories/:slug` and `/categories/:slug/:sub` → Search with prefilter
-- Add `NotFound` (404) and `ErrorBoundary` (500) pages, wire catch-all
-- Verify header/footer links resolve for both guest and authed states
+## 2. SEO pass
+- Install `react-helmet-async`, wrap app in `<HelmetProvider>`
+- Per-route `<Helmet>` on Landing, Search, GigDetail, SellerProfile (title, description, canonical, og:*)
+- JSON-LD: Organization on Landing, Product on GigDetail (price, rating, seller), BreadcrumbList on category
+- Clean `index.html` sitewide tags (remove duplicate canonical)
 
-### 2. Order lifecycle gating
-- `OrderDetail`: block delivery/messages UI until `requirements_submitted = true`
-- `RequirementsForm`: on submit, set `requirements_submitted_at` + status → `in_progress`, compute `delivery_deadline`
-- `LeaveReview`: confirm two-way gating copy matches new trigger behavior
+## 3. Seller Analytics charts
+- New `/seller/analytics` page with Recharts: orders trend (30d line), earnings trend (30d bar), funnel (impressions→clicks→orders), top gigs table
+- Link from Seller Dashboard
 
-### 3. Search & ranking
-- `Search.tsx`: order by `gig_promotions.status='active'` first, then `average_rating DESC, total_orders DESC`
-- Wire FTS query via `search_vector` when `q` param present
-- Empty state + result count
+## 4. Multi-step gig wizard
+- Refactor `GigEditor` into 5 steps: Overview → Pricing (3 packages + extras) → Description & FAQ → Requirements → Gallery & Publish
+- Step nav with validation per step, draft autosave
 
-### 4. Seller surfaces
-- `SellerAnalytics`: basic stats (orders, earnings, completion rate, response time/rate) — no Recharts, simple cards
-- `Withdrawals`: ensure request form validates against `available_balance`
-- Online status badge on seller profile + gig card uses `is_online`
+## 5. Smoke-test prep
+- Seed 1 buyer + 1 seller account with master credentials documented
+- Seed 3 sample gigs across categories with packages, extras, requirements
+- Verify cron jobs run, realtime channels connect, email templates send (Resend)
+- Manual walk: signup → publish gig → admin approve → checkout → requirements → deliver → review → withdraw
 
-### 5. Presence & realtime
-- Verify `useOnlineHeartbeat` mounted in `AppShell` (already added) and pings every 60s
-- Confirm `messages`, `orders`, `notifications` realtime subscriptions live on Inbox, OrderDetail, NotificationBell
-
-### 6. UX polish
-- Empty states for: Inbox, Orders, Saved, Notifications, Search
-- Loading skeletons on Landing, Search, GigDetail, Inbox
-- SEO: per-page `<title>` + meta description on Landing, Search, GigDetail, Profile
-- Responsive audit on Landing, Search, GigDetail, Inbox
-
-### 7. Smoke test (manual walk after build)
-Signup buyer → browse → open gig → place order → submit requirements → seller delivers → buyer accepts → both review → review publishes → seller withdraws.
-
-## Explicitly deferred
-- Stripe Connect Express onboarding (manual payouts remain)
-- Recharts analytics, JSON-LD SEO, real KYC, multi-currency, video calls, native mobile
+## Explicitly out of scope
+- Real KYC automation, video calls, multi-currency, native mobile
 
 ## Technical notes
-- All edits frontend-only except optional small migration if a missing index surfaces during search testing
-- No new tables; reuse existing schema and RPCs
-- Keep monochrome x.ai tokens; no new colors
+- Stripe Connect needs `STRIPE_SECRET_KEY` (already set) plus `STRIPE_WEBHOOK_SECRET` (already set); no new secrets required
+- Recharts already in dependency tree
+- Helmet is the only new dep
+- All work is additive; no destructive migrations
 
-After implementation I'll do the smoke walk and report any residual defects.
+After build I'll run the smoke walk in the browser and report any defects before you start your test.

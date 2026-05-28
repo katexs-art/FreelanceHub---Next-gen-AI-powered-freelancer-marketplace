@@ -8,6 +8,7 @@ import { Wallet, TrendingUp, Clock, ArrowDownToLine, CheckCircle2, Building2, Ma
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PayoutMethodCard } from "@/components/marketplace/PayoutMethodCard";
+import { StripeConnectCard } from "@/components/marketplace/StripeConnectCard";
 
 interface Acct {
   available_balance: number; pending_balance: number; lifetime_earnings: number;
@@ -71,6 +72,9 @@ export default function Earnings() {
           <Card icon={Clock} label="Pending" value={dollars(acct?.pending_balance ?? 0)} />
           <Card icon={TrendingUp} label="Lifetime" value={dollars(acct?.lifetime_earnings ?? 0)} />
         </div>
+
+        <StripeConnectCard />
+
 
         <PayoutMethodCard
           method={acct?.payout_method ?? null}
