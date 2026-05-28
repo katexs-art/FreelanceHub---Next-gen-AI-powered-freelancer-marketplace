@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { PromoteGigDialog } from "@/components/marketplace/PromoteGigDialog";
 
 interface Gig {
   id: string;
@@ -102,12 +103,15 @@ export default function MyGigs() {
                     <td className="py-3 px-4 text-right tabular-nums">{g.impressions}</td>
                     <td className="py-3 px-4 text-right tabular-nums">{g.total_orders}</td>
                     <td className="py-3 px-4 text-right tabular-nums">${g.starting_price ?? 0}</td>
-                    <td className="py-3 px-4 text-right">
-                      {(g.status === "active" || g.status === "paused") && (
-                        <button onClick={() => togglePause(g)} className="text-xs text-primary hover:underline">
-                          {g.status === "active" ? "Pause" : "Activate"}
-                        </button>
-                      )}
+                    <td className="py-4 px-4 text-right">
+                      <div className="flex items-center gap-3 justify-end">
+                        {g.status === "active" && <PromoteGigDialog gigId={g.id} onPromoted={load} />}
+                        {(g.status === "active" || g.status === "paused") && (
+                          <button onClick={() => togglePause(g)} className="text-xs text-primary hover:underline">
+                            {g.status === "active" ? "Pause" : "Activate"}
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
