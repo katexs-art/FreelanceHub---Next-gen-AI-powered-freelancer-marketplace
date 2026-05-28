@@ -145,6 +145,11 @@ export default function Admin() {
                   <td className="p-3"><span className={cn("text-xs px-2 py-0.5 rounded-full capitalize",
                     d.status === "open" ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}>{d.status}</span></td>
                   <td className="p-3 text-foreground-muted">{new Date(d.created_at).toLocaleDateString()}</td>
+                  <td className="p-3">
+                    {d.status === "open" && (
+                      <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id)}>Refund buyer</Button>
+                    )}
+                  </td>
                 </tr>
               ))}
             </Table>
