@@ -164,7 +164,7 @@ export default function Admin() {
                         <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id)}>Refund buyer</Button>
                         <Button size="sm" variant="ghost" onClick={async () => {
                           await supabase.from("orders").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", d.order_id);
-                          await supabase.from("disputes").update({ status: "resolved", resolution_outcome: "released", resolved_at: new Date().toISOString() }).eq("id", d.id);
+                          await supabase.from("disputes").update({ status: "resolved_release", resolution_outcome: "released", resolved_at: new Date().toISOString() }).eq("id", d.id);
                           toast.success("Released to seller"); load();
                         }}>Release to seller</Button>
                       </>
