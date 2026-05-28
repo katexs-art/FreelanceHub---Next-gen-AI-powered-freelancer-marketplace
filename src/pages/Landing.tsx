@@ -65,7 +65,7 @@ function Nav() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  const links = ["Find talent", "Post a job", "Sell", "Enterprise", "Pricing"];
+  const links = ["Find talent", "Post a job", "Sell"];
   return (
     <nav
       style={{
