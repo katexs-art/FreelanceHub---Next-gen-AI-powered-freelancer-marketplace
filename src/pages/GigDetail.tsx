@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Star, Clock, RefreshCw, Check, Heart, MessageSquare } from "lucide-react";
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
 import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
+import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
+import { trackRecentlyViewed } from "@/lib/recentlyViewed";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -74,6 +76,7 @@ export default function GigDetail() {
       const { data: g } = await supabase.from("gigs").select("*").eq("id", gigId).maybeSingle();
       if (!g) { setLoading(false); return; }
       setGig(g as Gig);
+      trackRecentlyViewed(g.id);
       // bump impressions (best effort)
       supabase.from("gigs").update({ impressions: (g.impressions ?? 0) + 1 }).eq("id", g.id);
 
@@ -226,6 +229,8 @@ export default function GigDetail() {
               <ReviewsList gigId={gig.id} />
             </section>
           </div>
+        </div>
+        <RecentlyViewed excludeId={gig.id} />
 
           {/* Pricing panel */}
           <aside className="lg:sticky lg:top-20 lg:self-start">
