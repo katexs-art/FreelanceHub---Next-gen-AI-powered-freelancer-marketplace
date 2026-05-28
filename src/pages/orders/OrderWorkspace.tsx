@@ -163,6 +163,31 @@ export default function OrderWorkspace() {
           <Stat icon={RotateCw} label="Revisions" value={`${order.revision_count}/${order.gig_packages?.revisions ?? 0}`} />
         </div>
 
+        <div className="mt-4">
+          <Button variant="outline" size="sm" onClick={async () => {
+            const other = isBuyer ? order.seller_id : order.buyer_id;
+            const { data, error } = await supabase.rpc("get_or_create_conversation", {
+              _other: other, _gig_id: order.gig_id, _order_id: order.id,
+            });
+            if (error) return toast.error(error.message);
+            nav(`/inbox/${data}`);
+          }}>
+            <MessageSquare className="h-4 w-4" /> Message {isBuyer ? "seller" : "buyer"}
+          </Button>
+        </div>
+
+        {order.status === "completed" && (
+          <section className="mt-8 bg-background border border-border rounded-xl p-6">
+            <h2 className="text-lg font-semibold mb-4">Review</h2>
+            <LeaveReview
+              orderId={order.id} gigId={order.gig_id}
+              buyerId={order.buyer_id} sellerId={order.seller_id}
+              currentUserId={user.id} onDone={load}
+            />
+          </section>
+        )}
+
+
         {/* Requirements */}
         {!order.requirements_submitted && (
           <section className="mt-8 bg-background border border-border rounded-xl p-6">
