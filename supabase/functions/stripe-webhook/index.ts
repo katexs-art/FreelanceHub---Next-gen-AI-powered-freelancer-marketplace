@@ -1,5 +1,5 @@
 // Handles Stripe webhook events. On checkout.session.completed it creates the
-// project + transaction record and notifies both parties.
+// order + transaction records.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
@@ -9,17 +9,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const FEE_PCT = 0.15;
-
-async function notify(admin: any, template: string, to: string, data: Record<string, any>) {
-  try {
-    await admin.functions.invoke("send-marketplace-email", {
-      body: { template, to, data },
-    });
-  } catch (e) {
-    console.error("email notify failed", template, e);
-  }
-}
+const FEE_PCT = 0.20; // 20% platform fee
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -54,55 +44,48 @@ Deno.serve(async (req) => {
       const session = event.data.object as Stripe.Checkout.Session;
       const md = session.metadata ?? {};
       const price = Number(md.price ?? 0);
-      const platform_fee = Math.round(price * FEE_PCT);
-      const expert_payout = price - platform_fee;
+      const deliveryDays = Number(md.delivery_days ?? 7);
+      const platformFee = Math.round(price * FEE_PCT);
+      const sellerEarnings = price - platformFee;
+      const extraIds = md.extra_ids ? JSON.parse(md.extra_ids) : [];
 
-      const { data: project, error: projErr } = await admin
-        .from("projects")
+      const { data: order, error: orderErr } = await admin
+        .from("orders")
         .insert({
-          client_id: md.client_id,
-          expert_id: md.expert_id,
-          service_id: md.service_id,
-          description: md.description || null,
-          title: md.title || null,
+          buyer_id: md.buyer_id,
+          seller_id: md.seller_id,
+          gig_id: md.gig_id,
+          package_id: md.package_id,
+          selected_extra_ids: extraIds,
           price,
-          platform_fee,
-          expert_payout,
-          status: "in_progress",
+          platform_fee: platformFee,
+          seller_earnings: sellerEarnings,
+          status: "pending_requirements",
           stripe_payment_intent_id: session.payment_intent as string,
+          delivery_deadline: new Date(Date.now() + deliveryDays * 86400000).toISOString(),
         })
         .select()
         .single();
+      if (orderErr) throw orderErr;
 
-      if (projErr) throw projErr;
+      await admin.from("transactions").insert([
+        { order_id: order.id, seller_id: md.seller_id, type: "charge", amount: price, status: "cleared" },
+        { order_id: order.id, seller_id: md.seller_id, type: "platform_fee", amount: platformFee, status: "cleared" },
+        { order_id: order.id, seller_id: md.seller_id, type: "seller_credit", amount: sellerEarnings, status: "pending" },
+      ]);
 
-      await admin.from("transactions").insert({
-        project_id: project.id,
-        client_id: md.client_id,
-        expert_id: md.expert_id,
-        amount: price,
-        platform_fee,
-        expert_payout,
-        stripe_payment_intent_id: session.payment_intent as string,
-        status: "held",
-      });
-
-      // Email both parties
+      // Notify both parties (best-effort)
       const { data: parties } = await admin
-        .from("profiles")
-        .select("id,email,full_name")
-        .in("id", [md.client_id, md.expert_id]);
-      const client = parties?.find((p: any) => p.id === md.client_id);
-      const expert = parties?.find((p: any) => p.id === md.expert_id);
-      const common = {
-        project_id: project.id,
-        title: project.title || project.description || "Untitled project",
-        price,
-        client_name: client?.full_name,
-        expert_name: expert?.full_name,
-      };
-      if (client?.email) await notify(admin, "project_created", client.email, { ...common, is_expert: false });
-      if (expert?.email) await notify(admin, "project_created", expert.email, { ...common, is_expert: true });
+        .from("profiles").select("id,email,full_name").in("id", [md.buyer_id, md.seller_id]);
+      for (const p of parties ?? []) {
+        await admin.from("notifications").insert({
+          user_id: p.id,
+          type: "order_placed" as any,
+          title: "New order",
+          body: `Order ${order.order_number}`,
+          link: `/orders/${order.id}`,
+        }).then(() => {}).catch(() => {});
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {
@@ -110,10 +93,6 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("webhook handler error", e);
-    await admin.from("error_logs").insert({
-      function_name: "stripe-webhook",
-      error_message: (e as Error).message,
-    });
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
