@@ -65,7 +65,7 @@ function Nav() {
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-  const links = ["Find talent", "Post a job", "Sell", "Enterprise", "Pricing"];
+  const links = ["Find talent", "Post a job", "Sell"];
   return (
     <nav
       style={{
@@ -681,7 +681,7 @@ function SellBanner() {
 
 // ───── Footer ─────
 function Footer() {
-  const links = ["About", "Pricing", "Enterprise", "How it works", "Support", "Privacy"];
+  const links = ["About", "How it works", "Support", "Privacy"];
   return (
     <footer
       style={{
