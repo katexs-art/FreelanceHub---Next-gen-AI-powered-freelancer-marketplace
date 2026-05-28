@@ -16,6 +16,7 @@ export default function BuyerDashboard() {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [saved, setSaved] = useState<GigCardData[]>([]);
   const [recs, setRecs] = useState<GigCardData[]>([]);
+  const [personalized, setPersonalized] = useState(false);
   const [stats, setStats] = useState({ active: 0, completed: 0, spent: 0 });
 
   useEffect(() => {
