@@ -163,6 +163,7 @@ export default function GigEditor() {
     if (!overview.title || !overview.category) return toast.error("Add a title and category first");
     if (!packages[0].price || !packages[0].title) return toast.error("Basic package needs a title and price");
     if (!description) return toast.error("Add a description");
+    if (!payoutsEnabled) return toast.error("Finish payout setup in Earnings before publishing");
     setSaving(true);
     const id = await upsertGig("active"); // auto-approve for now
     setSaving(false);
