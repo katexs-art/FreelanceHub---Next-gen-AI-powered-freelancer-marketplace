@@ -29,6 +29,7 @@ const SellerProfile = lazy(() => import("./pages/SellerProfile"));
 const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
 const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
 const OrderWorkspace = lazy(() => import("./pages/orders/OrderWorkspace"));
+const Inbox = lazy(() => import("./pages/Inbox"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -73,8 +74,8 @@ const App = () => (
             {/* Shared (any signed-in user) */}
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
             <Route path="/orders/:id" element={<ProtectedRoute><OrderWorkspace /></ProtectedRoute>} />
-            <Route path="/inbox" element={<ProtectedRoute><DashboardPlaceholder title="Inbox" /></ProtectedRoute>} />
-            <Route path="/inbox/:conversationId" element={<ProtectedRoute><DashboardPlaceholder title="Conversation" /></ProtectedRoute>} />
+            <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
+            <Route path="/inbox/:conversationId" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><DashboardPlaceholder title="Account settings" /></ProtectedRoute>} />
 
             {/* Admin */}

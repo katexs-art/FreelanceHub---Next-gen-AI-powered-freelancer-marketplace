@@ -157,6 +157,54 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          created_at: string
+          gig_id: string | null
+          id: string
+          last_message_at: string
+          last_message_preview: string | null
+          order_id: string | null
+          participant_one: string
+          participant_two: string
+        }
+        Insert: {
+          created_at?: string
+          gig_id?: string | null
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          order_id?: string | null
+          participant_one: string
+          participant_two: string
+        }
+        Update: {
+          created_at?: string
+          gig_id?: string | null
+          id?: string
+          last_message_at?: string
+          last_message_preview?: string | null
+          order_id?: string | null
+          participant_one?: string
+          participant_two?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_gig_id_fkey"
+            columns: ["gig_id"]
+            isOneToOne: false
+            referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       custom_offers: {
         Row: {
           buyer_id: string
@@ -1287,6 +1335,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_or_create_conversation: {
+        Args: { _gig_id?: string; _order_id?: string; _other: string }
+        Returns: string
+      }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_order_party: {
         Args: { _order_id: string; _user_id: string }
