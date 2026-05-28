@@ -1,63 +1,101 @@
-# Buyer Trust & Reviews
+## Phase 11 — Trust, growth, and discovery polish (all four)
 
-Strengthen the trust layer around gigs and sellers. Reviews already exist but are bare-bones (single star + text). This phase makes them informative, social-proof-worthy, and adds the seller-side stats Fiverr users expect.
+Builds out the remaining marketplace pillars in one pass: a real dispute flow, social signals (saves + follows), paid placement, and trust & safety (KYC + reporting).
 
-## 1. Richer review submission
+### 1. Disputes & resolution center
 
-Upgrade `LeaveReview` for buyers to capture three sub-ratings already in the schema:
-- **Communication** (1–5)
-- **Service as described** (1–5)
-- **Would recommend** (1–5)
+- Buyer/seller can open a dispute from the order workspace when status is `delivered`, `in_revision`, or `pending_acceptance`. New `OpenDisputeDialog` writes to existing `disputes` table.
+- `OrderWorkspace` shows a "Dispute open" banner with timeline of admin notes once raised; both parties can post replies via `messages` thread tied to that order.
+- Admin queue at `/admin` → new "Disputes" tab listing open disputes with order context, two resolution actions:
+  - **Refund buyer** → calls existing `stripe-refund` function, sets dispute `resolved`, order `refunded`.
+  - **Release to seller** → marks order `completed`, dispute `resolved`.
+- Adds `resolution_outcome` column (`refunded` | `released` | `mutual`) and `admin_notes` text on `disputes`.
 
-Overall `rating` becomes the rounded average of the three. Add a 500-char limit on `review_text` with zod validation. Seller-side review form stays simple (overall + text — they're rating the buyer).
+### 2. Saved gigs & follow sellers
 
-## 2. Seller replies
+- Use existing `saved_gigs` table; add a heart toggle on `GigCard` + `GigDetail`. New `/saved` page lists the user's saved gigs.
+- New `seller_follows` table (`follower_id`, `seller_id`, unique). "Follow" button on `SellerProfile`.
+- Inbox bell already exists — add a `new_gig` notification fanned out to followers when a seller publishes a gig (trigger on `gigs` insert with `status='active'`).
+- Add a "From sellers you follow" rail at the top of `Explore` (auth-only, hidden when empty).
 
-Add a "Reply" affordance under each review in `ReviewsList` when `auth.uid() === seller_id` and no reply exists yet. Inline textarea + Save → updates `reviews.reply`. Reply renders in the existing reply block.
+### 3. Promoted gigs & seller boosts
 
-## 3. Rating breakdown widget
+- New `gig_promotions` table: `gig_id`, `seller_id`, `daily_budget_cents`, `starts_at`, `ends_at`, `status` (`active`|`paused`|`ended`), `impressions`, `clicks`, `spend_cents`.
+- Seller dashboard: "Promote" action on each active gig → modal sets daily budget + duration. Charges flat $5/day from seller `available_balance` upfront via a new `transactions` row of type `promotion_charge` (added to enum).
+- `Search.tsx` + `Explore.tsx`: query promoted gigs first (limit 3, sorted by remaining budget), render with a small "Promoted" pill, then the normal results minus those ids.
+- Click + impression counters on the promoted slot bump `gig_promotions` counters via a `track_promotion_event` RPC.
 
-New `RatingBreakdown` component shown on `GigDetail` and `SellerProfile` above the reviews list:
-- Big average score + total count
-- Bar chart of 5★/4★/3★/2★/1★ distribution
-- Averages for Communication / Service / Recommend
+### 4. Trust & safety — KYC + reporting
 
-Computed client-side from the reviews query (already loaded).
+- New `seller_verifications` table: `seller_id`, `status` (`unverified`|`pending`|`verified`|`rejected`), `id_document_url`, `selfie_url`, `submitted_at`, `reviewed_by`, `reviewed_at`, `rejection_reason`.
+- Seller settings → new "Verification" card with a 2-file upload flow into a new private `kyc-documents` bucket. Status badge on `SellerProfile` ("Verified seller" pill) when `verified`.
+- New `reports` table: `reporter_id`, `target_type` (`gig`|`user`|`message`), `target_id`, `reason` (enum), `description`, `status` (`open`|`reviewing`|`actioned`|`dismissed`).
+- "Report" item in the `…` menu on `GigDetail`, `SellerProfile`, and each inbox message bubble. Submits to `reports`.
+- Admin panel gains "Verification queue" and "Reports" tabs with approve/reject and take-action flows (hide gig, suspend seller via a new `profiles.suspended_at` column — suspended sellers' gigs are hidden by extending `gigs_public_read`).
 
-## 4. Seller response stats
+## Technical details
 
-Add a nightly-style recompute (run on demand from a SQL function `recompute_seller_response_stats(uuid)`):
-- `response_rate` = % of buyer-initiated conversations the seller replied to
-- `response_time_minutes` = median minutes from buyer message → seller's first reply
+### New tables / columns
 
-Trigger recompute after each message insert (debounced — only when sender is seller and prior message was from a different participant). Display on `SellerProfile` and the seller card on `GigDetail` (e.g. "Responds in ~2h · 98% response rate").
+- `disputes`: add `resolution_outcome text`, `admin_notes text`.
+- `seller_follows(follower_id uuid, seller_id uuid, created_at timestamptz, unique(follower_id, seller_id))`.
+- `gig_promotions(... as above)`.
+- `seller_verifications(... as above)`.
+- `reports(... as above)`.
+- `profiles`: add `suspended_at timestamptz`.
+- Enum `transaction_type`: add `promotion_charge`.
+- Enum `notification_type`: add `system` (used for verification + report status pings) if not already present.
 
-## 5. Verified buyer badge
+Every new public table gets explicit `GRANT`s (authenticated full CRUD where policies allow, `service_role ALL`, no `anon` grants — all are auth-only) plus RLS:
+- `seller_follows`: follower can insert/delete own rows; anyone can read counts via a `seller_follower_count(uuid)` SQL function.
+- `gig_promotions`: seller owns rows; public read of `active` rows (for the Promoted rail).
+- `seller_verifications`: seller reads/writes own; admin reads all + updates status.
+- `reports`: reporter inserts/reads own; admin reads/updates all.
 
-Reviews where the buyer has ≥1 completed order get a small "Verified purchase" pill in `ReviewsList`. Since every review is tied to a completed order via RLS already, this is effectively always true — show the pill unconditionally on public reviews. Adds visual trust without new data.
+### New SQL functions / triggers
 
-## 6. Gig card upgrade
+- `track_promotion_event(_promotion_id uuid, _event text)` security-definer — bumps `impressions`/`clicks`.
+- `notify_followers_on_new_gig()` trigger on `gigs` (after insert/update where new status='active').
+- `suspend_seller(_seller uuid)` admin-only helper that sets `profiles.suspended_at` and flips all seller gigs to `paused`.
+- Extend `gigs_public_read` policy: also require `profiles.suspended_at IS NULL`.
 
-`GigCard` already shows average + count. Add:
-- "★ 4.9 (132)" stays as-is
-- Add a subtle "Top Rated" indicator when `average_rating >= 4.8 AND total_reviews >= 10`
+### Storage
 
-Pure presentation, no schema change.
+- New private bucket `kyc-documents` with policies restricting read to the owning seller and admins; writes restricted to owner.
 
-## Technical Details
+### Edge functions
 
-**Schema**: No new tables. All fields already exist (`reviews.communication_rating`, `service_rating`, `recommend_rating`, `reply`; `profiles.response_rate`, `response_time_minutes`).
+- `stripe-refund` already exists — reused from the admin dispute action.
+- New `promotion-charge` function: validates seller balance, inserts a `transactions` row, activates the `gig_promotions` row. (Lives separately so we can swap in real Stripe later without touching UI.)
 
-**New SQL**:
-- `recompute_seller_response_stats(_seller uuid)` security-definer function
-- Trigger `messages_after_insert_response_stats` that calls it when the sender is the conversation's seller party
+### Frontend files
 
-**Frontend files**:
-- `src/components/marketplace/LeaveReview.tsx` — add sub-rating sliders/stars, zod validation
-- `src/components/marketplace/ReviewsList.tsx` — render sub-ratings, verified pill, seller-reply inline editor
-- `src/components/marketplace/RatingBreakdown.tsx` (new)
-- `src/components/marketplace/GigCard.tsx` — Top Rated badge
-- `src/pages/GigDetail.tsx` — mount `RatingBreakdown`, show seller response stats in seller card
-- `src/pages/SellerProfile.tsx` — mount `RatingBreakdown` and response stats
+New:
+- `src/components/marketplace/OpenDisputeDialog.tsx`
+- `src/components/marketplace/SaveGigButton.tsx`
+- `src/components/marketplace/FollowSellerButton.tsx`
+- `src/components/marketplace/ReportDialog.tsx`
+- `src/components/marketplace/PromoteGigDialog.tsx`
+- `src/components/marketplace/VerifiedBadge.tsx`
+- `src/pages/account/Saved.tsx`
+- `src/pages/seller/Verification.tsx`
+- `src/pages/admin/sections/DisputesQueue.tsx`
+- `src/pages/admin/sections/VerificationsQueue.tsx`
+- `src/pages/admin/sections/ReportsQueue.tsx`
+- `src/lib/promotions.ts` (impression/click tracking helper)
 
-**Out of scope** (next phase candidates): seller levels (New/Level 1/2/Top Rated tied to thresholds), review photos, review helpfulness votes, review moderation queue in admin.
+Edited:
+- `src/App.tsx` — routes for `/saved`, `/seller/verification`.
+- `src/pages/orders/OrderWorkspace.tsx` — dispute banner + open-dispute entry.
+- `src/pages/admin/Admin.tsx` — three new tabs.
+- `src/pages/GigDetail.tsx`, `src/pages/SellerProfile.tsx`, `src/components/marketplace/GigCard.tsx` — heart, follow, verified badge, report menu.
+- `src/pages/Search.tsx`, `src/pages/Explore.tsx` — promoted rail + follow-feed.
+- `src/pages/seller/MyGigs.tsx` — Promote action per gig.
+- `src/components/layout/AppShell.tsx` — "Saved" link in buyer nav.
+
+### Out of scope (future)
+
+- Per-impression billing (we use a flat daily charge for now).
+- Messaging report auto-redaction.
+- Buyer KYC.
+- Real document verification provider integration (Stripe Identity / Persona) — current flow stores docs for manual admin review.
