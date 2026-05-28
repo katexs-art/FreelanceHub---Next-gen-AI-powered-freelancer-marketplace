@@ -1,84 +1,201 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Space+Mono:wght@400;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   KATEXS — x.ai-grade monochrome design system
+   Pure black canvas · hairline borders · JetBrains Mono + Work Sans
+   No gradients, no shadows, no glows. Depth = border + spacing.
+   ============================================================ */
+
 @layer base {
   :root {
-    /* Surfaces */
-    --background: 0 0% 100%;
-    --background-subtle: 0 0% 98%;
-    --background-elevated: 0 0% 96%;
-    --foreground: 220 13% 9%;
-    --foreground-muted: 220 9% 46%;
-    --foreground-subtle: 220 9% 65%;
+    /* Canvas — pure black, hairline-stratified surfaces */
+    --background: 0 0% 0%;             /* #000000 */
+    --background-subtle: 0 0% 4%;      /* #0a0a0a */
+    --background-elevated: 0 0% 11%;   /* #1c1c1c */
 
-    /* Brand */
-    --primary: 158 64% 38%;            /* fiverr-like green */
-    --primary-foreground: 0 0% 100%;
-    --primary-hover: 158 64% 32%;
+    /* Type */
+    --foreground: 0 0% 100%;           /* #ffffff */
+    --foreground-muted: 0 0% 64%;      /* secondary */
+    --foreground-subtle: 0 0% 40%;     /* muted */
 
-    --accent: 158 64% 38%;
-    --accent-foreground: 0 0% 100%;
+    /* Primary = inverted (white on black canvas) */
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+    --primary-hover: 0 0% 90%;
 
-    /* Borders / input */
-    --border: 220 13% 91%;
-    --border-strong: 220 13% 82%;
-    --input: 220 13% 91%;
-    --ring: 158 64% 38%;
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
 
-    /* Feedback */
-    --success: 142 71% 40%;
+    /* Hairline borders — barely-there white */
+    --border: 0 0% 100%;               /* used with /8 opacity via utility */
+    --border-strong: 0 0% 100%;        /* used with /16 opacity */
+    --input: 0 0% 11%;
+    --ring: 0 0% 100%;
+
+    /* Status */
+    --success: 142 71% 45%;
     --warning: 38 92% 50%;
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Aliases for shadcn */
-    --secondary: 220 13% 95%;
-    --secondary-foreground: 220 13% 9%;
-    --muted: 220 13% 95%;
-    --muted-foreground: 220 9% 46%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 13% 9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 13% 9%;
+    /* shadcn aliases — all anchored to the black canvas */
+    --secondary: 0 0% 11%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 7%;
+    --muted-foreground: 0 0% 64%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 100%;
 
-    --radius: 12px;
+    --radius: 4px;
 
-    --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 220 13% 9%;
-    --sidebar-primary: 158 64% 38%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 13% 95%;
-    --sidebar-accent-foreground: 220 13% 9%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 158 64% 38%;
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 0 0% 0%;
+    --sidebar-accent: 0 0% 7%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 11%;
+    --sidebar-ring: 0 0% 100%;
   }
 
-  .dark {
-    --background: 220 13% 7%;
-    --background-subtle: 220 13% 10%;
-    --background-elevated: 220 13% 13%;
-    --foreground: 0 0% 98%;
-    --foreground-muted: 220 9% 65%;
-    --foreground-subtle: 220 9% 46%;
-    --border: 220 13% 18%;
-    --border-strong: 220 13% 25%;
-    --input: 220 13% 18%;
-    --secondary: 220 13% 13%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 220 13% 13%;
-    --muted-foreground: 220 9% 65%;
-    --card: 220 13% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 220 13% 10%;
-    --popover-foreground: 0 0% 98%;
-  }
+  /* Force-dark: this app does not have a light mode */
+  .dark { color-scheme: dark; }
 }
 
 @layer base {
-  * { @apply border-border; }
-  html, body { @apply bg-background text-foreground font-body antialiased; }
-  h1, h2, h3, h4, h5 { @apply font-heading; letter-spacing: -0.015em; }
+  * { border-color: hsl(var(--border) / 0.08); }
+  html { color-scheme: dark; }
+  html, body {
+    @apply bg-background text-foreground font-body antialiased;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+  body { min-height: 100vh; }
+
+  /* Display type — JetBrains Mono, tight, white */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+    font-weight: 500;
+  }
+
+  /* Tabular numerals everywhere by default — marketplaces show numbers */
+  .tabular, [class*="StatNumber"], .font-mono { font-variant-numeric: tabular-nums; }
+
+  /* Selection */
+  ::selection { background: hsl(0 0% 100%); color: hsl(0 0% 0%); }
+
+  /* Focus ring — single hairline white, no shadow */
+  *:focus-visible { outline: none; }
+  :where(button, a, input, textarea, select, [role="button"]):focus-visible {
+    box-shadow: 0 0 0 1px hsl(0 0% 0%), 0 0 0 2px hsl(0 0% 100%);
+    border-radius: 4px;
+  }
+
+  /* Scrollbar — minimal monochrome */
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: hsl(0 0% 100% / 0.08); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 100% / 0.16); }
+}
+
+@layer components {
+  /* Mono eyebrow — uppercase tracked label */
+  .eyebrow {
+    @apply font-mono uppercase text-foreground-subtle;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+  }
+  .eyebrow-strong { @apply eyebrow; color: hsl(var(--foreground)); }
+
+  /* Hairline divider */
+  .divider { height: 1px; background: hsl(0 0% 100% / 0.08); width: 100%; }
+  .divider-strong { height: 1px; background: hsl(0 0% 100% / 0.16); width: 100%; }
+
+  /* Surface utilities */
+  .surface { background: hsl(var(--background-subtle)); border: 1px solid hsl(0 0% 100% / 0.08); }
+  .surface-2 { background: hsl(var(--background-elevated)); border: 1px solid hsl(0 0% 100% / 0.08); }
+
+  /* Container — centered, capped */
+  .container-page { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: 1.25rem; }
+  .container-narrow { width: 100%; max-width: 720px; margin-inline: auto; padding-inline: 1.25rem; }
+  .container-wide { width: 100%; max-width: 1440px; margin-inline: auto; padding-inline: 1.25rem; }
+
+  /* Display headline — used on home + manifesto pages */
+  .display-xl {
+    @apply font-heading;
+    font-size: clamp(2.75rem, 7vw, 6.5rem);
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+    font-weight: 500;
+  }
+  .display-lg {
+    @apply font-heading;
+    font-size: clamp(2.25rem, 5vw, 4.25rem);
+    line-height: 1.02;
+    letter-spacing: -0.03em;
+    font-weight: 500;
+  }
+  .display-md {
+    @apply font-heading;
+    font-size: clamp(1.75rem, 3.2vw, 2.75rem);
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    font-weight: 500;
+  }
+
+  /* Mono keycap hint (cmd-k etc.) */
+  .keycap {
+    @apply font-mono inline-flex items-center justify-center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    font-size: 11px;
+    color: hsl(var(--foreground-muted));
+    background: hsl(0 0% 100% / 0.05);
+    border: 1px solid hsl(0 0% 100% / 0.1);
+    border-radius: 4px;
+  }
+
+  /* Mono tag chip */
+  .mono-tag {
+    @apply font-mono uppercase inline-flex items-center;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    padding: 4px 10px;
+    border: 1px solid hsl(0 0% 100% / 0.12);
+    border-radius: 999px;
+    color: hsl(var(--foreground-muted));
+  }
+
+  /* Skeleton shimmer (opacity-only, no gradient) */
+  .skeleton {
+    background: hsl(0 0% 100% / 0.04);
+    border-radius: 4px;
+    animation: pulse-opacity 1.4s ease-in-out infinite;
+  }
+}
+
+@layer utilities {
+  .border-hairline { border: 1px solid hsl(0 0% 100% / 0.08); }
+  .border-hairline-strong { border: 1px solid hsl(0 0% 100% / 0.16); }
+  .border-b-hairline { border-bottom: 1px solid hsl(0 0% 100% / 0.08); }
+  .border-t-hairline { border-top: 1px solid hsl(0 0% 100% / 0.08); }
+  .border-r-hairline { border-right: 1px solid hsl(0 0% 100% / 0.08); }
+  .border-l-hairline { border-left: 1px solid hsl(0 0% 100% / 0.08); }
+  .text-foreground-muted { color: hsl(var(--foreground-muted)); }
+  .text-foreground-subtle { color: hsl(var(--foreground-subtle)); }
+  .bg-surface { background: hsl(var(--background-subtle)); }
+  .bg-surface-2 { background: hsl(var(--background-elevated)); }
+}
+
+@keyframes pulse-opacity {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
