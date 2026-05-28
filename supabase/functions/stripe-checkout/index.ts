@@ -43,14 +43,8 @@ Deno.serve(async (req) => {
     if (gig.status !== "active") throw new Error("Gig is not active");
     if (gig.seller_id === user.id) throw new Error("You can't purchase your own gig");
 
-    const { data: sellerAcc } = await admin
-      .from("seller_accounts")
-      .select("payouts_enabled")
-      .eq("seller_id", gig.seller_id)
-      .maybeSingle();
-    if (!sellerAcc?.payouts_enabled) {
-      throw new Error("This seller hasn't finished payout setup yet. Please try again later.");
-    }
+
+
 
     let extrasTotal = 0;
     let extraDays = 0;
