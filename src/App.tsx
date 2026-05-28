@@ -16,6 +16,11 @@ const Signup = lazy(() => import("./pages/auth/Signup"));
 const ForgotPassword = lazy(() => import("./pages/auth/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
 const Placeholder = lazy(() => import("./pages/Placeholder"));
+const DashboardPlaceholder = lazy(() => import("./pages/DashboardPlaceholder"));
+const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
+const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
+const MyGigs = lazy(() => import("./pages/seller/MyGigs"));
+const GigEditor = lazy(() => import("./pages/seller/GigEditor"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -41,24 +46,25 @@ const App = () => (
             <Route path="/search" element={<Placeholder title="Search results" />} />
             <Route path="/gig/:slug" element={<Placeholder title="Gig detail" />} />
             <Route path="/u/:username" element={<Placeholder title="Seller profile" />} />
-            <Route path="/become-a-seller" element={<Placeholder title="Become a seller" />} />
+            <Route path="/become-a-seller" element={<BecomeSeller />} />
 
             {/* Buyer */}
-            <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><Placeholder title="Buyer dashboard" /></ProtectedRoute>} />
-            <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","admin"]}><Placeholder title="My orders" /></ProtectedRoute>} />
+            <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><DashboardPlaceholder title="Buyer dashboard" /></ProtectedRoute>} />
+            <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","admin"]}><DashboardPlaceholder title="My orders" /></ProtectedRoute>} />
 
             {/* Seller */}
-            <Route path="/seller/dashboard" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Seller dashboard" /></ProtectedRoute>} />
-            <Route path="/seller/gigs" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="My gigs" /></ProtectedRoute>} />
-            <Route path="/seller/gigs/new" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Create a gig" /></ProtectedRoute>} />
-            <Route path="/seller/orders" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Active orders" /></ProtectedRoute>} />
-            <Route path="/seller/earnings" element={<ProtectedRoute roles={["seller","admin"]}><Placeholder title="Earnings & withdrawals" /></ProtectedRoute>} />
+            <Route path="/seller/dashboard" element={<ProtectedRoute roles={["seller","admin"]}><SellerDashboard /></ProtectedRoute>} />
+            <Route path="/seller/gigs" element={<ProtectedRoute roles={["seller","admin"]}><MyGigs /></ProtectedRoute>} />
+            <Route path="/seller/gigs/new" element={<ProtectedRoute roles={["seller","admin"]}><GigEditor /></ProtectedRoute>} />
+            <Route path="/seller/gigs/:id/edit" element={<ProtectedRoute roles={["seller","admin"]}><GigEditor /></ProtectedRoute>} />
+            <Route path="/seller/orders" element={<ProtectedRoute roles={["seller","admin"]}><DashboardPlaceholder title="Active orders" /></ProtectedRoute>} />
+            <Route path="/seller/earnings" element={<ProtectedRoute roles={["seller","admin"]}><DashboardPlaceholder title="Earnings & withdrawals" /></ProtectedRoute>} />
 
             {/* Shared (any signed-in user) */}
-            <Route path="/orders/:id" element={<ProtectedRoute><Placeholder title="Order workspace" /></ProtectedRoute>} />
-            <Route path="/inbox" element={<ProtectedRoute><Placeholder title="Inbox" /></ProtectedRoute>} />
-            <Route path="/inbox/:conversationId" element={<ProtectedRoute><Placeholder title="Conversation" /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Placeholder title="Account settings" /></ProtectedRoute>} />
+            <Route path="/orders/:id" element={<ProtectedRoute><DashboardPlaceholder title="Order workspace" /></ProtectedRoute>} />
+            <Route path="/inbox" element={<ProtectedRoute><DashboardPlaceholder title="Inbox" /></ProtectedRoute>} />
+            <Route path="/inbox/:conversationId" element={<ProtectedRoute><DashboardPlaceholder title="Conversation" /></ProtectedRoute>} />
+            <Route path="/settings" element={<ProtectedRoute><DashboardPlaceholder title="Account settings" /></ProtectedRoute>} />
 
             {/* Admin */}
             <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Placeholder title="Admin dashboard" /></ProtectedRoute>} />
