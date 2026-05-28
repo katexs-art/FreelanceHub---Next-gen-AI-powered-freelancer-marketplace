@@ -36,6 +36,13 @@ export default function GigEditor() {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
   const [gigId, setGigId] = useState<string | null>(id ?? null);
+  const [payoutsEnabled, setPayoutsEnabled] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("seller_accounts").select("payouts_enabled").eq("seller_id", user.id).maybeSingle()
+      .then(({ data }) => setPayoutsEnabled(!!data?.payouts_enabled));
+  }, [user]);
 
   const [overview, setOverview] = useState({
     title: "",
