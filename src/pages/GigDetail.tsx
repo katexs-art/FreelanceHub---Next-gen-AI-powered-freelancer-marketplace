@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Star, Clock, RefreshCw, Check, Heart, MessageSquare } from "lucide-react";
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
+import { SEO } from "@/components/SEO";
 import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { ReportDialog } from "@/components/marketplace/ReportDialog";
@@ -149,6 +150,23 @@ export default function GigDetail() {
 
   return (
     <div className="min-h-screen flex flex-col">
+      <SEO
+        title={gig.title}
+        description={(gig.description ?? "").slice(0, 155) || `${gig.title} — starting at $${gig.starting_price}`}
+        type="product"
+        image={gig.thumbnail_url ?? undefined}
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: gig.title,
+          description: gig.description,
+          image: gig.thumbnail_url,
+          offers: { "@type": "Offer", price: gig.starting_price, priceCurrency: "USD", availability: "https://schema.org/InStock" },
+          aggregateRating: gig.total_reviews > 0 ? {
+            "@type": "AggregateRating", ratingValue: Number(gig.average_rating), reviewCount: gig.total_reviews,
+          } : undefined,
+        }}
+      />
       <SiteHeader />
       <main className="flex-1 container py-10">
         <nav className="text-xs text-foreground-muted mb-3">
