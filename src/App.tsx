@@ -26,6 +26,9 @@ const Search = lazy(() => import("./pages/Search"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const GigDetail = lazy(() => import("./pages/GigDetail"));
 const SellerProfile = lazy(() => import("./pages/SellerProfile"));
+const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
+const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
+const OrderWorkspace = lazy(() => import("./pages/orders/OrderWorkspace"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient();
@@ -57,18 +60,19 @@ const App = () => (
 
             {/* Buyer */}
             <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><DashboardPlaceholder title="Buyer dashboard" /></ProtectedRoute>} />
-            <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","admin"]}><DashboardPlaceholder title="My orders" /></ProtectedRoute>} />
+            <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","seller","admin"]}><OrdersList as="buyer" /></ProtectedRoute>} />
 
             {/* Seller */}
             <Route path="/seller/dashboard" element={<ProtectedRoute roles={["seller","admin"]}><SellerDashboard /></ProtectedRoute>} />
             <Route path="/seller/gigs" element={<ProtectedRoute roles={["seller","admin"]}><MyGigs /></ProtectedRoute>} />
             <Route path="/seller/gigs/new" element={<ProtectedRoute roles={["seller","admin"]}><GigEditor /></ProtectedRoute>} />
             <Route path="/seller/gigs/:id/edit" element={<ProtectedRoute roles={["seller","admin"]}><GigEditor /></ProtectedRoute>} />
-            <Route path="/seller/orders" element={<ProtectedRoute roles={["seller","admin"]}><DashboardPlaceholder title="Active orders" /></ProtectedRoute>} />
+            <Route path="/seller/orders" element={<ProtectedRoute roles={["seller","admin"]}><OrdersList as="seller" /></ProtectedRoute>} />
             <Route path="/seller/earnings" element={<ProtectedRoute roles={["seller","admin"]}><DashboardPlaceholder title="Earnings & withdrawals" /></ProtectedRoute>} />
 
             {/* Shared (any signed-in user) */}
-            <Route path="/orders/:id" element={<ProtectedRoute><DashboardPlaceholder title="Order workspace" /></ProtectedRoute>} />
+            <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
+            <Route path="/orders/:id" element={<ProtectedRoute><OrderWorkspace /></ProtectedRoute>} />
             <Route path="/inbox" element={<ProtectedRoute><DashboardPlaceholder title="Inbox" /></ProtectedRoute>} />
             <Route path="/inbox/:conversationId" element={<ProtectedRoute><DashboardPlaceholder title="Conversation" /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><DashboardPlaceholder title="Account settings" /></ProtectedRoute>} />

@@ -1,4 +1,4 @@
-// Creates a Stripe Checkout Session for a service purchase.
+// Creates a Stripe Checkout Session for a gig package purchase.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
@@ -28,45 +28,70 @@ Deno.serve(async (req) => {
     if (userErr || !userData.user) throw new Error("Unauthenticated");
     const user = userData.user;
 
-    const { service_id, description } = await req.json();
-    if (!service_id) throw new Error("service_id required");
+    const { package_id, extra_ids = [] } = await req.json();
+    if (!package_id) throw new Error("package_id required");
 
-    // Fetch service + expert details using service role to bypass RLS guarantees
     const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const { data: service, error: svcErr } = await admin
-      .from("services")
-      .select("id, title, price, expert_id, is_active")
-      .eq("id", service_id)
-      .maybeSingle();
 
-    if (svcErr || !service || !service.is_active) throw new Error("Service unavailable");
-    if (service.expert_id === user.id) throw new Error("You cannot purchase your own service");
+    const { data: pkg, error: pkgErr } = await admin
+      .from("gig_packages")
+      .select("id, price, delivery_days, title, package_type, gig_id, gigs!inner(id, title, seller_id, status)")
+      .eq("id", package_id)
+      .maybeSingle();
+    if (pkgErr || !pkg) throw new Error("Package not found");
+    const gig: any = (pkg as any).gigs;
+    if (gig.status !== "active") throw new Error("Gig is not active");
+    if (gig.seller_id === user.id) throw new Error("You can't purchase your own gig");
+
+    let extrasTotal = 0;
+    let extraDays = 0;
+    const lineItems: any[] = [{
+      price_data: {
+        currency: "usd",
+        product_data: { name: `${gig.title} — ${pkg.package_type}` },
+        unit_amount: pkg.price * 100,
+      },
+      quantity: 1,
+    }];
+
+    if (extra_ids.length) {
+      const { data: extras } = await admin
+        .from("gig_extras")
+        .select("id, title, price, extra_delivery_days, gig_id")
+        .in("id", extra_ids)
+        .eq("gig_id", gig.id);
+      for (const e of extras ?? []) {
+        extrasTotal += e.price;
+        extraDays += e.extra_delivery_days ?? 0;
+        lineItems.push({
+          price_data: {
+            currency: "usd",
+            product_data: { name: `Extra: ${e.title}` },
+            unit_amount: e.price * 100,
+          },
+          quantity: 1,
+        });
+      }
+    }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
-
     const origin = req.headers.get("origin") || "https://katexs.com";
+
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: { name: service.title },
-            unit_amount: service.price * 100,
-          },
-          quantity: 1,
-        },
-      ],
+      line_items: lineItems,
       success_url: `${origin}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/expert/${service.expert_id}`,
+      cancel_url: `${origin}/gig/${gig.id}`,
       customer_email: user.email ?? undefined,
       metadata: {
-        service_id: service.id,
-        client_id: user.id,
-        expert_id: service.expert_id,
-        price: String(service.price),
-        description: description ?? "",
+        gig_id: gig.id,
+        package_id: pkg.id,
+        buyer_id: user.id,
+        seller_id: gig.seller_id,
+        price: String(pkg.price + extrasTotal),
+        delivery_days: String(pkg.delivery_days + extraDays),
+        extra_ids: JSON.stringify(extra_ids),
       },
     });
 
