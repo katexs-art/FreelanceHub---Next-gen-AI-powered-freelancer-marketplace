@@ -62,12 +62,11 @@
 
 @layer base {
   * { border-color: hsl(var(--border)); }
-  html { color-scheme: dark; }
+  html { color-scheme: light; }
   html, body {
     @apply bg-background text-foreground font-body antialiased;
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
-    background-color: #000;
   }
   body { min-height: 100vh; }
 
@@ -75,8 +74,7 @@
     @apply font-heading;
     letter-spacing: -0.01em;
     line-height: 1.05;
-    font-weight: 600;
-    color: #fff;
+    font-weight: 500;
   }
 
   .tabular, [class*="StatNumber"], .font-mono { font-variant-numeric: tabular-nums; }
@@ -85,20 +83,14 @@
 
   *:focus-visible { outline: none; }
   :where(button, a, input, textarea, select, [role="button"]):focus-visible {
-    box-shadow: 0 0 0 1px #000, 0 0 0 2px hsl(var(--ring));
-    border-radius: 8px;
+    box-shadow: 0 0 0 1px hsl(0 0% 100%), 0 0 0 2px hsl(var(--ring));
+    border-radius: 4px;
   }
 
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: hsl(0 0% 100% / 0.08); border-radius: 999px; }
-  ::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 100% / 0.18); }
-
-  input, textarea, select {
-    background: #060606;
-    color: #fff;
-  }
-  input::placeholder, textarea::placeholder { color: #3a3a3a; }
+  ::-webkit-scrollbar-thumb { background: hsl(0 0% 0% / 0.12); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 0% / 0.24); }
 }
 
 @layer components {
