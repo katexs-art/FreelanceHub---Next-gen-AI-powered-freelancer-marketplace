@@ -389,6 +389,12 @@ const experts: Expert[] = [
 function Listings() {
   const filters = ["All", "GHL Builds", "Voice AI", "Automations", "Consulting", "Chat AI", "Education", "Integrations"];
   const [active, setActive] = useState("All");
+  const { data: liveExperts, loading } = useExperts({
+    category: active,
+    limit: 6,
+  });
+  const showLive = !loading && liveExperts.length > 0;
+  const visibleMocks = active === "All" ? experts : experts.filter((e) => e.category.toLowerCase().includes(active.toLowerCase().split(" ")[0]));
   return (
     <section style={{ padding: "0 2.5rem 4rem", background: C.black }}>
       <Eyebrow>Top rated this week</Eyebrow>
@@ -417,18 +423,17 @@ function Listings() {
         })}
       </div>
       <div className="katexs-listings-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-        {experts.map((e, i) => (
-          <ListingCard key={i} e={e} />
-        ))}
+        {showLive
+          ? liveExperts.map((e) => <ExpertCard key={e.id} e={e} />)
+          : visibleMocks.map((e, i) => <ListingCard key={i} e={e} />)}
       </div>
       <div style={{ display: "flex", justifyContent: "center", marginTop: "2rem" }}>
-        <button
-          style={{ ...btnOutline, color: C.gray, borderColor: "#222" }}
-          onMouseEnter={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = "#444"; (ev.currentTarget as HTMLElement).style.color = C.white; }}
-          onMouseLeave={(ev) => { (ev.currentTarget as HTMLElement).style.borderColor = "#222"; (ev.currentTarget as HTMLElement).style.color = C.gray; }}
+        <Link
+          to="/browse"
+          style={{ ...btnOutline, color: C.gray, borderColor: "#222", textDecoration: "none", display: "inline-block" }}
         >
           Load more experts →
-        </button>
+        </Link>
       </div>
     </section>
   );
