@@ -301,6 +301,14 @@ export default function GigEditor() {
               <p className="text-sm text-foreground-muted mb-6">
                 Double-check the basics. You can edit your gig any time after publishing.
               </p>
+              {payoutsEnabled === false && (
+                <div className="mb-6 rounded-lg border border-border bg-background-elevated p-4 text-sm">
+                  <p className="font-medium mb-1">Payout setup required</p>
+                  <p className="text-foreground-muted">
+                    Finish connecting your bank in <a href="/seller/earnings" className="underline">Earnings</a> before publishing. Buyers can only check out from sellers with payouts enabled.
+                  </p>
+                </div>
+              )}
               <div className="space-y-2 text-sm">
                 <Row k="Title" v={overview.title || "—"} />
                 <Row k="Category" v={overview.category || "—"} />
