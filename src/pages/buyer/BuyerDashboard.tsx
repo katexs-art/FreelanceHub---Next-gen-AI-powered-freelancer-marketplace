@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
-import { StatNumber, Eyebrow, HairlineDivider } from "@/components/ui/mono";
+import { Eyebrow, HairlineDivider } from "@/components/ui/mono";
 
 interface OrderRow {
   id: string; order_number: string; status: string; price: number; created_at: string;
@@ -70,15 +70,15 @@ export default function BuyerDashboard() {
         <div className="grid grid-cols-3 border-hairline divide-x divide-white/[0.08]">
           <div className="p-6">
             <Eyebrow>Active</Eyebrow>
-            <StatNumber className="mt-2 text-3xl">{stats.active}</StatNumber>
+            <div className="mt-2 font-mono tabular-nums text-3xl">{stats.active}</div>
           </div>
           <div className="p-6">
             <Eyebrow>Completed</Eyebrow>
-            <StatNumber className="mt-2 text-3xl">{stats.completed}</StatNumber>
+            <div className="mt-2 font-mono tabular-nums text-3xl">{stats.completed}</div>
           </div>
           <div className="p-6">
             <Eyebrow>Lifetime spend</Eyebrow>
-            <StatNumber className="mt-2 text-3xl">${stats.spent}</StatNumber>
+            <div className="mt-2 font-mono tabular-nums text-3xl">${stats.spent}</div>
           </div>
         </div>
 
