@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/components/ui/mono";
 import { ArrowUpRight, ArrowRight, Command } from "lucide-react";
+import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { supabase } from "@/integrations/supabase/client";
 
 const CATEGORIES = [
   { label: "Graphics & Design", count: "12.4K" },
