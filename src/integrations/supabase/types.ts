@@ -1387,6 +1387,10 @@ export type Database = {
         Args: { _seller: string }
         Returns: undefined
       }
+      recompute_seller_response_stats: {
+        Args: { _seller: string }
+        Returns: undefined
+      }
     }
     Enums: {
       cancellation_status: "pending" | "accepted" | "declined"

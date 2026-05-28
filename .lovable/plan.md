@@ -1,49 +1,63 @@
-## Goal
+# Buyer Trust & Reviews
 
-Move off seller-side Stripe Connect onboarding. The **platform's Stripe account** handles all charges and refunds (like Fiverr). Sellers only need to tell us where to send their money — Stripe bank transfer (Connect transfer under the hood, no onboarding UI) or PayPal email. Refunds fire automatically when both parties agree to cancel.
+Strengthen the trust layer around gigs and sellers. Reviews already exist but are bare-bones (single star + text). This phase makes them informative, social-proof-worthy, and adds the seller-side stats Fiverr users expect.
 
-## What changes for users
+## 1. Richer review submission
 
-**Buyers**
-- Pay with card on Checkout, exactly as today.
-- If both they and the seller agree to cancel an order before delivery → refund hits their card automatically within minutes.
-- Disputes still go to admin for manual decision.
+Upgrade `LeaveReview` for buyers to capture three sub-ratings already in the schema:
+- **Communication** (1–5)
+- **Service as described** (1–5)
+- **Would recommend** (1–5)
 
-**Sellers**
-- No more "Connect with Stripe" onboarding screen.
-- A new **Payout method** card on the Earnings page:
-  - Choose **Bank transfer (Stripe)** → enter country + bank/IBAN details in a single form. We create a Stripe recipient behind the scenes.
-  - Or choose **PayPal** → enter PayPal email.
-- Can publish gigs immediately (no payout-gating). Withdrawals are still blocked until a payout method exists.
+Overall `rating` becomes the rounded average of the three. Add a 500-char limit on `review_text` with zod validation. Seller-side review form stays simple (overall + text — they're rating the buyer).
 
-**Admin**
-- Withdrawal queue: one **Pay out** button per request. We route to Stripe transfer or mark "PayPal — pending manual send" depending on the seller's chosen method.
-- Disputes page unchanged; resolving a dispute in buyer's favor triggers a refund.
+## 2. Seller replies
 
-## Technical plan
+Add a "Reply" affordance under each review in `ReviewsList` when `auth.uid() === seller_id` and no reply exists yet. Inline textarea + Save → updates `reviews.reply`. Reply renders in the existing reply block.
 
-### Database (single migration)
-- `seller_accounts`: add `payout_method text check in ('stripe_bank','paypal')`, `paypal_email text`, `bank_country text`, `bank_last4 text`. Keep `stripe_account_id` (still used as the transfer destination for the bank option).
-- `orders`: add `refunded_at timestamptz`, `refund_id text`, `stripe_charge_id text`.
-- `withdrawals`: add `method text`, `failure_reason text`.
+## 3. Rating breakdown widget
 
-### Edge functions
-- **`stripe-checkout`** — remove the `payouts_enabled` gate. Buyers can always pay.
-- **`stripe-webhook`** — on `checkout.session.completed`, capture `charge_id` onto the order. Add handler for `charge.refunded` → mark order `cancelled`, set `refunded_at`, insert reversing transactions, recompute balance.
-- **`stripe-refund`** (new) — called by admin (disputes) or by the mutual-cancel path. Calls `stripe.refunds.create({ charge })`.
-- **`payout-method-save`** (new) — accepts `{ method, paypal_email? , bank_token? }`. For `stripe_bank` it creates/updates a Stripe **Custom** connected account using a tokenized external account (no onboarding link, just the bank form posts a token to Stripe.js). Persists method on `seller_accounts`.
-- **`stripe-payout`** — branch on `payout_method`: `stripe_bank` → existing transfer flow; `paypal` → set withdrawal `status='processing'` and note "manual PayPal send required" (admin completes outside Stripe, then marks paid).
-- Delete `stripe-connect-onboard` and `stripe-connect-status` (no longer used).
+New `RatingBreakdown` component shown on `GigDetail` and `SellerProfile` above the reviews list:
+- Big average score + total count
+- Bar chart of 5★/4★/3★/2★/1★ distribution
+- Averages for Communication / Service / Recommend
 
-### DB function
-- New `request_mutual_cancel(_order_id)` and update `cancellation_requests` flow: when both parties have agreed (or seller approves a buyer request before delivery), call edge `stripe-refund` from a trigger via `pg_net`, or simpler — the client invokes `stripe-refund` right after the approving update. Go with the client-invokes path for simplicity.
+Computed client-side from the reviews query (already loaded).
 
-### Frontend
-- **`src/pages/seller/Earnings.tsx`**: replace the Stripe Connect onboarding banner with a **Payout method** card (radio: Bank transfer / PayPal, conditional fields, Stripe.js for bank tokenization). Withdraw button enabled when `payout_method` is set.
-- **`src/pages/seller/GigEditor.tsx`**: remove the `payouts_enabled` warning + submit gate.
-- **`src/pages/orders/OrderWorkspace.tsx`** (cancellation flow): when the second party accepts a cancellation on an unfulfilled order, call `stripe-refund` and toast "Refund issued".
-- **`src/pages/admin/Admin.tsx`**: in withdrawal queue, show the seller's payout method as a badge; "Pay out" button calls `stripe-payout` either way (PayPal branch just flags it for manual completion + offers a "Mark paid" action).
+## 4. Seller response stats
 
-### Out of scope
-- Building a full PayPal Payouts API integration. We capture the email and admin sends manually. Can be upgraded later.
-- KYC for sellers — relying on Stripe's lightweight recipient-only account for bank transfers.
+Add a nightly-style recompute (run on demand from a SQL function `recompute_seller_response_stats(uuid)`):
+- `response_rate` = % of buyer-initiated conversations the seller replied to
+- `response_time_minutes` = median minutes from buyer message → seller's first reply
+
+Trigger recompute after each message insert (debounced — only when sender is seller and prior message was from a different participant). Display on `SellerProfile` and the seller card on `GigDetail` (e.g. "Responds in ~2h · 98% response rate").
+
+## 5. Verified buyer badge
+
+Reviews where the buyer has ≥1 completed order get a small "Verified purchase" pill in `ReviewsList`. Since every review is tied to a completed order via RLS already, this is effectively always true — show the pill unconditionally on public reviews. Adds visual trust without new data.
+
+## 6. Gig card upgrade
+
+`GigCard` already shows average + count. Add:
+- "★ 4.9 (132)" stays as-is
+- Add a subtle "Top Rated" indicator when `average_rating >= 4.8 AND total_reviews >= 10`
+
+Pure presentation, no schema change.
+
+## Technical Details
+
+**Schema**: No new tables. All fields already exist (`reviews.communication_rating`, `service_rating`, `recommend_rating`, `reply`; `profiles.response_rate`, `response_time_minutes`).
+
+**New SQL**:
+- `recompute_seller_response_stats(_seller uuid)` security-definer function
+- Trigger `messages_after_insert_response_stats` that calls it when the sender is the conversation's seller party
+
+**Frontend files**:
+- `src/components/marketplace/LeaveReview.tsx` — add sub-rating sliders/stars, zod validation
+- `src/components/marketplace/ReviewsList.tsx` — render sub-ratings, verified pill, seller-reply inline editor
+- `src/components/marketplace/RatingBreakdown.tsx` (new)
+- `src/components/marketplace/GigCard.tsx` — Top Rated badge
+- `src/pages/GigDetail.tsx` — mount `RatingBreakdown`, show seller response stats in seller card
+- `src/pages/SellerProfile.tsx` — mount `RatingBreakdown` and response stats
+
+**Out of scope** (next phase candidates): seller levels (New/Level 1/2/Top Rated tied to thresholds), review photos, review helpfulness votes, review moderation queue in admin.

@@ -3,8 +3,10 @@ import { useParams, Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
+import { ReviewsList } from "@/components/marketplace/ReviewsList";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Calendar } from "lucide-react";
+import { MapPin, Calendar, Clock, MessageCircle } from "lucide-react";
 
 interface Seller {
   id: string;
@@ -16,6 +18,14 @@ interface Seller {
   languages: string[];
   member_since: string;
   is_online: boolean;
+  response_rate: number | null;
+  response_time_minutes: number | null;
+}
+
+function formatResponseTime(minutes: number): string {
+  if (minutes < 60) return `${Math.max(1, Math.round(minutes))}m`;
+  if (minutes < 60 * 24) return `${Math.round(minutes / 60)}h`;
+  return `${Math.round(minutes / (60 * 24))}d`;
 }
 
 export default function SellerProfile() {
@@ -92,15 +102,36 @@ export default function SellerProfile() {
               {seller.bio && (
                 <p className="mt-5 text-sm text-left text-foreground-muted whitespace-pre-line">{seller.bio}</p>
               )}
+              {(seller.response_time_minutes != null || seller.response_rate != null) && (
+                <div className="mt-5 space-y-2 text-sm text-left border-t border-border pt-4">
+                  {seller.response_time_minutes != null && (
+                    <div className="flex items-center gap-2 text-foreground-muted">
+                      <Clock className="h-4 w-4" /> Responds in ~{formatResponseTime(seller.response_time_minutes)}
+                    </div>
+                  )}
+                  {seller.response_rate != null && (
+                    <div className="flex items-center gap-2 text-foreground-muted">
+                      <MessageCircle className="h-4 w-4" /> {Number(seller.response_rate).toFixed(0)}% response rate
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </aside>
 
-          <section>
-            <h2 className="text-xl font-bold mb-6">{name}'s gigs</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {gigs.length === 0
-                ? <p className="text-foreground-muted col-span-full">No active gigs yet.</p>
-                : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+          <section className="space-y-10">
+            <div>
+              <h2 className="text-xl font-bold mb-4">Reviews</h2>
+              <div className="mb-5"><RatingBreakdown sellerId={seller.id} /></div>
+              <ReviewsList sellerId={seller.id} />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-6">{name}'s gigs</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {gigs.length === 0
+                  ? <p className="text-foreground-muted col-span-full">No active gigs yet.</p>
+                  : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+              </div>
             </div>
           </section>
         </div>
