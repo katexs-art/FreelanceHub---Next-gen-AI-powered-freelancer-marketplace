@@ -50,7 +50,6 @@ export default function BuyerDashboard() {
 
       // --- Personalized recommendations ---
       // Signal 1: categories from gigs the buyer has ordered
-      const orderedGigIds = [...new Set(rows.map((o) => (o as any).gig_id).filter(Boolean))];
       const { data: orderedGigs } = await supabase.from("orders")
         .select("gig_id, gigs:gig_id(category)").eq("buyer_id", user.id);
       const catSet = new Set<string>();
