@@ -198,7 +198,7 @@ export default function Landing() {
       <section className="border-b-hairline">
         <div className="container-page py-24">
           <div className="text-center mb-16">
-            <Eyebrow>02 / Workflow</Eyebrow>
+            <Eyebrow>03 / Workflow</Eyebrow>
             <h2 className="display-md mt-3 max-w-2xl mx-auto">Three moves. Zero ceremony.</h2>
           </div>
 
@@ -222,7 +222,7 @@ export default function Landing() {
       <section className="border-b-hairline">
         <div className="container-page py-24 grid md:grid-cols-2 gap-16 items-center">
           <div>
-            <Eyebrow>03 / Trust</Eyebrow>
+            <Eyebrow>04 / Trust</Eyebrow>
             <h2 className="display-md mt-3">Built for serious work.</h2>
             <p className="mt-6 text-foreground-muted max-w-md leading-relaxed">
               Verified sellers, escrowed payments, dispute resolution, KYC, and an admin layer that operates at platform scale.
@@ -264,7 +264,7 @@ export default function Landing() {
       {/* ───────────────────────────── FINAL CTA ───────────────────────────── */}
       <section>
         <div className="container-page py-32 text-center">
-          <Eyebrow>04 / Begin</Eyebrow>
+          <Eyebrow>05 / Begin</Eyebrow>
           <h2 className="display-lg mt-4 max-w-3xl mx-auto">
             The next decade of work
             <br />
