@@ -1,41 +1,45 @@
 import { Link } from "react-router-dom";
+import { Eyebrow } from "@/components/ui/mono";
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-border bg-background-subtle mt-24">
-      <div className="container py-12 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
+    <footer className="border-t-hairline bg-background">
+      <div className="container-page py-20 grid grid-cols-2 md:grid-cols-5 gap-12 text-sm">
         <div className="col-span-2">
-          <div className="font-heading font-bold text-lg">katexs<span className="text-primary">.</span></div>
-          <p className="text-foreground-muted mt-2 text-xs max-w-xs">
-            Freelance services for the modern creator economy.
+          <div className="font-mono uppercase tracking-[0.18em] text-base">KATEXS</div>
+          <p className="text-foreground-muted mt-4 text-xs max-w-xs leading-relaxed">
+            A precision freelance marketplace, engineered for the next decade of work.
           </p>
+          <div className="mt-8 inline-flex items-center gap-2 mono-tag">
+            <span className="h-1.5 w-1.5 rounded-full bg-success" />
+            ALL SYSTEMS NOMINAL
+          </div>
         </div>
-        <div>
-          <div className="font-semibold mb-3">Categories</div>
-          <ul className="space-y-2 text-foreground-muted">
-            <li><Link to="/explore">Graphics & Design</Link></li>
-            <li><Link to="/explore">Programming</Link></li>
-            <li><Link to="/explore">Writing</Link></li>
-          </ul>
-        </div>
-        <div>
-          <div className="font-semibold mb-3">Support</div>
-          <ul className="space-y-2 text-foreground-muted">
-            <li><Link to="/help">Help center</Link></li>
-            <li><Link to="/trust">Trust & safety</Link></li>
-          </ul>
-        </div>
-        <div>
-          <div className="font-semibold mb-3">Company</div>
-          <ul className="space-y-2 text-foreground-muted">
-            <li><Link to="/about">About</Link></li>
-            <li><Link to="/terms">Terms</Link></li>
-            <li><Link to="/privacy">Privacy</Link></li>
-          </ul>
-        </div>
+
+        {[
+          { h: "CATALOG", items: [["Browse", "/explore"], ["Categories", "/explore"], ["AI services", "/explore"]] },
+          { h: "SELLERS", items: [["Become a seller", "/become-a-seller"], ["Seller dashboard", "/seller/dashboard"], ["Earnings", "/seller/earnings"]] },
+          { h: "COMPANY", items: [["About", "/about"], ["Trust & safety", "/trust"], ["Terms", "/terms"], ["Privacy", "/privacy"]] },
+        ].map((col) => (
+          <div key={col.h}>
+            <Eyebrow>{col.h}</Eyebrow>
+            <ul className="space-y-3 text-foreground-muted mt-5">
+              {col.items.map(([l, h]) => (
+                <li key={l}><Link to={h} className="hover:text-foreground transition-colors">{l}</Link></li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
-      <div className="border-t border-border py-6 text-xs text-foreground-subtle text-center">
-        © {new Date().getFullYear()} katexs. All rights reserved.
+      <div className="border-t-hairline py-6">
+        <div className="container-page flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+          <div className="font-mono uppercase tracking-[0.14em] text-foreground-subtle">
+            © {new Date().getFullYear()} KATEXS LABS · ALL RIGHTS RESERVED
+          </div>
+          <div className="font-mono uppercase tracking-[0.14em] text-foreground-subtle">
+            BUILT IN PUBLIC · V1.0.0
+          </div>
+        </div>
       </div>
     </footer>
   );

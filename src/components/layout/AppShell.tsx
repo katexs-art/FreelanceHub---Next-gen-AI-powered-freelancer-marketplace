@@ -32,56 +32,58 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { to: "/settings", icon: Settings, label: "Settings" },
   ];
 
+  const itemCls = ({ isActive }: { isActive: boolean }) =>
+    cn(
+      "flex items-center gap-3 px-3 py-2 text-sm transition-colors font-mono uppercase tracking-[0.12em] text-[11px]",
+      isActive
+        ? "bg-white/[0.06] text-foreground"
+        : "text-foreground-muted hover:bg-white/[0.03] hover:text-foreground"
+    );
+
   return (
-    <div className="min-h-screen bg-background-subtle">
-      <header className="bg-background border-b border-border sticky top-0 z-40">
-        <div className="px-6 h-16 flex items-center gap-6">
-          <Link to="/" className="font-heading font-bold text-xl">
-            katexs<span className="text-primary">.</span>
+    <div className="min-h-screen bg-background">
+      <header className="bg-background border-b-hairline sticky top-0 z-40">
+        <div className="px-6 h-14 flex items-center gap-6">
+          <Link to="/" className="font-mono font-medium text-sm tracking-[0.18em] uppercase">
+            KATEXS
           </Link>
           <div className="flex-1" />
           {isSeller && (
             <Button size="sm" onClick={() => nav("/seller/gigs/new")}>
-              <Plus className="h-4 w-4" /> New gig
+              <Plus className="h-3.5 w-3.5" /> New gig
             </Button>
           )}
           <NotificationBell />
-          <div className="flex items-center gap-2 text-sm">
-            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-medium">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-full bg-background-elevated border-hairline text-foreground-muted flex items-center justify-center font-mono text-xs">
               {(profile?.full_name?.[0] ?? profile?.email?.[0] ?? "?").toUpperCase()}
             </div>
-            <button onClick={signOut} className="text-foreground-muted hover:text-foreground p-2">
-              <LogOut className="h-4 w-4" />
+            <button onClick={signOut} className="text-foreground-subtle hover:text-foreground p-2 transition-colors">
+              <LogOut className="h-3.5 w-3.5" />
             </button>
           </div>
         </div>
       </header>
 
       <div className="flex">
-        <aside className="w-60 shrink-0 border-r border-border bg-background min-h-[calc(100vh-4rem)] p-3">
-          <nav className="space-y-0.5 text-sm">
+        <aside className="w-56 shrink-0 border-r-hairline bg-background min-h-[calc(100vh-3.5rem)] py-4">
+          <nav className="space-y-px">
             {links.map(({ to, icon: Icon, label }) => (
-              <NavLink key={to} to={to} end className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg",
-                isActive ? "bg-primary/10 text-primary font-medium" : "text-foreground-muted hover:bg-background-elevated hover:text-foreground"
-              )}>
-                <Icon className="h-4 w-4" />
+              <NavLink key={to} to={to} end className={itemCls}>
+                <Icon className="h-3.5 w-3.5" />
                 {label}
               </NavLink>
             ))}
-            <div className="my-3 h-px bg-border" />
+            <div className="my-3 divider" />
             {shared.map(({ to, icon: Icon, label }) => (
-              <NavLink key={to} to={to} className={({ isActive }) => cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg",
-                isActive ? "bg-primary/10 text-primary font-medium" : "text-foreground-muted hover:bg-background-elevated hover:text-foreground"
-              )}>
-                <Icon className="h-4 w-4" />
+              <NavLink key={to} to={to} className={itemCls}>
+                <Icon className="h-3.5 w-3.5" />
                 {label}
               </NavLink>
             ))}
           </nav>
         </aside>
-        <main className="flex-1 p-8 min-w-0">{children}</main>
+        <main className="flex-1 p-10 min-w-0">{children}</main>
       </div>
     </div>
   );
