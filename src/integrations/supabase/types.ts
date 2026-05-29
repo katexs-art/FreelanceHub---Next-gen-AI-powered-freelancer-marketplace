@@ -74,6 +74,27 @@ export type Database = {
           },
         ]
       }
+      buyer_searches: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          id: string
+          query: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          id?: string
+          query: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          id?: string
+          query?: string
+        }
+        Relationships: []
+      }
       cancellation_requests: {
         Row: {
           created_at: string
@@ -1545,6 +1566,10 @@ export type Database = {
         Returns: boolean
       }
       mark_offline_stale: { Args: never; Returns: undefined }
+      notify_river_match: {
+        Args: { _query: string; _seller_ids: string[] }
+        Returns: string
+      }
       recompute_seller_balance: {
         Args: { _seller: string }
         Returns: undefined
@@ -1554,6 +1579,10 @@ export type Database = {
         Returns: undefined
       }
       seller_follower_count: { Args: { _seller: string }; Returns: number }
+      submit_river_pitch: {
+        Args: { _content: string; _search_id: string }
+        Returns: string
+      }
       suspend_seller: { Args: { _seller: string }; Returns: undefined }
       track_promotion_event: {
         Args: { _event: string; _promotion_id: string }
@@ -1581,6 +1610,7 @@ export type Database = {
         | "dispute"
         | "payout"
         | "system"
+        | "river_match"
       offer_status:
         | "pending"
         | "accepted"
@@ -1755,6 +1785,7 @@ export const Constants = {
         "dispute",
         "payout",
         "system",
+        "river_match",
       ],
       offer_status: ["pending", "accepted", "declined", "withdrawn", "expired"],
       order_status: [
