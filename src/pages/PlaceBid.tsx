@@ -71,7 +71,7 @@ export default function PlaceBid() {
         },
       }).catch(() => {});
     }
-    toast({ title: "Bid submitted" });
+    toast({ title: "Your bid was submitted successfully" });
     nav("/projects");
   };
 
