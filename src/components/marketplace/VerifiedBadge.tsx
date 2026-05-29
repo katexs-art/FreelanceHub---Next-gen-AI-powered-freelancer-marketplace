@@ -5,8 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 export function VerifiedBadge({ sellerId }: { sellerId: string }) {
   const [verified, setVerified] = useState(false);
   useEffect(() => {
-    supabase.from("seller_verifications").select("status").eq("seller_id", sellerId).maybeSingle()
-      .then(({ data }) => setVerified((data as any)?.status === "verified"));
+    supabase.rpc("get_seller_verification_status", { _seller: sellerId })
+      .then(({ data }) => setVerified((data as any) === "verified"));
   }, [sellerId]);
   if (!verified) return null;
   return (
