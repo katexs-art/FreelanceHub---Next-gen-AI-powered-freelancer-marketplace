@@ -100,8 +100,18 @@ export default function RiverResults() {
 
       setSellers(list);
       setLoading(false);
+
+      // Fire-and-forget: notify the matched sellers via River AI
+      const sig = `${query}::${list.map((s) => s.id).join(",")}`;
+      if (user && query.trim() && list.length && notifiedRef.current !== sig) {
+        notifiedRef.current = sig;
+        supabase.rpc("notify_river_match", {
+          _query: query,
+          _seller_ids: list.map((s) => s.id),
+        }).then(({ error }) => { if (error) console.warn("notify_river_match", error.message); });
+      }
     })();
-  }, [query]);
+  }, [query, user?.id]);
 
   const openMessage = async (sellerId: string) => {
     if (!user) { nav("/login"); return; }
