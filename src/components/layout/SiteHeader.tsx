@@ -43,9 +43,8 @@ export function SiteHeader() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search the catalog…"
-            className="w-full h-9 pl-9 pr-28 rounded-full surface text-sm focus:outline-none focus:border-white/30 transition-colors"
+            className="w-full h-9 pl-9 pr-24 rounded-full surface text-sm focus:outline-none focus:border-white/30 transition-colors"
           />
-          <span className="absolute right-[88px] top-1/2 -translate-y-1/2 keycap">K</span>
           <Button
             type="submit"
             size="sm"
