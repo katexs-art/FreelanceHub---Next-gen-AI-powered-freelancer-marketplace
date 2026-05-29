@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleSwitcher } from "@/components/layout/RoleSwitcher";
 import { Search, Menu, ArrowRight } from "lucide-react";
+import { CategoryBar } from "@/components/layout/CategoryBar";
 import { useState } from "react";
 
 export function SiteHeader() {
@@ -74,6 +75,7 @@ export function SiteHeader() {
 
         <button className="md:hidden p-2 text-foreground-muted"><Menu className="h-5 w-5" /></button>
       </div>
+      <CategoryBar />
     </header>
   );
 }
