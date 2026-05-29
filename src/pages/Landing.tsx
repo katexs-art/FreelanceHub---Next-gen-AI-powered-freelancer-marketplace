@@ -281,30 +281,3 @@ export default function Landing() {
   );
 }
 
-function RiverAISearch() {
-  const nav = useNavigate();
-  const [q, setQ] = useState("");
-  return (
-    <section className="border-b-hairline">
-      <div className="container-page py-20">
-        <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/river-results?q=${encodeURIComponent(q.trim())}`); }}
-          className="max-w-3xl mx-auto text-center"
-        >
-          <div className="eyebrow mb-4">POWERED BY RIVER AI</div>
-          <div className="surface flex items-center gap-3 rounded-full px-2 py-2 h-14">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Tell River what you need — I'll find the best AI experts for you..."
-              className="flex-1 bg-transparent text-sm md:text-base px-4 focus:outline-none placeholder:text-foreground-subtle"
-            />
-            <Button type="submit" size="sm" className="h-10 rounded-full bg-black text-white hover:bg-black/90">
-              Find My Expert
-            </Button>
-          </div>
-        </form>
-      </div>
-    </section>
-  );
-}
