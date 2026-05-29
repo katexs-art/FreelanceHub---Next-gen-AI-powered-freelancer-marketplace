@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleSwitcher } from "@/components/layout/RoleSwitcher";
 import { Search, Menu, ArrowRight } from "lucide-react";
+import { CategoryBar } from "@/components/layout/CategoryBar";
 import { useState } from "react";
 
 export function SiteHeader() {
