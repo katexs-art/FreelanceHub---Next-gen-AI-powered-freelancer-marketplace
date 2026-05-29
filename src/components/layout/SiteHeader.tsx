@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleSwitcher } from "@/components/layout/RoleSwitcher";
-import { Search, Menu, Command } from "lucide-react";
+import { Search, Menu } from "lucide-react";
 import { useState } from "react";
 
 export function SiteHeader() {
@@ -43,12 +43,8 @@ export function SiteHeader() {
             value={q}
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search the catalog…"
-            className="w-full h-9 pl-9 pr-16 rounded-full surface text-sm focus:outline-none focus:border-white/30 transition-colors"
+            className="w-full h-9 pl-9 pr-4 rounded-full surface text-sm focus:outline-none focus:border-white/30 transition-colors"
           />
-          <span className="absolute right-2 top-1/2 -translate-y-1/2 inline-flex items-center gap-1">
-            <span className="keycap"><Command className="h-3 w-3" /></span>
-            <span className="keycap">K</span>
-          </span>
         </form>
 
         <div className="flex-1 lg:hidden" />
