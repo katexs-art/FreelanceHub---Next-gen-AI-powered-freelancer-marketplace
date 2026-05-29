@@ -67,6 +67,7 @@ const App = () => (
             <Route path="/browse" element={<Explore />} />
             <Route path="/search" element={<Search />} />
             <Route path="/river-results" element={<RiverResults />} />
+            <Route path="/pitch/:buyer_search_id" element={<ProtectedRoute><Pitch /></ProtectedRoute>} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/gig/:slug" element={<GigDetail />} />
             <Route path="/u/:username" element={<SellerProfile />} />
