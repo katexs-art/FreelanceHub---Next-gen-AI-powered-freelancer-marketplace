@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -35,6 +35,7 @@ export default function RiverResults() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sellers, setSellers] = useState<SellerMatch[]>([]);
+  const notifiedRef = useRef<string>("");
 
   const tokens = useMemo(() => tokenize(query), [query]);
 
@@ -99,8 +100,18 @@ export default function RiverResults() {
 
       setSellers(list);
       setLoading(false);
+
+      // Fire-and-forget: notify the matched sellers via River AI
+      const sig = `${query}::${list.map((s) => s.id).join(",")}`;
+      if (user && query.trim() && list.length && notifiedRef.current !== sig) {
+        notifiedRef.current = sig;
+        supabase.rpc("notify_river_match", {
+          _query: query,
+          _seller_ids: list.map((s) => s.id),
+        }).then(({ error }) => { if (error) console.warn("notify_river_match", error.message); });
+      }
     })();
-  }, [query]);
+  }, [query, user?.id]);
 
   const openMessage = async (sellerId: string) => {
     if (!user) { nav("/login"); return; }

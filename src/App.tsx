@@ -25,6 +25,7 @@ const GigEditor = lazy(() => import("./pages/seller/GigEditor"));
 const Explore = lazy(() => import("./pages/Explore"));
 const Search = lazy(() => import("./pages/Search"));
 const RiverResults = lazy(() => import("./pages/RiverResults"));
+const Pitch = lazy(() => import("./pages/Pitch"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const GigDetail = lazy(() => import("./pages/GigDetail"));
 const SellerProfile = lazy(() => import("./pages/SellerProfile"));
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/browse" element={<Explore />} />
             <Route path="/search" element={<Search />} />
             <Route path="/river-results" element={<RiverResults />} />
+            <Route path="/pitch/:buyer_search_id" element={<ProtectedRoute><Pitch /></ProtectedRoute>} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/gig/:slug" element={<GigDetail />} />
             <Route path="/u/:username" element={<SellerProfile />} />
