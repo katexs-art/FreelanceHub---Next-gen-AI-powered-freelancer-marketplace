@@ -133,6 +133,10 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ───────────────────────────── RIVER AI SEARCH ───────────────────────────── */}
+      <RiverAISearch />
+    </section>
+
       {/* ───────────────────────────── STATS STRIP ───────────────────────────── */}
       <section className="border-b-hairline">
         <div className="container-page py-14 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06]">
