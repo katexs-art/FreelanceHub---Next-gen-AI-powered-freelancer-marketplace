@@ -8,6 +8,16 @@ import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/compon
 import { ArrowUpRight, ArrowRight, Command } from "lucide-react";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { supabase } from "@/integrations/supabase/client";
+import avatar1 from "@/assets/avatars/user-1.jpg";
+import avatar2 from "@/assets/avatars/user-2.jpg";
+import avatar3 from "@/assets/avatars/user-3.jpg";
+import avatar4 from "@/assets/avatars/user-4.jpg";
+import avatar5 from "@/assets/avatars/user-5.jpg";
+import avatar6 from "@/assets/avatars/user-6.jpg";
+import avatar7 from "@/assets/avatars/user-7.jpg";
+import avatar8 from "@/assets/avatars/user-8.jpg";
+
+const AVATARS = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6, avatar7, avatar8];
 
 const CATEGORIES = [
   { label: "Graphics & Design", count: "12.4K" },
