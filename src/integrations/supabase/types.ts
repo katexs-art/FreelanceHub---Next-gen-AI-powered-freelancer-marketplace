@@ -1530,8 +1530,34 @@ export type Database = {
         Returns: undefined
       }
       expire_promotions: { Args: never; Returns: undefined }
+      get_my_promotion_stats: {
+        Args: never
+        Returns: {
+          clicks: number
+          created_at: string
+          daily_budget_cents: number
+          ends_at: string
+          gig_id: string
+          id: string
+          impressions: number
+          seller_id: string
+          spend_cents: number
+          starts_at: string
+          status: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "gig_promotions"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_or_create_conversation: {
         Args: { _gig_id?: string; _order_id?: string; _other: string }
+        Returns: string
+      }
+      get_seller_verification_status: {
+        Args: { _seller: string }
         Returns: string
       }
       heartbeat_online: { Args: never; Returns: undefined }
