@@ -129,6 +129,34 @@ export default function Landing() {
               </Link>
             ))}
           </div>
+
+          {/* Social proof — real users */}
+          <div className="mt-10 flex items-center justify-center gap-4">
+            <div className="flex -space-x-3">
+              {AVATARS.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`Katexs member ${i + 1}`}
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  className="h-10 w-10 rounded-full object-cover ring-2 ring-background"
+                />
+              ))}
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-1 text-foreground">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <svg key={i} viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-success">
+                    <path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6L10 15l-5.4 3 1.2-6L1.3 7.8l6.1-.7L10 1.5z" />
+                  </svg>
+                ))}
+                <span className="ml-2 eyebrow">50,000+ MEMBERS</span>
+              </div>
+              <p className="mt-1 text-xs text-foreground-muted">Loved by founders, creators &amp; teams worldwide</p>
+            </div>
+          </div>
         </div>
       </section>
 
