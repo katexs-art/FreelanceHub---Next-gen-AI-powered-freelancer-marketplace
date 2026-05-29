@@ -23,6 +23,7 @@ type Project = {
 type Sort = "newest" | "most_bids" | "ending_soon" | "budget_high";
 
 export default function Projects() {
+  const { profile } = useAuth();
   const { data: categories } = useCategories();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
