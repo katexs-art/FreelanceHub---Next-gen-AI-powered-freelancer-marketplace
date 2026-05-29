@@ -193,8 +193,8 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06]">
             {CATEGORIES.map((c, i) => (
               <Link
-                key={c.label}
-                to={`/explore?category=${encodeURIComponent(c.label)}`}
+                key={c.slug}
+                to={`/category/${c.slug}`}
                 className="bg-background p-6 md:p-8 group hover:bg-background-subtle transition-colors"
               >
                 <div className="flex items-start justify-between">
@@ -202,7 +202,7 @@ export default function Landing() {
                   <ArrowUpRight className="h-4 w-4 text-foreground-subtle group-hover:text-foreground transition-colors" />
                 </div>
                 <div className="mt-12 font-heading text-base md:text-lg leading-tight">{c.label}</div>
-                <div className="mt-2 eyebrow">{c.count} GIGS</div>
+                <div className="mt-2 eyebrow">EXPLORE</div>
               </Link>
             ))}
           </div>
