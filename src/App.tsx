@@ -26,6 +26,10 @@ const Explore = lazy(() => import("./pages/Explore"));
 const Search = lazy(() => import("./pages/Search"));
 const RiverResults = lazy(() => import("./pages/RiverResults"));
 const Pitch = lazy(() => import("./pages/Pitch"));
+const PostJob = lazy(() => import("./pages/PostJob"));
+const Projects = lazy(() => import("./pages/Projects"));
+const PlaceBid = lazy(() => import("./pages/PlaceBid"));
+const ProjectBids = lazy(() => import("./pages/ProjectBids"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const GigDetail = lazy(() => import("./pages/GigDetail"));
 const SellerProfile = lazy(() => import("./pages/SellerProfile"));
@@ -68,6 +72,10 @@ const App = () => (
             <Route path="/search" element={<Search />} />
             <Route path="/river-results" element={<RiverResults />} />
             <Route path="/pitch/:buyer_search_id" element={<ProtectedRoute><Pitch /></ProtectedRoute>} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/post-job" element={<ProtectedRoute roles={["client","admin"]}><PostJob /></ProtectedRoute>} />
+            <Route path="/projects/:project_id/bid" element={<ProtectedRoute><PlaceBid /></ProtectedRoute>} />
+            <Route path="/projects/:project_id/bids" element={<ProtectedRoute><ProjectBids /></ProtectedRoute>} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/gig/:slug" element={<GigDetail />} />
             <Route path="/u/:username" element={<SellerProfile />} />
