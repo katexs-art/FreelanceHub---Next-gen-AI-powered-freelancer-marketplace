@@ -30,28 +30,12 @@ const CATEGORIES = [
   { label: "Learn AI", slug: "learn-ai" },
 ];
 
-const ROTATING = [
-  "build a landing page in React",
-  "design a brand identity system",
-  "write a 90-day content plan",
-  "edit a 60-second product film",
-  "ship a Shopify storefront",
-  "compose a sonic logo",
-];
-
-const POPULAR = ["Logo Design", "WordPress", "Voice Over", "Video Editing", "AI Artists", "SEO"];
-
 export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
-  const [phIdx, setPhIdx] = useState(0);
   const [featured, setFeatured] = useState<GigCardData[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
 
-  useEffect(() => {
-    const id = setInterval(() => setPhIdx((i) => (i + 1) % ROTATING.length), 2800);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     (async () => {
