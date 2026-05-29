@@ -35,6 +35,7 @@ export default function RiverResults() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [sellers, setSellers] = useState<SellerMatch[]>([]);
+  const notifiedRef = useRef<string>("");
 
   const tokens = useMemo(() => tokenize(query), [query]);
 
