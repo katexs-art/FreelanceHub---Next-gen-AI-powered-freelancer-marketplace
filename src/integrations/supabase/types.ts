@@ -559,15 +559,7 @@ export type Database = {
           total_reviews?: number
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "gigs_seller_id_fkey"
-            columns: ["seller_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       messages: {
         Row: {
