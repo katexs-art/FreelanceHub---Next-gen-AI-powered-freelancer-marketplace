@@ -20,14 +20,14 @@ import avatar8 from "@/assets/avatars/user-8.jpg";
 const AVATARS = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6, avatar7, avatar8];
 
 const CATEGORIES = [
-  { label: "Graphics & Design", count: "12.4K" },
-  { label: "Programming & Tech", count: "9.8K" },
-  { label: "Digital Marketing", count: "7.1K" },
-  { label: "Writing & Translation", count: "6.3K" },
-  { label: "Video & Animation", count: "5.9K" },
-  { label: "Music & Audio", count: "4.2K" },
-  { label: "AI Services", count: "3.6K" },
-  { label: "Business", count: "2.8K" },
+  { label: "Build with AI", slug: "build-with-ai" },
+  { label: "Sound & Speak with AI", slug: "sound-and-speak-with-ai" },
+  { label: "Create with AI", slug: "create-with-ai" },
+  { label: "Grow with AI", slug: "grow-with-ai" },
+  { label: "Run with AI", slug: "run-with-ai" },
+  { label: "Understand AI", slug: "understand-ai" },
+  { label: "Write with AI", slug: "write-with-ai" },
+  { label: "Learn AI", slug: "learn-ai" },
 ];
 
 const ROTATING = [
@@ -193,8 +193,8 @@ export default function Landing() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06]">
             {CATEGORIES.map((c, i) => (
               <Link
-                key={c.label}
-                to={`/explore?category=${encodeURIComponent(c.label)}`}
+                key={c.slug}
+                to={`/category/${c.slug}`}
                 className="bg-background p-6 md:p-8 group hover:bg-background-subtle transition-colors"
               >
                 <div className="flex items-start justify-between">
@@ -202,7 +202,7 @@ export default function Landing() {
                   <ArrowUpRight className="h-4 w-4 text-foreground-subtle group-hover:text-foreground transition-colors" />
                 </div>
                 <div className="mt-12 font-heading text-base md:text-lg leading-tight">{c.label}</div>
-                <div className="mt-2 eyebrow">{c.count} GIGS</div>
+                <div className="mt-2 eyebrow">EXPLORE</div>
               </Link>
             ))}
           </div>
