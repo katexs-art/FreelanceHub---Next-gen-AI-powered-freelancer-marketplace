@@ -14,6 +14,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
 
+  useEffect(() => {
+    if (params.get("verified") === "1") {
+      toast.success("Email verified! Please sign in.");
+    }
+  }, [params]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
