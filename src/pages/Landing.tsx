@@ -8,6 +8,16 @@ import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/compon
 import { ArrowUpRight, ArrowRight, Command } from "lucide-react";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { supabase } from "@/integrations/supabase/client";
+import avatar1 from "@/assets/avatars/user-1.jpg";
+import avatar2 from "@/assets/avatars/user-2.jpg";
+import avatar3 from "@/assets/avatars/user-3.jpg";
+import avatar4 from "@/assets/avatars/user-4.jpg";
+import avatar5 from "@/assets/avatars/user-5.jpg";
+import avatar6 from "@/assets/avatars/user-6.jpg";
+import avatar7 from "@/assets/avatars/user-7.jpg";
+import avatar8 from "@/assets/avatars/user-8.jpg";
+
+const AVATARS = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6, avatar7, avatar8];
 
 const CATEGORIES = [
   { label: "Graphics & Design", count: "12.4K" },
@@ -118,6 +128,34 @@ export default function Landing() {
                 {p}
               </Link>
             ))}
+          </div>
+
+          {/* Social proof — real users */}
+          <div className="mt-10 flex items-center justify-center gap-4">
+            <div className="flex -space-x-3">
+              {AVATARS.map((src, i) => (
+                <img
+                  key={i}
+                  src={src}
+                  alt={`Katexs member ${i + 1}`}
+                  width={40}
+                  height={40}
+                  loading="lazy"
+                  className="h-10 w-10 rounded-full object-cover ring-2 ring-background"
+                />
+              ))}
+            </div>
+            <div className="text-left">
+              <div className="flex items-center gap-1 text-foreground">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <svg key={i} viewBox="0 0 20 20" fill="currentColor" className="h-3.5 w-3.5 text-success">
+                    <path d="M10 1.5l2.6 5.6 6.1.7-4.5 4.2 1.2 6L10 15l-5.4 3 1.2-6L1.3 7.8l6.1-.7L10 1.5z" />
+                  </svg>
+                ))}
+                <span className="ml-2 eyebrow">50,000+ MEMBERS</span>
+              </div>
+              <p className="mt-1 text-xs text-foreground-muted">Loved by founders, creators &amp; teams worldwide</p>
+            </div>
           </div>
         </div>
       </section>
