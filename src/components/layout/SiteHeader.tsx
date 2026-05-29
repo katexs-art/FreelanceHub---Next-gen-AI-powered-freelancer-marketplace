@@ -75,6 +75,7 @@ export function SiteHeader() {
 
         <button className="md:hidden p-2 text-foreground-muted"><Menu className="h-5 w-5" /></button>
       </div>
+      <CategoryBar />
     </header>
   );
 }
