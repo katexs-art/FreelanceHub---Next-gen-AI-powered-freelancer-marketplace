@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useCategories } from "@/hooks/useCategories";
+import { useAuth } from "@/hooks/useAuth";
 
 type Project = {
   id: string;
@@ -22,6 +23,7 @@ type Project = {
 type Sort = "newest" | "most_bids" | "ending_soon" | "budget_high";
 
 export default function Projects() {
+  const { profile } = useAuth();
   const { data: categories } = useCategories();
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
@@ -70,6 +72,45 @@ export default function Projects() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 container-page py-10">
+        <div
+          style={{
+            background: "#fff",
+            borderBottom: "2px solid #000",
+            padding: "20px 24px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            borderRadius: 4,
+            marginBottom: 24,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: 24, fontWeight: 700, color: "#000", lineHeight: 1.2 }}>Open Projects</div>
+            <div style={{ fontSize: 14, color: "#666", marginTop: 6 }}>
+              Find a project that matches your skills and place your bid
+            </div>
+          </div>
+          {profile?.role === "client" && (
+            <Link to="/post-job">
+              <button
+                style={{
+                  background: "#000",
+                  color: "#fff",
+                  fontSize: 14,
+                  fontWeight: 600,
+                  padding: "10px 18px",
+                  borderRadius: 8,
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                Post a Project
+              </button>
+            </Link>
+          )}
+        </div>
         <h1 className="text-2xl font-semibold mb-6">Project Board</h1>
 
         <div className="mb-4">

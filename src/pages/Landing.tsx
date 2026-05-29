@@ -101,6 +101,37 @@ export default function Landing() {
             </div>
           </form>
 
+          <div className="mt-10 max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+            <div style={{ background: "#000", color: "#fff", borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Post a Project</div>
+                <div style={{ fontSize: 13, color: "#fff", marginTop: 8, opacity: 0.85 }}>
+                  Describe what you need and let sellers compete for your job
+                </div>
+              </div>
+              <Link to="/post-job" style={{ marginTop: 20 }}>
+                <button style={{ background: "#fff", color: "#000", fontSize: 13, fontWeight: 600, padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer", width: "100%" }}>
+                  Post a Job Now
+                </button>
+              </Link>
+            </div>
+            <div style={{ background: "#fff", color: "#000", border: "1px solid #000", borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#000" }}>Browse Open Projects</div>
+                <div style={{ fontSize: 13, color: "#000", marginTop: 8, opacity: 0.75 }}>
+                  Find live projects and place your bid right now
+                </div>
+              </div>
+              <Link to="/projects" style={{ marginTop: 20 }}>
+                <button style={{ background: "#000", color: "#fff", fontSize: 13, fontWeight: 600, padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer", width: "100%" }}>
+                  View All Projects
+                </button>
+              </Link>
+            </div>
+          </div>
+
+
+
         </div>
       </section>
 

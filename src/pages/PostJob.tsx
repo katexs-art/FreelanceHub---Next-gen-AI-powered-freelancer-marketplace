@@ -84,6 +84,12 @@ export default function PostJob() {
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 container-page py-10 max-w-3xl mx-auto w-full">
+        <div className="mb-6">
+          <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1.2 }}>Post Your Project</div>
+          <div style={{ fontSize: 15, color: "#666", marginTop: 6 }}>
+            Tell us what you need — qualified sellers will bid on your job within hours
+          </div>
+        </div>
         <h1 className="text-2xl font-semibold mb-6">Post a Job</h1>
         <form onSubmit={submit} className="space-y-6">
           <div>
