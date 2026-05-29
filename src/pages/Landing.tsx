@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
 import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/components/ui/mono";
-import { ArrowUpRight, ArrowRight, Command } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { supabase } from "@/integrations/supabase/client";
 import avatar1 from "@/assets/avatars/user-1.jpg";
@@ -30,28 +30,12 @@ const CATEGORIES = [
   { label: "Learn AI", slug: "learn-ai" },
 ];
 
-const ROTATING = [
-  "build a landing page in React",
-  "design a brand identity system",
-  "write a 90-day content plan",
-  "edit a 60-second product film",
-  "ship a Shopify storefront",
-  "compose a sonic logo",
-];
-
-const POPULAR = ["Logo Design", "WordPress", "Voice Over", "Video Editing", "AI Artists", "SEO"];
-
 export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
-  const [phIdx, setPhIdx] = useState(0);
   const [featured, setFeatured] = useState<GigCardData[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
 
-  useEffect(() => {
-    const id = setInterval(() => setPhIdx((i) => (i + 1) % ROTATING.length), 2800);
-    return () => clearInterval(id);
-  }, []);
 
   useEffect(() => {
     (async () => {
@@ -98,43 +82,28 @@ export default function Landing() {
             A precision marketplace where talent and intent meet through intelligence — not noise.
           </p>
 
-          {/* AI search pill */}
+          {/* River AI search */}
           <form
-            onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/search?q=${encodeURIComponent(q)}`); }}
-            className="mt-12 max-w-2xl mx-auto"
+            onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/river-results?q=${encodeURIComponent(q.trim())}`); }}
+            className="mt-12 max-w-3xl mx-auto"
           >
-            <div className="surface flex items-center gap-3 rounded-full px-2 py-2 h-14 transition-colors hover:border-white/20">
-              <span className="eyebrow pl-4 hidden sm:inline">ASK</span>
+            <div className="eyebrow mb-4">POWERED BY RIVER AI</div>
+            <div className="surface flex items-center gap-3 rounded-full px-2 py-2 h-14">
               <input
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder={`Try: ${ROTATING[phIdx]}`}
-                className="flex-1 bg-transparent text-sm md:text-base focus:outline-none placeholder:text-foreground-subtle"
+                placeholder="Tell River what you need — I'll find the best AI experts for you..."
+                className="flex-1 bg-transparent text-sm md:text-base px-4 focus:outline-none placeholder:text-foreground-subtle"
               />
-              <span className="hidden md:inline-flex items-center gap-1 text-foreground-subtle">
-                <span className="keycap"><Command className="h-3 w-3" /></span>
-                <span className="keycap">K</span>
-              </span>
-              <Button type="submit" size="sm" className="h-10 rounded-full">
-                Search <ArrowRight className="h-3.5 w-3.5" />
+              <Button type="submit" size="sm" className="h-10 rounded-full bg-black text-white hover:bg-black/90">
+                Find My Expert
               </Button>
             </div>
           </form>
 
-          {/* Popular chips */}
-          <div className="mt-6 flex flex-wrap justify-center gap-2">
-            {POPULAR.map((p) => (
-              <Link key={p} to={`/search?q=${encodeURIComponent(p)}`} className="mono-tag hover:border-white/30 hover:text-foreground transition-colors">
-                {p}
-              </Link>
-            ))}
-          </div>
-
         </div>
       </section>
 
-      {/* ───────────────────────────── RIVER AI SEARCH ───────────────────────────── */}
-      <RiverAISearch />
 
       {/* ───────────────────────────── STATS STRIP ───────────────────────────── */}
       <section className="border-b-hairline">
@@ -296,30 +265,3 @@ export default function Landing() {
   );
 }
 
-function RiverAISearch() {
-  const nav = useNavigate();
-  const [q, setQ] = useState("");
-  return (
-    <section className="border-b-hairline">
-      <div className="container-page py-20">
-        <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/river-results?q=${encodeURIComponent(q.trim())}`); }}
-          className="max-w-3xl mx-auto text-center"
-        >
-          <div className="eyebrow mb-4">POWERED BY RIVER AI</div>
-          <div className="surface flex items-center gap-3 rounded-full px-2 py-2 h-14">
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Tell River what you need — I'll find the best AI experts for you..."
-              className="flex-1 bg-transparent text-sm md:text-base px-4 focus:outline-none placeholder:text-foreground-subtle"
-            />
-            <Button type="submit" size="sm" className="h-10 rounded-full bg-black text-white hover:bg-black/90">
-              Find My Expert
-            </Button>
-          </div>
-        </form>
-      </div>
-    </section>
-  );
-}
