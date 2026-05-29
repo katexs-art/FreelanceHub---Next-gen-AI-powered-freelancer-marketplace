@@ -74,6 +74,50 @@ export type Database = {
           },
         ]
       }
+      bids: {
+        Row: {
+          attachments: string[]
+          bid_amount: number
+          cover_message: string
+          created_at: string
+          delivery_days: number
+          id: string
+          project_id: string
+          seller_id: string
+          status: string
+        }
+        Insert: {
+          attachments?: string[]
+          bid_amount: number
+          cover_message: string
+          created_at?: string
+          delivery_days: number
+          id?: string
+          project_id: string
+          seller_id: string
+          status?: string
+        }
+        Update: {
+          attachments?: string[]
+          bid_amount?: number
+          cover_message?: string
+          created_at?: string
+          delivery_days?: number
+          id?: string
+          project_id?: string
+          seller_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bids_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "project_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buyer_searches: {
         Row: {
           buyer_id: string
@@ -955,6 +999,57 @@ export type Database = {
         }
         Relationships: []
       }
+      project_posts: {
+        Row: {
+          attachments: string[]
+          bid_count: number
+          budget_max: number | null
+          budget_min: number | null
+          buyer_id: string
+          category: string | null
+          created_at: string
+          deadline: string | null
+          description: string
+          id: string
+          skills: string[]
+          status: string
+          title: string
+          visibility: string
+        }
+        Insert: {
+          attachments?: string[]
+          bid_count?: number
+          budget_max?: number | null
+          budget_min?: number | null
+          buyer_id: string
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description: string
+          id?: string
+          skills?: string[]
+          status?: string
+          title: string
+          visibility?: string
+        }
+        Update: {
+          attachments?: string[]
+          bid_count?: number
+          budget_max?: number | null
+          budget_min?: number | null
+          buyer_id?: string
+          category?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          id?: string
+          skills?: string[]
+          status?: string
+          title?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -1514,6 +1609,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_bid: { Args: { _bid_id: string }; Returns: string }
       accept_custom_offer: { Args: { _offer_id: string }; Returns: string }
       auto_complete_orders: { Args: never; Returns: undefined }
       auto_publish_reviews: { Args: never; Returns: undefined }
@@ -1579,6 +1675,16 @@ export type Database = {
         Returns: undefined
       }
       seller_follower_count: { Args: { _seller: string }; Returns: number }
+      submit_bid: {
+        Args: {
+          _attachments?: string[]
+          _bid_amount: number
+          _cover_message: string
+          _delivery_days: number
+          _project_id: string
+        }
+        Returns: string
+      }
       submit_river_pitch: {
         Args: { _content: string; _search_id: string }
         Returns: string
@@ -1611,6 +1717,7 @@ export type Database = {
         | "payout"
         | "system"
         | "river_match"
+        | "bid"
       offer_status:
         | "pending"
         | "accepted"
@@ -1786,6 +1893,7 @@ export const Constants = {
         "payout",
         "system",
         "river_match",
+        "bid",
       ],
       offer_status: ["pending", "accepted", "declined", "withdrawn", "expired"],
       order_status: [
