@@ -20,14 +20,14 @@ import avatar8 from "@/assets/avatars/user-8.jpg";
 const AVATARS = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6, avatar7, avatar8];
 
 const CATEGORIES = [
-  { label: "Graphics & Design", count: "12.4K" },
-  { label: "Programming & Tech", count: "9.8K" },
-  { label: "Digital Marketing", count: "7.1K" },
-  { label: "Writing & Translation", count: "6.3K" },
-  { label: "Video & Animation", count: "5.9K" },
-  { label: "Music & Audio", count: "4.2K" },
-  { label: "AI Services", count: "3.6K" },
-  { label: "Business", count: "2.8K" },
+  { label: "Build with AI", slug: "build-with-ai" },
+  { label: "Sound & Speak with AI", slug: "sound-and-speak-with-ai" },
+  { label: "Create with AI", slug: "create-with-ai" },
+  { label: "Grow with AI", slug: "grow-with-ai" },
+  { label: "Run with AI", slug: "run-with-ai" },
+  { label: "Understand AI", slug: "understand-ai" },
+  { label: "Write with AI", slug: "write-with-ai" },
+  { label: "Learn AI", slug: "learn-ai" },
 ];
 
 const ROTATING = [
