@@ -135,7 +135,6 @@ export default function Landing() {
 
       {/* ───────────────────────────── RIVER AI SEARCH ───────────────────────────── */}
       <RiverAISearch />
-    </section>
 
       {/* ───────────────────────────── STATS STRIP ───────────────────────────── */}
       <section className="border-b-hairline">
