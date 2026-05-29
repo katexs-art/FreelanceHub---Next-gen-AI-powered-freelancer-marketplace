@@ -1,23 +1,14 @@
-# Spec coverage on current theme
+## Fix gigs.seller_id foreign key
 
-Colors/fonts from the spec are intentionally ignored. Everything below uses existing semantic tokens (JetBrains Mono + Work Sans, green primary, white canvas).
+Mirror the messages FK fix on the `gigs` table.
 
-## Already implemented (no action needed)
+### Migration
 
-1. Checkout flow — `stripe-checkout` + `stripe-webhook` create order, conversation, transactions, notifications.
-2. Order workspace — `/orders/:id` with requirements, deliveries (delivery-files bucket), revisions, accept, cancel, dispute.
-3. Realtime inbox + custom offers — messages realtime, composer with attachments, send/accept/decline offers via `accept_custom_offer` RPC.
-4. Reviews — leave-review CTA, 14-day public gate via trigger.
-5. Seller payouts — Stripe Connect onboarding, earnings, `stripe-payout`, `stripe-refund`.
-6. Admin — disputes, gigs, users, withdrawals.
-7. AI search — `ai-search` edge function (Gemini Flash) wired into `/search`.
-8. Cron — auto-complete, clear-funds, auto-publish reviews, expire promotions, mark offline.
-9. Notifications bell in navbar.
+```sql
+ALTER TABLE public.gigs DROP CONSTRAINT IF EXISTS gigs_seller_id_fkey;
+ALTER TABLE public.gigs
+  ADD CONSTRAINT gigs_seller_id_fkey
+  FOREIGN KEY (seller_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+```
 
-## Remaining
-
-None from the functional spec. The white theme + green primary + current fonts stay locked.
-
-## Next step
-
-Tell me any specific flow you want to test, polish, or extend (e.g. "harden checkout edge cases", "add tipping", "buyer cancel reasons"), and I'll scope just that.
+No code changes needed — app already inserts `seller_id` from `auth.uid()`.
