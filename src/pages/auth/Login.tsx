@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
@@ -13,6 +13,12 @@ export default function Login() {
   const redirect = params.get("redirect") || "";
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ email: "", password: "" });
+
+  useEffect(() => {
+    if (params.get("verified") === "1") {
+      toast.success("Email verified! Please sign in.");
+    }
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
