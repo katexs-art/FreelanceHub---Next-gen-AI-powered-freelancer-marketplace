@@ -36,9 +36,9 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
       <header
         className="fixed top-0 left-0 right-0 z-[100] transition-[background-color,backdrop-filter] duration-300"
         style={{
-          background: scrolled ? "rgba(0,0,0,0.85)" : "transparent",
-          backdropFilter: scrolled ? "blur(12px)" : "none",
-          WebkitBackdropFilter: scrolled ? "blur(12px)" : "none",
+          background: "#000",
+          backdropFilter: "none",
+          WebkitBackdropFilter: "none",
         }}
       >
         <div className="flex items-center gap-6 h-16" style={{ padding: "0 40px" }}>
