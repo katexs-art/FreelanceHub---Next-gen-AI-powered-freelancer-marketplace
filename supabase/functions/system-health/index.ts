@@ -6,11 +6,33 @@ Deno.serve(async (req) => {
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
   const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
   const anthropicKey = Deno.env.get('ANTHROPIC_API_KEY');
   const sendgridKey = Deno.env.get('SENDGRID_API_KEY') ?? Deno.env.get('RESEND_API_KEY');
 
   const supa = createClient(supabaseUrl, serviceKey);
+
+  // Admin-only: system-health exposes sensitive infra status
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const userClient = createClient(supabaseUrl, anonKey, { global: { headers: { Authorization: authHeader } } });
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) {
+    return new Response(JSON.stringify({ error: 'unauthorized' }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const { data: prof } = await supa.from('profiles').select('role').eq('id', user.id).maybeSingle();
+  if (prof?.role !== 'admin') {
+    return new Response(JSON.stringify({ error: 'forbidden' }), {
+      status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
 
   async function timed<T>(fn: () => Promise<T>): Promise<{ ok: boolean; ms: number; data?: T; error?: string }> {
     const t0 = Date.now();
