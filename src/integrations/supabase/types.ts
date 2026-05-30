@@ -1528,6 +1528,7 @@ export type Database = {
           order_id: string | null
           seller_id: string | null
           status: Database["public"]["Enums"]["transaction_status"]
+          stripe_transfer_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
         }
         Insert: {
@@ -1538,6 +1539,7 @@ export type Database = {
           order_id?: string | null
           seller_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
+          stripe_transfer_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
         }
         Update: {
@@ -1548,6 +1550,7 @@ export type Database = {
           order_id?: string | null
           seller_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
+          stripe_transfer_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
         }
         Relationships: [

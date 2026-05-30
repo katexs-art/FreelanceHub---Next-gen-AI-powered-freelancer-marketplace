@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,12 +23,16 @@ interface Stats {
 
 export default function SellerDashboard() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [stats, setStats] = useState<Stats>({
     active_gigs: 0, active_orders: 0, total_earnings: 0, total_orders: 0,
     avg_rating: 0, total_reviews: 0, impressions: 0, clicks: 0, orders_last_30d: 0,
   });
   const [trend, setTrend] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payouts, setPayouts] = useState<{ charges_enabled: boolean; onboarding_complete: boolean } | null>(null);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -38,7 +42,7 @@ export default function SellerDashboard() {
         supabase.from("gigs").select("id", { count: "exact", head: true }).eq("seller_id", user.id).eq("status", "active"),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("seller_id", user.id).in("status", ["in_progress","delivered","revision_requested","active"] as any),
         supabase.from("gigs").select("total_orders,total_reviews,average_rating,impressions,clicks").eq("seller_id", user.id),
-        supabase.from("seller_accounts").select("lifetime_earnings,available_balance,pending_balance").eq("seller_id", user.id).maybeSingle(),
+        supabase.from("seller_accounts").select("lifetime_earnings,available_balance,pending_balance,charges_enabled,onboarding_complete").eq("seller_id", user.id).maybeSingle(),
         supabase.from("orders").select("created_at").eq("seller_id", user.id).gte("created_at", since30).order("created_at"),
       ]);
 
@@ -70,9 +74,45 @@ export default function SellerDashboard() {
         orders_last_30d: (recentOrders.data ?? []).length,
       });
       setTrend(buckets);
+      setPayouts({
+        charges_enabled: !!(account.data as any)?.charges_enabled,
+        onboarding_complete: !!(account.data as any)?.onboarding_complete,
+      });
       setLoading(false);
     })();
   }, [user]);
+
+  // Handle Stripe Connect return: refresh flags, show toast, strip query
+  useEffect(() => {
+    if (!user) return;
+    if (searchParams.get("payout") !== "connected") return;
+    (async () => {
+      const { data } = await supabase.functions.invoke("stripe-connect-status");
+      if (data?.charges_enabled) {
+        setPayouts({ charges_enabled: true, onboarding_complete: !!data.onboarding_complete });
+        const key = `katexs:payouts-connected-toast:${user.id}`;
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, "1");
+          toast.success("Payout account connected — you will receive payments automatically after every completed order.");
+        }
+      }
+      navigate("/seller/dashboard", { replace: true });
+    })();
+  }, [user, searchParams, navigate]);
+
+  const connectPayouts = async () => {
+    setConnecting(true);
+    try {
+      const returnUrl = `${window.location.origin}/seller/dashboard?payout=connected`;
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", { body: { return_url: returnUrl } });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to start onboarding");
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   const conversion = useMemo(() => {
     if (!stats.impressions) return 0;
@@ -115,6 +155,14 @@ export default function SellerDashboard() {
           <div className="mb-6 rounded-xl border border-red-300 bg-red-50 text-red-900 p-4 text-sm">
             Your application was not approved.{profile?.rejection_reason ? ` ${profile.rejection_reason}` : ""}{" "}
             <Link to="/seller-onboarding" className="underline">Update and resubmit</Link>.
+          </div>
+        )}
+        {approved && payouts && (!payouts.charges_enabled || !payouts.onboarding_complete) && (
+          <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900 p-4 text-sm flex items-center justify-between gap-4">
+            <span>Add your payout account to start receiving payments</span>
+            <Button onClick={connectPayouts} disabled={connecting} className="bg-black text-white hover:bg-black/90">
+              Set Up Payouts
+            </Button>
           </div>
         )}
         <div className="flex items-center justify-between mb-8">
