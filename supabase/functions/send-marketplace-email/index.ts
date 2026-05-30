@@ -207,19 +207,9 @@ Deno.serve(async (req) => {
     });
   } catch (e) {
     console.error("send-marketplace-email error", e);
-    // Log but never throw to caller — emails are best-effort
-    try {
-      const admin = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-      );
-      await admin.from("error_logs").insert({
-        function_name: "send-marketplace-email",
-        error_message: (e as Error).message,
-      });
-    } catch {}
+    // emails are best-effort — soft-fail so callers (webhooks, triggers) aren't blocked
     return new Response(JSON.stringify({ ok: false, error: (e as Error).message }), {
-      status: 200, // soft-fail
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
