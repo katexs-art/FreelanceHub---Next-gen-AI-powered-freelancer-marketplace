@@ -2,3 +2,39 @@ project_id = "nswgubxabcjyfsgbiicz"
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.stripe-payment-intent]
+verify_jwt = false
+
+[functions.order-reminders]
+verify_jwt = false
+
+[functions.ai-search]
+verify_jwt = false
+
+[functions.river-chat]
+verify_jwt = false
+
+[functions.send-marketplace-email]
+verify_jwt = false
+
+[functions.project-action]
+verify_jwt = false
+
+[functions.workflow-engine]
+verify_jwt = false
+
+[functions.stripe-checkout]
+verify_jwt = false
+
+[functions.stripe-connect-onboard]
+verify_jwt = false
+
+[functions.stripe-payout]
+verify_jwt = false
+
+[functions.stripe-refund]
+verify_jwt = false
+
+[functions.payout-method-save]
+verify_jwt = false

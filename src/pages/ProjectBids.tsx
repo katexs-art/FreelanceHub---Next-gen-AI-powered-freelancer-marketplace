@@ -90,14 +90,15 @@ export default function ProjectBids() {
 
   const accept = async (bid: Bid) => {
     setActing(true);
-    const { error } = await supabase.rpc("accept_bid", { _bid_id: bid.id });
+    const { data, error } = await supabase.rpc("create_escrow_order", {
+      _source: "bid", _source_id: bid.id,
+    });
     setActing(false);
-    if (error) {
-      toast({ title: "Could not accept bid", description: error.message, variant: "destructive" });
+    if (error || !data) {
+      toast({ title: "Could not accept bid", description: error?.message, variant: "destructive" });
       return;
     }
-    toast({ title: "Bid accepted" });
-    nav(`/checkout/success?bid=${bid.id}&amount=${bid.bid_amount}`);
+    nav(`/checkout/${data}`);
   };
 
   const message = async (sellerId: string) => {
