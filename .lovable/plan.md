@@ -1,75 +1,105 @@
-## Review System Build Plan
 
-A dedicated 5-category review flow for completed orders, plus a public reviews section on seller profiles. All new UI; no existing colors, fonts, images, layout, or unrelated functionality are touched.
+# Seller Approval Flow — Plan
 
-### 1. Database migration
+This refines the existing onboarding to match the new spec exactly. No existing colors, fonts, images, layout, or styling will be modified. All new UI uses tokens/utilities already present in the project.
 
-Extend existing `reviews` table (keeps current data working):
-- Add `rating_communication`, `rating_quality`, `rating_delivery`, `rating_value`, `rating_rehire` (int 1–5, nullable for legacy rows)
-- Add `overall_rating` numeric(3,2)
-- Add `standout_moment` text
-- Add `helpful_count` int default 0 (for "Most Helpful" sort)
-- Backfill `overall_rating` from existing `rating` for legacy rows
+## 1. Database (migration)
 
-New `review_prompts` table to track the 14-day window:
-- `order_id` (unique), `buyer_id`, `expires_at`, `notified_at`, `dismissed`
-- RLS: buyer can read their own; service role inserts
+Create a dedicated applications table (the current flow stores data directly on `profiles`; spec requires a separate table).
 
-New `profiles` columns:
-- `river_score` numeric(4,2) — computed from reviews
-- `average_rating` numeric(3,2)
-- `total_reviews` int
+```sql
+create table public.seller_applications (
+  id uuid primary key default gen_random_uuid(),
+  seller_id uuid not null references public.profiles(id) on delete cascade,
+  full_name text not null,
+  avatar_url text,
+  bio text not null,
+  location text not null,
+  language text not null,
+  skills text[] not null default '{}',
+  primary_category text not null,
+  secondary_category text,
+  experience_description text not null,
+  packages jsonb not null default '[]'::jsonb,
+  portfolio_urls text[] not null default '{}',
+  status text not null default 'pending',     -- pending | approved | rejected
+  admin_notes text,
+  rejection_reason text,
+  created_at timestamptz not null default now(),
+  reviewed_at timestamptz,
+  reviewed_by uuid
+);
 
-New RPC `submit_full_review(order_id, c, q, d, v, r, text, standout)`:
-- Validates buyer owns completed order, not past 14 days, no existing review
-- Inserts review with all 5 sub-ratings + overall avg
-- Recomputes seller's `average_rating`, `total_reviews`, and `river_score`
-  (River Score formula: weighted avg of overall_rating × 20, adjusted by review count and on-time delivery rate — single deterministic function)
-- Creates seller notification "You just received a new review — check it out." linking to `/u/<username>#reviews`
+-- GRANTs (required)
+grant select, insert on public.seller_applications to authenticated;
+grant all on public.seller_applications to service_role;
 
-Trigger `on_order_completed_create_prompt`:
-- When `orders.status` flips to `completed`, insert into `review_prompts` (14-day expiry) and create buyer notification "How did it go? Leave a review for your seller — it only takes 60 seconds." linking to `/orders/<id>/review`
-- Also enqueues email via existing `send-marketplace-email` edge function pattern
+alter table public.seller_applications enable row level security;
 
-### 2. Edge function
+create policy sa_own_read on public.seller_applications
+  for select to authenticated
+  using (auth.uid() = seller_id or public.is_admin(auth.uid()));
 
-`review-prompt-email` (invoked from trigger via pg_net OR piggyback on existing notification email flow) — uses RESEND with existing FROM email, same template style as other marketplace emails.
+create policy sa_own_insert on public.seller_applications
+  for insert to authenticated
+  with check (auth.uid() = seller_id);
 
-### 3. Frontend — Review page
+create policy sa_admin_update on public.seller_applications
+  for update to authenticated
+  using (public.is_admin(auth.uid()));
+```
 
-New route `/orders/:order_id/review` → `src/pages/orders/LeaveReviewPage.tsx`:
-- Header card: seller avatar + name + River Score, then project title + delivery date
-- 5 star rows (Communication, Quality of Work, On Time Delivery, Value for Money, Would Rehire) — black filled / grey unfilled, click-to-fill
-- Live overall score "X.0 out of 5.0" large text
-- Textarea "Tell others about your experience" + live counter "X characters — minimum 50 required" (turns green ≥50)
-- Optional "Stand out moment" field
-- Submit button: full-width, black, 999px radius, 48px h, 15px/700, disabled+grey until all 5 rated AND text ≥50
-- On submit → call `submit_full_review` RPC → redirect to `/orders/:id`
-- If prompt expired or already reviewed → show read-only state
+Update RPCs:
 
-Routing: add to `App.tsx` under `/orders/:order_id/review` protected.
+- `submit_seller_application(...)` extended to accept `_experience_description` and `_language`; also inserts a row in `seller_applications` (status=`pending`), and sets `profiles.seller_status = 'pending_approval'`. Admin notification text changed to "New seller application submitted — review now."
+- `approve_seller(_seller, _notes)` and `reject_seller(_seller, _reason)` also update the latest matching `seller_applications` row (`status`, `reviewed_at = now()`, `reviewed_by = auth.uid()`, `admin_notes`/`rejection_reason`). Notification copy updated to spec.
 
-### 4. Frontend — Profile reviews section
+`notify_river_match` already skips non-approved sellers — no change needed there.
 
-New `src/components/marketplace/ProfileReviewsSection.tsx` rendered on `SellerProfile.tsx` below bio:
-- Aggregate header: large overall rating, 5-star visual, total count, 5-row distribution bar chart (% horizontal bars)
-- Sort toggle: Newest (default) / Most Helpful / Highest Rated
-- Each review card: buyer first name + last initial only, date, 5-star overall, 5 small category rows, review text, italic standout moment if present
-- Seller-only "Respond to this review" link → inline textarea (max 300 chars) → saves to existing `reply` column; displays as "Seller response" label 11px uppercase #999, indented
+## 2. Onboarding flow (`/seller-onboarding`)
 
-### 5. Buyer notification CTA
+Rewrite `src/pages/SellerOnboarding.tsx` as 5 steps with the progress bar at top labeled: Profile · Skills · Category · Packages · Submit.
 
-Existing `NotificationBell` already routes via `link`; no change needed — link points to `/orders/:id/review`.
+- **Step 1 Profile** — full name, photo upload (optional), one-line specialty bio, "city and country" field, primary language. All required except photo. "Next" disabled until valid.
+- **Step 2 Skills** — pill tag input (Enter to add). Min 3 to proceed. Suggestions: top 10 most common skills computed from `profiles.seller_skills` of approved sellers (`unnest` + `count`), rendered as clickable pills under the input.
+- **Step 3 Category** — primary dropdown (from `categories`), optional secondary dropdown, "Describe your experience" textarea with the exact placeholder, min 80 chars enforced with live counter.
+- **Step 4 Packages** — Basic / Standard / Premium cards side by side (stack on mobile). Each: title, description, price ($), delivery days. Basic required; Standard and Premium optional (only validated if any field is filled).
+- **Step 5 Submit** — read-only summary of every field. Black filled "Submit My Application" button, border-radius 999px. Calls the updated RPC, then redirects to `/seller/dashboard`.
 
-### Technical notes
+Redirect on first switch to Selling mode: in `RoleSwitcher` (and any "Activate seller mode" flow in `BecomeSeller`), if `profile.seller_status === 'onboarding'` send the user to `/seller-onboarding` instead of `/seller/dashboard`.
 
-- Existing `LeaveReview.tsx` and `ReviewsList.tsx` remain untouched (used elsewhere); the new page and section are additive.
-- River Score formula encapsulated in a single SQL function `compute_river_score(seller_id)` so it can be reused/tuned.
-- 14-day expiry enforced both in RPC (server) and UI (client).
-- Email uses existing Resend infrastructure; no new secrets.
-- No changes to existing styling tokens, layout, or any unrelated page.
+## 3. Seller Dashboard status UI
 
-### Files
+In `src/pages/seller/SellerDashboard.tsx`:
 
-**New:** migration, `src/pages/orders/LeaveReviewPage.tsx`, `src/components/marketplace/ProfileReviewsSection.tsx`
-**Edited:** `src/App.tsx` (1 route), `src/pages/SellerProfile.tsx` (mount new section below bio)
+- `pending_approval` → persistent yellow banner: "Your seller application is under review. We will notify you within 24 hours." Hide gig-creation CTAs, hide River-matching widgets, and gate any "create gig" link. (Server-side, `gigs_seller_insert` policy already enforces `seller_status='approved'`.)
+- `rejected` → persistent red banner: "Your application was not approved." plus `profiles.rejection_reason`. Show a link back to `/seller-onboarding` to resubmit.
+- `approved` → one-time green sonner toast "You are approved — start selling on Katexs now." Tracked via a small localStorage flag keyed by user id so it fires exactly once.
+
+Banners use existing semantic tokens (`bg-yellow-50/border-yellow-200` etc. as already used in the codebase) — no new colors.
+
+## 4. Admin review
+
+Add a dedicated route `/admin/seller-applications` rendering a new page `src/pages/admin/SellerApplicationsPage.tsx`. The existing in-tab `SellerApprovalsQueue` continues to work; the new page reuses the same component (or a thin list variant) so we don't duplicate logic.
+
+Page contents per spec:
+- List of pending applications sorted by `created_at` asc (oldest first).
+- Each row: seller name, primary category, skills as pill badges, experience description, green "Approve" button, red "Reject" button.
+- Reject opens an inline text input + "Confirm Reject" button. Approve and Reject call the updated RPCs.
+
+Notifications + email copy match spec exactly:
+- Approve: "Congratulations — you are approved to sell on Katexs. Start building your profile and getting matched to buyers today."
+- Reject: "Your Katexs seller application was not approved." + reason. (Sent via `send-marketplace-email` edge function in addition to in-app notification.)
+
+Add route in `src/App.tsx` under the existing admin protection: `<Route path="/admin/seller-applications" element={<ProtectedRoute roles={["admin"]}><SellerApplicationsPage /></ProtectedRoute>} />`.
+
+## 5. Files touched
+
+- New migration creating `seller_applications` + updated RPCs.
+- `src/pages/SellerOnboarding.tsx` — rewrite to 5 steps, add skill suggestions and experience description, drop existing portfolio step (kept inside Step 4 packages or removed per spec which lists 5 steps only).
+- `src/pages/seller/SellerDashboard.tsx` — add status banners, gate seller features, one-time approved toast.
+- `src/components/layout/RoleSwitcher.tsx` and `src/pages/BecomeSeller.tsx` — redirect to `/seller-onboarding` when `seller_status === 'onboarding'`.
+- `src/pages/admin/SellerApplicationsPage.tsx` (new) + route in `src/App.tsx`.
+- `src/hooks/useAuth.ts` — no schema change needed (already exposes `seller_status`, `rejection_reason`).
+
+No edits to global tokens, fonts, images, or shared layout components.

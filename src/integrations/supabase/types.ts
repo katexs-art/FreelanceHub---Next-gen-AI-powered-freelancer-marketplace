@@ -1390,6 +1390,72 @@ export type Database = {
           },
         ]
       }
+      seller_applications: {
+        Row: {
+          admin_notes: string | null
+          avatar_url: string | null
+          bio: string
+          created_at: string
+          experience_description: string
+          full_name: string
+          id: string
+          language: string
+          location: string
+          packages: Json
+          portfolio_urls: string[]
+          primary_category: string
+          rejection_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          secondary_category: string | null
+          seller_id: string
+          skills: string[]
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          avatar_url?: string | null
+          bio: string
+          created_at?: string
+          experience_description: string
+          full_name: string
+          id?: string
+          language: string
+          location: string
+          packages?: Json
+          portfolio_urls?: string[]
+          primary_category: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          secondary_category?: string | null
+          seller_id: string
+          skills?: string[]
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          avatar_url?: string | null
+          bio?: string
+          created_at?: string
+          experience_description?: string
+          full_name?: string
+          id?: string
+          language?: string
+          location?: string
+          packages?: Json
+          portfolio_urls?: string[]
+          primary_category?: string
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          secondary_category?: string | null
+          seller_id?: string
+          skills?: string[]
+          status?: string
+        }
+        Relationships: []
+      }
       seller_follows: {
         Row: {
           created_at: string
@@ -1848,21 +1914,38 @@ export type Database = {
         }
         Returns: string
       }
-      submit_seller_application: {
-        Args: {
-          _avatar_url: string
-          _bio: string
-          _full_name: string
-          _languages: string[]
-          _location: string
-          _packages: Json
-          _portfolio_urls: string[]
-          _primary_category: string
-          _secondary_category: string
-          _skills: string[]
-        }
-        Returns: undefined
-      }
+      submit_seller_application:
+        | {
+            Args: {
+              _avatar_url: string
+              _bio: string
+              _full_name: string
+              _languages: string[]
+              _location: string
+              _packages: Json
+              _portfolio_urls: string[]
+              _primary_category: string
+              _secondary_category: string
+              _skills: string[]
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              _avatar_url: string
+              _bio: string
+              _experience_description?: string
+              _full_name: string
+              _languages: string[]
+              _location: string
+              _packages: Json
+              _portfolio_urls: string[]
+              _primary_category: string
+              _secondary_category: string
+              _skills: string[]
+            }
+            Returns: string
+          }
       suspend_seller: { Args: { _seller: string }; Returns: undefined }
       track_promotion_event: {
         Args: { _event: string; _promotion_id: string }
