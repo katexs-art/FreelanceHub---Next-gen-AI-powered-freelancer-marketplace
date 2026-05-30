@@ -2,6 +2,7 @@
 // a refined query, suggested categories, budget/delivery filters, and ranked gig IDs.
 // Logs every session to ai_search_sessions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { checkRateLimit, tooManyRequests } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
