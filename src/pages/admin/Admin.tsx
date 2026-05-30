@@ -36,8 +36,9 @@ type NavKey =
 
 /* ------------- Status badge ------------- */
 type StatusVariant =
-  | "pending" | "approved" | "suspended" | "banned" | "disputed"
-  | "completed" | "in-progress" | "late" | "funds-locked" | "funds-released";
+  | "pending" | "approved" | "active" | "suspended" | "banned" | "disputed"
+  | "completed" | "in-progress" | "late" | "funds-locked" | "funds-released"
+  | "seller" | "buyer";
 
 function StatusBadge({ variant, label }: { variant: StatusVariant; label?: string }) {
   const text = label ?? variant.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -55,10 +56,29 @@ function orderStatusVariant(status: string): StatusVariant {
     case "completed": return "completed";
     case "disputed": return "disputed";
     case "cancelled": return "banned";
+    case "active": return "active";
+    case "pending": case "pending_payment": case "pending_requirements": return "pending";
     case "delivered": case "in_progress": case "in_revision": return "in-progress";
     case "late": return "late";
     default: return "in-progress";
   }
+}
+
+function genericStatusVariant(status: string): StatusVariant {
+  const s = (status ?? "").toLowerCase();
+  if (s === "active" || s === "approved" || s === "paid" || s === "completed" || s === "cleared" || s === "released") return "active";
+  if (s === "pending" || s === "requested" || s === "processing" || s === "pending_approval" || s === "onboarding") return "pending";
+  if (s === "in_progress" || s === "in-progress" || s === "open" || s === "delivered" || s === "in_revision") return "in-progress";
+  if (s === "completed") return "completed";
+  if (s === "disputed") return "disputed";
+  if (s === "late" || s === "overdue") return "late";
+  if (s === "suspended" || s === "paused") return "suspended";
+  if (s === "banned" || s === "rejected" || s === "failed" || s === "cancelled" || s === "refunded") return "banned";
+  return "in-progress";
+}
+
+function prettyStatus(s: string) {
+  return (s ?? "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function sellerStatusVariant(s: string): StatusVariant {
