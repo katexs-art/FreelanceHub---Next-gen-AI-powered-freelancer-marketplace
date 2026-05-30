@@ -74,9 +74,45 @@ export default function SellerDashboard() {
         orders_last_30d: (recentOrders.data ?? []).length,
       });
       setTrend(buckets);
+      setPayouts({
+        charges_enabled: !!(account.data as any)?.charges_enabled,
+        onboarding_complete: !!(account.data as any)?.onboarding_complete,
+      });
       setLoading(false);
     })();
   }, [user]);
+
+  // Handle Stripe Connect return: refresh flags, show toast, strip query
+  useEffect(() => {
+    if (!user) return;
+    if (searchParams.get("payout") !== "connected") return;
+    (async () => {
+      const { data } = await supabase.functions.invoke("stripe-connect-status");
+      if (data?.charges_enabled) {
+        setPayouts({ charges_enabled: true, onboarding_complete: !!data.onboarding_complete });
+        const key = `katexs:payouts-connected-toast:${user.id}`;
+        if (!localStorage.getItem(key)) {
+          localStorage.setItem(key, "1");
+          toast.success("Payout account connected — you will receive payments automatically after every completed order.");
+        }
+      }
+      navigate("/seller/dashboard", { replace: true });
+    })();
+  }, [user, searchParams, navigate]);
+
+  const connectPayouts = async () => {
+    setConnecting(true);
+    try {
+      const returnUrl = `${window.location.origin}/seller/dashboard?payout=connected`;
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", { body: { return_url: returnUrl } });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      toast.error(e.message ?? "Failed to start onboarding");
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   const conversion = useMemo(() => {
     if (!stats.impressions) return 0;
