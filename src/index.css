@@ -198,6 +198,8 @@
   .admin-dot-yellow { background:#F59E0B; }
   .admin-dot-green  { background:#10B981; }
   .admin-dot-blue   { background:#2563EB; }
+}
+
 
 @keyframes pulse-opacity {
   0%, 100% { opacity: 1; }
