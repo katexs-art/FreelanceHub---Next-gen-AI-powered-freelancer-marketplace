@@ -85,6 +85,7 @@ const App = () => (
             <Route path="/u/:username" element={<SellerProfile />} />
             <Route path="/seller/:username" element={<SellerIntelligenceProfile />} />
             <Route path="/become-a-seller" element={<BecomeSeller />} />
+            <Route path="/seller-onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
 
             {/* Buyer */}
             <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><BuyerDashboard /></ProtectedRoute>} />
