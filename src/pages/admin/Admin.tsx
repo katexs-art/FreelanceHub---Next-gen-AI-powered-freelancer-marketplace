@@ -328,8 +328,8 @@ export default function Admin() {
   const indicators = useAdminIndicators();
   const health = useSystemHealth();
 
-  // mark river ops read when visited
-  useEffect(() => { if (active === "river-ops") localStorage.setItem("river_ops_last_seen", new Date().toISOString()); }, [active]);
+  // (River Ops is a separate route /admin/river-ops; "last seen" updated there.)
+
 
 
   const [stats, setStats] = useState({ users: 0, gigs: 0, orders: 0, gmv: 0 });
