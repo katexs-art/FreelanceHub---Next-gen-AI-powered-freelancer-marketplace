@@ -1277,12 +1277,14 @@ function EscrowPanel() {
 function PayoutsPanel() {
   const [pending, setPending] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
+  const [paypalPending, setPaypalPending] = useState<any[]>([]);
   const load = async () => {
-    const [p, h] = await Promise.all([
+    const [p, h, pp] = await Promise.all([
       supabase.from("withdrawals").select("*, seller:seller_id(username, full_name, river_score)").eq("status", "requested").order("created_at", { ascending: false }),
       supabase.from("withdrawals").select("*, seller:seller_id(username, full_name)").in("status", ["paid","failed"] as any).order("paid_at", { ascending: false }).limit(100),
+      supabase.from("seller_accounts").select("seller_id, paypal_email, payout_method, created_at, seller:seller_id(username, full_name, email)").eq("payout_method", "paypal").eq("payouts_enabled", false),
     ]);
-    setPending(p.data ?? []); setHistory(h.data ?? []);
+    setPending(p.data ?? []); setHistory(h.data ?? []); setPaypalPending(pp.data ?? []);
   };
   useEffect(() => { load(); }, []);
   const approve = async (id: string) => {
@@ -1294,8 +1296,35 @@ function PayoutsPanel() {
     if (!confirm(`Approve ${pending.length} payouts?`)) return;
     for (const w of pending) await approve(w.id);
   };
+  const verifyPaypal = async (sellerId: string, email: string) => {
+    if (!confirm(`Verify PayPal email ${email} for this seller? They will be able to receive payouts.`)) return;
+    const { error } = await supabase.from("seller_accounts").update({ payouts_enabled: true }).eq("seller_id", sellerId);
+    if (error) return toast.error(error.message);
+    await supabase.from("audit_log").insert({
+      admin_id: (await supabase.auth.getUser()).data.user?.id,
+      action_type: "verify_paypal", target_type: "seller_account", target_id: sellerId,
+      description: `Verified PayPal email ${email}`,
+    });
+    toast.success("PayPal verified"); load();
+  };
+
   return (
     <div className="space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold mb-2">PayPal Verification Queue ({paypalPending.length})</h3>
+        <Table headers={["Seller","Email","PayPal email","Submitted","Action"]}>
+          {paypalPending.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-sm text-foreground-muted">No PayPal accounts awaiting verification.</td></tr>}
+          {paypalPending.map((s) => (
+            <tr key={s.seller_id} className="border-t border-border">
+              <td className="p-3">{s.seller?.full_name ?? s.seller?.username}</td>
+              <td className="p-3 text-xs text-foreground-muted">{s.seller?.email}</td>
+              <td className="p-3 font-mono text-xs">{s.paypal_email}</td>
+              <td className="p-3 text-foreground-muted">{fmtDate(s.created_at)}</td>
+              <td className="p-3"><Button size="sm" onClick={() => verifyPaypal(s.seller_id, s.paypal_email)}>Verify</Button></td>
+            </tr>
+          ))}
+        </Table>
+      </div>
       <div>
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-semibold">Pending Payouts ({pending.length})</h3>
