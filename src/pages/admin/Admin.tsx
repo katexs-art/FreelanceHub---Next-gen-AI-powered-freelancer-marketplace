@@ -137,7 +137,12 @@ export default function Admin() {
                   <td className="p-3">{o.buyer?.username ?? "—"}</td>
                   <td className="p-3">{o.seller?.username ?? "—"}</td>
                   <td className="p-3 font-medium">{dollars(o.price)}</td>
-                  <td className="p-3 capitalize">{o.status.replace(/_/g, " ")}</td>
+                  <td className="p-3 capitalize">
+                    <span className="inline-flex items-center gap-2">
+                      {o.status.replace(/_/g, " ")}
+                      {o.status === "disputed" && <FundsLockedBadge />}
+                    </span>
+                  </td>
                   <td className="p-3 text-foreground-muted">{new Date(o.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
