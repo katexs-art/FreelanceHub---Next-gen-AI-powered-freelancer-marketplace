@@ -43,6 +43,35 @@ export default function RiverResults() {
     (async () => {
       setLoading(true);
 
+      // Try Claude-powered matcher first
+      try {
+        const { data, error } = await supabase.functions.invoke("river-public-match", { body: { query } });
+        if (!error && data && Array.isArray((data as any).sellers) && (data as any).sellers.length) {
+          const list = ((data as any).sellers as any[]).map((s) => ({
+            id: s.id, username: s.username, full_name: s.full_name, avatar_url: s.avatar_url,
+            bio: s.bio, response_time_minutes: s.response_time_minutes,
+            average_rating: Number(s.average_rating) || 0,
+            total_reviews: s.total_reviews || 0, total_orders: s.total_orders || 0,
+            starting_price: s.starting_price ?? null,
+            tags: s.tags || [], categories: s.categories || [],
+            matchScore: s.matchScore || 0, riverScore: Number(s.riverScore) || 0,
+          })) as SellerMatch[];
+          setSellers(list);
+          setLoading(false);
+
+          const sig = `${query}::${list.map((s) => s.id).join(",")}`;
+          if (user && query.trim() && list.length && notifiedRef.current !== sig) {
+            notifiedRef.current = sig;
+            supabase.rpc("notify_river_match", { _query: query, _seller_ids: list.map((s) => s.id) })
+              .then(({ error }) => { if (error) console.warn("notify_river_match", error.message); });
+          }
+          return;
+        }
+      } catch (e) {
+        console.warn("river-public-match failed, using local fallback", e);
+      }
+
+      // Fallback: original client-side scoring
       const { data: gigs } = await supabase
         .from("gigs")
         .select("seller_id,title,description,category,subcategory,tags,starting_price,average_rating,total_reviews,total_orders")
@@ -81,7 +110,6 @@ export default function RiverResults() {
         (g.tags || []).forEach((t: string) => { if (!s.tags.includes(t)) s.tags.push(t); });
         if (g.category && !s.categories.includes(g.category)) s.categories.push(g.category);
 
-        // scoring
         const hay = [g.title, g.description, g.category, g.subcategory, (g.tags || []).join(" "), s.bio, s.full_name]
           .filter(Boolean).join(" ").toLowerCase();
         tokens.forEach((tok) => { if (hay.includes(tok)) s.matchScore += 1; });
