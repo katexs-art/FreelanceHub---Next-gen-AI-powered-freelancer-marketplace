@@ -171,17 +171,17 @@ export default function Services() {
   const intel = sellers.slice(0, 6);
 
   return (
-    <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
+    <div style={{ minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
       <SEO title="Services — Discover AI Experts | KATEXS" description="A precision marketplace where talent and intent meet through intelligence." />
-      <SiteHeader variant="transparent" />
+      <SiteHeader />
 
       <style>{`
-        .svc-cat:hover { border-color: #fff !important; color: #fff !important; }
+        .svc-cat:hover { border-color: #111 !important; color: #111 !important; }
         .svc-pick { transition: background 0.2s ease, transform 0.2s ease; }
-        .svc-pick:hover { background: #111 !important; transform: translateY(-2px); }
+        .svc-pick:hover { background: #f0f0f0 !important; transform: translateY(-2px); }
         .svc-intel { transition: border-color 0.2s ease; }
-        .svc-intel:hover { border-color: #2a2a2a !important; }
-        .svc-intel:hover .svc-pitch { background: #fff !important; color: #000 !important; }
+        .svc-intel:hover { border-color: #ccc !important; }
+        .svc-intel:hover .svc-pitch { background: #111 !important; color: #fff !important; }
         .svc-pulse { animation: svcpulse 2s ease-in-out infinite; }
         @keyframes svcpulse { 0%,100% { opacity: 1 } 50% { opacity: 0.4 } }
         @media (max-width: 900px) {
@@ -195,11 +195,11 @@ export default function Services() {
       `}</style>
 
       {/* HERO */}
-      <section className="svc-section" style={{ padding: "140px 80px 80px", textAlign: "center" }}>
-        <h1 className="svc-h1" style={{ fontSize: 64, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: 880, margin: "0 auto 20px" }}>
+      <section className="svc-section" style={{ padding: "80px 80px 80px", textAlign: "center" }}>
+        <h1 className="svc-h1" style={{ fontSize: 64, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: 880, margin: "0 auto 20px", color: "#111" }}>
           The freelance market,<br />rebuilt from first principles
         </h1>
-        <p style={{ fontSize: 18, color: "rgba(255,255,255,0.55)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 18, color: "rgba(0,0,0,0.55)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
         <form
@@ -208,19 +208,19 @@ export default function Services() {
         >
           <div style={{ position: "absolute", top: -22, left: 4, display: "flex", alignItems: "center", gap: 6 }}>
             <span className="svc-pulse" style={{ width: 6, height: 6, borderRadius: 999, background: "#10b981" }} />
-            <span style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>
+            <span style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(0,0,0,0.45)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>
               Powered by River AI
             </span>
           </div>
-          <div style={{ display: "flex", alignItems: "center", background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 999, padding: 6, paddingLeft: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", background: "#f5f5f5", border: "1px solid #e5e5e5", borderRadius: 999, padding: 6, paddingLeft: 24 }}>
             <Search size={16} color="#666" style={{ marginRight: 12, flexShrink: 0 }} />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Describe the expert you need…"
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: 15, padding: "12px 0" }}
+              style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#111", fontSize: 15, padding: "12px 0" }}
             />
-            <button type="submit" style={{ background: "#fff", color: "#000", border: "none", borderRadius: 999, padding: "12px 26px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
+            <button type="submit" style={{ background: "#111", color: "#fff", border: "none", borderRadius: 999, padding: "12px 26px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
               Find My Expert
             </button>
           </div>
@@ -236,8 +236,8 @@ export default function Services() {
               to={`/category/${c.slug}`}
               className="svc-cat"
               style={{
-                padding: "9px 18px", borderRadius: 999, border: "1px solid #1f1f1f",
-                background: "rgba(255,255,255,0.02)", color: "rgba(255,255,255,0.75)",
+                padding: "9px 18px", borderRadius: 999, border: "1px solid #e5e5e5",
+                background: "rgba(0,0,0,0.02)", color: "rgba(0,0,0,0.75)",
                 fontSize: 13, fontWeight: 500, textDecoration: "none", transition: "all 0.2s ease",
               }}
             >
@@ -248,16 +248,16 @@ export default function Services() {
       </section>
 
       {/* RIVER'S PICKS */}
-      <section className="svc-section" style={{ padding: "80px", borderTop: "1px solid #111", borderBottom: "1px solid #111" }}>
+      <section className="svc-section" style={{ padding: "80px", borderTop: "1px solid #e5e5e5", borderBottom: "1px solid #e5e5e5" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", marginBottom: 32, gap: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>River's Picks</h2>
-            <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
+            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0, color: "#111" }}>River's Picks</h2>
+            <div style={{ flex: 1, height: 1, background: "#e5e5e5" }} />
           </div>
           <div className="svc-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
             {picks.length === 0
               ? Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} style={{ background: "#0a0a0a", height: 240, borderTop: "3px solid #222" }} />
+                  <div key={i} style={{ background: "#fafafa", height: 240, borderTop: "3px solid #ddd" }} />
                 ))
               : picks.map((s, i) => {
                   const meta = picksLabels[i];
@@ -267,8 +267,8 @@ export default function Services() {
                       to={`/seller/${s.username ?? s.id}`}
                       className="svc-pick"
                       style={{
-                        background: "#0a0a0a", borderTop: `3px solid ${meta.color}`,
-                        padding: 28, display: "flex", flexDirection: "column", textDecoration: "none", color: "#fff",
+                        background: "#fafafa", borderTop: `3px solid ${meta.color}`,
+                        padding: 28, display: "flex", flexDirection: "column", textDecoration: "none", color: "#111",
                       }}
                     >
                       <span style={{ fontSize: 10, fontWeight: 700, color: meta.color, letterSpacing: "0.18em", textTransform: "uppercase", marginBottom: 18 }}>
@@ -277,16 +277,16 @@ export default function Services() {
                       <h3 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 8px" }}>
                         {s.full_name || s.username || "Expert"}
                       </h3>
-                      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, margin: "0 0 24px", minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      <p style={{ fontSize: 13, color: "rgba(0,0,0,0.55)", lineHeight: 1.5, margin: "0 0 24px", minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                         {s.bio || "Specialist on Katexs."}
                       </p>
-                      <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid #181818" }}>
-                        <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#9aa" }}>
+                      <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid #e5e5e5" }}>
+                        <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#6b7280" }}>
                           {i === 0 ? `River ${Number(s.river_score ?? 0).toFixed(1)}` :
                            i === 1 ? (s.startingPrice != null ? `From $${s.startingPrice}` : "Best rate") :
                            (s.minDelivery ? `${s.minDelivery}d avg` : "Rapid")}
                         </span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", borderBottom: "1px solid #333", paddingBottom: 2 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#111", borderBottom: "1px solid #ccc", paddingBottom: 2 }}>
                           View Profile →
                         </span>
                       </div>
@@ -301,17 +301,17 @@ export default function Services() {
       <section className="svc-section" style={{ padding: "80px" }}>
         <div className="svc-activity-split" style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 32, alignItems: "stretch" }}>
           <div style={{ flex: "1 1 65%" }}>
-            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", margin: "0 0 24px" }}>
+            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(0,0,0,0.45)", margin: "0 0 24px" }}>
               Featured this week
             </h2>
             {featured ? (
-              <Link to={`/seller/${featured.username ?? featured.id}`} style={{ display: "block", textDecoration: "none", color: "#fff" }}>
-                <div style={{ background: "#0a0a0a", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "row", minHeight: 320 }}>
-                  <div style={{ width: "42%", background: "#111", position: "relative", flexShrink: 0 }}>
+              <Link to={`/seller/${featured.username ?? featured.id}`} style={{ display: "block", textDecoration: "none", color: "#111" }}>
+                <div style={{ background: "#fafafa", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "row", minHeight: 320 }}>
+                  <div style={{ width: "42%", background: "#f0f0f0", position: "relative", flexShrink: 0 }}>
                     {featured.avatar_url ? (
                       <img src={featured.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                     ) : (
-                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, fontWeight: 600, color: "#333" }}>
+                      <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 64, fontWeight: 600, color: "#ccc" }}>
                         {(featured.full_name || featured.username || "?").charAt(0).toUpperCase()}
                       </div>
                     )}
@@ -323,41 +323,41 @@ export default function Services() {
                     <h3 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 10px" }}>
                       {featured.full_name || featured.username || "Top Expert"}
                     </h3>
-                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: "0 0 24px" }}>
+                    <p style={{ fontSize: 14, color: "rgba(0,0,0,0.6)", lineHeight: 1.6, margin: "0 0 24px" }}>
                       {featured.bio || "A top-ranked AI specialist on Katexs."}
                     </p>
-                    <div style={{ display: "inline-block", alignSelf: "flex-start", background: "#fff", color: "#000", padding: "12px 24px", fontSize: 13, fontWeight: 700 }}>
+                    <div style={{ display: "inline-block", alignSelf: "flex-start", background: "#111", color: "#fff", padding: "12px 24px", fontSize: 13, fontWeight: 700 }}>
                       View Profile
                     </div>
                   </div>
                 </div>
               </Link>
             ) : (
-              <div style={{ background: "#0a0a0a", borderRadius: 16, height: 320 }} />
+              <div style={{ background: "#fafafa", borderRadius: 16, height: 320 }} />
             )}
           </div>
 
           <div style={{ flex: "1 1 35%", minWidth: 280 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-              <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", margin: 0 }}>
+              <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(0,0,0,0.45)", margin: 0 }}>
                 Live activity feed
               </h2>
               <span className="svc-pulse" style={{ width: 8, height: 8, borderRadius: 999, background: "#10b981" }} />
             </div>
-            <div style={{ background: "#0a0a0a", border: "1px solid #111", borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 18, maxHeight: 380, overflowY: "auto" }}>
+            <div style={{ background: "#fafafa", border: "1px solid #e5e5e5", borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 18, maxHeight: 380, overflowY: "auto" }}>
               {activity.length === 0 ? (
-                <div style={{ fontSize: 12, color: "#444" }}>Listening for activity…</div>
+                <div style={{ fontSize: 12, color: "#999" }}>Listening for activity…</div>
               ) : activity.map((a) => {
                 const c = a.accent === "green" ? "#10b981" : a.accent === "blue" ? "#3b82f6" : "#fbbf24";
                 return (
                   <div key={a.id + a.type} style={{ display: "flex", gap: 12 }}>
                     <div style={{ width: 2, background: c, borderRadius: 2, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>
+                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(0,0,0,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>
                         {a.when}
                       </div>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.4 }}>
-                        <span style={{ color: "#fff", fontWeight: 600 }}>{a.who}</span> {a.text}
+                      <div style={{ fontSize: 13, color: "rgba(0,0,0,0.75)", lineHeight: 1.4 }}>
+                        <span style={{ color: "#111", fontWeight: 600 }}>{a.who}</span> {a.text}
                       </div>
                     </div>
                   </div>
@@ -369,14 +369,14 @@ export default function Services() {
       </section>
 
       {/* INTELLIGENCE CARDS */}
-      <section className="svc-section" style={{ padding: "100px 80px", background: "#0a0a0a" }}>
+      <section className="svc-section" style={{ padding: "100px 80px", background: "#fafafa" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 16 }}>
             <div>
-              <h2 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px", letterSpacing: "-0.01em" }}>Intelligence Verified</h2>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>Top-ranked sellers by River Score.</p>
+              <h2 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px", letterSpacing: "-0.01em", color: "#111" }}>Intelligence Verified</h2>
+              <p style={{ fontSize: 14, color: "rgba(0,0,0,0.5)", margin: 0 }}>Top-ranked sellers by River Score.</p>
             </div>
-            <Link to="/browse" style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", textDecoration: "none", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
+            <Link to="/browse" style={{ fontSize: 12, color: "rgba(0,0,0,0.6)", textDecoration: "none", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
               Browse all experts →
             </Link>
           </div>
@@ -385,30 +385,30 @@ export default function Services() {
               <div
                 key={s?.id ?? i}
                 className="svc-intel"
-                style={{ background: "#000", border: "1px solid #161616", borderRadius: 10, padding: 24, display: "flex", flexDirection: "column" }}
+                style={{ background: "#fff", border: "1px solid #e5e5e5", borderRadius: 10, padding: 24, display: "flex", flexDirection: "column" }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
                   <div style={{ display: "flex", gap: 12, minWidth: 0 }}>
                     {s?.avatar_url ? (
                       <img src={s.avatar_url} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: 44, height: 44, borderRadius: 8, background: "#161616", flexShrink: 0 }} />
+                      <div style={{ width: 44, height: 44, borderRadius: 8, background: "#e5e5e5", flexShrink: 0 }} />
                     )}
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#111", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {s?.full_name || s?.username || "Expert"}
                       </div>
-                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginTop: 2, letterSpacing: "0.08em" }}>
+                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(0,0,0,0.4)", textTransform: "uppercase", marginTop: 2, letterSpacing: "0.08em" }}>
                         {(s?.seller_skills ?? [])[0] || "AI Specialist"}
                       </div>
                     </div>
                   </div>
-                  <button aria-label="Save" style={{ background: "transparent", border: "none", color: "#444", cursor: "pointer", padding: 0 }}>
+                  <button aria-label="Save" style={{ background: "transparent", border: "none", color: "#999", cursor: "pointer", padding: 0 }}>
                     <Bookmark size={16} />
                   </button>
                 </div>
-                <div style={{ background: "#0a0a0a", border: "1px solid #161616", borderRadius: 6, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                <div style={{ background: "#f5f5f5", border: "1px solid #e5e5e5", borderRadius: 6, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(0,0,0,0.4)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
                     River Score
                   </span>
                   <span style={{ fontSize: 14, fontWeight: 700, color: "#10b981", fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}>
@@ -417,7 +417,7 @@ export default function Services() {
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 24, minHeight: 22 }}>
                   {((s?.seller_skills ?? []) as string[]).slice(0, 3).map((sk) => (
-                    <span key={sk} style={{ fontSize: 10, padding: "3px 8px", border: "1px solid #1a1a1a", color: "rgba(255,255,255,0.6)", borderRadius: 3 }}>
+                    <span key={sk} style={{ fontSize: 10, padding: "3px 8px", border: "1px solid #e5e5e5", color: "rgba(0,0,0,0.6)", borderRadius: 3 }}>
                       {sk}
                     </span>
                   ))}
@@ -426,9 +426,9 @@ export default function Services() {
                   to={s ? `/seller/${s.username ?? s.id}` : "#"}
                   className="svc-pitch"
                   style={{
-                    marginTop: "auto", textAlign: "center", background: "#0e0e0e",
-                    color: "#fff", padding: "12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.18em",
-                    textTransform: "uppercase", textDecoration: "none", borderRadius: 4, border: "1px solid #1a1a1a",
+                    marginTop: "auto", textAlign: "center", background: "#f5f5f5",
+                    color: "#111", padding: "12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.18em",
+                    textTransform: "uppercase", textDecoration: "none", borderRadius: 4, border: "1px solid #e5e5e5",
                     transition: "all 0.2s ease",
                   }}
                 >
@@ -444,14 +444,14 @@ export default function Services() {
       <section className="svc-section" style={{ padding: "100px 80px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", marginBottom: 32, gap: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Gigs</h2>
-            <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
-            <Link to="/explore" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>View all →</Link>
+            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0, color: "#111" }}>Trending Gigs</h2>
+            <div style={{ flex: 1, height: 1, background: "#e5e5e5" }} />
+            <Link to="/explore" style={{ fontSize: 12, color: "rgba(0,0,0,0.55)", textDecoration: "none" }}>View all →</Link>
           </div>
           <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
             {gigs.length === 0
               ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} style={{ background: "#0a0a0a", aspectRatio: "4/3", borderRadius: 8 }} />
+                  <div key={i} style={{ background: "#f0f0f0", aspectRatio: "4/3", borderRadius: 8 }} />
                 ))
               : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
           </div>
