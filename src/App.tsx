@@ -19,6 +19,7 @@ const AuthCallback = lazy(() => import("./pages/auth/AuthCallback"));
 const Placeholder = lazy(() => import("./pages/Placeholder"));
 const DashboardPlaceholder = lazy(() => import("./pages/DashboardPlaceholder"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
+const SellerOnboarding = lazy(() => import("./pages/SellerOnboarding"));
 const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
 const MyGigs = lazy(() => import("./pages/seller/MyGigs"));
 const GigEditor = lazy(() => import("./pages/seller/GigEditor"));
