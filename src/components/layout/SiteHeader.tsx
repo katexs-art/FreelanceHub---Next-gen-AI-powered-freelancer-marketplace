@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { RoleSwitcher } from "@/components/layout/RoleSwitcher";
 import { Search, Menu, ArrowRight } from "lucide-react";
 import { useEffect, useState } from "react";
-import katexsLogo from "@/assets/katexs-logo.jpg";
+import katexsLogo from "@/assets/katexs-logo.png";
 
 interface SiteHeaderProps {
   variant?: "default" | "transparent";
