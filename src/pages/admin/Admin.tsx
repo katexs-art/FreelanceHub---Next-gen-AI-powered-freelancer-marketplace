@@ -1481,7 +1481,7 @@ function GigsPanel() {
             <td className="p-3">{dollars(g.starting_price)}</td>
             <td className="p-3">{g.total_orders}</td>
             <td className="p-3">{Number(g.average_rating ?? 0).toFixed(1)}</td>
-            <td className="p-3 capitalize">{g.status}</td>
+            <td className="p-3"><StatusBadge variant={genericStatusVariant(g.status)} label={prettyStatus(g.status)} /></td>
             <td className="p-3 flex gap-1.5 flex-wrap">
               <Button size="sm" variant="ghost" asChild><a href={`/gig/${g.id}`} target="_blank" rel="noreferrer">View</a></Button>
               {g.status === "active"
