@@ -37,7 +37,7 @@ export default function Earnings() {
     if (!user) return;
     const [{ data: a }, { data: t }, { data: w }] = await Promise.all([
       supabase.from("seller_accounts")
-        .select("available_balance, pending_balance, lifetime_earnings, payout_method, paypal_email, bank_country, bank_last4")
+        .select("available_balance, pending_balance, lifetime_earnings, payout_method, paypal_email, bank_country, bank_last4, charges_enabled, payouts_enabled, stripe_account_id")
         .eq("seller_id", user.id).maybeSingle(),
       supabase.from("transactions").select("*").eq("seller_id", user.id).order("created_at", { ascending: false }).limit(50),
       supabase.from("withdrawals").select("*").eq("seller_id", user.id).order("created_at", { ascending: false }).limit(20),
