@@ -820,19 +820,28 @@ export type Database = {
       orders: {
         Row: {
           auto_complete_at: string | null
+          bid_id: string | null
           buyer_id: string
           completed_at: string | null
           created_at: string
           delivered_at: string | null
           delivery_deadline: string | null
-          gig_id: string
+          dispute_deadline: string | null
+          escrow_released_at: string | null
+          escrow_status: string
+          gig_id: string | null
           id: string
           order_number: string
           package_id: string | null
+          pitch_message_id: string | null
           platform_fee: number
           price: number
+          project_title: string | null
           refund_id: string | null
           refunded_at: string | null
+          reminder_24h_sent_at: string | null
+          reminder_halfway_sent_at: string | null
+          reminder_late_sent_at: string | null
           requirements_submitted: boolean
           requirements_submitted_at: string | null
           revision_count: number
@@ -846,19 +855,28 @@ export type Database = {
         }
         Insert: {
           auto_complete_at?: string | null
+          bid_id?: string | null
           buyer_id: string
           completed_at?: string | null
           created_at?: string
           delivered_at?: string | null
           delivery_deadline?: string | null
-          gig_id: string
+          dispute_deadline?: string | null
+          escrow_released_at?: string | null
+          escrow_status?: string
+          gig_id?: string | null
           id?: string
           order_number?: string
           package_id?: string | null
+          pitch_message_id?: string | null
           platform_fee: number
           price: number
+          project_title?: string | null
           refund_id?: string | null
           refunded_at?: string | null
+          reminder_24h_sent_at?: string | null
+          reminder_halfway_sent_at?: string | null
+          reminder_late_sent_at?: string | null
           requirements_submitted?: boolean
           requirements_submitted_at?: string | null
           revision_count?: number
@@ -872,19 +890,28 @@ export type Database = {
         }
         Update: {
           auto_complete_at?: string | null
+          bid_id?: string | null
           buyer_id?: string
           completed_at?: string | null
           created_at?: string
           delivered_at?: string | null
           delivery_deadline?: string | null
-          gig_id?: string
+          dispute_deadline?: string | null
+          escrow_released_at?: string | null
+          escrow_status?: string
+          gig_id?: string | null
           id?: string
           order_number?: string
           package_id?: string | null
+          pitch_message_id?: string | null
           platform_fee?: number
           price?: number
+          project_title?: string | null
           refund_id?: string | null
           refunded_at?: string | null
+          reminder_24h_sent_at?: string | null
+          reminder_halfway_sent_at?: string | null
+          reminder_late_sent_at?: string | null
           requirements_submitted?: boolean
           requirements_submitted_at?: string | null
           revision_count?: number
@@ -1620,9 +1647,14 @@ export type Database = {
     Functions: {
       accept_bid: { Args: { _bid_id: string }; Returns: string }
       accept_custom_offer: { Args: { _offer_id: string }; Returns: string }
+      approve_delivery: { Args: { _order_id: string }; Returns: undefined }
       auto_complete_orders: { Args: never; Returns: undefined }
       auto_publish_reviews: { Args: never; Returns: undefined }
       clear_due_seller_credits: { Args: never; Returns: undefined }
+      create_escrow_order: {
+        Args: { _source: string; _source_id: string }
+        Returns: string
+      }
       create_notification: {
         Args: {
           _body: string
@@ -1674,6 +1706,10 @@ export type Database = {
       notify_river_match: {
         Args: { _query: string; _seller_ids: string[] }
         Returns: string
+      }
+      raise_dispute: {
+        Args: { _order_id: string; _reason: string }
+        Returns: undefined
       }
       recompute_seller_balance: {
         Args: { _seller: string }
@@ -1747,6 +1783,7 @@ export type Database = {
         | "completed"
         | "cancelled"
         | "disputed"
+        | "late"
       package_type: "basic" | "standard" | "premium"
       transaction_status: "pending" | "cleared" | "reversed"
       transaction_type:
@@ -1919,6 +1956,7 @@ export const Constants = {
         "completed",
         "cancelled",
         "disputed",
+        "late",
       ],
       package_type: ["basic", "standard", "premium"],
       transaction_status: ["pending", "cleared", "reversed"],

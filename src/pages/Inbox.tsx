@@ -213,7 +213,16 @@ export default function Inbox() {
                           {!mine && (
                             <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
                               <button
-                                onClick={() => nav(`/u/${active?.other?.username ?? active?.other?.id}?pitch=${m.id}`)}
+                                onClick={async () => {
+                                  const { data, error } = await supabase.rpc("create_escrow_order", {
+                                    _source: "pitch", _source_id: m.id,
+                                  });
+                                  if (error || !data) {
+                                    alert(error?.message || "Could not start checkout");
+                                    return;
+                                  }
+                                  nav(`/checkout/${data}`);
+                                }}
                                 style={{
                                   background: "#000", color: "#fff", border: "none",
                                   padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",

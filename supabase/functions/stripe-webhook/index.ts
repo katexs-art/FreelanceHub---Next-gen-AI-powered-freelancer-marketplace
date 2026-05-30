@@ -10,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const FEE_PCT = 0.20;
+const FEE_PCT = 0.10;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -84,6 +84,48 @@ Deno.serve(async (req) => {
       ]);
 
       console.log("order created", order.id, order.order_number);
+    }
+
+    if (event.type === "payment_intent.succeeded") {
+      const pi = event.data.object as Stripe.PaymentIntent;
+      const orderId = pi.metadata?.order_id;
+      if (orderId) {
+        const { data: order } = await admin.from("orders").select("*").eq("id", orderId).maybeSingle();
+        if (order && order.status === "pending_payment") {
+          const price = order.price;
+          const platformFee = Math.round(price * FEE_PCT);
+          const sellerEarnings = price - platformFee;
+          await admin.from("orders").update({
+            status: "pending_requirements",
+            escrow_status: "held",
+            platform_fee: platformFee,
+            seller_earnings: sellerEarnings,
+            stripe_charge_id: (pi.latest_charge as string) ?? null,
+          }).eq("id", order.id);
+          await admin.from("transactions").insert([
+            { order_id: order.id, seller_id: order.seller_id, type: "charge", amount: price, status: "cleared" },
+            { order_id: order.id, seller_id: order.seller_id, type: "platform_fee", amount: platformFee, status: "cleared" },
+            { order_id: order.id, seller_id: order.seller_id, type: "seller_credit", amount: sellerEarnings, status: "pending" },
+          ]);
+          // Mark source bid/pitch as accepted; close other bids on same project
+          if (order.bid_id) {
+            await admin.from("bids").update({ status: "accepted" }).eq("id", order.bid_id);
+            const { data: bidRow } = await admin.from("bids").select("project_id").eq("id", order.bid_id).maybeSingle();
+            if (bidRow?.project_id) {
+              await admin.from("bids").update({ status: "closed" })
+                .eq("project_id", bidRow.project_id).neq("id", order.bid_id).eq("status", "pending");
+              await admin.from("project_posts").update({ status: "in_progress" }).eq("id", bidRow.project_id);
+            }
+          }
+          // Notifications
+          const deadline = order.delivery_deadline ? new Date(order.delivery_deadline).toLocaleDateString() : "soon";
+          await admin.from("notifications").insert([
+            { user_id: order.seller_id, type: "order", title: `Your order has started — deliver by ${deadline}`, link: `/orders/${order.id}` },
+            { user_id: order.buyer_id, type: "order", title: "Your payment is secured — your expert is now working on your project.", link: `/orders/${order.id}` },
+          ]);
+          console.log("escrow order activated", order.id);
+        }
+      }
     }
 
     if (event.type === "charge.refunded") {

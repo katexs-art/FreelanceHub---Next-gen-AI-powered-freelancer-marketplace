@@ -15,10 +15,11 @@ import { shouldEmail } from "@/lib/emailPrefs";
 
 interface Order {
   id: string; order_number: string; status: string; price: number;
-  buyer_id: string; seller_id: string; gig_id: string; package_id: string | null;
+  buyer_id: string; seller_id: string; gig_id: string | null; package_id: string | null;
   delivery_deadline: string | null; delivered_at: string | null;
   requirements_submitted: boolean; requirements_submitted_at: string | null;
   revision_count: number; created_at: string; completed_at: string | null;
+  dispute_deadline: string | null; escrow_status: string | null; project_title: string | null;
   gigs: { title: string; thumbnail_url: string | null } | null;
   gig_packages: { title: string | null; delivery_days: number; revisions: number } | null;
   buyer: { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string } | null;
@@ -44,6 +45,7 @@ export default function OrderWorkspace() {
     if (!id) return;
     const { data } = await supabase.from("orders").select(`
       id, order_number, status, price, buyer_id, seller_id, gig_id, package_id,
+      dispute_deadline, escrow_status, project_title,
       delivery_deadline, delivered_at, requirements_submitted, requirements_submitted_at,
       revision_count, created_at, completed_at,
       gigs:gig_id (title, thumbnail_url),
@@ -128,13 +130,12 @@ export default function OrderWorkspace() {
   };
 
   const accept = async () => {
+    if (!order) return;
     setBusy(true);
-    const { error } = await supabase.from("orders").update({
-      status: "completed", completed_at: new Date().toISOString(),
-    }).eq("id", order.id);
+    const { error } = await supabase.rpc("approve_delivery", { _order_id: order.id });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Order completed");
+    toast.success("Delivery approved — funds released");
     if (order.seller?.email && shouldEmail("orders")) {
       supabase.functions.invoke("send-marketplace-email", {
         body: {
@@ -143,6 +144,22 @@ export default function OrderWorkspace() {
         },
       });
     }
+    load();
+  };
+
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const raiseDispute = async () => {
+    if (!order) return;
+    if (!disputeReason.trim()) return toast.error("Please describe the issue");
+    setBusy(true);
+    const { error } = await supabase.rpc("raise_dispute", {
+      _order_id: order.id, _reason: disputeReason.trim(),
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Dispute opened — our team will review");
+    setDisputeOpen(false); setDisputeReason("");
     load();
   };
 
@@ -291,12 +308,45 @@ export default function OrderWorkspace() {
           )}
 
           {isBuyer && order.status === "delivered" && (
-            <div className="mt-6 border-t border-border pt-6 flex gap-3">
-              <Button onClick={accept} disabled={busy}><CheckCircle2 className="h-4 w-4" /> Accept & complete</Button>
-              {(order.revision_count ?? 0) < (order.gig_packages?.revisions ?? 0) && (
-                <Button variant="outline" onClick={requestRevision} disabled={busy}>
-                  <RotateCw className="h-4 w-4" /> Request revision
+            <div className="mt-6 border-t border-border pt-6 space-y-4">
+              {order.dispute_deadline && (
+                <div style={{
+                  background: "#fff8e1", border: "1px solid #f1d77b",
+                  borderRadius: 8, padding: 12, fontSize: 13, color: "#5a4a10",
+                }}>
+                  {(() => {
+                    const ms = new Date(order.dispute_deadline).getTime() - Date.now();
+                    const days = Math.max(0, Math.ceil(ms / 86400000));
+                    const when = new Date(order.dispute_deadline).toLocaleString();
+                    return `${days} day${days === 1 ? "" : "s"} remaining to review — approve or dispute by ${when}`;
+                  })()}
+                </div>
+              )}
+              <div className="flex gap-3 flex-wrap">
+                <Button onClick={accept} disabled={busy}><CheckCircle2 className="h-4 w-4" /> Approve Delivery</Button>
+                <Button variant="outline" onClick={() => setDisputeOpen((v) => !v)} disabled={busy}>
+                  Raise a Dispute
                 </Button>
+                {order.gig_packages && (order.revision_count ?? 0) < (order.gig_packages?.revisions ?? 0) && (
+                  <Button variant="outline" onClick={requestRevision} disabled={busy}>
+                    <RotateCw className="h-4 w-4" /> Request revision
+                  </Button>
+                )}
+              </div>
+              {disputeOpen && (
+                <div className="space-y-2 border border-border rounded-lg p-4">
+                  <h4 className="text-sm font-semibold">Open a dispute</h4>
+                  <Textarea
+                    placeholder="Tell us what went wrong"
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    rows={3}
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={raiseDispute} disabled={busy}>Submit dispute</Button>
+                    <Button variant="outline" onClick={() => setDisputeOpen(false)} disabled={busy}>Cancel</Button>
+                  </div>
+                </div>
               )}
             </div>
           )}

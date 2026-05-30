@@ -34,6 +34,7 @@ const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const GigDetail = lazy(() => import("./pages/GigDetail"));
 const SellerProfile = lazy(() => import("./pages/SellerProfile"));
 const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
+const Checkout = lazy(() => import("./pages/Checkout"));
 const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
 const OrderWorkspace = lazy(() => import("./pages/orders/OrderWorkspace"));
 const Inbox = lazy(() => import("./pages/Inbox"));
@@ -98,6 +99,7 @@ const App = () => (
 
             {/* Shared (any signed-in user) */}
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
+            <Route path="/checkout/:order_id" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
             <Route path="/orders/:id" element={<ProtectedRoute><OrderWorkspace /></ProtectedRoute>} />
             <Route path="/inbox" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
             <Route path="/inbox/:conversationId" element={<ProtectedRoute><Inbox /></ProtectedRoute>} />
