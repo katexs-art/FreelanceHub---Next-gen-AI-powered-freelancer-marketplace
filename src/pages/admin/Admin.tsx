@@ -1074,7 +1074,7 @@ function SellerDetail({
             <tr key={t.id} className="border-t border-border">
               <td className="p-2 capitalize">{t.type.replace(/_/g, " ")}</td>
               <td className="p-2">{dollars(t.amount)}</td>
-              <td className="p-2 capitalize">{t.status}</td>
+              <td className="p-2"><StatusBadge variant={genericStatusVariant(t.status)} label={prettyStatus(t.status)} /></td>
               <td className="p-2 text-foreground-muted">{fmtDate(t.created_at)}</td>
             </tr>
           ))}
