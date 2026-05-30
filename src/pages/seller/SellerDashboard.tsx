@@ -157,6 +157,14 @@ export default function SellerDashboard() {
             <Link to="/seller-onboarding" className="underline">Update and resubmit</Link>.
           </div>
         )}
+        {approved && payouts && (!payouts.charges_enabled || !payouts.onboarding_complete) && (
+          <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900 p-4 text-sm flex items-center justify-between gap-4">
+            <span>Add your payout account to start receiving payments</span>
+            <Button onClick={connectPayouts} disabled={connecting} className="bg-black text-white hover:bg-black/90">
+              Set Up Payouts
+            </Button>
+          </div>
+        )}
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-3">
