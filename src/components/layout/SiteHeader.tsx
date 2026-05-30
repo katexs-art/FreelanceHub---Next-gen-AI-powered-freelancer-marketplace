@@ -108,8 +108,8 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b-hairline">
       <div className="container-page flex items-center gap-6 h-16">
-        <Link to="/" className="font-mono font-medium text-base tracking-[0.18em] uppercase">
-          KATEXS
+        <Link to="/" className="flex items-center">
+          <img src={katexsLogo} alt="KATEXS" style={{ height: 24, width: "auto", display: "block" }} />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1 text-sm">
