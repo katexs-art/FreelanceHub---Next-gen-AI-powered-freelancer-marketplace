@@ -179,6 +179,7 @@ export default function Admin() {
 
           <TabsContent value="verifications"><VerificationsQueue /></TabsContent>
           <TabsContent value="reports"><ReportsQueue /></TabsContent>
+          <TabsContent value="seller_approvals"><SellerApprovalsQueue /></TabsContent>
         </Tabs>
       </div>
     </AppShell>
