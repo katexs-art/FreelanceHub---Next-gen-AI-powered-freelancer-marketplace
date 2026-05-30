@@ -1277,12 +1277,14 @@ function EscrowPanel() {
 function PayoutsPanel() {
   const [pending, setPending] = useState<any[]>([]);
   const [history, setHistory] = useState<any[]>([]);
+  const [paypalPending, setPaypalPending] = useState<any[]>([]);
   const load = async () => {
-    const [p, h] = await Promise.all([
+    const [p, h, pp] = await Promise.all([
       supabase.from("withdrawals").select("*, seller:seller_id(username, full_name, river_score)").eq("status", "requested").order("created_at", { ascending: false }),
       supabase.from("withdrawals").select("*, seller:seller_id(username, full_name)").in("status", ["paid","failed"] as any).order("paid_at", { ascending: false }).limit(100),
+      supabase.from("seller_accounts").select("seller_id, paypal_email, payout_method, created_at, seller:seller_id(username, full_name, email)").eq("payout_method", "paypal").eq("payouts_enabled", false),
     ]);
-    setPending(p.data ?? []); setHistory(h.data ?? []);
+    setPending(p.data ?? []); setHistory(h.data ?? []); setPaypalPending(pp.data ?? []);
   };
   useEffect(() => { load(); }, []);
   const approve = async (id: string) => {
@@ -1294,6 +1296,18 @@ function PayoutsPanel() {
     if (!confirm(`Approve ${pending.length} payouts?`)) return;
     for (const w of pending) await approve(w.id);
   };
+  const verifyPaypal = async (sellerId: string, email: string) => {
+    if (!confirm(`Verify PayPal email ${email} for this seller? They will be able to receive payouts.`)) return;
+    const { error } = await supabase.from("seller_accounts").update({ payouts_enabled: true }).eq("seller_id", sellerId);
+    if (error) return toast.error(error.message);
+    await supabase.from("audit_log").insert({
+      admin_id: (await supabase.auth.getUser()).data.user?.id,
+      action_type: "verify_paypal", target_type: "seller_account", target_id: sellerId,
+      description: `Verified PayPal email ${email}`,
+    });
+    toast.success("PayPal verified"); load();
+  };
+
   return (
     <div className="space-y-6">
       <div>
