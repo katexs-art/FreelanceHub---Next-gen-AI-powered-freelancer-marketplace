@@ -45,6 +45,7 @@ export default function OrderWorkspace() {
     if (!id) return;
     const { data } = await supabase.from("orders").select(`
       id, order_number, status, price, buyer_id, seller_id, gig_id, package_id,
+      dispute_deadline, escrow_status, project_title,
       delivery_deadline, delivered_at, requirements_submitted, requirements_submitted_at,
       revision_count, created_at, completed_at,
       gigs:gig_id (title, thumbnail_url),
@@ -129,13 +130,12 @@ export default function OrderWorkspace() {
   };
 
   const accept = async () => {
+    if (!order) return;
     setBusy(true);
-    const { error } = await supabase.from("orders").update({
-      status: "completed", completed_at: new Date().toISOString(),
-    }).eq("id", order.id);
+    const { error } = await supabase.rpc("approve_delivery", { _order_id: order.id });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Order completed");
+    toast.success("Delivery approved — funds released");
     if (order.seller?.email && shouldEmail("orders")) {
       supabase.functions.invoke("send-marketplace-email", {
         body: {
@@ -144,6 +144,22 @@ export default function OrderWorkspace() {
         },
       });
     }
+    load();
+  };
+
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
+  const raiseDispute = async () => {
+    if (!order) return;
+    if (!disputeReason.trim()) return toast.error("Please describe the issue");
+    setBusy(true);
+    const { error } = await supabase.rpc("raise_dispute", {
+      _order_id: order.id, _reason: disputeReason.trim(),
+    });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Dispute opened — our team will review");
+    setDisputeOpen(false); setDisputeReason("");
     load();
   };
 
