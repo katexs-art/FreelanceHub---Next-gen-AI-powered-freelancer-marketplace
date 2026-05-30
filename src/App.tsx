@@ -33,6 +33,7 @@ const ProjectBids = lazy(() => import("./pages/ProjectBids"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const GigDetail = lazy(() => import("./pages/GigDetail"));
 const SellerProfile = lazy(() => import("./pages/SellerProfile"));
+const SellerIntelligenceProfile = lazy(() => import("./pages/SellerIntelligenceProfile"));
 const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
@@ -81,6 +82,7 @@ const App = () => (
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/gig/:slug" element={<GigDetail />} />
             <Route path="/u/:username" element={<SellerProfile />} />
+            <Route path="/seller/:username" element={<SellerIntelligenceProfile />} />
             <Route path="/become-a-seller" element={<BecomeSeller />} />
 
             {/* Buyer */}
