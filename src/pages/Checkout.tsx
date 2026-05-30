@@ -46,34 +46,67 @@ function riverScore(p: SellerProfile): number {
 function PayForm({ orderId }: { orderId: string }) {
   const stripe = useStripe();
   const elements = useElements();
+  const nav = useNavigate();
   const [busy, setBusy] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [succeeded, setSucceeded] = useState(false);
 
   const onPay = async () => {
     if (!stripe || !elements) return;
+    setErrorMsg(null);
     setBusy(true);
-    const { error } = await stripe.confirmPayment({
+    const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: `${window.location.origin}/orders/${orderId}` },
+      redirect: "if_required",
     });
+    if (error) {
+      setErrorMsg(error.message ?? "Payment failed");
+      setBusy(false);
+      return;
+    }
+    if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
+      setSucceeded(true);
+      setBusy(false);
+      setTimeout(() => nav(`/orders/${orderId}`), 2000);
+      return;
+    }
+    setErrorMsg("Payment did not complete. Please try again.");
     setBusy(false);
-    if (error) toast.error(error.message ?? "Payment failed");
   };
+
+  const bg = succeeded ? "#16a34a" : "#000";
+  const label = succeeded ? "✓ Payment successful" : busy ? "Processing…" : "Pay & Start Project";
 
   return (
     <>
-      <PaymentElement />
+      <div style={{ background: "#fff", border: "1px solid #e5e5e5", borderRadius: 8, padding: 16 }}>
+        <PaymentElement />
+      </div>
+      {errorMsg && (
+        <div role="alert" style={{
+          marginTop: 12, padding: "10px 12px", borderRadius: 8,
+          background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: 13,
+        }}>{errorMsg}</div>
+      )}
+      {succeeded && (
+        <div role="status" style={{
+          marginTop: 12, padding: "10px 12px", borderRadius: 8,
+          background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", fontSize: 13,
+        }}>Payment successful — your project has started. Redirecting…</div>
+      )}
       <button
         type="button"
         onClick={onPay}
-        disabled={!stripe || busy}
+        disabled={!stripe || busy || succeeded}
         style={{
           width: "100%", marginTop: 20,
-          background: "#000", color: "#fff", border: "none",
+          background: bg, color: "#fff", border: "none",
           borderRadius: 999, height: 52, fontSize: 16, fontWeight: 700,
-          cursor: busy ? "wait" : "pointer", opacity: busy ? 0.7 : 1,
+          cursor: busy ? "wait" : succeeded ? "default" : "pointer",
+          opacity: busy ? 0.7 : 1,
         }}
       >
-        {busy ? "Processing…" : "Pay & Start Project"}
+        {label}
       </button>
     </>
   );
