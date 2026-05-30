@@ -64,10 +64,8 @@ Deno.serve(async (req) => {
 
     // Rate limit: 10/min per IP (no auth required on this endpoint)
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-    if (!(await checkRateLimit(`ip:${ip}`, 10))) {
-      return new Response(JSON.stringify({ error: "rate limit exceeded" }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!(await checkRateLimit(supabase, { bucket: "river-public-match", identifier: `ip:${ip}`, limit: 10 }))) {
+      return tooManyRequests(corsHeaders);
     }
 
     let signals: Signals;
