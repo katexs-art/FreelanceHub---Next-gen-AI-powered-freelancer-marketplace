@@ -16,6 +16,9 @@ interface Acct {
   paypal_email: string | null;
   bank_country: string | null;
   bank_last4: string | null;
+  charges_enabled: boolean | null;
+  payouts_enabled: boolean | null;
+  stripe_account_id: string | null;
 }
 interface Tx { id: string; type: string; status: string; amount: number; created_at: string; clears_at: string | null; order_id: string | null; }
 interface Wd { id: string; amount: number; status: string; created_at: string; paid_at: string | null; }
