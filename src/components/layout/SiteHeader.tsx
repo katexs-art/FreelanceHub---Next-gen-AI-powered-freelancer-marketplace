@@ -26,6 +26,7 @@ export function SiteHeader() {
 
         <nav className="hidden md:flex items-center gap-1 text-sm">
           <Link to="/explore" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Browse</Link>
+          <Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Services</Link>
           {profile?.role !== "seller" && (
             <Link to="/become-a-seller" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Sell</Link>
           )}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Star, X } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -86,7 +86,8 @@ export default function Browse() {
 
   const [query, setQuery] = useState("");
   const [pendingQuery, setPendingQuery] = useState("");
-  const [category, setCategory] = useState("All");
+  const [searchParams] = useSearchParams();
+  const [category, setCategory] = useState(searchParams.get("category") ?? "All");
   const [quick, setQuick] = useState<Set<Quick>>(new Set());
   const [sort, setSort] = useState<Sort>("River Recommended");
   const [page, setPage] = useState(1);
