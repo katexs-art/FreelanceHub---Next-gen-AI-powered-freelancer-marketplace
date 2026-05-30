@@ -77,7 +77,7 @@ export default function PostJob() {
       return;
     }
     toast({ title: "Project posted" });
-    nav(`/projects/${data?.id ?? ""}` || "/projects");
+    nav(data?.id ? `/projects/${data.id}/bids` : "/projects");
   };
 
   return (
