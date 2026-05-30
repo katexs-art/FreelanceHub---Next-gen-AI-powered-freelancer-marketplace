@@ -44,6 +44,7 @@ const Inbox = lazy(() => import("./pages/Inbox"));
 const Earnings = lazy(() => import("./pages/seller/Earnings"));
 const Admin = lazy(() => import("./pages/admin/Admin"));
 const SellerApplicationsPage = lazy(() => import("./pages/admin/SellerApplicationsPage"));
+const RiverOps = lazy(() => import("./pages/admin/RiverOps"));
 const NotificationPreferences = lazy(() => import("./pages/account/NotificationPreferences"));
 const Saved = lazy(() => import("./pages/account/Saved"));
 const Verification = lazy(() => import("./pages/seller/Verification"));
