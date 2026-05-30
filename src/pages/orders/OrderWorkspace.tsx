@@ -15,10 +15,11 @@ import { shouldEmail } from "@/lib/emailPrefs";
 
 interface Order {
   id: string; order_number: string; status: string; price: number;
-  buyer_id: string; seller_id: string; gig_id: string; package_id: string | null;
+  buyer_id: string; seller_id: string; gig_id: string | null; package_id: string | null;
   delivery_deadline: string | null; delivered_at: string | null;
   requirements_submitted: boolean; requirements_submitted_at: string | null;
   revision_count: number; created_at: string; completed_at: string | null;
+  dispute_deadline: string | null; escrow_status: string | null; project_title: string | null;
   gigs: { title: string; thumbnail_url: string | null } | null;
   gig_packages: { title: string | null; delivery_days: number; revisions: number } | null;
   buyer: { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string } | null;
