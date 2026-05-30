@@ -33,6 +33,7 @@ const ProjectBids = lazy(() => import("./pages/ProjectBids"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const GigDetail = lazy(() => import("./pages/GigDetail"));
 const SellerProfile = lazy(() => import("./pages/SellerProfile"));
+const SellerIntelligenceProfile = lazy(() => import("./pages/SellerIntelligenceProfile"));
 const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
