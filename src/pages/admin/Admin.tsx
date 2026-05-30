@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ShoppingBag, Wallet, AlertTriangle } from "lucide-react";
+import { Users, ShoppingBag, Wallet, AlertTriangle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { VerificationsQueue } from "@/pages/admin/sections/VerificationsQueue";
