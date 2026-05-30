@@ -1029,7 +1029,7 @@ function SellerDetail({
           {(gigs ?? []).map((g) => (
             <tr key={g.id} className="border-t border-border">
               <td className="p-2">{g.title}</td>
-              <td className="p-2 capitalize">{g.status}</td>
+              <td className="p-2"><StatusBadge variant={genericStatusVariant(g.status)} label={prettyStatus(g.status)} /></td>
               <td className="p-2">{dollars(g.starting_price)}</td>
               <td className="p-2">{g.total_orders}</td>
               <td className="p-2">{Number(g.average_rating ?? 0).toFixed(1)}</td>
