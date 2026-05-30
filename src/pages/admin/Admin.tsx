@@ -223,6 +223,14 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
   );
 }
 
+function FundsLockedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive">
+      <Lock className="h-3 w-3" /> Funds Locked
+    </span>
+  );
+}
+
 function Table({ headers, children }: { headers: string[]; children: React.ReactNode }) {
   return (
     <div className="mt-4 bg-background border border-border rounded-xl overflow-hidden">
