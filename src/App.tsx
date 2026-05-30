@@ -75,7 +75,7 @@ const App = () => (
 
             {/* Public marketplace */}
             <Route path="/explore" element={<Explore />} />
-            <Route path="/browse" element={<Explore />} />
+            <Route path="/browse" element={<Browse />} />
             <Route path="/search" element={<Search />} />
             <Route path="/river-results" element={<RiverResults />} />
             <Route path="/pitch/:buyer_search_id" element={<ProtectedRoute><Pitch /></ProtectedRoute>} />
