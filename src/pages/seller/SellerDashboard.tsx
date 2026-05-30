@@ -23,12 +23,16 @@ interface Stats {
 
 export default function SellerDashboard() {
   const { user, profile } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [stats, setStats] = useState<Stats>({
     active_gigs: 0, active_orders: 0, total_earnings: 0, total_orders: 0,
     avg_rating: 0, total_reviews: 0, impressions: 0, clicks: 0, orders_last_30d: 0,
   });
   const [trend, setTrend] = useState<number[]>([]);
   const [loading, setLoading] = useState(true);
+  const [payouts, setPayouts] = useState<{ charges_enabled: boolean; onboarding_complete: boolean } | null>(null);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
