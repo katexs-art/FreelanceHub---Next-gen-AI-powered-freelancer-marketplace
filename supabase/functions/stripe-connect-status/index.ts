@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
     const a = await stripe.accounts.retrieve(acct.stripe_account_id);
     await admin.from("seller_accounts").update({
       charges_enabled: a.charges_enabled,

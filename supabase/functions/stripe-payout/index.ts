@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
     // stripe_bank
     if (!acct.stripe_account_id) throw new Error("Seller has no Stripe account on file");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-04-30.basil" });
     await admin.from("withdrawals").update({ status: "processing", method: "stripe_bank" }).eq("id", withdrawal_id);
 
     const transfer = await stripe.transfers.create({

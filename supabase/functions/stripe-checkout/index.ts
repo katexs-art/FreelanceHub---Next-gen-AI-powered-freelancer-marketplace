@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
     const origin = req.headers.get("origin") || "https://katexs.com";
 
     const session = await stripe.checkout.sessions.create({
