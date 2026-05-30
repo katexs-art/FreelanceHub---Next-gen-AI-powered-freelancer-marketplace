@@ -47,13 +47,25 @@ export default function Earnings() {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [user?.id]);
 
   const hasMethod = !!acct?.payout_method;
+  const stripeReady = !!(acct?.stripe_account_id && acct?.payouts_enabled);
 
   const requestWithdrawal = async () => {
     if (!user || !acct) return;
-    if (!hasMethod) return toast.error("Add a payout method first");
     const cents = Math.round(parseFloat(amount) * 100);
     if (!cents || cents < 1000) return toast.error("Minimum withdrawal is $10");
     if (cents > acct.available_balance) return toast.error("Amount exceeds available balance");
+
+    if (stripeReady) {
+      setBusy(true);
+      const { data, error } = await supabase.functions.invoke("stripe-instant-payout", { body: { amount_cents: cents } });
+      setBusy(false);
+      if (error || (data as any)?.error) return toast.error((data as any)?.error ?? error?.message ?? "Payout failed");
+      toast.success((data as any)?.method === "stripe_instant" ? "Payout sent — typically arrives instantly" : "Payout sent — arrives in 1–2 business days");
+      setAmount(""); load();
+      return;
+    }
+
+    if (!hasMethod) return toast.error("Add a payout method first");
     setBusy(true);
     const { error } = await supabase.from("withdrawals").insert({ seller_id: user.id, amount: cents, method: acct.payout_method });
     setBusy(false);
