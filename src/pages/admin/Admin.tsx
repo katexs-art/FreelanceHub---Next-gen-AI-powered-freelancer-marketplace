@@ -56,12 +56,35 @@ export default function Admin() {
     load();
   };
 
-  const refundOrder = async (orderId: string) => {
+  const refundOrder = async (orderId: string, disputeId?: string) => {
     const { data, error } = await supabase.functions.invoke("stripe-refund", { body: { order_id: orderId } });
     if (error || data?.error) return toast.error(error?.message || data?.error || "Refund failed");
+    await supabase.from("orders").update({ escrow_status: "refunded" }).eq("id", orderId);
+    if (disputeId) {
+      await supabase.from("disputes").update({
+        status: "resolved_refund", resolution_outcome: "refunded", resolved_at: new Date().toISOString(),
+      }).eq("id", disputeId);
+    }
     toast.success("Refund issued");
     load();
   };
+
+  const releaseToSeller = async (orderId: string, disputeId: string) => {
+    const nowIso = new Date().toISOString();
+    const { error: oe } = await supabase.from("orders").update({
+      status: "completed", completed_at: nowIso,
+      escrow_status: "released", escrow_released_at: nowIso,
+    }).eq("id", orderId);
+    if (oe) return toast.error(oe.message);
+    await supabase.from("transactions").update({ status: "cleared", clears_at: nowIso })
+      .eq("order_id", orderId).eq("type", "seller_credit").eq("status", "pending");
+    await supabase.from("disputes").update({
+      status: "resolved_release", resolution_outcome: "released", resolved_at: nowIso,
+    }).eq("id", disputeId);
+    toast.success("Released to seller — transfer will be sent shortly");
+    load();
+  };
+
 
   if (profile && profile.role !== "admin") {
     return <AppShell><div className="text-sm">Admin access required.</div></AppShell>;
