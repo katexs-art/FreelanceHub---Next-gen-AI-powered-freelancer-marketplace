@@ -41,10 +41,8 @@ Deno.serve(async (req) => {
     }
     const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
     const identifier = userId ?? `ip:${ip}`;
-    if (!(await checkRateLimit(identifier, 'river-chat', 15))) {
-      return new Response(JSON.stringify({ error: 'rate limit exceeded' }), {
-        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
+    if (!(await checkRateLimit(supabase, { bucket: 'river-chat', identifier, limit: 15 }))) {
+      return tooManyRequests(corsHeaders);
     }
 
     // Fetch live, active gigs to ground the model
