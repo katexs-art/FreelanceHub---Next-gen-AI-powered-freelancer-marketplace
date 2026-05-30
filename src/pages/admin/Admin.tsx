@@ -1311,6 +1311,21 @@ function PayoutsPanel() {
   return (
     <div className="space-y-6">
       <div>
+        <h3 className="text-sm font-semibold mb-2">PayPal Verification Queue ({paypalPending.length})</h3>
+        <Table headers={["Seller","Email","PayPal email","Submitted","Action"]}>
+          {paypalPending.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-sm text-foreground-muted">No PayPal accounts awaiting verification.</td></tr>}
+          {paypalPending.map((s) => (
+            <tr key={s.seller_id} className="border-t border-border">
+              <td className="p-3">{s.seller?.full_name ?? s.seller?.username}</td>
+              <td className="p-3 text-xs text-foreground-muted">{s.seller?.email}</td>
+              <td className="p-3 font-mono text-xs">{s.paypal_email}</td>
+              <td className="p-3 text-foreground-muted">{fmtDate(s.created_at)}</td>
+              <td className="p-3"><Button size="sm" onClick={() => verifyPaypal(s.seller_id, s.paypal_email)}>Verify</Button></td>
+            </tr>
+          ))}
+        </Table>
+      </div>
+      <div>
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-sm font-semibold">Pending Payouts ({pending.length})</h3>
           {pending.length > 0 && <Button size="sm" onClick={bulkApprove}>Bulk Approve All</Button>}
