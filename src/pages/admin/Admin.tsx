@@ -321,8 +321,16 @@ function HealthStrip({ health }: { health: Health }) {
    ============================================================ */
 export default function Admin() {
   const { profile } = useAuth();
-  const [active, setActive] = useState<NavKey>("buyers");
-  const indicators = useAdminNavIndicators();
+  const params = useParams<{ section?: string }>();
+  const navigate = useNavigate();
+  const active = (params.section ?? "overview") as NavKey;
+  const setActive = (k: NavKey) => navigate(k === "overview" ? "/admin" : `/admin/${k}`);
+  const indicators = useAdminIndicators();
+  const health = useSystemHealth();
+
+  // mark river ops read when visited
+  useEffect(() => { if (active === "river-ops") localStorage.setItem("river_ops_last_seen", new Date().toISOString()); }, [active]);
+
 
   const [stats, setStats] = useState({ users: 0, gigs: 0, orders: 0, gmv: 0 });
   const [buyers, setBuyers] = useState<any[]>([]);
