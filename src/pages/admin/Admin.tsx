@@ -90,6 +90,7 @@ export default function Admin() {
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
             <TabsTrigger value="verifications">Verifications</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="seller_approvals">Seller Approvals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
