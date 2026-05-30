@@ -47,7 +47,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
             <img
               src={katexsLogo}
               alt="KATEXS"
-              style={{ height: 36, width: "auto", display: "block", background: "transparent", filter: "invert(1)" }}
+              style={{ height: 20, width: "auto", display: "block", background: "transparent", filter: "invert(1)" }}
             />
           </Link>
 
