@@ -1,298 +1,353 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Button } from "@/components/ui/button";
 import { SEO } from "@/components/SEO";
-import { Eyebrow, StatNumber, HairlineDivider, MonoTag, Marquee } from "@/components/ui/mono";
-import { ArrowUpRight } from "lucide-react";
-import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import avatar1 from "@/assets/avatars/user-1.jpg";
-import avatar2 from "@/assets/avatars/user-2.jpg";
-import avatar3 from "@/assets/avatars/user-3.jpg";
-import avatar4 from "@/assets/avatars/user-4.jpg";
-import avatar5 from "@/assets/avatars/user-5.jpg";
-import avatar6 from "@/assets/avatars/user-6.jpg";
-import avatar7 from "@/assets/avatars/user-7.jpg";
-import avatar8 from "@/assets/avatars/user-8.jpg";
 
-const AVATARS = [avatar1, avatar2, avatar3, avatar4, avatar5, avatar6, avatar7, avatar8];
+const VIDEO_URL =
+  "https://lquoahkuzqwtiihshdaf.supabase.co/storage/v1/object/public/katexs-assets/7438233-uhd_4096_2160_25fps%20(1)%20(1)%20(1).mp4";
 
 const CATEGORIES = [
-  { label: "Build with AI", slug: "build-with-ai" },
-  { label: "Sound & Speak with AI", slug: "sound-and-speak-with-ai" },
-  { label: "Create with AI", slug: "create-with-ai" },
-  { label: "Grow with AI", slug: "grow-with-ai" },
-  { label: "Run with AI", slug: "run-with-ai" },
-  { label: "Understand AI", slug: "understand-ai" },
-  { label: "Write with AI", slug: "write-with-ai" },
-  { label: "Learn AI", slug: "learn-ai" },
+  { label: "Build with AI", slug: "build-with-ai", desc: "Custom AI apps, agents, automations" },
+  { label: "Sound & Speak with AI", slug: "sound-and-speak-with-ai", desc: "Voice AI, podcasts, audio cloning" },
+  { label: "Create with AI", slug: "create-with-ai", desc: "Images, video, design with AI" },
+  { label: "Grow with AI", slug: "grow-with-ai", desc: "Marketing, SEO, growth automation" },
+  { label: "Run with AI", slug: "run-with-ai", desc: "Ops, support, internal AI tools" },
+  { label: "Understand AI", slug: "understand-ai", desc: "Data, analytics, AI insight" },
+  { label: "Write with AI", slug: "write-with-ai", desc: "Copy, content, scripts with AI" },
+  { label: "Learn AI", slug: "learn-ai", desc: "Tutoring, courses, AI training" },
 ];
+
+type TopSeller = {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  avatar_url: string | null;
+  bio: string | null;
+  river_score: number | null;
+  seller_skills: string[] | null;
+  startingPrice: number | null;
+};
 
 export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
-  const [featured, setFeatured] = useState<GigCardData[]>([]);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
-
+  const [sellers, setSellers] = useState<TopSeller[]>([]);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from("gigs")
-        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
-        .eq("status", "active")
-        .order("total_orders", { ascending: false })
-        .limit(8);
-      const ids = [...new Set((data ?? []).map((g) => g.seller_id))];
-      const { data: sellers } = ids.length
-        ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
-        : { data: [] as any };
-      const byId = new Map((sellers ?? []).map((s: any) => [s.id, s]));
-      setFeatured((data ?? []).map((g) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
-      setFeaturedLoading(false);
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id,username,full_name,avatar_url,bio,river_score,seller_skills")
+        .eq("seller_status", "approved")
+        .order("river_score", { ascending: false, nullsFirst: false })
+        .limit(6);
+      const ids = (profs ?? []).map((p: any) => p.id);
+      let priceById = new Map<string, number>();
+      if (ids.length) {
+        const { data: gigs } = await supabase
+          .from("gigs")
+          .select("seller_id,starting_price")
+          .in("seller_id", ids)
+          .eq("status", "active")
+          .order("starting_price", { ascending: true });
+        (gigs ?? []).forEach((g: any) => {
+          if (!priceById.has(g.seller_id)) priceById.set(g.seller_id, g.starting_price);
+        });
+      }
+      setSellers(
+        (profs ?? []).map((p: any) => ({ ...p, startingPrice: priceById.get(p.id) ?? null })),
+      );
     })();
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div style={{ background: "#fff", color: "#000", minHeight: "100vh" }}>
       <SEO
-        title="KATEXS — The AI Freelance Marketplace"
-        description="Hire AI-native freelancers. Find experts in seconds, ship work in days. The first marketplace built for the AI era."
-        jsonLd={{ "@context": "https://schema.org", "@type": "Organization", name: "Katexs", url: "https://katexs.lovable.app" }}
+        title="KATEXS — Hire AI experts. Ship faster."
+        description="Tell River what you need — the best AI experts come to you in seconds. The world's first AI-native freelance marketplace."
+        jsonLd={{ "@context": "https://schema.org", "@type": "Organization", name: "Katexs", url: "https://katexs.com" }}
       />
-      <SiteHeader />
 
-      {/* ───────────────────────────── HERO ───────────────────────────── */}
-      <section className="relative border-b-hairline">
-        <div className="container-page pt-28 pb-24 md:pt-40 md:pb-32 text-center">
-          <div className="inline-flex items-center gap-2 mono-tag mb-10">
-            <span className="h-1.5 w-1.5 rounded-full bg-success" />
-            <span>KATEXS / V1 — LIVE 2026</span>
+      <style>{`
+        .kx-hero-h1 { font-size: 72px; }
+        @media (max-width: 768px) {
+          .kx-hero-h1 { font-size: 40px !important; }
+          .kx-section { padding: 48px 20px !important; }
+          .kx-grid-4 { grid-template-columns: 1fr 1fr !important; }
+          .kx-grid-3 { grid-template-columns: 1fr !important; }
+          .kx-grid-stats { grid-template-columns: 1fr 1fr !important; }
+        }
+        .kx-cat-card { transition: all 0.2s ease; }
+        .kx-cat-card:hover { border-color: #000 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
+        .kx-btn-primary:hover { background: #111 !important; }
+        .kx-seller-card { transition: all 0.2s ease; }
+        .kx-seller-card:hover { border-color: #000 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+      `}</style>
+
+      <SiteHeader variant="transparent" />
+
+      {/* HERO */}
+      <section style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden" }}>
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: 0 }}
+        >
+          <source src={VIDEO_URL} type="video/mp4" />
+        </video>
+        <div
+          style={{
+            position: "absolute", top: 0, left: 0, width: "100%", height: "100%",
+            background: "rgba(0,0,0,0.60)", zIndex: 1,
+          }}
+        />
+        <div
+          style={{
+            position: "relative", zIndex: 2, height: "100%",
+            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+            textAlign: "center", padding: "0 24px",
+          }}
+        >
+          <div
+            style={{
+              border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)",
+              color: "#fff", fontSize: 11, letterSpacing: "0.12em", padding: "6px 16px",
+              borderRadius: 999, marginBottom: 32, textTransform: "uppercase",
+            }}
+          >
+            The AI Freelance Marketplace
           </div>
 
-          <h1 className="display-xl mx-auto max-w-5xl">
-            The freelance market,
-            <br />
-            <span className="text-foreground-muted">rebuilt from first principles.</span>
+          <h1
+            className="kx-hero-h1"
+            style={{
+              color: "#fff", fontWeight: 500, lineHeight: 1.1, letterSpacing: "-0.02em",
+              maxWidth: 800, marginBottom: 20,
+            }}
+          >
+            Hire AI experts. Ship faster.
           </h1>
 
-          <p className="mt-8 text-base md:text-lg text-foreground-muted max-w-xl mx-auto leading-relaxed">
-            A precision marketplace where talent and intent meet through intelligence — not noise.
+          <p
+            style={{
+              color: "rgba(255,255,255,0.6)", fontSize: 18, fontWeight: 400,
+              maxWidth: 520, lineHeight: 1.6, marginBottom: 48,
+            }}
+          >
+            Tell River what you need — the best AI experts come to you in seconds.
           </p>
 
-          {/* River AI search */}
           <form
             onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/river-results?q=${encodeURIComponent(q.trim())}`); }}
-            className="mt-12 max-w-3xl mx-auto"
+            style={{
+              background: "#fff", borderRadius: 999, overflow: "hidden",
+              display: "flex", alignItems: "center", maxWidth: 580, width: "100%",
+              boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
+            }}
           >
-            <div className="eyebrow mb-4">POWERED BY RIVER AI</div>
-            <div className="surface flex items-center gap-3 rounded-full px-2 py-2 h-14">
-              <input
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Tell River what you need — I'll find the best AI experts for you..."
-                className="flex-1 bg-transparent text-sm md:text-base px-4 focus:outline-none placeholder:text-foreground-subtle"
-              />
-              <Button type="submit" size="sm" className="h-10 rounded-full bg-black text-white hover:bg-black/90">
-                Find My Expert
-              </Button>
-            </div>
+            <Search size={18} color="#999" style={{ marginLeft: 24, flexShrink: 0 }} />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Tell River what you need — I'll find your expert..."
+              style={{
+                flex: 1, padding: "18px 20px", fontSize: 15, color: "#111",
+                border: "none", outline: "none", background: "transparent",
+              }}
+            />
+            <button
+              type="submit"
+              className="kx-btn-primary"
+              style={{
+                padding: "14px 28px", fontSize: 14, fontWeight: 500, borderRadius: 999,
+                margin: 6, background: "#000", color: "#fff", border: "none", cursor: "pointer",
+              }}
+            >
+              Find My Expert
+            </button>
           </form>
 
-          <div className="mt-10 max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
-            <div style={{ background: "#000", color: "#fff", borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#fff" }}>Post a Project</div>
-                <div style={{ fontSize: 13, color: "#fff", marginTop: 8, opacity: 0.85 }}>
-                  Describe what you need and let sellers compete for your job
-                </div>
+          <div
+            style={{
+              marginTop: 32, display: "flex", alignItems: "center", flexWrap: "wrap",
+              justifyContent: "center",
+            }}
+          >
+            {["2,400+ Verified Experts", "$2.1M Paid Out", "3-Day Payments"].map((s, i) => (
+              <div key={s} style={{ display: "flex", alignItems: "center" }}>
+                {i > 0 && <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.15)" }} />}
+                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", padding: "0 24px" }}>{s}</div>
               </div>
-              <Link to="/post-job" style={{ marginTop: 20 }}>
-                <button style={{ background: "#fff", color: "#000", fontSize: 13, fontWeight: 600, padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer", width: "100%" }}>
-                  Post a Job Now
-                </button>
-              </Link>
-            </div>
-            <div style={{ background: "#fff", color: "#000", border: "1px solid #000", borderRadius: 12, padding: 24, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#000" }}>Browse Open Projects</div>
-                <div style={{ fontSize: 13, color: "#000", marginTop: 8, opacity: 0.75 }}>
-                  Find live projects and place your bid right now
-                </div>
-              </div>
-              <Link to="/projects" style={{ marginTop: 20 }}>
-                <button style={{ background: "#000", color: "#fff", fontSize: 13, fontWeight: 600, padding: "10px 16px", borderRadius: 8, border: "none", cursor: "pointer", width: "100%" }}>
-                  View All Projects
-                </button>
-              </Link>
-            </div>
+            ))}
           </div>
-
-
-
         </div>
       </section>
 
+      {/* CATEGORIES */}
+      <section className="kx-section" style={{ background: "#fff", padding: "60px 80px" }}>
+        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#999", marginBottom: 24 }}>
+          What do you need done?
+        </div>
+        <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+          {CATEGORIES.map((c) => (
+            <Link
+              key={c.slug}
+              to={`/category/${c.slug}`}
+              className="kx-cat-card"
+              style={{
+                background: "#fff", border: "1px solid #f0f0f0", borderRadius: 16,
+                padding: 28, display: "block", textDecoration: "none",
+              }}
+            >
+              <div style={{ fontSize: 15, fontWeight: 500, color: "#000", marginBottom: 8 }}>{c.label}</div>
+              <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
+              <div style={{ fontSize: 12, color: "#bbb" }}>Browse experts</div>
+              <div style={{ fontSize: 14, color: "#000", marginTop: 16 }}>→</div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
-      {/* ───────────────────────────── STATS STRIP ───────────────────────────── */}
-      <section className="border-b-hairline">
-        <div className="container-page py-14 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06]">
+      {/* TOP PERFORMERS */}
+      <section className="kx-section" style={{ background: "#fff", padding: "60px 80px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#000", margin: 0 }}>Top performers this week</h2>
+          <Link to="/explore" style={{ fontSize: 14, color: "#000", textDecoration: "none" }}>Browse all experts →</Link>
+        </div>
+        <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+          {sellers.length === 0
+            ? Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 16, padding: 24, height: 240 }} />
+              ))
+            : sellers.map((s) => {
+                const displayName = s.full_name || s.username || "Expert";
+                const initial = displayName.charAt(0).toUpperCase();
+                return (
+                  <div key={s.id} className="kx-seller-card" style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 16, padding: 24 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+                      {s.avatar_url ? (
+                        <img src={s.avatar_url} alt={displayName} style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
+                      ) : (
+                        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500, color: "#666" }}>
+                          {initial}
+                        </div>
+                      )}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: "#000" }}>{displayName}</div>
+                        {s.river_score != null && (
+                          <span style={{ display: "inline-block", marginTop: 4, background: "#000", color: "#fff", fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>
+                            River Score {s.river_score}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 13, color: "#666", lineHeight: 1.5, marginBottom: 12, minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      {s.bio || "AI specialist on Katexs."}
+                    </div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
+                      {(s.seller_skills ?? []).slice(0, 3).map((sk) => (
+                        <span key={sk} style={{ background: "#f4f4f4", color: "#333", fontSize: 11, padding: "4px 10px", borderRadius: 999 }}>{sk}</span>
+                      ))}
+                    </div>
+                    {s.startingPrice != null && (
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#000", marginBottom: 12 }}>From ${s.startingPrice}</div>
+                    )}
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <Link to={`/seller/${s.username ?? s.id}`} style={{ flex: 1, textAlign: "center", background: "#000", color: "#fff", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
+                        View Profile
+                      </Link>
+                      <Link to={`/inbox?to=${s.id}`} style={{ flex: 1, textAlign: "center", background: "#fff", color: "#000", border: "1px solid #000", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
+                        Message
+                      </Link>
+                    </div>
+                  </div>
+                );
+              })}
+        </div>
+      </section>
+
+      {/* HOW IT WORKS */}
+      <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+        <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 48, maxWidth: 1200, margin: "0 auto" }}>
           {[
-            { label: "GIGS DELIVERED", value: "2.4M" },
-            { label: "AVG. RATING", value: "4.9" },
-            { label: "COUNTRIES", value: "164" },
-            { label: "PAID TO TALENT", value: "$1.2B" },
+            { n: "1", t: "Tell River", d: "Describe what you need in plain English. River reads every word and understands the nuance." },
+            { n: "2", t: "Get matched", d: "Top 15 experts are notified instantly. They pitch you directly — no browsing required." },
+            { n: "3", t: "Ship it", d: "Pay securely into escrow. Approve delivery. Funds release in 3 days automatically." },
           ].map((s) => (
-            <div key={s.label} className="bg-background px-6 py-8">
-              <div className="eyebrow mb-3">{s.label}</div>
-              <div className="font-mono text-3xl md:text-4xl text-foreground tabular">{s.value}</div>
+            <div key={s.n}>
+              <div style={{ fontSize: 72, fontWeight: 500, color: "#222", lineHeight: 1 }}>{s.n}</div>
+              <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
+              <div style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>{s.d}</div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* ───────────────────────────── CATEGORIES ───────────────────────────── */}
-      <section className="border-b-hairline">
-        <div className="container-page py-24">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <Eyebrow>01 / Catalog</Eyebrow>
-              <h2 className="display-md mt-3">Every craft. One surface.</h2>
+      {/* TRUST STATS */}
+      <section className="kx-section" style={{ background: "#fff", padding: "60px 80px" }}>
+        <div className="kx-grid-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
+          {[
+            { v: "2,400+", l: "Verified AI experts" },
+            { v: "$2.1M+", l: "Paid out to sellers" },
+            { v: "3 days", l: "Average payment time" },
+            { v: "98%", l: "Satisfaction rate" },
+          ].map((s, i) => (
+            <div key={s.l} style={{ padding: "0 32px", borderLeft: i === 0 ? "none" : "1px solid #f0f0f0" }}>
+              <div style={{ fontSize: 48, fontWeight: 500, color: "#000", lineHeight: 1.1 }}>{s.v}</div>
+              <div style={{ fontSize: 14, color: "#888", marginTop: 8 }}>{s.l}</div>
             </div>
-            <Link to="/explore" className="hidden md:inline-flex items-center gap-1 eyebrow hover:text-foreground transition-colors">
-              All categories <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-white/[0.06]">
-            {CATEGORIES.map((c, i) => (
-              <Link
-                key={c.slug}
-                to={`/category/${c.slug}`}
-                className="bg-background p-6 md:p-8 group hover:bg-background-subtle transition-colors"
-              >
-                <div className="flex items-start justify-between">
-                  <span className="font-mono text-xs text-foreground-subtle tabular">{String(i + 1).padStart(2, "0")}</span>
-                  <ArrowUpRight className="h-4 w-4 text-foreground-subtle group-hover:text-foreground transition-colors" />
-                </div>
-                <div className="mt-12 font-heading text-base md:text-lg leading-tight">{c.label}</div>
-                <div className="mt-2 eyebrow">EXPLORE</div>
-              </Link>
-            ))}
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* ───────────────────────────── FEATURED GIGS ───────────────────────────── */}
-      <section className="border-b-hairline">
-        <div className="container-page py-24">
-          <div className="flex items-end justify-between mb-12">
-            <div>
-              <Eyebrow>02 / Featured</Eyebrow>
-              <h2 className="display-md mt-3">Top-rated gigs, live now.</h2>
-            </div>
-            <Link to="/explore" className="hidden md:inline-flex items-center gap-1 eyebrow hover:text-foreground transition-colors">
-              Browse all <ArrowUpRight className="h-3 w-3" />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {featuredLoading
-              ? Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)
-              : featured.length === 0
-                ? <p className="text-foreground-muted col-span-full">No gigs published yet.</p>
-                : featured.map((g) => <GigCard key={g.id} gig={g} />)}
-          </div>
-        </div>
+      {/* BOTTOM CTA */}
+      <section style={{ background: "#000", padding: "100px 80px", textAlign: "center" }}>
+        <h2 style={{ fontSize: 52, fontWeight: 500, color: "#fff", maxWidth: 600, margin: "0 auto 20px", lineHeight: 1.1 }}>
+          Stop searching. Tell River.
+        </h2>
+        <p style={{ fontSize: 18, color: "#666", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
+          The best AI experts are waiting. Describe your project and get matched in seconds.
+        </p>
+        <Link
+          to="/signup"
+          style={{
+            display: "inline-block", background: "#fff", color: "#000", borderRadius: 999,
+            padding: "16px 40px", fontSize: 16, fontWeight: 500, textDecoration: "none",
+          }}
+        >
+          Get Started Free
+        </Link>
       </section>
 
-      {/* ───────────────────────────── HOW IT WORKS ───────────────────────────── */}
-      <section className="border-b-hairline">
-        <div className="container-page py-24">
-          <div className="text-center mb-16">
-            <Eyebrow>03 / Workflow</Eyebrow>
-            <h2 className="display-md mt-3 max-w-2xl mx-auto">Three moves. Zero ceremony.</h2>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-px bg-white/[0.06]">
-            {[
-              { n: "01", t: "Search with intent", d: "Describe the outcome. Our AI matches gigs, packages, and sellers in milliseconds — ranked by signal, not ads." },
-              { n: "02", t: "Brief & buy in escrow", d: "Pick a package, submit requirements, fund the order. Money sits in escrow until you accept the delivery." },
-              { n: "03", t: "Ship, review, repeat", d: "Realtime chat, custom offers, revisions, disputes — all in one workspace. Two-way reviews keep the bar high." },
-            ].map((s) => (
-              <div key={s.n} className="bg-background p-8 md:p-10">
-                <div className="font-mono text-5xl tabular text-foreground-subtle">{s.n}</div>
-                <div className="mt-8 font-heading text-xl">{s.t}</div>
-                <p className="mt-3 text-sm text-foreground-muted leading-relaxed">{s.d}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───────────────────────────── TRUST / FOR BUSINESS ───────────────────────────── */}
-      <section className="border-b-hairline">
-        <div className="container-page py-24 grid md:grid-cols-2 gap-16 items-center">
+      {/* FOOTER */}
+      <footer style={{ background: "#000", padding: "60px 80px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 32 }}>
           <div>
-            <Eyebrow>04 / Trust</Eyebrow>
-            <h2 className="display-md mt-3">Built for serious work.</h2>
-            <p className="mt-6 text-foreground-muted max-w-md leading-relaxed">
-              Verified sellers, escrowed payments, dispute resolution, KYC, and an admin layer that operates at platform scale.
-              Every gig is screened. Every dollar is accounted for.
-            </p>
-            <div className="mt-10 flex flex-wrap gap-3">
-              <Link to="/become-a-seller"><Button variant="outline">Become a seller</Button></Link>
-              <Link to="/explore"><Button variant="ghost">Browse the catalog</Button></Link>
+            <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, letterSpacing: "0.1em", marginBottom: 12 }}>KATEXS</div>
+            <div style={{ fontSize: 14, color: "#555", maxWidth: 320 }}>
+              The world's first AI-native freelance marketplace
             </div>
           </div>
-          <div className="surface p-10 grid grid-cols-2 gap-px bg-white/[0.06]">
-            {[
-              { l: "ESCROW", v: "100%" },
-              { l: "DISPUTE SLA", v: "24H" },
-              { l: "KYC TIERS", v: "3" },
-              { l: "UPTIME", v: "99.99%" },
-            ].map((s) => (
-              <div key={s.l} className="bg-background-subtle p-6">
-                <div className="eyebrow">{s.l}</div>
-                <div className="mt-4 font-mono text-3xl tabular">{s.v}</div>
-              </div>
-            ))}
+          <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+            <Link to="/explore" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Browse</Link>
+            <Link to="/services" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Services</Link>
+            <Link to="/projects" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Projects</Link>
+            <Link to="/about" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>About</Link>
+            <Link to="/trust" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Contact</Link>
           </div>
         </div>
-      </section>
-
-      {/* ───────────────────────────── PRESS MARQUEE ───────────────────────────── */}
-      <section className="border-b-hairline py-14">
-        <div className="container-page mb-8 text-center">
-          <Eyebrow>TRUSTED BY OPERATORS AT</Eyebrow>
-        </div>
-        <Marquee>
-          {["STRIPE", "LINEAR", "VERCEL", "FIGMA", "NOTION", "RAYCAST", "SUPERHUMAN", "RAMP", "ARC", "MERCURY"].map((b) => (
-            <span key={b} className="font-mono text-xl text-foreground-subtle tracking-[0.18em] mx-10">{b}</span>
-          ))}
-        </Marquee>
-      </section>
-
-      {/* ───────────────────────────── FINAL CTA ───────────────────────────── */}
-      <section>
-        <div className="container-page py-32 text-center">
-          <Eyebrow>05 / Begin</Eyebrow>
-          <h2 className="display-lg mt-4 max-w-3xl mx-auto">
-            The next decade of work
-            <br />
-            <span className="text-foreground-muted">starts on Katexs.</span>
-          </h2>
-          <div className="mt-12 flex justify-center gap-3">
-            <Link to="/signup"><Button size="lg">Open an account</Button></Link>
-            <Link to="/become-a-seller"><Button size="lg" variant="outline">Sell on Katexs</Button></Link>
+        <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+          <div style={{ fontSize: 12, color: "#444" }}>© 2026 Katexs. All rights reserved.</div>
+          <div style={{ display: "flex", gap: 24 }}>
+            <Link to="/privacy" style={{ fontSize: 12, color: "#444", textDecoration: "none" }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ fontSize: 12, color: "#444", textDecoration: "none" }}>Terms of Service</Link>
           </div>
         </div>
-      </section>
-
-      <SiteFooter />
+      </footer>
     </div>
   );
 }
-
