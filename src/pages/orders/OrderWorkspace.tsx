@@ -308,12 +308,45 @@ export default function OrderWorkspace() {
           )}
 
           {isBuyer && order.status === "delivered" && (
-            <div className="mt-6 border-t border-border pt-6 flex gap-3">
-              <Button onClick={accept} disabled={busy}><CheckCircle2 className="h-4 w-4" /> Accept & complete</Button>
-              {(order.revision_count ?? 0) < (order.gig_packages?.revisions ?? 0) && (
-                <Button variant="outline" onClick={requestRevision} disabled={busy}>
-                  <RotateCw className="h-4 w-4" /> Request revision
+            <div className="mt-6 border-t border-border pt-6 space-y-4">
+              {order.dispute_deadline && (
+                <div style={{
+                  background: "#fff8e1", border: "1px solid #f1d77b",
+                  borderRadius: 8, padding: 12, fontSize: 13, color: "#5a4a10",
+                }}>
+                  {(() => {
+                    const ms = new Date(order.dispute_deadline).getTime() - Date.now();
+                    const days = Math.max(0, Math.ceil(ms / 86400000));
+                    const when = new Date(order.dispute_deadline).toLocaleString();
+                    return `${days} day${days === 1 ? "" : "s"} remaining to review — approve or dispute by ${when}`;
+                  })()}
+                </div>
+              )}
+              <div className="flex gap-3 flex-wrap">
+                <Button onClick={accept} disabled={busy}><CheckCircle2 className="h-4 w-4" /> Approve Delivery</Button>
+                <Button variant="outline" onClick={() => setDisputeOpen((v) => !v)} disabled={busy}>
+                  Raise a Dispute
                 </Button>
+                {order.gig_packages && (order.revision_count ?? 0) < (order.gig_packages?.revisions ?? 0) && (
+                  <Button variant="outline" onClick={requestRevision} disabled={busy}>
+                    <RotateCw className="h-4 w-4" /> Request revision
+                  </Button>
+                )}
+              </div>
+              {disputeOpen && (
+                <div className="space-y-2 border border-border rounded-lg p-4">
+                  <h4 className="text-sm font-semibold">Open a dispute</h4>
+                  <Textarea
+                    placeholder="Tell us what went wrong"
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    rows={3}
+                  />
+                  <div className="flex gap-2">
+                    <Button onClick={raiseDispute} disabled={busy}>Submit dispute</Button>
+                    <Button variant="outline" onClick={() => setDisputeOpen(false)} disabled={busy}>Cancel</Button>
+                  </div>
+                </div>
               )}
             </div>
           )}
