@@ -827,6 +827,7 @@ export type Database = {
           delivered_at: string | null
           delivery_deadline: string | null
           dispute_deadline: string | null
+          dispute_hold_notified_at: string | null
           escrow_released_at: string | null
           escrow_status: string
           gig_id: string | null
@@ -862,6 +863,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_deadline?: string | null
           dispute_deadline?: string | null
+          dispute_hold_notified_at?: string | null
           escrow_released_at?: string | null
           escrow_status?: string
           gig_id?: string | null
@@ -897,6 +899,7 @@ export type Database = {
           delivered_at?: string | null
           delivery_deadline?: string | null
           dispute_deadline?: string | null
+          dispute_hold_notified_at?: string | null
           escrow_released_at?: string | null
           escrow_status?: string
           gig_id?: string | null

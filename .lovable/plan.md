@@ -1,49 +1,58 @@
 ## Goal
-Wire Stripe Connect Express end-to-end for approved sellers: yellow setup banner, automatic transfer on order release, and an instant Withdraw button. Reuses the existing `stripe-connect-onboard` function, `seller_accounts` table (`stripe_account_id`, `onboarding_complete`, `charges_enabled`, `payouts_enabled`), and `STRIPE_SECRET_KEY` secret. No visual tokens, fonts, images, or unrelated layout changes.
+Make the day-4 escrow auto-release respect open disputes, notify both parties when funds are held, and show a red "Funds Locked" indicator on disputed orders in the admin panel. Admin dispute resolution actions must trigger the actual Stripe transfer (seller win) or refund (buyer win). Nothing else changes — no styling, layout, or unrelated logic edits.
 
-## 1. Seller dashboard banner + return handling (`src/pages/seller/SellerDashboard.tsx`)
+## 1. Migration: dispute-aware `auto_complete_orders`
 
-- Load `seller_accounts.charges_enabled` and `onboarding_complete` alongside existing stats.
-- When `seller_status === "approved"` and (`!charges_enabled` or `!onboarding_complete`): render a yellow banner at the top — same yellow style as the existing pending banner — text "Add your payout account to start receiving payments", with a black `Button` "Set Up Payouts" that calls `supabase.functions.invoke("stripe-connect-onboard", { body: { return_url: \`${origin}/seller/dashboard?payout=connected\` } })` and redirects to `data.url`.
-- On mount, if `searchParams.get("payout") === "connected"`:
-  1. Invoke a new `stripe-connect-status` edge function to re-pull the Stripe account and persist `charges_enabled` / `onboarding_complete` / `payouts_enabled`.
-  2. If `charges_enabled` is now true and `localStorage[\`katexs:payouts-connected-toast:${user.id}\`]` is unset, fire `toast.success("Payout account connected — you will receive payments automatically after every completed order.")` and set the key.
-  3. Strip the query param via `nav("/seller/dashboard", { replace: true })`.
-- The literal `/dashboard?payout=connected` in the spec maps to the seller dashboard (no `/dashboard` route exists).
+Rewrite `public.auto_complete_orders()` (currently in `20260530032139_*.sql`) so it follows the exact decision tree on every cron tick:
 
-Note: the user-facing route uses `?payout=connected`; for the seller dashboard path I use the actual `/seller/dashboard` because no plain `/dashboard` route exists in the app.
+1. Select candidate orders where `status = 'delivered'` AND `auto_complete_at <= now()` AND `escrow_status = 'held'`.
+2. Split into two sets:
+   - **Disputed** = orders whose `status = 'disputed'` OR have a row in `disputes` with `status = 'open'`. (Status will normally already be `'disputed'` because `open_dispute` sets it, but we double-check via the `disputes` table for safety.)
+   - **Clean** = the rest.
+3. For **Disputed**: do NOT touch `escrow_status`, `status`, or `transactions`. Insert notifications (only if not already inserted for this order — track via a new `dispute_hold_notified_at` timestamp column on `orders` so we don't spam every cron tick):
+   - Seller: title "Payout paused", body "Your payout has been paused due to an open dispute on this order. Our team is reviewing and will resolve within 24 hours."
+   - Buyer: title "Dispute under review", body "Your dispute is being reviewed. Funds are held securely until resolution."
+   - Set `dispute_hold_notified_at = now()`.
+4. For **Clean**: keep existing behavior — set `status='completed'`, `escrow_status='released'`, `escrow_released_at=now()`, and flip matching `transactions.seller_credit` rows from `pending` to `cleared` (so `stripe-auto-transfer` picks them up).
 
-## 2. New edge function `stripe-connect-status`
+Schema additions in the same migration:
+- `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS dispute_hold_notified_at timestamptz;`
 
-Reads the caller's `seller_accounts.stripe_account_id`, calls `stripe.accounts.retrieve`, and updates `charges_enabled`, `payouts_enabled`, `onboarding_complete = details_submitted`. Returns the flags. Used by the dashboard return handler and the existing `StripeConnectCard` initial load (refresh path).
+No changes to grants, RLS, or other functions.
 
-## 3. Automatic transfer on escrow release
+## 2. Admin dispute resolution must actually move money
 
-The product spec says "in the Supabase edge function that handles order completion and fund release after the 3 day window". Today this is the SQL function `auto_complete_orders` (cron-driven) plus the buyer-driven `approve_delivery` RPC. We do not call Stripe from SQL. Plan:
+In `src/pages/admin/Admin.tsx` Disputes tab, the two existing buttons currently only update DB rows. Wire them to the real money paths:
 
-- Add a new edge function `stripe-auto-transfer` (cron-triggered, every 5 minutes) that:
-  - Selects `transactions` rows where `type='seller_credit'`, `status='cleared'`, and a new column `stripe_transfer_id IS NULL`.
-  - For each, loads `seller_accounts` for the seller; if `stripe_account_id` and `charges_enabled` are present, computes the seller payout = `amount` (the row is already net of the 10% platform fee since the fee is stored as a separate `platform_fee` transaction), and calls `stripe.transfers.create({ amount, currency: "usd", destination: stripe_account_id, transfer_group: order_id, metadata: { transaction_id, order_id, seller_id } })`.
-  - Writes the returned `transfer.id` to `transactions.stripe_transfer_id`.
-  - Skips (logs only) when the seller has not connected — funds stay available until they connect.
-- Migration: `ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS stripe_transfer_id text;`
-- Schedule via `pg_cron` + `pg_net` inserting into the project's existing cron config (separate `supabase--insert` call with the deployed function URL and anon key — not in the migration).
+- **Refund buyer** — already calls `stripe-refund` ✓ (no change beyond also ensuring the dispute row is marked `resolved_refund` after success; today it's not updated on success). Add: on successful refund, update the dispute to `status='resolved_refund', resolution_outcome='refunded', resolved_at=now()` and the order's `escrow_status='refunded'`.
+- **Release to seller** — currently just sets order `completed` + dispute `resolved_release`. Add: also flip the matching `seller_credit` transaction from `pending` → `cleared` and set `escrow_status='released', escrow_released_at=now()`. This causes the existing `stripe-auto-transfer` cron (runs every 5 min) to push the transfer to the seller's Connect account on its next tick. No new edge function required.
 
-The 3-day window remains enforced by the existing `dispute_deadline` / `auto_complete_at` logic on orders; no changes there.
+These are client-side calls that already run as admin under existing RLS (`tx_seller_read`/admin policies + `orders_party_update` allows admin via `is_admin`). Transactions table currently disallows UPDATE from clients — add an admin UPDATE policy in the same migration:
 
-## 4. Instant Withdraw on Earnings page (`src/pages/seller/Earnings.tsx` + new edge function)
+```sql
+CREATE POLICY tx_admin_update ON public.transactions
+  FOR UPDATE TO authenticated
+  USING (is_admin(auth.uid())) WITH CHECK (is_admin(auth.uid()));
+```
 
-- Replace the "Request" withdrawal flow with an immediate Stripe payout:
-  - On click, invoke new edge function `stripe-instant-payout` with `{ amount_cents }`.
-  - Function: auth user → loads `seller_accounts` → validates `stripe_account_id` and `payouts_enabled` → calls `stripe.payouts.create({ amount, currency: "usd", method: "instant" }, { stripeAccount: stripe_account_id })`. If "instant" fails (no debit card eligible), retries with `method: "standard"`.
-  - On success: inserts a `withdrawals` row with `status='paid'`, `stripe_payout_id = payout.id`, `method = payout.method === 'instant' ? 'stripe_instant' : 'stripe_bank'`. This will trigger `recompute_seller_balance` via the existing trigger.
-- Button stays disabled until `acct.charges_enabled && acct.payouts_enabled`. Helper text: "Instant for debit cards, 1–2 business days for bank accounts."
-- Existing `PayoutMethodCard` (paypal/bank manual entry) stays unchanged — out of scope; the Stripe Connect card is now the canonical path.
+## 3. Admin UI: red "Funds Locked" lock badge on disputed orders
 
-## 5. Files touched
+In `src/pages/admin/Admin.tsx`:
 
-- New: `supabase/functions/stripe-connect-status/index.ts`, `supabase/functions/stripe-auto-transfer/index.ts`, `supabase/functions/stripe-instant-payout/index.ts`.
-- New migration: add `transactions.stripe_transfer_id`.
-- New scheduled job via `supabase--insert` (pg_cron) calling `stripe-auto-transfer` every 5 minutes.
-- Edited: `src/pages/seller/SellerDashboard.tsx` (banner, return handler, status load), `src/pages/seller/Earnings.tsx` (Withdraw → instant payout, button gating).
-- No changes to global styles, fonts, layout, or any other page.
+- **Disputes tab table**: add a "Funds" column. For any dispute whose order has `escrow_status = 'held'`, render a red lock badge: `<Lock />` icon + text "Funds Locked", using existing destructive token classes already in the file (e.g. `bg-destructive/10 text-destructive`). Load `orders.escrow_status` alongside the existing disputes query (extend the select to join order escrow_status, or fetch order ids in a follow-up query keyed by `order_id`).
+- **Orders tab table**: in the Status column, when `status = 'disputed'`, append the same red lock badge next to the status text so Kevin sees locked funds at a glance from the Orders view too.
+
+No icon library additions needed — `lucide-react` is already used (`Users`, `Wallet`, etc.); add `Lock` to the existing import.
+
+## 4. Files touched
+
+- New migration: rewrite `auto_complete_orders`, add `orders.dispute_hold_notified_at`, add `tx_admin_update` policy on `transactions`.
+- Edited: `src/pages/admin/Admin.tsx` — load order escrow_status into disputes view, add red Lock badge in Disputes and Orders tables, extend "Refund buyer" and "Release to seller" handlers to update transaction + order escrow state.
+
+No edge function changes (the existing `stripe-auto-transfer` cron handles the actual transfer for the seller-win case; `stripe-refund` handles the buyer-win case). No CSS, font, layout, or other page changes.
+
+## Technical notes
+
+- Notification deduping: `dispute_hold_notified_at IS NULL` gate ensures the seller/buyer pair is notified exactly once per disputed order, even though the cron runs every minute.
+- Decision tree enforcement: the rewritten function NEVER releases funds when status is `disputed` or when an open `disputes` row exists — both checks are in the same SQL `WHERE` clause for atomicity.
+- Day-4 timing is preserved via the existing `auto_complete_at` column (set on delivery); we only add gating, not new timing logic.
