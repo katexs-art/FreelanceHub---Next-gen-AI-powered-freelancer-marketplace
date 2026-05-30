@@ -1,0 +1,2 @@
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS stripe_transfer_id text;
+CREATE INDEX IF NOT EXISTS idx_transactions_pending_transfer ON public.transactions (seller_id) WHERE type='seller_credit' AND status='cleared' AND stripe_transfer_id IS NULL;
