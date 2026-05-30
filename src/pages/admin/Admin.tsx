@@ -1142,3 +1142,689 @@ function RejectSellerDialog({
     </Dialog>
   );
 }
+
+/* ============= Section titles ============= */
+function sectionTitle(k: NavKey) {
+  const m: Record<string, string> = {
+    overview: "Overview", buyers: "Buyers", sellers: "Sellers", verifications: "Verifications",
+    orders: "Orders", projects: "Projects and Bids", gigs: "Gigs", disputes: "Disputes", reviews: "Reviews",
+    revenue: "Revenue", escrow: "Escrow", payouts: "Payouts", refunds: "Refunds", withdrawals: "Withdrawals",
+    river: "River Controls", "river-analytics": "River Analytics",
+    categories: "Categories", announcements: "Announcements", featured: "Featured Sellers",
+    notifications: "Notifications", settings: "Settings", audit: "Audit Log", health: "System Health", reports: "Reports",
+  };
+  return m[k] ?? "Admin";
+}
+function sectionSubtitle(k: NavKey) {
+  return ({
+    overview: "Live snapshot of the platform.",
+    audit: "Read-only record of every admin action.",
+    health: "Live status of all platform systems.",
+  } as Record<string,string>)[k] ?? "";
+}
+
+/* ============= Overview ============= */
+function OverviewPanel({ indicators, health }: { indicators: Indicators; health: Health }) {
+  return (
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-3 gap-4">
+        <MiniStat label="Pending sellers" value={String(indicators.pendingSellers)} />
+        <MiniStat label="Open disputes" value={String(indicators.openDisputes)} />
+        <MiniStat label="Active orders" value={String(indicators.activeOrders)} />
+        <MiniStat label="Escrow held (orders)" value={String(indicators.escrowHeld)} />
+        <MiniStat label="Pending payouts" value={String(indicators.pendingPayouts)} />
+        <MiniStat label="River searches today" value={String(indicators.riverSearchesToday)} />
+      </div>
+      <div className="bg-background border border-border rounded-xl p-5 text-xs text-foreground-muted">
+        System status: {health
+          ? `Supabase ${health.supabase.status} · Stripe ${health.stripe.status} (${health.stripe.mode}) · Anthropic ${health.anthropic.status}`
+          : "checking…"}
+      </div>
+    </div>
+  );
+}
+
+/* ============= Escrow ============= */
+function EscrowPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const load = async () => {
+    const { data } = await supabase
+      .from("orders")
+      .select("id, order_number, price, platform_fee, status, escrow_status, created_at, auto_complete_at, delivered_at, buyer:buyer_id(username, full_name), seller:seller_id(username, full_name)")
+      .eq("escrow_status", "held")
+      .order("created_at", { ascending: false });
+    setRows(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+
+  const total = rows.reduce((s, r) => s + (r.price ?? 0), 0);
+  const releaseEarly = async (id: string) => {
+    if (!confirm("Release these funds to the seller now?")) return;
+    setBusy(id);
+    const nowIso = new Date().toISOString();
+    await supabase.from("orders").update({ status: "completed", completed_at: nowIso, escrow_status: "released", escrow_released_at: nowIso }).eq("id", id);
+    setBusy(null); load();
+  };
+  const lockFunds = async (id: string) => {
+    setBusy(id);
+    await supabase.from("orders").update({ status: "disputed" }).eq("id", id);
+    setBusy(null); load();
+  };
+  const exportCsv = () => {
+    const csv = ["order_number,buyer,seller,price,platform_fee,status,created_at"]
+      .concat(rows.map(r => [r.order_number, r.buyer?.username, r.seller?.username, r.price, r.platform_fee, r.status, r.created_at].join(",")))
+      .join("\n");
+    downloadCsv("escrow.csv", csv);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border p-5" style={{ background: "#fff7ed", borderColor: "#fed7aa" }}>
+        <div className="text-xs uppercase tracking-wide" style={{ color: "#9a3412" }}>Total Funds in Escrow</div>
+        <div className="text-3xl font-bold mt-1" style={{ color: "#9a3412" }}>{dollars(total)}</div>
+        <div className="text-xs mt-1" style={{ color: "#9a3412" }}>{rows.length} orders held</div>
+      </div>
+      <div className="flex justify-end"><Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button></div>
+      <Table headers={["Order","Buyer","Seller","Held","Fee","Status","Created","Actions"]}>
+        {rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-sm text-foreground-muted">No funds held in escrow.</td></tr>}
+        {rows.map((r) => {
+          const disputed = r.status === "disputed";
+          const bg = disputed ? "#fef2f2" : "transparent";
+          return (
+            <tr key={r.id} className="border-t border-border" style={{ background: bg }}>
+              <td className="p-3 font-mono text-xs">{r.order_number}</td>
+              <td className="p-3">{r.buyer?.full_name ?? r.buyer?.username ?? "—"}</td>
+              <td className="p-3">{r.seller?.full_name ?? r.seller?.username ?? "—"}</td>
+              <td className="p-3 font-medium">{dollars(r.price)}</td>
+              <td className="p-3">{dollars(r.platform_fee)}</td>
+              <td className="p-3"><StatusBadge variant={disputed ? "disputed" : "in-progress"} label={disputed ? "Disputed" : r.status.replace(/_/g," ")} /></td>
+              <td className="p-3 text-foreground-muted">{fmtDate(r.created_at)}</td>
+              <td className="p-3 flex gap-1.5">
+                <Button size="sm" variant="ghost" asChild><a href={`/orders/${r.id}`} target="_blank" rel="noreferrer">View</a></Button>
+                <Button size="sm" variant="outline" disabled={busy===r.id} onClick={() => releaseEarly(r.id)}>Release Early</Button>
+                {!disputed && <Button size="sm" variant="destructive" disabled={busy===r.id} onClick={() => lockFunds(r.id)}>Lock Funds</Button>}
+              </td>
+            </tr>
+          );
+        })}
+      </Table>
+    </div>
+  );
+}
+
+/* ============= Payouts ============= */
+function PayoutsPanel() {
+  const [pending, setPending] = useState<any[]>([]);
+  const [history, setHistory] = useState<any[]>([]);
+  const load = async () => {
+    const [p, h] = await Promise.all([
+      supabase.from("withdrawals").select("*, seller:seller_id(username, full_name, river_score)").eq("status", "requested").order("created_at", { ascending: false }),
+      supabase.from("withdrawals").select("*, seller:seller_id(username, full_name)").in("status", ["paid","failed"] as any).order("paid_at", { ascending: false }).limit(100),
+    ]);
+    setPending(p.data ?? []); setHistory(h.data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const approve = async (id: string) => {
+    const { data, error } = await supabase.functions.invoke("stripe-payout", { body: { withdrawal_id: id } });
+    if (error || data?.error) return toast.error(error?.message || data?.error || "Failed");
+    toast.success("Payout sent"); load();
+  };
+  const bulkApprove = async () => {
+    if (!confirm(`Approve ${pending.length} payouts?`)) return;
+    for (const w of pending) await approve(w.id);
+  };
+  return (
+    <div className="space-y-6">
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-semibold">Pending Payouts ({pending.length})</h3>
+          {pending.length > 0 && <Button size="sm" onClick={bulkApprove}>Bulk Approve All</Button>}
+        </div>
+        <Table headers={["Seller","River","Amount","Orders","Stripe","Requested","Action"]}>
+          {pending.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-sm text-foreground-muted">No pending payouts.</td></tr>}
+          {pending.map((w) => (
+            <tr key={w.id} className="border-t border-border">
+              <td className="p-3">{w.seller?.full_name ?? w.seller?.username}</td>
+              <td className="p-3 font-mono text-xs">{w.seller?.river_score ?? "—"}</td>
+              <td className="p-3 font-medium">{dollars(w.amount)}</td>
+              <td className="p-3">—</td>
+              <td className="p-3"><span className="text-xs">{w.method ?? "—"}</span></td>
+              <td className="p-3 text-foreground-muted">{fmtDate(w.created_at)}</td>
+              <td className="p-3"><Button size="sm" onClick={() => approve(w.id)}>Approve Payout</Button></td>
+            </tr>
+          ))}
+        </Table>
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Payout History</h3>
+        <Table headers={["Date","Seller","Amount","Transfer ID","Status"]}>
+          {history.map((w) => (
+            <tr key={w.id} className="border-t border-border">
+              <td className="p-3 text-foreground-muted">{fmtDate(w.paid_at ?? w.created_at)}</td>
+              <td className="p-3">{w.seller?.full_name ?? w.seller?.username}</td>
+              <td className="p-3 font-medium">{dollars(w.amount)}</td>
+              <td className="p-3 font-mono text-xs">{w.stripe_payout_id ?? "—"}</td>
+              <td className="p-3"><StatusBadge variant={w.status === "paid" ? "completed" : "banned"} label={w.status} /></td>
+            </tr>
+          ))}
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+/* ============= Refunds ============= */
+function RefundsPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [from, setFrom] = useState<string>("");
+  const [to, setTo] = useState<string>("");
+  const load = async () => {
+    let q = supabase.from("orders").select("id, order_number, price, platform_fee, refund_id, refunded_at, buyer:buyer_id(username, full_name), seller:seller_id(username, full_name)").not("refunded_at", "is", null).order("refunded_at", { ascending: false }).limit(500);
+    if (from) q = q.gte("refunded_at", from);
+    if (to) q = q.lte("refunded_at", to);
+    const { data } = await q;
+    setRows(data ?? []);
+  };
+  useEffect(() => { load(); }, [from, to]);
+  const start = new Date(); start.setDate(1); start.setHours(0,0,0,0);
+  const monthTotal = rows.filter(r => r.refunded_at && new Date(r.refunded_at) >= start).reduce((s, r) => s + (r.price ?? 0), 0);
+  const exportCsv = () => {
+    const csv = ["date,order,buyer,seller,amount,refund_id"]
+      .concat(rows.map(r => [r.refunded_at, r.order_number, r.buyer?.username, r.seller?.username, r.price, r.refund_id].join(","))).join("\n");
+    downloadCsv("refunds.csv", csv);
+  };
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl border p-5" style={{ background: "#fef2f2", borderColor: "#fecaca" }}>
+        <div className="text-xs uppercase tracking-wide" style={{ color: "#991b1b" }}>Refunds this month</div>
+        <div className="text-3xl font-bold mt-1" style={{ color: "#991b1b" }}>{dollars(monthTotal)}</div>
+      </div>
+      <div className="flex gap-2 items-center">
+        <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="w-40" />
+        <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="w-40" />
+        <div className="flex-1" />
+        <Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button>
+      </div>
+      <Table headers={["Date","Order","Buyer","Seller","Amount","Refund ID"]}>
+        {rows.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No refunds.</td></tr>}
+        {rows.map((r) => (
+          <tr key={r.id} className="border-t border-border">
+            <td className="p-3 text-foreground-muted">{fmtDate(r.refunded_at)}</td>
+            <td className="p-3 font-mono text-xs">{r.order_number}</td>
+            <td className="p-3">{r.buyer?.username ?? "—"}</td>
+            <td className="p-3">{r.seller?.username ?? "—"}</td>
+            <td className="p-3 font-medium">{dollars(r.price)}</td>
+            <td className="p-3 font-mono text-xs">{r.refund_id ?? "—"}</td>
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
+/* ============= Reviews ============= */
+function ReviewsPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [filter, setFilter] = useState<string>("all");
+  const [q, setQ] = useState("");
+  const [open, setOpen] = useState<string | null>(null);
+  const load = async () => {
+    let qy = supabase.from("reviews").select("id, rating, review_text, created_at, order_id, buyer:buyer_id(username, full_name), seller:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(500);
+    if (filter !== "all") qy = qy.eq("rating", Number(filter));
+    const { data } = await qy;
+    setRows(data ?? []);
+  };
+  useEffect(() => { load(); }, [filter]);
+  const remove = async (id: string) => {
+    if (!confirm("Remove this review? Both parties will be notified.")) return;
+    await supabase.from("reviews").delete().eq("id", id);
+    load();
+  };
+  const filtered = rows.filter(r => {
+    if (!q.trim()) return true;
+    const s = q.toLowerCase();
+    return (r.buyer?.username ?? "").toLowerCase().includes(s) || (r.seller?.username ?? "").toLowerCase().includes(s);
+  });
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2">
+        <Input placeholder="Search seller or buyer…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
+        <select className="border border-border rounded px-2 text-sm bg-background" value={filter} onChange={(e) => setFilter(e.target.value)}>
+          {["all","5","4","3","2","1"].map(o => <option key={o} value={o}>{o === "all" ? "All ratings" : `${o} star`}</option>)}
+        </select>
+      </div>
+      <Table headers={["Date","Buyer","Seller","Rating","Preview","Actions"]}>
+        {filtered.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No reviews.</td></tr>}
+        {filtered.map((r) => (
+          <Fragment key={r.id}>
+            <tr className="border-t border-border">
+              <td className="p-3 text-foreground-muted">{fmtDate(r.created_at)}</td>
+              <td className="p-3">{r.buyer?.username ?? "—"}</td>
+              <td className="p-3">{r.seller?.username ?? "—"}</td>
+              <td className="p-3">{"★".repeat(r.rating)}{"☆".repeat(5 - r.rating)}</td>
+              <td className="p-3 max-w-md truncate">{r.review_text ?? "—"}</td>
+              <td className="p-3 flex gap-1.5">
+                <Button size="sm" variant="ghost" onClick={() => setOpen(open === r.id ? null : r.id)}>{open === r.id ? "Hide" : "View"}</Button>
+                <Button size="sm" variant="destructive" onClick={() => remove(r.id)}>Remove</Button>
+              </td>
+            </tr>
+            {open === r.id && (
+              <tr className="border-t border-border bg-background-elevated/30">
+                <td colSpan={6} className="p-4 text-sm whitespace-pre-wrap">{r.review_text}</td>
+              </tr>
+            )}
+          </Fragment>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
+/* ============= Gigs ============= */
+function GigsPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [q, setQ] = useState("");
+  const [cat, setCat] = useState("all");
+  const [status, setStatus] = useState("all");
+  const load = async () => {
+    let qy = supabase.from("gigs").select("id, title, thumbnail_url, category, status, starting_price, total_orders, average_rating, created_at, seller:seller_id(username, full_name, river_score)").order("created_at", { ascending: false }).limit(500);
+    if (status !== "all") qy = qy.eq("status", status as any);
+    if (cat !== "all") qy = qy.eq("category", cat);
+    const { data } = await qy;
+    setRows(data ?? []);
+  };
+  useEffect(() => { load(); }, [cat, status]);
+  const cats = Array.from(new Set(rows.map(r => r.category))).filter(Boolean);
+  const filtered = rows.filter(r => !q.trim() || r.title?.toLowerCase().includes(q.toLowerCase()) || r.seller?.username?.toLowerCase().includes(q.toLowerCase()));
+  const setGigStatus = async (id: string, s: string) => { await supabase.from("gigs").update({ status: s as any }).eq("id", id); load(); };
+  const remove = async (id: string) => { if (!confirm("Delete gig?")) return; await supabase.from("gigs").delete().eq("id", id); load(); };
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2 flex-wrap">
+        <Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
+        <select className="border rounded px-2 text-sm bg-background" value={cat} onChange={(e) => setCat(e.target.value)}>
+          <option value="all">All categories</option>
+          {cats.map(c => <option key={c} value={c}>{c}</option>)}
+        </select>
+        <select className="border rounded px-2 text-sm bg-background" value={status} onChange={(e) => setStatus(e.target.value)}>
+          <option value="all">All status</option><option value="active">Active</option><option value="paused">Paused</option><option value="draft">Draft</option>
+        </select>
+      </div>
+      <Table headers={["","Title","Seller","Category","Price","Orders","Rating","Status","Actions"]}>
+        {filtered.map((g) => (
+          <tr key={g.id} className="border-t border-border">
+            <td className="p-2">{g.thumbnail_url ? <img src={g.thumbnail_url} alt="" className="h-10 w-14 object-cover rounded" /> : <div className="h-10 w-14 rounded bg-background-elevated" />}</td>
+            <td className="p-3 max-w-xs truncate">{g.title}</td>
+            <td className="p-3">{g.seller?.username} <span className="text-xs text-foreground-muted">· {g.seller?.river_score ?? "—"}</span></td>
+            <td className="p-3 text-xs">{g.category}</td>
+            <td className="p-3">{dollars(g.starting_price)}</td>
+            <td className="p-3">{g.total_orders}</td>
+            <td className="p-3">{Number(g.average_rating ?? 0).toFixed(1)}</td>
+            <td className="p-3 capitalize">{g.status}</td>
+            <td className="p-3 flex gap-1.5 flex-wrap">
+              <Button size="sm" variant="ghost" asChild><a href={`/gig/${g.id}`} target="_blank" rel="noreferrer">View</a></Button>
+              {g.status === "active"
+                ? <Button size="sm" variant="outline" onClick={() => setGigStatus(g.id, "paused")}>Pause</Button>
+                : <Button size="sm" variant="outline" onClick={() => setGigStatus(g.id, "active")}>Activate</Button>}
+              <Button size="sm" variant="destructive" onClick={() => remove(g.id)}>Remove</Button>
+            </td>
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
+/* ============= Projects ============= */
+function ProjectsPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  useEffect(() => {
+    supabase.from("project_posts").select("id, title, category, status, budget_min, budget_max, bid_count, created_at, buyer:buyer_id(username)").order("created_at", { ascending: false }).limit(200).then(({ data }) => setRows(data ?? []));
+  }, []);
+  return (
+    <Table headers={["Title","Buyer","Category","Budget","Bids","Status","Posted"]}>
+      {rows.map((p) => (
+        <tr key={p.id} className="border-t border-border">
+          <td className="p-3 max-w-xs truncate">{p.title}</td>
+          <td className="p-3">{p.buyer?.username ?? "—"}</td>
+          <td className="p-3 text-xs">{p.category ?? "—"}</td>
+          <td className="p-3 text-xs">${(p.budget_min ?? 0)/100} – ${(p.budget_max ?? 0)/100}</td>
+          <td className="p-3">{p.bid_count}</td>
+          <td className="p-3 capitalize">{p.status}</td>
+          <td className="p-3 text-foreground-muted">{fmtDate(p.created_at)}</td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+/* ============= Featured Sellers ============= */
+function FeaturedSellersPanel() {
+  const [items, setItems] = useState<any[]>([]);
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase.from("featured_sellers").select("id, position, seller_id").order("position");
+    if (!data || data.length === 0) { setItems([]); return; }
+    const { data: profs } = await supabase.from("profiles").select("id, full_name, username, avatar_url, primary_category, river_score").in("id", data.map((f: any) => f.seller_id));
+    const map = new Map((profs ?? []).map((p: any) => [p.id, p]));
+    setItems(data.map((f: any) => ({ ...f, profile: map.get(f.seller_id) })));
+  };
+  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    if (!search.trim()) { setResults([]); return; }
+    supabase.from("profiles").select("id, full_name, username, avatar_url, primary_category, river_score").eq("role", "seller").eq("seller_status", "approved").or(`username.ilike.%${search}%,full_name.ilike.%${search}%`).limit(8).then(({ data }) => setResults(data ?? []));
+  }, [search]);
+  const add = async (id: string) => {
+    if (items.length >= 12) return toast.error("Max 12 featured sellers");
+    if (items.some(i => i.seller_id === id)) return;
+    await supabase.from("featured_sellers").insert({ seller_id: id, position: items.length } as any);
+    setSearch(""); setResults([]); load();
+  };
+  const remove = async (id: string) => { await supabase.from("featured_sellers").delete().eq("id", id); load(); };
+  const move = async (idx: number, dir: -1 | 1) => {
+    const j = idx + dir; if (j < 0 || j >= items.length) return;
+    const a = items[idx], b = items[j];
+    await supabase.from("featured_sellers").update({ position: j }).eq("id", a.id);
+    await supabase.from("featured_sellers").update({ position: idx }).eq("id", b.id);
+    load();
+  };
+  return (
+    <div className="space-y-4">
+      <div className="relative max-w-md">
+        <Input placeholder="Search approved sellers to add…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        {results.length > 0 && (
+          <div className="absolute z-10 left-0 right-0 mt-1 bg-background border border-border rounded shadow-lg">
+            {results.map((r) => (
+              <button key={r.id} className="w-full text-left p-2 hover:bg-background-elevated text-sm" onClick={() => add(r.id)}>{r.full_name ?? r.username} <span className="text-foreground-muted text-xs">· {r.primary_category}</span></button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="grid sm:grid-cols-3 gap-3">
+        {items.length === 0 && <div className="text-sm text-foreground-muted">No featured sellers yet.</div>}
+        {items.map((it, i) => (
+          <div key={it.id} className="border border-border rounded-lg p-3 flex items-center gap-3">
+            <Avatar url={it.profile?.avatar_url} name={it.profile?.full_name} />
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium truncate">{it.profile?.full_name ?? it.profile?.username}</div>
+              <div className="text-xs text-foreground-muted truncate">{it.profile?.primary_category ?? "—"} · River {it.profile?.river_score ?? "—"}</div>
+            </div>
+            <div className="flex flex-col gap-1">
+              <Button size="sm" variant="ghost" onClick={() => move(i, -1)}>↑</Button>
+              <Button size="sm" variant="ghost" onClick={() => move(i, 1)}>↓</Button>
+            </div>
+            <Button size="sm" variant="destructive" onClick={() => remove(it.id)}>×</Button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============= Announcements ============= */
+function AnnouncementsPanel() {
+  const { profile } = useAuth();
+  const [title, setTitle] = useState("");
+  const [body, setBody] = useState("");
+  const [audience, setAudience] = useState("all");
+  const [channel, setChannel] = useState("in_app");
+  const [scheduledFor, setScheduledFor] = useState("");
+  const [history, setHistory] = useState<any[]>([]);
+  const load = async () => {
+    const { data } = await supabase.from("announcements").select("*").order("created_at", { ascending: false }).limit(50);
+    setHistory(data ?? []);
+  };
+  useEffect(() => { load(); }, []);
+  const send = async () => {
+    if (!title.trim() || !body.trim()) return toast.error("Title and body required");
+    const ins = await supabase.from("announcements").insert({
+      title, body, audience, channel,
+      scheduled_for: scheduledFor || null,
+      created_by: profile?.id,
+    } as any).select("id").single();
+    if (ins.error || !ins.data) return toast.error(ins.error?.message ?? "Failed");
+    if (!scheduledFor) {
+      const { error } = await supabase.functions.invoke("announcement-send", { body: { announcement_id: ins.data.id } });
+      if (error) return toast.error(error.message);
+    }
+    toast.success(scheduledFor ? "Scheduled" : "Sent");
+    setTitle(""); setBody(""); setScheduledFor(""); load();
+  };
+  return (
+    <div className="space-y-6">
+      <div className="bg-background border border-border rounded-xl p-5 space-y-3">
+        <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <Textarea placeholder="Message" value={body} onChange={(e) => setBody(e.target.value)} rows={4} />
+        <div className="flex gap-2 flex-wrap">
+          <select className="border rounded px-2 text-sm bg-background" value={audience} onChange={(e) => setAudience(e.target.value)}>
+            <option value="all">All users</option>
+            <option value="buyers">All buyers</option>
+            <option value="sellers">All sellers</option>
+          </select>
+          <select className="border rounded px-2 text-sm bg-background" value={channel} onChange={(e) => setChannel(e.target.value)}>
+            <option value="in_app">In-app only</option>
+            <option value="in_app_email">In-app + Email</option>
+          </select>
+          <Input type="datetime-local" value={scheduledFor} onChange={(e) => setScheduledFor(e.target.value)} className="w-56" />
+          <div className="flex-1" />
+          <Button onClick={send}>{scheduledFor ? "Schedule" : "Send now"}</Button>
+        </div>
+      </div>
+      <Table headers={["Title","Audience","Channel","Sent","Recipients"]}>
+        {history.map((a) => (
+          <tr key={a.id} className="border-t border-border">
+            <td className="p-3">{a.title}</td>
+            <td className="p-3 text-xs">{a.audience}</td>
+            <td className="p-3 text-xs">{a.channel}</td>
+            <td className="p-3 text-foreground-muted">{a.sent_at ? fmtDateTime(a.sent_at) : (a.scheduled_for ? `Scheduled ${fmtDateTime(a.scheduled_for)}` : "Draft")}</td>
+            <td className="p-3">{a.recipient_count}</td>
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
+/* ============= River Controls ============= */
+function RiverControlsPanel({ health }: { health: Health }) {
+  return (
+    <div className="space-y-4">
+      <div className="bg-background border border-border rounded-xl p-5">
+        <div className="text-xs uppercase tracking-wide text-foreground-muted">River API status</div>
+        <div className="text-lg font-semibold mt-1 flex items-center gap-2">
+          <span style={{ width: 10, height: 10, borderRadius: 999, background: health?.anthropic.status === "active" ? "#10b981" : "#ef4444" }} />
+          {health?.anthropic.status === "active" ? "Active" : "Error"}
+        </div>
+        <div className="text-xs text-foreground-muted mt-1">Last search: {health?.anthropic ? "see /admin/river-analytics" : "—"}</div>
+      </div>
+      <div className="text-xs text-foreground-muted">Use /admin/river-ops for the operations chat. Edit the system prompt in the river-public-match edge function.</div>
+    </div>
+  );
+}
+
+/* ============= River Analytics ============= */
+function RiverAnalyticsPanel() {
+  const [stats, setStats] = useState<any>({ total: 0, today: 0, week: 0, avg: 0 });
+  const [top, setTop] = useState<any[]>([]);
+  const [zero, setZero] = useState<any[]>([]);
+  useEffect(() => {
+    (async () => {
+      const today = startOfTodayIso();
+      const week = weekAgoIso();
+      const [all, td, wk] = await Promise.all([
+        supabase.from("ai_search_sessions").select("id, query, result_gig_ids, clicked_gig_id").limit(2000),
+        supabase.from("ai_search_sessions").select("id", { count: "exact", head: true }).gte("created_at", today),
+        supabase.from("ai_search_sessions").select("id", { count: "exact", head: true }).gte("created_at", week),
+      ]);
+      const data = all.data ?? [];
+      const avg = data.length ? data.reduce((s, r: any) => s + (r.result_gig_ids?.length ?? 0), 0) / data.length : 0;
+      setStats({ total: data.length, today: td.count ?? 0, week: wk.count ?? 0, avg: avg.toFixed(1) });
+
+      const counts = new Map<string, { count: number; results: number; clicks: number }>();
+      for (const r of data as any[]) {
+        const k = (r.query ?? "").toLowerCase().trim(); if (!k) continue;
+        const c = counts.get(k) ?? { count: 0, results: 0, clicks: 0 };
+        c.count++; c.results += r.result_gig_ids?.length ?? 0; if (r.clicked_gig_id) c.clicks++;
+        counts.set(k, c);
+      }
+      const arr = Array.from(counts.entries()).map(([q, v]) => ({ q, ...v, conv: v.count ? Math.round((v.clicks/v.count)*100) : 0, avgRes: v.count ? (v.results/v.count).toFixed(1) : "0" }));
+      setTop(arr.sort((a,b) => b.count - a.count).slice(0, 50));
+      setZero(arr.filter(a => a.results === 0).slice(0, 50));
+    })();
+  }, []);
+  return (
+    <div className="space-y-6">
+      <div className="grid sm:grid-cols-4 gap-4">
+        <Stat icon={Sparkles} label="All time" value={String(stats.total)} />
+        <Stat icon={Sparkles} label="Today" value={String(stats.today)} />
+        <Stat icon={Sparkles} label="Last 7 days" value={String(stats.week)} />
+        <Stat icon={Sparkles} label="Avg matches" value={String(stats.avg)} />
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Top searches</h3>
+        <Table headers={["Query","Count","Avg results","Conv %"]}>
+          {top.map((r) => (
+            <tr key={r.q} className="border-t border-border">
+              <td className="p-3">{r.q}</td><td className="p-3">{r.count}</td><td className="p-3">{r.avgRes}</td><td className="p-3">{r.conv}%</td>
+            </tr>
+          ))}
+        </Table>
+      </div>
+      <div>
+        <h3 className="text-sm font-semibold mb-2">Zero-result searches</h3>
+        <Table headers={["Query","Count"]}>
+          {zero.length === 0 && <tr><td colSpan={2} className="p-6 text-center text-sm text-foreground-muted">None.</td></tr>}
+          {zero.map((r) => (<tr key={r.q} className="border-t border-border"><td className="p-3">{r.q}</td><td className="p-3">{r.count}</td></tr>))}
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+/* ============= Categories ============= */
+function CategoriesPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  useEffect(() => { supabase.from("categories").select("*").order("sort_order").then(({ data }) => setRows(data ?? [])); }, []);
+  return (
+    <Table headers={["Name","Slug","Active","Sort"]}>
+      {rows.map((c) => (
+        <tr key={c.id} className="border-t border-border">
+          <td className="p-3">{c.name}</td><td className="p-3 font-mono text-xs">{c.slug}</td>
+          <td className="p-3">{c.is_active ? "Yes" : "No"}</td><td className="p-3">{c.sort_order}</td>
+        </tr>
+      ))}
+    </Table>
+  );
+}
+
+/* ============= Notifications composer ============= */
+function NotificationsComposerPanel() {
+  const [title, setTitle] = useState(""); const [body, setBody] = useState("");
+  const send = async () => {
+    if (!title.trim()) return toast.error("Title required");
+    const { data: users } = await supabase.from("profiles").select("id");
+    if (!users) return;
+    for (let i = 0; i < users.length; i += 500) {
+      const slice = users.slice(i, i + 500).map((u: any) => ({ user_id: u.id, type: "system" as any, title, body }));
+      await supabase.from("notifications").insert(slice as any);
+    }
+    toast.success(`Sent to ${users.length} users`); setTitle(""); setBody("");
+  };
+  return (
+    <div className="bg-background border border-border rounded-xl p-5 max-w-2xl space-y-3">
+      <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
+      <Textarea placeholder="Body" value={body} onChange={(e) => setBody(e.target.value)} rows={5} />
+      <Button onClick={send}>Send to all users</Button>
+    </div>
+  );
+}
+
+/* ============= Settings ============= */
+function SettingsPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  useEffect(() => { supabase.from("platform_settings").select("*").order("key").then(({ data }) => setRows(data ?? [])); }, []);
+  return (
+    <Table headers={["Key","Value","Updated"]}>
+      {rows.length === 0 && <tr><td colSpan={3} className="p-6 text-center text-sm text-foreground-muted">No platform settings configured.</td></tr>}
+      {rows.map((s) => (<tr key={s.id} className="border-t border-border"><td className="p-3 font-mono text-xs">{s.key}</td><td className="p-3">{s.value}</td><td className="p-3 text-foreground-muted">{fmtDateTime(s.updated_at)}</td></tr>))}
+    </Table>
+  );
+}
+
+/* ============= Audit Log ============= */
+function AuditLogPanel() {
+  const [rows, setRows] = useState<any[]>([]);
+  const [q, setQ] = useState("");
+  useEffect(() => { supabase.from("audit_log").select("*").order("created_at", { ascending: false }).limit(500).then(({ data }) => setRows(data ?? [])); }, []);
+  const filtered = rows.filter(r => !q.trim() || JSON.stringify(r).toLowerCase().includes(q.toLowerCase()));
+  const exportCsv = () => {
+    const csv = ["timestamp,admin,action,target_type,target_id,description,ip"]
+      .concat(filtered.map(r => [r.created_at, r.admin_name, r.action_type, r.target_type, r.target_id, JSON.stringify(r.description ?? ""), r.ip_address].join(",")))
+      .join("\n");
+    downloadCsv("audit_log.csv", csv);
+  };
+  return (
+    <div className="space-y-3">
+      <div className="flex gap-2"><Input placeholder="Search…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" /><div className="flex-1" /><Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button></div>
+      <Table headers={["Time","Admin","Action","Target","Description","IP"]}>
+        {filtered.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No audit entries.</td></tr>}
+        {filtered.map((r) => (
+          <tr key={r.id} className="border-t border-border">
+            <td className="p-3 text-foreground-muted text-xs">{fmtDateTime(r.created_at)}</td>
+            <td className="p-3">{r.admin_name ?? "—"}</td>
+            <td className="p-3 text-xs">{r.action_type}</td>
+            <td className="p-3 text-xs">{r.target_type ?? "—"} {r.target_id ? `#${String(r.target_id).slice(0,8)}` : ""}</td>
+            <td className="p-3 max-w-md truncate">{r.description ?? "—"}</td>
+            <td className="p-3 font-mono text-xs">{r.ip_address ?? "—"}</td>
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
+/* ============= System Health ============= */
+function SystemHealthPanel({ health }: { health: Health }) {
+  const [logs, setLogs] = useState<any[]>([]);
+  const load = () => supabase.from("webhook_logs").select("*").order("created_at", { ascending: false }).limit(100).then(({ data }) => setLogs(data ?? []));
+  useEffect(() => { load(); const id = setInterval(load, 30_000); return () => clearInterval(id); }, []);
+  const Card = ({ name, ok, lines }: { name: string; ok: boolean; lines: string[] }) => (
+    <div className="bg-background border border-border rounded-xl p-5">
+      <div className="flex items-center gap-2 mb-2">
+        <span style={{ width: 10, height: 10, borderRadius: 999, background: ok ? "#10b981" : "#ef4444" }} />
+        <div className="font-semibold">{name}</div>
+      </div>
+      {lines.map((l, i) => <div key={i} className="text-xs text-foreground-muted">{l}</div>)}
+    </div>
+  );
+  return (
+    <div className="space-y-4">
+      <div className="grid sm:grid-cols-4 gap-4">
+        <Card name="Supabase" ok={health?.supabase.status === "connected"} lines={[health?.supabase.status === "connected" ? "Connected" : "Disconnected", `${health?.supabase.latency_ms ?? "—"} ms`, `Checked ${fmtDateTime(health?.last_checked)}`]} />
+        <Card name="Stripe" ok={health?.stripe.status === "live"} lines={[`${health?.stripe.mode ?? "test"} mode`, "Webhook errors 24h: —"]} />
+        <Card name="Anthropic" ok={health?.anthropic.status === "active"} lines={[health?.anthropic.status === "active" ? "Active" : "Error", "Errors 24h: 0"]} />
+        <Card name="Email" ok={health?.email?.status === "connected"} lines={[health?.email?.status === "connected" ? "Connected" : "Not configured"]} />
+      </div>
+      <h3 className="text-sm font-semibold">Recent events</h3>
+      <Table headers={["Time","Service","Event","Status"]}>
+        {logs.map((l) => (
+          <tr key={l.id} className="border-t border-border">
+            <td className="p-3 text-xs text-foreground-muted">{fmtDateTime(l.created_at)}</td>
+            <td className="p-3 text-xs">{l.event_type?.split(".")[0] ?? "—"}</td>
+            <td className="p-3 text-xs">{l.event_type}</td>
+            <td className="p-3"><span style={{ color: l.status === "success" ? "#10b981" : "#ef4444", fontSize: 11 }}>{l.status}</span></td>
+          </tr>
+        ))}
+      </Table>
+    </div>
+  );
+}
+
+function downloadCsv(filename: string, content: string) {
+  const blob = new Blob([content], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
