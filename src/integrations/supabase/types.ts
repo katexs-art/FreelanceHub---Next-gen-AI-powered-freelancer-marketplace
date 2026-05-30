@@ -635,7 +635,10 @@ export type Database = {
           custom_offer_id: string | null
           id: string
           is_read: boolean
+          message_type: string
           order_id: string | null
+          pitch_delivery_days: number | null
+          pitch_price: number | null
           recipient_id: string
           sender_id: string
         }
@@ -647,7 +650,10 @@ export type Database = {
           custom_offer_id?: string | null
           id?: string
           is_read?: boolean
+          message_type?: string
           order_id?: string | null
+          pitch_delivery_days?: number | null
+          pitch_price?: number | null
           recipient_id: string
           sender_id: string
         }
@@ -659,7 +665,10 @@ export type Database = {
           custom_offer_id?: string | null
           id?: string
           is_read?: boolean
+          message_type?: string
           order_id?: string | null
+          pitch_delivery_days?: number | null
+          pitch_price?: number | null
           recipient_id?: string
           sender_id?: string
         }
@@ -1686,7 +1695,12 @@ export type Database = {
         Returns: string
       }
       submit_river_pitch: {
-        Args: { _content: string; _search_id: string }
+        Args: {
+          _content: string
+          _delivery_days: number
+          _price: number
+          _search_id: string
+        }
         Returns: string
       }
       suspend_seller: { Args: { _seller: string }; Returns: undefined }
