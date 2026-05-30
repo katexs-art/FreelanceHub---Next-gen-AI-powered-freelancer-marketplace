@@ -42,6 +42,18 @@ Deno.serve(async (req) => {
   );
 
   try {
+    // Idempotency: skip if this event id has already been processed
+    const { error: dedupErr } = await admin
+      .from("webhook_events")
+      .insert({ id: event.id, source: "stripe", event_type: event.type });
+    if (dedupErr) {
+      // unique violation = already processed; ack so Stripe stops retrying
+      console.log("webhook event already processed", event.id);
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const md = session.metadata ?? {};
