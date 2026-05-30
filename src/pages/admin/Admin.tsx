@@ -1511,7 +1511,7 @@ function ProjectsPanel() {
           <td className="p-3 text-xs">{p.category ?? "—"}</td>
           <td className="p-3 text-xs">${(p.budget_min ?? 0)/100} – ${(p.budget_max ?? 0)/100}</td>
           <td className="p-3">{p.bid_count}</td>
-          <td className="p-3 capitalize">{p.status}</td>
+          <td className="p-3"><StatusBadge variant={genericStatusVariant(p.status)} label={prettyStatus(p.status)} /></td>
           <td className="p-3 text-foreground-muted">{fmtDate(p.created_at)}</td>
         </tr>
       ))}
