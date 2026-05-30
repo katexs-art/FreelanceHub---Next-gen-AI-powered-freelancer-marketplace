@@ -36,8 +36,9 @@ type NavKey =
 
 /* ------------- Status badge ------------- */
 type StatusVariant =
-  | "pending" | "approved" | "suspended" | "banned" | "disputed"
-  | "completed" | "in-progress" | "late" | "funds-locked" | "funds-released";
+  | "pending" | "approved" | "active" | "suspended" | "banned" | "disputed"
+  | "completed" | "in-progress" | "late" | "funds-locked" | "funds-released"
+  | "seller" | "buyer";
 
 function StatusBadge({ variant, label }: { variant: StatusVariant; label?: string }) {
   const text = label ?? variant.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -55,10 +56,29 @@ function orderStatusVariant(status: string): StatusVariant {
     case "completed": return "completed";
     case "disputed": return "disputed";
     case "cancelled": return "banned";
+    case "active": return "active";
+    case "pending": case "pending_payment": case "pending_requirements": return "pending";
     case "delivered": case "in_progress": case "in_revision": return "in-progress";
     case "late": return "late";
     default: return "in-progress";
   }
+}
+
+function genericStatusVariant(status: string): StatusVariant {
+  const s = (status ?? "").toLowerCase();
+  if (s === "active" || s === "approved" || s === "paid" || s === "completed" || s === "cleared" || s === "released") return "active";
+  if (s === "pending" || s === "requested" || s === "processing" || s === "pending_approval" || s === "onboarding") return "pending";
+  if (s === "in_progress" || s === "in-progress" || s === "open" || s === "delivered" || s === "in_revision") return "in-progress";
+  if (s === "completed") return "completed";
+  if (s === "disputed") return "disputed";
+  if (s === "late" || s === "overdue") return "late";
+  if (s === "suspended" || s === "paused") return "suspended";
+  if (s === "banned" || s === "rejected" || s === "failed" || s === "cancelled" || s === "refunded") return "banned";
+  return "in-progress";
+}
+
+function prettyStatus(s: string) {
+  return (s ?? "").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 function sellerStatusVariant(s: string): StatusVariant {
@@ -1009,7 +1029,7 @@ function SellerDetail({
           {(gigs ?? []).map((g) => (
             <tr key={g.id} className="border-t border-border">
               <td className="p-2">{g.title}</td>
-              <td className="p-2 capitalize">{g.status}</td>
+              <td className="p-2"><StatusBadge variant={genericStatusVariant(g.status)} label={prettyStatus(g.status)} /></td>
               <td className="p-2">{dollars(g.starting_price)}</td>
               <td className="p-2">{g.total_orders}</td>
               <td className="p-2">{Number(g.average_rating ?? 0).toFixed(1)}</td>
@@ -1054,7 +1074,7 @@ function SellerDetail({
             <tr key={t.id} className="border-t border-border">
               <td className="p-2 capitalize">{t.type.replace(/_/g, " ")}</td>
               <td className="p-2">{dollars(t.amount)}</td>
-              <td className="p-2 capitalize">{t.status}</td>
+              <td className="p-2"><StatusBadge variant={genericStatusVariant(t.status)} label={prettyStatus(t.status)} /></td>
               <td className="p-2 text-foreground-muted">{fmtDate(t.created_at)}</td>
             </tr>
           ))}
@@ -1461,7 +1481,7 @@ function GigsPanel() {
             <td className="p-3">{dollars(g.starting_price)}</td>
             <td className="p-3">{g.total_orders}</td>
             <td className="p-3">{Number(g.average_rating ?? 0).toFixed(1)}</td>
-            <td className="p-3 capitalize">{g.status}</td>
+            <td className="p-3"><StatusBadge variant={genericStatusVariant(g.status)} label={prettyStatus(g.status)} /></td>
             <td className="p-3 flex gap-1.5 flex-wrap">
               <Button size="sm" variant="ghost" asChild><a href={`/gig/${g.id}`} target="_blank" rel="noreferrer">View</a></Button>
               {g.status === "active"
@@ -1491,7 +1511,7 @@ function ProjectsPanel() {
           <td className="p-3 text-xs">{p.category ?? "—"}</td>
           <td className="p-3 text-xs">${(p.budget_min ?? 0)/100} – ${(p.budget_max ?? 0)/100}</td>
           <td className="p-3">{p.bid_count}</td>
-          <td className="p-3 capitalize">{p.status}</td>
+          <td className="p-3"><StatusBadge variant={genericStatusVariant(p.status)} label={prettyStatus(p.status)} /></td>
           <td className="p-3 text-foreground-muted">{fmtDate(p.created_at)}</td>
         </tr>
       ))}
