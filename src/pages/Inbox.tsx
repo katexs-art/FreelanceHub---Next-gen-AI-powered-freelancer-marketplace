@@ -25,6 +25,9 @@ interface Msg {
   id: string; conversation_id: string; sender_id: string; recipient_id: string;
   content: string | null; created_at: string; is_read: boolean;
   custom_offer_id: string | null;
+  message_type?: string | null;
+  pitch_price?: number | null;
+  pitch_delivery_days?: number | null;
 }
 
 export default function Inbox() {
@@ -176,6 +179,66 @@ export default function Inbox() {
                     return (
                       <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
                         <CustomOfferCard offerId={m.custom_offer_id} />
+                      </div>
+                    );
+                  }
+                  if (m.message_type === "pitch") {
+                    const priceDollars = m.pitch_price != null ? (m.pitch_price / 100).toFixed(0) : null;
+                    return (
+                      <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+                        <div style={{
+                          background: "#fff", borderLeft: "3px solid #000",
+                          padding: 16, borderRadius: 8, maxWidth: "70%",
+                          boxShadow: "0 1px 2px rgba(0,0,0,0.04)", border: "1px solid #eee", borderLeftWidth: 3,
+                        }}>
+                          <div style={{ fontSize: 11, color: "#999", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 8 }}>
+                            Pitch
+                          </div>
+                          <div style={{ whiteSpace: "pre-line", fontSize: 14, color: "#111", lineHeight: 1.5 }}>
+                            {m.content}
+                          </div>
+                          <hr style={{ borderColor: "#eee", borderTop: "1px solid #eee", borderBottom: "none", margin: "12px 0" }} />
+                          {priceDollars && (
+                            <div style={{ fontSize: 14, marginBottom: 4 }}>
+                              <span style={{ color: "#666" }}>Proposed Price: </span>
+                              <span style={{ color: "#15803d", fontWeight: 700 }}>${priceDollars}</span>
+                            </div>
+                          )}
+                          {m.pitch_delivery_days != null && (
+                            <div style={{ fontSize: 14, color: "#111" }}>
+                              <span style={{ color: "#666" }}>Delivery Time: </span>
+                              <span style={{ fontWeight: 600 }}>{m.pitch_delivery_days} days</span>
+                            </div>
+                          )}
+                          {!mine && (
+                            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                              <button
+                                onClick={() => nav(`/u/${active?.other?.username ?? active?.other?.id}?pitch=${m.id}`)}
+                                style={{
+                                  background: "#000", color: "#fff", border: "none",
+                                  padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",
+                                }}
+                              >
+                                Accept & Place Order
+                              </button>
+                              <button
+                                onClick={() => {
+                                  const el = document.querySelector<HTMLInputElement>('input[placeholder="Write a message…"]');
+                                  el?.focus();
+                                }}
+                                style={{
+                                  background: "#fff", color: "#000", border: "1px solid #000",
+                                  padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer",
+                                }}
+                              >
+                                Reply
+                              </button>
+                            </div>
+                          )}
+                          <div style={{ fontSize: 10, color: "#999", marginTop: 8 }}>
+                            {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </div>
+                        </div>
                       </div>
                     );
                   }
