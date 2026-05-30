@@ -30,7 +30,7 @@ export default function Admin() {
       supabase.from("profiles").select("id, full_name, username, email, role, created_at").order("created_at", { ascending: false }).limit(25),
       supabase.from("orders").select("id, order_number, status, price, created_at, buyer:buyer_id(username), seller:seller_id(username)").order("created_at", { ascending: false }).limit(25),
       supabase.from("withdrawals").select("id, amount, status, created_at, method, failure_reason, seller_id, seller:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(25),
-      supabase.from("disputes").select("id, status, reason, created_at, order_id").order("created_at", { ascending: false }).limit(25),
+      supabase.from("disputes").select("id, status, reason, created_at, order_id, order:order_id(escrow_status, status)").order("created_at", { ascending: false }).limit(25),
     ]);
     setStats({
       users: u.count ?? 0, gigs: g.count ?? 0, orders: o.count ?? 0,
