@@ -499,144 +499,164 @@ export default function Admin() {
 
   return (
     <AppShell>
-      <div className="max-w-6xl space-y-6">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold">Admin</h1>
-            <p className="text-sm text-foreground-muted mt-1">Platform overview and operations.</p>
-          </div>
-          <a href="/admin/river-ops" className="text-sm font-mono uppercase tracking-[0.14em] border-hairline rounded px-3 py-2 hover:bg-white/[0.03] transition-colors">
-            River Ops →
-          </a>
-        </header>
+      <div className="flex items-stretch -mx-4 -my-4" style={{ minHeight: "calc(100vh - 64px)" }}>
+        <AdminSidebar active={active} indicators={indicators} health={health} />
 
-        <div className="grid sm:grid-cols-4 gap-4">
-          <Stat icon={Users} label="Users" value={stats.users.toString()} />
-          <Stat icon={ShoppingBag} label="Gigs" value={stats.gigs.toString()} />
-          <Stat icon={Wallet} label="Orders" value={stats.orders.toString()} />
-          <Stat icon={Wallet} label="GMV" value={dollars(stats.gmv)} />
-        </div>
+        <div className="flex-1 min-w-0 p-6 bg-background">
+          <header className="flex items-start justify-between gap-4 mb-6">
+            <div>
+              <h1 className="text-2xl font-bold">{sectionTitle(active)}</h1>
+              <p className="text-sm text-foreground-muted mt-1">{sectionSubtitle(active)}</p>
+            </div>
+            <a href="/admin/river-ops" className="text-sm font-mono uppercase tracking-[0.14em] border-hairline rounded px-3 py-2 hover:bg-white/[0.03] transition-colors">
+              River Ops →
+            </a>
+          </header>
 
-        <div className="flex gap-5 items-start">
-          <AdminNav active={active} onChange={setActive} indicators={indicators} />
+          {active === "overview" && (
+            <div className="space-y-6">
+              <div className="grid sm:grid-cols-4 gap-4">
+                <Stat icon={Users} label="Users" value={stats.users.toString()} />
+                <Stat icon={ShoppingBag} label="Gigs" value={stats.gigs.toString()} />
+                <Stat icon={Wallet} label="Orders" value={stats.orders.toString()} />
+                <Stat icon={Wallet} label="GMV" value={dollars(stats.gmv)} />
+              </div>
+              <OverviewPanel indicators={indicators} health={health} />
+            </div>
+          )}
 
-          <div className="flex-1 min-w-0">
-            {active === "buyers" && (
-              <BuyersTable
-                rows={buyers}
-                aggs={buyerAggs}
-                onNotify={(u) => setNotifyUser({ id: u.id, name: u.full_name ?? u.username ?? u.email })}
-                onSuspend={(u) => suspendUser(u.id, u.full_name ?? u.username ?? u.email)}
-                onBan={(u) => banUser(u.id, u.full_name ?? u.username ?? u.email)}
-              />
-            )}
+          {active === "buyers" && (
+            <BuyersTable
+              rows={buyers}
+              aggs={buyerAggs}
+              onNotify={(u) => setNotifyUser({ id: u.id, name: u.full_name ?? u.username ?? u.email })}
+              onSuspend={(u) => suspendUser(u.id, u.full_name ?? u.username ?? u.email)}
+              onBan={(u) => banUser(u.id, u.full_name ?? u.username ?? u.email)}
+            />
+          )}
 
-            {active === "sellers" && (
-              <SellersTable
-                rows={sortedSellers}
-                applications={applications}
-                aggs={sellerAggs}
-                accts={sellerAccts}
-                onNotify={(u) => setNotifyUser({ id: u.id, name: u.full_name ?? u.username ?? u.email })}
-                onSuspend={(u) => suspendUser(u.id, u.full_name ?? u.username ?? u.email)}
-                onBan={(u) => banUser(u.id, u.full_name ?? u.username ?? u.email)}
-                onApprove={(u) => approveSeller(u.id)}
-                onReject={(u) => setRejectSeller({ id: u.id, name: u.full_name ?? u.username ?? u.email })}
-              />
-            )}
+          {active === "sellers" && (
+            <SellersTable
+              rows={sortedSellers}
+              applications={applications}
+              aggs={sellerAggs}
+              accts={sellerAccts}
+              onNotify={(u) => setNotifyUser({ id: u.id, name: u.full_name ?? u.username ?? u.email })}
+              onSuspend={(u) => suspendUser(u.id, u.full_name ?? u.username ?? u.email)}
+              onBan={(u) => banUser(u.id, u.full_name ?? u.username ?? u.email)}
+              onApprove={(u) => approveSeller(u.id)}
+              onReject={(u) => setRejectSeller({ id: u.id, name: u.full_name ?? u.username ?? u.email })}
+            />
+          )}
 
-            {active === "orders" && (
-              <Table headers={["Order", "Buyer", "Seller", "Amount", "Status", "Funds", "Date"]}>
-                {orders.map((o) => (
-                  <tr key={o.id} className="border-t border-border">
-                    <td className="p-3 font-mono text-xs">{o.order_number}</td>
-                    <td className="p-3">{o.buyer?.username ?? "—"}</td>
-                    <td className="p-3">{o.seller?.username ?? "—"}</td>
-                    <td className="p-3 font-medium">{dollars(o.price)}</td>
-                    <td className="p-3"><StatusBadge variant={orderStatusVariant(o.status)} label={o.status.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())} /></td>
-                    <td className="p-3">
-                      {o.status === "disputed" || o.escrow_status === "held"
-                        ? <StatusBadge variant="funds-locked" label="Funds Locked" />
-                        : o.escrow_status === "released"
-                          ? <StatusBadge variant="funds-released" label="Funds Released" />
-                          : <span className="text-xs text-foreground-muted">—</span>}
-                    </td>
-                    <td className="p-3 text-foreground-muted">{new Date(o.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-              </Table>
-            )}
-
-            {active === "revenue" && <RevenuePanel rows={revenueRows} />}
-
-            {active === "withdrawals" && (
-              <Table headers={["Seller", "Method", "Amount", "Status", "Requested", "Actions"]}>
-                {withdrawals.map((w) => {
-                  const v: StatusVariant = w.status === "paid" ? "completed" : w.status === "failed" ? "banned" : "in-progress";
-                  return (
-                    <tr key={w.id} className="border-t border-border">
-                      <td className="p-3">{w.seller?.full_name ?? w.seller?.username ?? "—"}</td>
-                      <td className="p-3 text-xs">
-                        <span className="px-2 py-0.5 rounded-full bg-background-elevated capitalize">
-                          {w.method?.replace("_", " ") ?? "—"}
-                        </span>
-                      </td>
-                      <td className="p-3 font-medium">{dollars(w.amount)}</td>
-                      <td className="p-3" title={w.failure_reason ?? ""}><StatusBadge variant={v} label={w.status.charAt(0).toUpperCase() + w.status.slice(1)} /></td>
-                      <td className="p-3 text-foreground-muted">{new Date(w.created_at).toLocaleDateString()}</td>
-                      <td className="p-3 flex gap-1.5">
-                        {(w.status === "requested" || w.status === "processing") && (
-                          <Button size="sm" onClick={() => processStripePayout(w.id)}>Pay out</Button>
-                        )}
-                        {(w.status === "requested" || w.status === "processing") && (
-                          <>
-                            <Button size="sm" variant="ghost" onClick={() => updateWithdrawal(w.id, "paid")}>Mark paid</Button>
-                            <Button size="sm" variant="ghost" onClick={() => updateWithdrawal(w.id, "failed")}>Fail</Button>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </Table>
-            )}
-
-            {active === "disputes" && (
-              <Table headers={["Order", "Reason", "Status", "Funds", "Opened", "Actions"]}>
-                {disputes.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
-                {disputes.map((d) => (
-                  <tr key={d.id} className="border-t border-border">
-                    <td className="p-3 font-mono text-xs">{d.order_id.slice(0, 8)}</td>
-                    <td className="p-3 max-w-md truncate">{d.reason}</td>
-                    <td className="p-3">
-                      {d.status === "open"
-                        ? <StatusBadge variant="disputed" label="Open" />
-                        : <StatusBadge variant="completed" label={d.status.replace(/_/g, " ")} />}
-                    </td>
-                    <td className="p-3">
-                      {d.order?.escrow_status === "held"
-                        ? <StatusBadge variant="funds-locked" label="Funds Locked" />
+          {active === "orders" && (
+            <Table headers={["Order", "Buyer", "Seller", "Amount", "Status", "Funds", "Date"]}>
+              {orders.map((o) => (
+                <tr key={o.id} className="border-t border-border">
+                  <td className="p-3 font-mono text-xs">{o.order_number}</td>
+                  <td className="p-3">{o.buyer?.username ?? "—"}</td>
+                  <td className="p-3">{o.seller?.username ?? "—"}</td>
+                  <td className="p-3 font-medium">{dollars(o.price)}</td>
+                  <td className="p-3"><StatusBadge variant={orderStatusVariant(o.status)} label={o.status.replace(/_/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase())} /></td>
+                  <td className="p-3">
+                    {o.status === "disputed" || o.escrow_status === "held"
+                      ? <StatusBadge variant="funds-locked" label="Funds Locked" />
+                      : o.escrow_status === "released"
+                        ? <StatusBadge variant="funds-released" label="Funds Released" />
                         : <span className="text-xs text-foreground-muted">—</span>}
+                  </td>
+                  <td className="p-3 text-foreground-muted">{new Date(o.created_at).toLocaleDateString()}</td>
+                </tr>
+              ))}
+            </Table>
+          )}
+
+          {active === "revenue" && <RevenuePanel rows={revenueRows} />}
+
+          {active === "withdrawals" && (
+            <Table headers={["Seller", "Method", "Amount", "Status", "Requested", "Actions"]}>
+              {withdrawals.map((w) => {
+                const v: StatusVariant = w.status === "paid" ? "completed" : w.status === "failed" ? "banned" : "in-progress";
+                return (
+                  <tr key={w.id} className="border-t border-border">
+                    <td className="p-3">{w.seller?.full_name ?? w.seller?.username ?? "—"}</td>
+                    <td className="p-3 text-xs">
+                      <span className="px-2 py-0.5 rounded-full bg-background-elevated capitalize">
+                        {w.method?.replace("_", " ") ?? "—"}
+                      </span>
                     </td>
-                    <td className="p-3 text-foreground-muted">{new Date(d.created_at).toLocaleDateString()}</td>
+                    <td className="p-3 font-medium">{dollars(w.amount)}</td>
+                    <td className="p-3" title={w.failure_reason ?? ""}><StatusBadge variant={v} label={w.status.charAt(0).toUpperCase() + w.status.slice(1)} /></td>
+                    <td className="p-3 text-foreground-muted">{new Date(w.created_at).toLocaleDateString()}</td>
                     <td className="p-3 flex gap-1.5">
-                      {d.status === "open" && (
+                      {(w.status === "requested" || w.status === "processing") && (
+                        <Button size="sm" onClick={() => processStripePayout(w.id)}>Pay out</Button>
+                      )}
+                      {(w.status === "requested" || w.status === "processing") && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id, d.id)}>Refund buyer</Button>
-                          <Button size="sm" variant="ghost" onClick={() => releaseToSeller(d.order_id, d.id)}>Release to seller</Button>
+                          <Button size="sm" variant="ghost" onClick={() => updateWithdrawal(w.id, "paid")}>Mark paid</Button>
+                          <Button size="sm" variant="ghost" onClick={() => updateWithdrawal(w.id, "failed")}>Fail</Button>
                         </>
                       )}
                     </td>
                   </tr>
-                ))}
-              </Table>
-            )}
+                );
+              })}
+            </Table>
+          )}
 
-            {active === "verifications" && <VerificationsQueue />}
-            {active === "reports" && <ReportsQueue />}
-          </div>
+          {active === "disputes" && (
+            <Table headers={["Order", "Reason", "Status", "Funds", "Opened", "Actions"]}>
+              {disputes.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
+              {disputes.map((d) => (
+                <tr key={d.id} className="border-t border-border">
+                  <td className="p-3 font-mono text-xs">{d.order_id.slice(0, 8)}</td>
+                  <td className="p-3 max-w-md truncate">{d.reason}</td>
+                  <td className="p-3">
+                    {d.status === "open"
+                      ? <StatusBadge variant="disputed" label="Open" />
+                      : <StatusBadge variant="completed" label={d.status.replace(/_/g, " ")} />}
+                  </td>
+                  <td className="p-3">
+                    {d.order?.escrow_status === "held"
+                      ? <StatusBadge variant="funds-locked" label="Funds Locked" />
+                      : <span className="text-xs text-foreground-muted">—</span>}
+                  </td>
+                  <td className="p-3 text-foreground-muted">{new Date(d.created_at).toLocaleDateString()}</td>
+                  <td className="p-3 flex gap-1.5">
+                    {d.status === "open" && (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id, d.id)}>Refund buyer</Button>
+                        <Button size="sm" variant="ghost" onClick={() => releaseToSeller(d.order_id, d.id)}>Release to seller</Button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </Table>
+          )}
+
+          {active === "verifications" && <VerificationsQueue />}
+          {active === "reports" && <ReportsQueue />}
+
+          {active === "escrow" && <EscrowPanel />}
+          {active === "payouts" && <PayoutsPanel />}
+          {active === "refunds" && <RefundsPanel />}
+          {active === "reviews" && <ReviewsPanel />}
+          {active === "gigs" && <GigsPanel />}
+          {active === "projects" && <ProjectsPanel />}
+          {active === "featured" && <FeaturedSellersPanel />}
+          {active === "announcements" && <AnnouncementsPanel />}
+          {active === "river" && <RiverControlsPanel health={health} />}
+          {active === "river-analytics" && <RiverAnalyticsPanel />}
+          {active === "categories" && <CategoriesPanel />}
+          {active === "notifications" && <NotificationsComposerPanel />}
+          {active === "settings" && <SettingsPanel />}
+          {active === "audit" && <AuditLogPanel />}
+          {active === "health" && <SystemHealthPanel health={health} />}
         </div>
       </div>
+
 
       <SendNotificationDialog
         target={notifyUser}
