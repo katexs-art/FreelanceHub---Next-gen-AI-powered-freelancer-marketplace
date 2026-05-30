@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, Fragment } from "react";
+import { useEffect, useMemo, useRef, useState, Fragment } from "react";
+import { useParams, useNavigate, NavLink } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -9,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Users, ShoppingBag, Wallet, Lock, ChevronDown, ChevronRight,
   UserCircle2, Briefcase, AlertTriangle, DollarSign, BadgeCheck, Flag, Banknote,
+  LayoutDashboard, Star, ShieldCheck, MessageSquare, Megaphone, Settings as SettingsIcon,
+  Activity, ScrollText, Folder, Sparkles, BarChart3, Bot, RefreshCcw, Bell, Pin,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -22,7 +25,14 @@ const fmtDateTime = (d?: string | null) => (d ? new Date(d).toLocaleString() : "
 type BuyerAgg = { placed: number; spent: number };
 type SellerAgg = { completed: number; cancelled: number; earnings: number };
 
-type NavKey = "buyers" | "sellers" | "orders" | "revenue" | "withdrawals" | "disputes" | "verifications" | "reports";
+type NavKey =
+  | "overview" | "buyers" | "sellers" | "verifications"
+  | "orders" | "projects" | "gigs" | "disputes" | "reviews"
+  | "revenue" | "escrow" | "payouts" | "refunds" | "withdrawals"
+  | "river" | "river-analytics"
+  | "categories" | "announcements" | "featured"
+  | "notifications" | "settings" | "audit" | "health" | "reports";
+
 
 /* ------------- Status badge ------------- */
 type StatusVariant =
