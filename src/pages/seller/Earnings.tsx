@@ -101,17 +101,20 @@ export default function Earnings() {
 
         <section className="bg-background border border-border rounded-xl p-6">
           <h2 className="font-semibold mb-1">Withdraw funds</h2>
-          <p className="text-sm text-foreground-muted mb-4">Minimum $10. Payouts processed within 3 business days.</p>
+          <p className="text-sm text-foreground-muted mb-4">
+            Minimum $10. {stripeReady ? "Instant for debit cards, 1–2 business days for bank accounts." : "Payouts processed within 3 business days."}
+          </p>
           <div className="flex gap-2 max-w-sm">
             <Input type="number" placeholder="Amount ($)" value={amount} onChange={(e) => setAmount(e.target.value)} />
-            <Button onClick={requestWithdrawal} disabled={busy || !amount || !hasMethod}>
-              <ArrowDownToLine className="h-4 w-4" /> Request
+            <Button onClick={requestWithdrawal} disabled={busy || !amount || (!stripeReady && !hasMethod)}>
+              <ArrowDownToLine className="h-4 w-4" /> Withdraw
             </Button>
           </div>
-          {!hasMethod && (
-            <p className="text-xs text-foreground-muted mt-3">Add a payout method above to enable withdrawals.</p>
+          {!stripeReady && !hasMethod && (
+            <p className="text-xs text-foreground-muted mt-3">Connect a payout account above to enable withdrawals.</p>
           )}
         </section>
+
 
         <section>
           <h2 className="font-semibold mb-3">Withdrawals</h2>
