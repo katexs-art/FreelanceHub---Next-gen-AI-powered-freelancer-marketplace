@@ -300,13 +300,14 @@ export default function GigDetail() {
                     onClick={async () => {
                       if (!user) return nav("/login");
                       if (!selected) return;
-                      toast.loading("Redirecting to checkout…", { id: "co" });
-                      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-                        body: { package_id: selected.id, extra_ids: [] },
+                      toast.loading("Preparing your order…", { id: "co" });
+                      const { data, error } = await supabase.rpc("create_gig_order", {
+                        _package_id: selected.id,
+                        _extra_ids: [],
                       });
                       toast.dismiss("co");
-                      if (error || !data?.url) return toast.error(error?.message ?? "Checkout failed");
-                      window.location.href = data.url;
+                      if (error || !data) return toast.error(error?.message ?? "Could not create order");
+                      nav(`/checkout/${data}`);
                     }}>
                     Continue (${selected.price})
                   </Button>
