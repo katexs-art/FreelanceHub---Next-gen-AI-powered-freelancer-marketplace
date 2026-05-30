@@ -127,6 +127,96 @@ const CATS: Cat[] = [
       "Revenue & Conversion Tracking",
     ],
   },
+  {
+    label: "Build with GHL", slug: "build-with-ghl",
+    items: [
+      "Full GHL Account Setup & Configuration", "GHL Sub-Account Setup for Agencies",
+      "GHL White Label Setup & Branding", "GHL SaaS Mode Configuration",
+      "GHL Snapshot Creation & Deployment", "GHL CRM Build & Configuration",
+      "GHL Pipeline Setup & Management", "GHL Custom Fields & Tags Setup",
+      "GHL Dashboard Customization", "GHL API Integrations & Connections",
+      "GHL Migration from Any Platform", "GHL Agency Account Setup",
+    ],
+  },
+  {
+    label: "Automate with GHL", slug: "automate-with-ghl",
+    items: [
+      "Workflow Automation Setup", "Lead Nurture Sequence Build",
+      "Appointment Reminder Automation", "Follow Up Campaign Setup",
+      "SMS Automation Campaigns", "Email Automation Sequences",
+      "Pipeline Automation Rules", "Re-engagement Campaign Automation",
+      "Abandoned Lead Recovery Workflows", "Onboarding Automation Sequences",
+      "GHL Workflow AI Setup", "Trigger & Action Workflow Build",
+    ],
+  },
+  {
+    label: "Sell with GHL", slug: "sell-with-ghl",
+    items: [
+      "Sales Funnel Design & Build", "Landing Page Design & Build",
+      "Website Build in GHL", "Membership Site Setup",
+      "Course & Community Platform Setup", "Order Bump & Upsell Setup",
+      "Checkout Page Configuration", "GHL Funnel Cloning & Templates",
+      "GHL AI Funnel Builder Setup", "Affiliate Program Setup in GHL",
+    ],
+  },
+  {
+    label: "Connect with GHL", slug: "connect-with-ghl",
+    items: [
+      "Zapier to GHL Integration", "Make to GHL Integration",
+      "Stripe Payment Setup in GHL", "Twilio SMS Setup & Configuration",
+      "Google Ads Integration & Tracking", "Facebook Ads Integration & Tracking",
+      "Webhooks & API Setup", "Third Party App Connections",
+      "Calendar Integration with Zoom and Google Meet", "Mailgun Email Setup & Configuration",
+    ],
+  },
+  {
+    label: "Speak with GHL", slug: "speak-with-ghl",
+    items: [
+      "GHL Voice AI Configuration", "GHL AI Employee Setup",
+      "GHL Conversation AI Setup", "Voice AI Caller Setup for GHL",
+      "AI Appointment Booking Setup", "AI Lead Qualification Workflow",
+      "GHL Copilot Setup & Training", "AI Chatbot Build in GHL",
+      "GHL Content AI Configuration", "Inbound Call AI Setup",
+    ],
+  },
+  {
+    label: "Grow with GHL", slug: "grow-with-ghl",
+    items: [
+      "Email Marketing Campaign Setup", "SMS Marketing Campaign Setup",
+      "Review Request Campaign Setup", "Reputation Management Setup",
+      "Broadcast Campaign Setup", "Drip Campaign Build",
+      "Social Media Scheduling Setup", "GHL Email Template Design",
+      "Lead Source Tracking Setup", "Conversion Tracking Configuration",
+    ],
+  },
+  {
+    label: "Book with GHL", slug: "book-with-ghl",
+    items: [
+      "Calendar & Booking System Setup", "Round Robin Calendar Configuration",
+      "Multi-Location Calendar Setup", "Appointment Reminder Sequences",
+      "No-Show Follow Up Automation", "Online Scheduling Page Setup",
+      "Service Menu & Pricing Setup",
+    ],
+  },
+  {
+    label: "Manage with GHL", slug: "manage-with-ghl",
+    items: [
+      "CRM Setup & Contact Management", "Smart List & Segmentation Setup",
+      "Lead Scoring Configuration", "Contact Import & Data Cleanup",
+      "Pipeline Reporting & Analytics Setup", "Opportunity Tracking Setup",
+      "GHL Reporting Dashboard Setup", "ROI Reporting Setup",
+      "Custom Dashboard Build", "Multi-Location Management Setup",
+    ],
+  },
+  {
+    label: "Learn GHL", slug: "learn-ghl",
+    items: [
+      "GHL Platform Training & Walkthroughs", "GHL Agency Consulting",
+      "GHL Audit & Optimization", "GHL Strategy & Roadmapping",
+      "GHL Ongoing Support & Maintenance", "Done For You GHL Management",
+      "GHL Onboarding for Teams",
+    ],
+  },
 ];
 
 export function CategoryBar() {
