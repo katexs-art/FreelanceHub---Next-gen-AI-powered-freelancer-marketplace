@@ -115,8 +115,9 @@ const App = () => (
             <Route path="/settings/notifications" element={<ProtectedRoute><NotificationPreferences /></ProtectedRoute>} />
 
             {/* Admin */}
-            <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
             <Route path="/admin/river-ops" element={<ProtectedRoute roles={["admin"]}><RiverOps /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
+            <Route path="/admin/:section" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
