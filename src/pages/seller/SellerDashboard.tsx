@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, Package, ShoppingBag, Star, TrendingUp, Eye } from "lucide-react";
 import { SellerLevelBadge } from "@/components/marketplace/SellerLevelBadge";
 import { computeSellerLevel } from "@/lib/sellerLevel";
+import { toast } from "sonner";
 
 interface Stats {
   active_gigs: number;
