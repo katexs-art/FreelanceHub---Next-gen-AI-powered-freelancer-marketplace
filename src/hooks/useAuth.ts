@@ -23,35 +23,49 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
+    const loadProfile = async (userId: string) => {
+      const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+      if (!mounted) return;
+      setProfile(data as Profile | null);
+      setLoading(false);
+    };
+
+    // Listen for auth state changes first (sync callback only — async work deferred)
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
       setUser(session?.user ?? null);
       if (session?.user) {
-        setTimeout(() => loadProfile(session.user.id), 0);
+        setLoading(true);
+        setTimeout(() => { if (mounted) loadProfile(session.user.id); }, 0);
       } else {
         setProfile(null);
         setLoading(false);
       }
     });
 
+    // Then check existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       setUser(session?.user ?? null);
       if (session?.user) loadProfile(session.user.id);
       else setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => { mounted = false; subscription.unsubscribe(); };
   }, []);
-
-  const loadProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
-    setProfile(data as Profile | null);
-    setLoading(false);
-  };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     setProfile(null);
   };
 
-  return { user, profile, loading, signOut, refresh: () => user && loadProfile(user.id) };
+  const refresh = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
+    setProfile(data as Profile | null);
+  };
+
+  return { user, profile, loading, signOut, refresh };
 }

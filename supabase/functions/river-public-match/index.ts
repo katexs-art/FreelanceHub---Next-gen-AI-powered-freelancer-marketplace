@@ -47,6 +47,20 @@ async function callClaude(query: string): Promise<Signals> {
 
 function norm(s: string) { return s.toLowerCase().trim(); }
 
+async function checkRateLimit(identifier: string, limit: number) {
+  const windowMs = 60_000;
+  const windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();
+  const { data: existing } = await supabase.from("rate_limits").select("id,count")
+    .eq("bucket", "river-public-match").eq("identifier", identifier).eq("window_start", windowStart).maybeSingle();
+  if (existing) {
+    if (existing.count >= limit) return false;
+    await supabase.from("rate_limits").update({ count: existing.count + 1 }).eq("id", existing.id);
+  } else {
+    await supabase.from("rate_limits").insert({ bucket: "river-public-match", identifier, window_start: windowStart, count: 1 });
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -54,6 +68,19 @@ Deno.serve(async (req) => {
     if (!query || typeof query !== "string") {
       return new Response(JSON.stringify({ error: "query required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (query.length > 1000) {
+      return new Response(JSON.stringify({ error: "query too long" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Rate limit: 10/min per IP (no auth required on this endpoint)
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    if (!(await checkRateLimit(`ip:${ip}`, 10))) {
+      return new Response(JSON.stringify({ error: "rate limit exceeded" }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 

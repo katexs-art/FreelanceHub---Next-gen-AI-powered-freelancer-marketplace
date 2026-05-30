@@ -56,12 +56,30 @@ Respond ONLY with valid JSON of shape:
   };
 }
 
+async function checkRateLimit(admin: any, identifier: string, bucket: string, limit: number) {
+  const windowMs = 60_000;
+  const windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();
+  const { data: existing } = await admin
+    .from("rate_limits")
+    .select("id,count")
+    .eq("bucket", bucket).eq("identifier", identifier).eq("window_start", windowStart)
+    .maybeSingle();
+  if (existing) {
+    if (existing.count >= limit) return false;
+    await admin.from("rate_limits").update({ count: existing.count + 1 }).eq("id", existing.id);
+  } else {
+    await admin.from("rate_limits").insert({ bucket, identifier, window_start: windowStart, count: 1 });
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
     const { query, session_id } = await req.json();
     if (!query || typeof query !== "string") throw new Error("query required");
+    if (query.length > 500) throw new Error("query too long");
 
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -79,6 +97,15 @@ Deno.serve(async (req) => {
       );
       const { data } = await userClient.auth.getUser();
       user_id = data.user?.id ?? null;
+    }
+
+    // Rate limit: 20/min per user or per IP
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+    const identifier = user_id ?? `ip:${ip}`;
+    if (!(await checkRateLimit(admin, identifier, "ai-search", 20))) {
+      return new Response(JSON.stringify({ error: "rate limit exceeded" }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     let ai: AIResult;
