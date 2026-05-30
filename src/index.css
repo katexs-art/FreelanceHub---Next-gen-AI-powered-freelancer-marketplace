@@ -177,6 +177,30 @@
   .bg-surface-2 { background: hsl(var(--background-elevated)); }
 }
 
+/* Admin panel status color tokens — scoped, not used elsewhere */
+@layer components {
+  .admin-status {
+    @apply inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-full whitespace-nowrap;
+  }
+  .admin-status-pending     { background:#FEF3C7; color:#92400E; }
+  .admin-status-approved    { background:#D1FAE5; color:#065F46; }
+  .admin-status-suspended   { background:#FED7AA; color:#B45309; }
+  .admin-status-banned      { background:#FEE2E2; color:#991B1B; }
+  .admin-status-disputed    { background:#FEE2E2; color:#991B1B; }
+  .admin-status-completed   { background:#D1FAE5; color:#065F46; }
+  .admin-status-in-progress { background:#DBEAFE; color:#1E40AF; }
+  .admin-status-late        { background:#FEE2E2; color:#991B1B; }
+  .admin-status-funds-locked   { background:#FEE2E2; color:#991B1B; }
+  .admin-status-funds-released { background:#D1FAE5; color:#065F46; }
+
+  .admin-dot { display:inline-block; width:8px; height:8px; border-radius:9999px; flex-shrink:0; }
+  .admin-dot-red    { background:#DC2626; }
+  .admin-dot-yellow { background:#F59E0B; }
+  .admin-dot-green  { background:#10B981; }
+  .admin-dot-blue   { background:#2563EB; }
+}
+
+
 @keyframes pulse-opacity {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }

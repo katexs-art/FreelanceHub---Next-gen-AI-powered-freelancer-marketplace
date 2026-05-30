@@ -1,76 +1,52 @@
-# Wire Anthropic Claude into River Public and River Ops
+## Scope
+Admin panel only. No other site changes.
 
-Uses the existing `ANTHROPIC_API_KEY` Supabase secret. Model: `claude-sonnet-4-6`. No visual changes anywhere.
+## 1. Remove separate seller applications page
+- Delete `src/pages/admin/SellerApplicationsPage.tsx`.
+- Remove the `/admin/seller-applications` route and lazy import in `src/App.tsx`.
+- Remove the existing "Seller Approvals" tab from `Admin.tsx` (and its `SellerApprovalsQueue` section usage in the tab list).
 
-## 1. Database migration
+## 2. Merge application flow into Sellers tab
+In `Admin.tsx` Sellers tab:
+- Fetch `seller_applications` alongside seller profiles; join by `seller_id`.
+- Sort so sellers whose `seller_status = 'pending_approval'` (with a pending application) appear at the top.
+- Show a yellow "Pending" badge in the Status column for those rows.
+- Expanding a pending row reveals the full application inline: bio, location, language, skills, primary/secondary category, experience description, packages, portfolio URLs, submitted date.
+- Inline Approve / Reject buttons that call existing `approve_seller` / `reject_seller` RPCs (Reject opens existing reason dialog).
 
-New table `river_ops_conversations`:
-- `id` uuid pk
-- `user_id` uuid (Kevin / admin author)
-- `role` text ('user' | 'assistant')
-- `message` text
-- `daily_briefing` boolean default false
-- `created_at` timestamptz default now()
+## 3. Status color tokens
+Add semantic status classes in `src/index.css` (HSL equivalents of the requested hexes) and small Tailwind utilities:
+- `.status-pending` (yellow #FEF3C7 / #92400E)
+- `.status-approved` (green #D1FAE5 / #065F46) — also used for Active, Completed, Funds Released
+- `.status-suspended` (orange #FED7AA / #B45309)
+- `.status-banned` (red #FEE2E2 / #991B1B) — also used for Disputed, Late, Funds Locked
+- `.status-in-progress` (blue #DBEAFE / #1E40AF)
 
-GRANTs + RLS: admins only (via `is_admin(auth.uid())`) can select/insert. `service_role` full access for edge functions.
+Build a `<StatusBadge variant="..." withLock?>` helper component used everywhere in admin (Buyers Status, Sellers Status, Orders status, Disputes, Withdrawals/Revenue payout state, escrow lock badges). Late and Funds Locked variants render a `Lock` icon from lucide. No styling changes outside admin.
 
-## 2. Edge function: `river-public-match`
+## 4. Convert admin to left sidebar layout
+Replace the horizontal `Tabs` bar in `Admin.tsx` with a shadcn `Sidebar` (`SidebarProvider` + collapsible="icon"):
+- Nav links: Buyers, Sellers, Orders, Revenue (new), Disputes, Withdrawals, Verifications, Reports.
+- Selected nav drives the same internal section state — existing tab content components are reused unchanged.
+- Header keeps the existing title and "River Ops →" link; add a `SidebarTrigger`.
+- Add a new "Revenue" section that surfaces platform revenue (sum of `platform_fee` from completed orders, grouped by day/month — read-only summary using existing data).
 
-- Input: `{ query: string }` from buyer.
-- Calls Anthropic `claude-sonnet-4-6` with the exact River Public system prompt from the spec, asking for strict JSON (`required_skills`, `category`, `budget_signal`, `urgency_signal`, `match_summary`).
-- Parses JSON, then queries `profiles` + `gigs` (active, approved sellers) and scores each seller:
-  - +3 per matching skill in `seller_skills` / gig tags
-  - +5 if `primary_category` or gig `category` matches
-  - + river_score / 20, + rating weight, completed orders weight
-- Returns top 15 sellers + the parsed signals.
+## 5. Real-time dot indicators on sidebar links
+Small colored dot rendered next to the nav label:
+- **Disputes** — red dot when any `orders.status = 'disputed'` OR `disputes.status = 'open'` exists.
+- **Sellers** — yellow dot when any `profiles.seller_status = 'pending_approval'` exists.
+- **Revenue** — always green dot.
+- **Orders** — blue dot when any order in `pending_requirements`, `in_progress`, or `delivered` exists.
 
-## 3. Hook River Public into `RiverResults.tsx`
+Implementation: a `useAdminNavIndicators()` hook does initial counts via Supabase queries, then subscribes via Supabase Realtime channels to `public.orders`, `public.disputes`, and `public.profiles` (`postgres_changes` event `*`). On any change it re-runs the affected count. Cleanup on unmount.
 
-Replace the current client-side keyword scoring with a single call to `river-public-match`. Render the same existing cards/markup with the returned sellers — **no visual changes**. Fallback: if the edge call fails, keep the existing local scoring path so the page never breaks.
+No DB migration required (realtime publication already includes these core tables; if not, add `ALTER PUBLICATION supabase_realtime ADD TABLE ...` for the missing ones in a small migration).
 
-## 4. Edge function: `river-ops-chat`
+## Files
+- Edit: `src/App.tsx`, `src/pages/admin/Admin.tsx`, `src/index.css`
+- Delete: `src/pages/admin/SellerApplicationsPage.tsx`
+- Create: `src/components/admin/StatusBadge.tsx`, `src/components/admin/AdminSidebar.tsx`, `src/hooks/useAdminNavIndicators.ts`
+- Possible: small migration to ensure realtime publication includes `orders`, `disputes`, `profiles`.
 
-- Verifies caller is admin (JWT → `is_admin`).
-- Input: `{ messages: [{role, content}], daily_briefing?: boolean }`.
-- Fetches live context in parallel from Supabase (service role):
-  - orders today count
-  - revenue today = sum(`platform_fee`) on today's completed orders
-  - open disputes count
-  - pending seller applications count
-  - active orders count (in_progress / delivered / pending_*)
-  - top 5 sellers by completed orders this week (join profiles for name)
-  - new signups today (profiles created today)
-  - River searches today (`buyer_searches` created today)
-- Builds a `Live platform data` system context block and prepends the exact River Ops system prompt from the spec.
-- Calls Anthropic `claude-sonnet-4-6`, returns `{ reply }`.
-- Persists both the user message and the assistant reply into `river_ops_conversations` (with `daily_briefing` flag on the auto briefing pair).
-
-## 5. New admin page: River Ops Chat
-
-Route: `/admin/river-ops` (lazy in `App.tsx`, protected like other admin pages).
-
-- Reuses existing admin shell styling — same tokens, same fonts, same layout patterns as `Admin.tsx`. No new colors or images.
-- Chat layout: scrollable message list + input + Send button using existing UI primitives (`Button`, `Input`, `surface`, `border-hairline`, etc.).
-- On mount: query `river_ops_conversations` for today's messages for the current admin.
-  - If no `daily_briefing=true` row exists for today, automatically invoke `river-ops-chat` with `daily_briefing: true` and a synthetic user prompt: *"Give me this morning's briefing: revenue today, active orders, open disputes, new signups, and one recommendation."* Render the reply as the first assistant message.
-- Subsequent messages stream through the same edge function.
-- Add a small "River Ops" link in the existing admin tab bar in `Admin.tsx` (same styling as other tabs, no new visual treatment).
-
-## 6. Files
-
-**Created**
-- `supabase/migrations/<ts>_river_ops_conversations.sql`
-- `supabase/functions/river-public-match/index.ts`
-- `supabase/functions/river-ops-chat/index.ts`
-- `src/pages/admin/RiverOps.tsx`
-
-**Edited**
-- `src/App.tsx` — add lazy route `/admin/river-ops`
-- `src/pages/admin/Admin.tsx` — add tab/link to River Ops (no style changes)
-- `src/pages/RiverResults.tsx` — swap to edge function, keep existing UI
-
-## Notes
-
-- `ANTHROPIC_API_KEY` already exists; no secret prompt needed.
-- All Anthropic calls happen server-side in edge functions; the key is never exposed to the client.
-- Existing River widget (`RiverWidget.tsx`) continues to use the current `river-chat` function — untouched, per "do not change existing functionality".
+## Out of scope
+No changes to colors, fonts, layout, or behavior anywhere outside `/admin`.
