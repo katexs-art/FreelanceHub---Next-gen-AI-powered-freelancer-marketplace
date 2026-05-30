@@ -3,8 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
-import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
-import { ReviewsList } from "@/components/marketplace/ReviewsList";
+import { ProfileReviewsSection } from "@/components/marketplace/ProfileReviewsSection";
 import { SEO } from "@/components/SEO";
 import { SellerLevelBadge } from "@/components/marketplace/SellerLevelBadge";
 import { FollowSellerButton } from "@/components/marketplace/FollowSellerButton";
@@ -143,8 +142,7 @@ export default function SellerProfile() {
           <section className="space-y-10">
             <div>
               <h2 className="text-xl font-bold mb-4">Reviews</h2>
-              <div className="mb-5"><RatingBreakdown sellerId={seller.id} /></div>
-              <ReviewsList sellerId={seller.id} />
+              <ProfileReviewsSection sellerId={seller.id} />
             </div>
             <div>
               <h2 className="text-xl font-bold mb-6">{name}'s gigs</h2>

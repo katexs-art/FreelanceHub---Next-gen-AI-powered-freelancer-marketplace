@@ -978,6 +978,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          average_rating: number | null
           bio: string | null
           country: string | null
           created_at: string
@@ -990,13 +991,16 @@ export type Database = {
           member_since: string
           response_rate: number | null
           response_time_minutes: number | null
+          river_score: number | null
           role: Database["public"]["Enums"]["user_role"]
           suspended_at: string | null
+          total_reviews: number
           updated_at: string
           username: string | null
         }
         Insert: {
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           country?: string | null
           created_at?: string
@@ -1009,13 +1013,16 @@ export type Database = {
           member_since?: string
           response_rate?: number | null
           response_time_minutes?: number | null
+          river_score?: number | null
           role?: Database["public"]["Enums"]["user_role"]
           suspended_at?: string | null
+          total_reviews?: number
           updated_at?: string
           username?: string | null
         }
         Update: {
           avatar_url?: string | null
+          average_rating?: number | null
           bio?: string | null
           country?: string | null
           created_at?: string
@@ -1028,8 +1035,10 @@ export type Database = {
           member_since?: string
           response_rate?: number | null
           response_time_minutes?: number | null
+          river_score?: number | null
           role?: Database["public"]["Enums"]["user_role"]
           suspended_at?: string | null
+          total_reviews?: number
           updated_at?: string
           username?: string | null
         }
@@ -1125,54 +1134,105 @@ export type Database = {
         }
         Relationships: []
       }
+      review_prompts: {
+        Row: {
+          buyer_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          notified_at: string
+          order_id: string
+        }
+        Insert: {
+          buyer_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          notified_at?: string
+          order_id: string
+        }
+        Update: {
+          buyer_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          notified_at?: string
+          order_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           buyer_id: string
           communication_rating: number | null
           created_at: string
           gig_id: string
+          helpful_count: number
           id: string
           is_public: boolean
           order_id: string
+          overall_rating: number | null
           rating: number
+          rating_communication: number | null
+          rating_delivery: number | null
+          rating_quality: number | null
+          rating_rehire: number | null
+          rating_value: number | null
           recommend_rating: number | null
           reply: string | null
           review_text: string | null
           reviewer_role: string
           seller_id: string
           service_rating: number | null
+          standout_moment: string | null
         }
         Insert: {
           buyer_id: string
           communication_rating?: number | null
           created_at?: string
           gig_id: string
+          helpful_count?: number
           id?: string
           is_public?: boolean
           order_id: string
+          overall_rating?: number | null
           rating: number
+          rating_communication?: number | null
+          rating_delivery?: number | null
+          rating_quality?: number | null
+          rating_rehire?: number | null
+          rating_value?: number | null
           recommend_rating?: number | null
           reply?: string | null
           review_text?: string | null
           reviewer_role: string
           seller_id: string
           service_rating?: number | null
+          standout_moment?: string | null
         }
         Update: {
           buyer_id?: string
           communication_rating?: number | null
           created_at?: string
           gig_id?: string
+          helpful_count?: number
           id?: string
           is_public?: boolean
           order_id?: string
+          overall_rating?: number | null
           rating?: number
+          rating_communication?: number | null
+          rating_delivery?: number | null
+          rating_quality?: number | null
+          rating_rehire?: number | null
+          rating_value?: number | null
           recommend_rating?: number | null
           reply?: string | null
           review_text?: string | null
           reviewer_role?: string
           seller_id?: string
           service_rating?: number | null
+          standout_moment?: string | null
         }
         Relationships: [
           {
@@ -1719,6 +1779,10 @@ export type Database = {
         Args: { _seller: string }
         Returns: undefined
       }
+      recompute_seller_review_stats: {
+        Args: { _seller: string }
+        Returns: undefined
+      }
       seller_follower_count: { Args: { _seller: string }; Returns: number }
       submit_bid: {
         Args: {
@@ -1727,6 +1791,19 @@ export type Database = {
           _cover_message: string
           _delivery_days: number
           _project_id: string
+        }
+        Returns: string
+      }
+      submit_full_review: {
+        Args: {
+          _communication: number
+          _delivery: number
+          _order_id: string
+          _quality: number
+          _rehire: number
+          _standout: string
+          _text: string
+          _value: number
         }
         Returns: string
       }
