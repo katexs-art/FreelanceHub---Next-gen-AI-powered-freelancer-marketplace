@@ -114,7 +114,9 @@ export default function SellerDashboard() {
             </div>
             <p className="text-foreground-muted mt-1 text-sm">Your level: <span className="text-foreground font-medium">{level.label}</span> · Next: {nextLevelHint(level.level)}</p>
           </div>
-          <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a gig</Button></Link>
+          {!pending && !rejected && (
+            <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a gig</Button></Link>
+          )}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
