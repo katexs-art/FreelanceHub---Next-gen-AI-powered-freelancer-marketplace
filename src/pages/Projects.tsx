@@ -177,9 +177,15 @@ export default function Projects() {
                         <span>{p.bid_count} bid{p.bid_count === 1 ? "" : "s"}</span>
                       </div>
                     </div>
-                    <Link to={`/projects/${p.id}/bid`} onClick={(e) => e.stopPropagation()}>
-                      <Button variant="outline">Place a Bid</Button>
-                    </Link>
+                    {profile?.role === "seller" || profile?.role === "admin" ? (
+                      <Link to={`/projects/${p.id}/bid`} onClick={(e) => e.stopPropagation()}>
+                        <Button variant="outline">Place a Bid</Button>
+                      </Link>
+                    ) : (
+                      <Link to={`/projects/${p.id}/bids`} onClick={(e) => e.stopPropagation()}>
+                        <Button variant="outline">View Bids</Button>
+                      </Link>
+                    )}
                   </div>
                   <div
                     className="grid transition-all duration-300 ease-out"
