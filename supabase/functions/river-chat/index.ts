@@ -16,6 +16,20 @@ Your job:
 
 When recommending, mention 1-3 gigs by title, their category, starting price, and rating. Refer to gigs by their title.`;
 
+async function checkRateLimit(identifier: string, bucket: string, limit: number) {
+  const windowMs = 60_000;
+  const windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();
+  const { data: existing } = await supabase.from("rate_limits").select("id,count")
+    .eq("bucket", bucket).eq("identifier", identifier).eq("window_start", windowStart).maybeSingle();
+  if (existing) {
+    if (existing.count >= limit) return false;
+    await supabase.from("rate_limits").update({ count: existing.count + 1 }).eq("id", existing.id);
+  } else {
+    await supabase.from("rate_limits").insert({ bucket, identifier, window_start: windowStart, count: 1 });
+  }
+  return true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
@@ -24,6 +38,24 @@ Deno.serve(async (req) => {
     if (!Array.isArray(messages) || messages.length === 0) {
       return new Response(JSON.stringify({ error: 'messages required' }), {
         status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Rate limit: 15/min per user or IP
+    const authHeader = req.headers.get('Authorization');
+    let userId: string | null = null;
+    if (authHeader) {
+      const userClient = createClient(SUPABASE_URL, Deno.env.get('SUPABASE_ANON_KEY')!, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const { data } = await userClient.auth.getUser();
+      userId = data.user?.id ?? null;
+    }
+    const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+    const identifier = userId ?? `ip:${ip}`;
+    if (!(await checkRateLimit(identifier, 'river-chat', 15))) {
+      return new Response(JSON.stringify({ error: 'rate limit exceeded' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
