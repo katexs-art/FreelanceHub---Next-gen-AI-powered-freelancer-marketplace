@@ -170,9 +170,14 @@ export default function Admin() {
   return (
     <AppShell>
       <div className="max-w-6xl space-y-8">
-        <header>
-          <h1 className="text-2xl font-bold">Admin</h1>
-          <p className="text-sm text-foreground-muted mt-1">Platform overview and operations.</p>
+        <header className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold">Admin</h1>
+            <p className="text-sm text-foreground-muted mt-1">Platform overview and operations.</p>
+          </div>
+          <a href="/admin/river-ops" className="text-sm font-mono uppercase tracking-[0.14em] border-hairline rounded px-3 py-2 hover:bg-white/[0.03] transition-colors">
+            River Ops →
+          </a>
         </header>
 
         <div className="grid sm:grid-cols-4 gap-4">

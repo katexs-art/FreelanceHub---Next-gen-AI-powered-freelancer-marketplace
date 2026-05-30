@@ -1,69 +1,76 @@
-# Split Admin Users into Buyers + Sellers
+# Wire Anthropic Claude into River Public and River Ops
 
-Replace the single **Users** tab in `src/pages/admin/Admin.tsx` with two dedicated tabs. Nothing else on the site changes.
+Uses the existing `ANTHROPIC_API_KEY` Supabase secret. Model: `claude-sonnet-4-6`. No visual changes anywhere.
 
-> Note: the `user_role` enum stores buyers as `"client"`. The new **Buyers** tab will filter `role = 'client'` and display the label "Buyers" in the UI.
+## 1. Database migration
 
-## Tab 1 — Buyers (`role = 'client'`)
+New table `river_ops_conversations`:
+- `id` uuid pk
+- `user_id` uuid (Kevin / admin author)
+- `role` text ('user' | 'assistant')
+- `message` text
+- `daily_briefing` boolean default false
+- `created_at` timestamptz default now()
 
-Columns: Profile Photo · Full Name · Email · Status · Member Since · Total Orders Placed · Total Amount Spent · Last Active · Actions
+GRANTs + RLS: admins only (via `is_admin(auth.uid())`) can select/insert. `service_role` full access for edge functions.
 
-- **Status**: derived — `suspended_at` → "Suspended", else "Active" (Ban = soft via `suspended_at` + flag; see Technical).
-- **Total Orders Placed**: count of `orders` where `buyer_id = profile.id`.
-- **Total Amount Spent**: sum of `orders.price` where `buyer_id = profile.id AND status = 'completed'`.
-- **Last Active**: `last_seen` (fallback `updated_at`).
-- **Row actions**: View Profile (link to `/u/:username` in new tab) · Send Notification (dialog → insert into `notifications`) · Suspend Account (sets `suspended_at = now()`) · Ban Account (sets `suspended_at = now()` + future-proof flag).
-- **Expandable row**: clicking the row toggles an inline detail panel (no navigation) showing:
-  - Full order history table (order #, seller, amount, status, date)
-  - Recent activity: messages sent count, reviews left, saved gigs, last login
+## 2. Edge function: `river-public-match`
 
-## Tab 2 — Sellers (`role = 'seller'`)
+- Input: `{ query: string }` from buyer.
+- Calls Anthropic `claude-sonnet-4-6` with the exact River Public system prompt from the spec, asking for strict JSON (`required_skills`, `category`, `budget_signal`, `urgency_signal`, `match_summary`).
+- Parses JSON, then queries `profiles` + `gigs` (active, approved sellers) and scores each seller:
+  - +3 per matching skill in `seller_skills` / gig tags
+  - +5 if `primary_category` or gig `category` matches
+  - + river_score / 20, + rating weight, completed orders weight
+- Returns top 15 sellers + the parsed signals.
 
-Columns: Profile Photo · Full Name · Email · Seller Status badge · River Score · Member Since · Total Orders Completed · Total Earned · Completion Rate · Last Active · Actions
+## 3. Hook River Public into `RiverResults.tsx`
 
-- **Seller Status badge**: from `profiles.seller_status` (`approved`/`pending`/`rejected`/etc) — color-coded with existing tokens.
-- **River Score**: `profiles.river_score`.
-- **Total Orders Completed**: count of `orders` where `seller_id = profile.id AND status = 'completed'`.
-- **Total Earned**: `seller_accounts.lifetime_earnings` (fallback to sum of `orders.seller_earnings` for completed).
-- **Completion Rate**: completed / (completed + cancelled) as %.
-- **Row actions**: View Profile · Approve (sets `seller_status='approved'`) · Reject (dialog for reason → `seller_status='rejected'` + `rejection_reason`) · Suspend · Ban · Send Notification · View Gigs (link to public seller profile, gigs section).
-- **Expandable row**: inline panel showing:
-  - Application: latest row from `seller_applications` (bio, skills, categories, portfolio, packages, status)
-  - Gigs: list from `gigs` (title, status, price, orders, rating)
-  - Orders: recent `orders` as seller
-  - Reviews: recent `reviews` where `seller_id`
-  - Earnings: `seller_accounts` balances + recent `transactions`
+Replace the current client-side keyword scoring with a single call to `river-public-match`. Render the same existing cards/markup with the returned sellers — **no visual changes**. Fallback: if the edge call fails, keep the existing local scoring path so the page never breaks.
 
-## UX behavior
+## 4. Edge function: `river-ops-chat`
 
-- Single row expansion at a time (clicking another row collapses prior).
-- Detail panel lazy-loads its data on first expand (per-row state map).
-- Action buttons in the row use `stopPropagation` so they don't toggle expansion.
-- Confirm dialogs for Suspend / Ban / Reject. Toast on success, then refresh list.
-- Send Notification dialog: title + body fields → insert one row in `notifications` for that user.
+- Verifies caller is admin (JWT → `is_admin`).
+- Input: `{ messages: [{role, content}], daily_briefing?: boolean }`.
+- Fetches live context in parallel from Supabase (service role):
+  - orders today count
+  - revenue today = sum(`platform_fee`) on today's completed orders
+  - open disputes count
+  - pending seller applications count
+  - active orders count (in_progress / delivered / pending_*)
+  - top 5 sellers by completed orders this week (join profiles for name)
+  - new signups today (profiles created today)
+  - River searches today (`buyer_searches` created today)
+- Builds a `Live platform data` system context block and prepends the exact River Ops system prompt from the spec.
+- Calls Anthropic `claude-sonnet-4-6`, returns `{ reply }`.
+- Persists both the user message and the assistant reply into `river_ops_conversations` (with `daily_briefing` flag on the auto briefing pair).
 
-## Technical
+## 5. New admin page: River Ops Chat
 
-- File touched: `src/pages/admin/Admin.tsx` only (plus small extracted subcomponents in the same file, matching current pattern).
-- Replace the existing `<TabsTrigger value="users">` with `buyers` and `sellers` triggers; keep all other tabs unchanged.
-- Data fetching: extend `load()` to pull two lists in parallel:
-  - Buyers: `profiles.select('id, full_name, username, email, avatar_url, suspended_at, created_at, last_seen').eq('role','client')`
-  - Sellers: `profiles.select('id, full_name, username, email, avatar_url, seller_status, river_score, suspended_at, created_at, last_seen').eq('role','seller')`
-- Aggregates per row computed via grouped queries:
-  - One `orders` query grouped client-side by `buyer_id` to derive count + sum for buyers.
-  - One `orders` query grouped client-side by `seller_id` for sellers (counts + cancellation).
-  - `seller_accounts` fetched once and joined client-side by `seller_id`.
-- Expanded-row data fetched on demand (separate effect keyed by expanded id) to avoid loading everything up front.
-- Mutations:
-  - Suspend: `update profiles set suspended_at = now()`.
-  - Ban: same as suspend (no separate column today). If you want a distinct "banned" state later we'd add a `banned_at` column — flagged but not part of this change unless you ask.
-  - Approve/Reject: `update profiles set seller_status = ...`.
-  - Send Notification: `insert into notifications (user_id, type, title, body)`.
-- All writes already permitted by existing `profiles_admin_update` / admin RLS.
-- No DB migration required.
-- No changes to colors, fonts, layout, or any other tab/page. Uses existing `Tabs`, `Button`, `Badge`, table styles, `cn`, lucide icons.
+Route: `/admin/river-ops` (lazy in `App.tsx`, protected like other admin pages).
 
-## Out of scope
+- Reuses existing admin shell styling — same tokens, same fonts, same layout patterns as `Admin.tsx`. No new colors or images.
+- Chat layout: scrollable message list + input + Send button using existing UI primitives (`Button`, `Input`, `surface`, `border-hairline`, etc.).
+- On mount: query `river_ops_conversations` for today's messages for the current admin.
+  - If no `daily_briefing=true` row exists for today, automatically invoke `river-ops-chat` with `daily_briefing: true` and a synthetic user prompt: *"Give me this morning's briefing: revenue today, active orders, open disputes, new signups, and one recommendation."* Render the reply as the first assistant message.
+- Subsequent messages stream through the same edge function.
+- Add a small "River Ops" link in the existing admin tab bar in `Admin.tsx` (same styling as other tabs, no new visual treatment).
 
-- No new columns on `profiles` (Ban reuses `suspended_at` for now).
-- No changes to the existing `SellerApprovalsQueue` tab — it stays as-is.
+## 6. Files
+
+**Created**
+- `supabase/migrations/<ts>_river_ops_conversations.sql`
+- `supabase/functions/river-public-match/index.ts`
+- `supabase/functions/river-ops-chat/index.ts`
+- `src/pages/admin/RiverOps.tsx`
+
+**Edited**
+- `src/App.tsx` — add lazy route `/admin/river-ops`
+- `src/pages/admin/Admin.tsx` — add tab/link to River Ops (no style changes)
+- `src/pages/RiverResults.tsx` — swap to edge function, keep existing UI
+
+## Notes
+
+- `ANTHROPIC_API_KEY` already exists; no secret prompt needed.
+- All Anthropic calls happen server-side in edge functions; the key is never exposed to the client.
+- Existing River widget (`RiverWidget.tsx`) continues to use the current `river-chat` function — untouched, per "do not change existing functionality".
