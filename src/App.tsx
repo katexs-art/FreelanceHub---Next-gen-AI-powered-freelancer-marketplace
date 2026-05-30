@@ -19,6 +19,7 @@ const AuthCallback = lazy(() => import("./pages/auth/AuthCallback"));
 const Placeholder = lazy(() => import("./pages/Placeholder"));
 const DashboardPlaceholder = lazy(() => import("./pages/DashboardPlaceholder"));
 const BecomeSeller = lazy(() => import("./pages/BecomeSeller"));
+const SellerOnboarding = lazy(() => import("./pages/SellerOnboarding"));
 const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
 const MyGigs = lazy(() => import("./pages/seller/MyGigs"));
 const GigEditor = lazy(() => import("./pages/seller/GigEditor"));
@@ -84,6 +85,7 @@ const App = () => (
             <Route path="/u/:username" element={<SellerProfile />} />
             <Route path="/seller/:username" element={<SellerIntelligenceProfile />} />
             <Route path="/become-a-seller" element={<BecomeSeller />} />
+            <Route path="/seller-onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
 
             {/* Buyer */}
             <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><BuyerDashboard /></ProtectedRoute>} />

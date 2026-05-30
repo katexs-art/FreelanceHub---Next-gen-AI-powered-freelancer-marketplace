@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -88,9 +88,24 @@ export default function SellerDashboard() {
     { icon: Star, label: "Avg rating", value: stats.avg_rating ? stats.avg_rating.toFixed(1) : "—" },
   ];
 
+  if (profile?.seller_status === "onboarding") return <Navigate to="/seller-onboarding" replace />;
+  const pending = profile?.seller_status === "pending_approval";
+  const rejected = profile?.seller_status === "rejected";
+
   return (
     <AppShell>
       <div className="max-w-5xl">
+        {pending && (
+          <div className="mb-6 rounded-xl border border-border bg-background-elevated p-4 text-sm">
+            Your application is under review. We will notify you within 24 hours.
+          </div>
+        )}
+        {rejected && (
+          <div className="mb-6 rounded-xl border border-border bg-background-elevated p-4 text-sm">
+            Your application was not approved.{profile?.rejection_reason ? ` Reason: ${profile.rejection_reason}` : ""}{" "}
+            <Link to="/seller-onboarding" className="underline">Update and resubmit</Link>.
+          </div>
+        )}
         <div className="flex items-center justify-between mb-8">
           <div>
             <div className="flex items-center gap-3">
@@ -99,7 +114,9 @@ export default function SellerDashboard() {
             </div>
             <p className="text-foreground-muted mt-1 text-sm">Your level: <span className="text-foreground font-medium">{level.label}</span> · Next: {nextLevelHint(level.level)}</p>
           </div>
-          <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a gig</Button></Link>
+          {!pending && !rejected && (
+            <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a gig</Button></Link>
+          )}
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

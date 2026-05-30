@@ -13,6 +13,8 @@ export interface Profile {
   avatar_url: string | null;
   country: string | null;
   bio: string | null;
+  seller_status?: string | null;
+  rejection_reason?: string | null;
 }
 
 export function useAuth() {

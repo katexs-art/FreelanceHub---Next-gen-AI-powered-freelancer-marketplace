@@ -977,6 +977,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          application_submitted_at: string | null
           avatar_url: string | null
           average_rating: number | null
           bio: string | null
@@ -988,17 +989,26 @@ export type Database = {
           is_online: boolean
           languages: string[] | null
           last_seen: string | null
+          location: string | null
           member_since: string
+          pending_packages: Json
+          portfolio_urls: string[]
+          primary_category: string | null
+          rejection_reason: string | null
           response_rate: number | null
           response_time_minutes: number | null
           river_score: number | null
           role: Database["public"]["Enums"]["user_role"]
+          secondary_category: string | null
+          seller_skills: string[]
+          seller_status: string
           suspended_at: string | null
           total_reviews: number
           updated_at: string
           username: string | null
         }
         Insert: {
+          application_submitted_at?: string | null
           avatar_url?: string | null
           average_rating?: number | null
           bio?: string | null
@@ -1010,17 +1020,26 @@ export type Database = {
           is_online?: boolean
           languages?: string[] | null
           last_seen?: string | null
+          location?: string | null
           member_since?: string
+          pending_packages?: Json
+          portfolio_urls?: string[]
+          primary_category?: string | null
+          rejection_reason?: string | null
           response_rate?: number | null
           response_time_minutes?: number | null
           river_score?: number | null
           role?: Database["public"]["Enums"]["user_role"]
+          secondary_category?: string | null
+          seller_skills?: string[]
+          seller_status?: string
           suspended_at?: string | null
           total_reviews?: number
           updated_at?: string
           username?: string | null
         }
         Update: {
+          application_submitted_at?: string | null
           avatar_url?: string | null
           average_rating?: number | null
           bio?: string | null
@@ -1032,11 +1051,19 @@ export type Database = {
           is_online?: boolean
           languages?: string[] | null
           last_seen?: string | null
+          location?: string | null
           member_since?: string
+          pending_packages?: Json
+          portfolio_urls?: string[]
+          primary_category?: string | null
+          rejection_reason?: string | null
           response_rate?: number | null
           response_time_minutes?: number | null
           river_score?: number | null
           role?: Database["public"]["Enums"]["user_role"]
+          secondary_category?: string | null
+          seller_skills?: string[]
+          seller_status?: string
           suspended_at?: string | null
           total_reviews?: number
           updated_at?: string
@@ -1708,6 +1735,7 @@ export type Database = {
       accept_bid: { Args: { _bid_id: string }; Returns: string }
       accept_custom_offer: { Args: { _offer_id: string }; Returns: string }
       approve_delivery: { Args: { _order_id: string }; Returns: undefined }
+      approve_seller: { Args: { _seller: string }; Returns: undefined }
       auto_complete_orders: { Args: never; Returns: undefined }
       auto_publish_reviews: { Args: never; Returns: undefined }
       clear_due_seller_credits: { Args: never; Returns: undefined }
@@ -1783,6 +1811,10 @@ export type Database = {
         Args: { _seller: string }
         Returns: undefined
       }
+      reject_seller: {
+        Args: { _reason: string; _seller: string }
+        Returns: undefined
+      }
       seller_follower_count: { Args: { _seller: string }; Returns: number }
       submit_bid: {
         Args: {
@@ -1815,6 +1847,21 @@ export type Database = {
           _search_id: string
         }
         Returns: string
+      }
+      submit_seller_application: {
+        Args: {
+          _avatar_url: string
+          _bio: string
+          _full_name: string
+          _languages: string[]
+          _location: string
+          _packages: Json
+          _portfolio_urls: string[]
+          _primary_category: string
+          _secondary_category: string
+          _skills: string[]
+        }
+        Returns: undefined
       }
       suspend_seller: { Args: { _seller: string }; Returns: undefined }
       track_promotion_event: {

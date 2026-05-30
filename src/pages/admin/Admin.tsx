@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { VerificationsQueue } from "@/pages/admin/sections/VerificationsQueue";
 import { ReportsQueue } from "@/pages/admin/sections/ReportsQueue";
+import { SellerApprovalsQueue } from "@/pages/admin/sections/SellerApprovalsQueue";
 
 const dollars = (c: number) => `$${(c / 100).toFixed(2)}`;
 
@@ -89,6 +90,7 @@ export default function Admin() {
             <TabsTrigger value="disputes">Disputes</TabsTrigger>
             <TabsTrigger value="verifications">Verifications</TabsTrigger>
             <TabsTrigger value="reports">Reports</TabsTrigger>
+            <TabsTrigger value="seller_approvals">Seller Approvals</TabsTrigger>
           </TabsList>
 
           <TabsContent value="users">
@@ -177,6 +179,7 @@ export default function Admin() {
 
           <TabsContent value="verifications"><VerificationsQueue /></TabsContent>
           <TabsContent value="reports"><ReportsQueue /></TabsContent>
+          <TabsContent value="seller_approvals"><SellerApprovalsQueue /></TabsContent>
         </Tabs>
       </div>
     </AppShell>
