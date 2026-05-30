@@ -78,7 +78,7 @@ const App = () => (
             <Route path="/pitch/:buyer_search_id" element={<ProtectedRoute><Pitch /></ProtectedRoute>} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/post-job" element={<ProtectedRoute roles={["client","admin"]}><PostJob /></ProtectedRoute>} />
-            <Route path="/projects/:project_id/bid" element={<ProtectedRoute><PlaceBid /></ProtectedRoute>} />
+            <Route path="/projects/:project_id/bid" element={<ProtectedRoute roles={["seller","admin"]}><PlaceBid /></ProtectedRoute>} />
             <Route path="/projects/:project_id/bids" element={<ProtectedRoute><ProjectBids /></ProtectedRoute>} />
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/gig/:slug" element={<GigDetail />} />
