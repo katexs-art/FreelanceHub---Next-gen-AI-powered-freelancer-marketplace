@@ -44,7 +44,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
       >
         <div className="flex items-center gap-6 h-16" style={{ padding: "0 40px" }}>
           <Link to="/" className="flex items-center">
-            <img src={katexsLogo} alt="KATEXS" style={{ height: 28, width: "auto", display: "block" }} />
+            <img src={katexsLogo} alt="KATEXS" style={{ height: 40, width: "auto", display: "block" }} />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-[13px] ml-4">
@@ -109,7 +109,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b-hairline">
       <div className="container-page flex items-center gap-6 h-16">
         <Link to="/" className="flex items-center">
-          <img src={katexsLogo} alt="KATEXS" style={{ height: 24, width: "auto", display: "block" }} />
+          <img src={katexsLogo} alt="KATEXS" style={{ height: 36, width: "auto", display: "block" }} />
         </Link>
 
         <nav className="hidden md:flex items-center gap-1 text-sm">
