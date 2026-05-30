@@ -184,6 +184,7 @@
   }
   .admin-status-pending     { background:#FEF3C7; color:#92400E; }
   .admin-status-approved    { background:#D1FAE5; color:#065F46; }
+  .admin-status-active      { background:#D1FAE5; color:#065F46; }
   .admin-status-suspended   { background:#FED7AA; color:#B45309; }
   .admin-status-banned      { background:#FEE2E2; color:#991B1B; }
   .admin-status-disputed    { background:#FEE2E2; color:#991B1B; }
@@ -192,6 +193,8 @@
   .admin-status-late        { background:#FEE2E2; color:#991B1B; }
   .admin-status-funds-locked   { background:#FEE2E2; color:#991B1B; }
   .admin-status-funds-released { background:#D1FAE5; color:#065F46; }
+  .admin-status-seller      { background:#DBEAFE; color:#1E40AF; }
+  .admin-status-buyer       { background:#F3E8FF; color:#6B21A8; }
 
   .admin-dot { display:inline-block; width:8px; height:8px; border-radius:9999px; flex-shrink:0; }
   .admin-dot-red    { background:#DC2626; }
