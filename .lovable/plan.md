@@ -1,36 +1,69 @@
+# Platform Audit & Hardening Plan
 
-## Heads up — the proposed fix won't resolve this error
+A full audit of a marketplace this size (28+ tables, 15+ edge functions, Stripe escrow, AI flows, messaging, disputes, admin) is a multi-pass engagement, not a single tool run. Below is how I'll structure it so nothing gets skipped and every finding ends with either a fix or a documented recommendation.
 
-I want to flag this before changing code, because applying the suggested edit will not fix the problem and will introduce a different bug.
+## Phase 1 — Static audit (read-only, no code changes)
 
-### What the error actually is
+1. **Database & RLS review**
+   - Re-read every policy on all 30+ public tables; flag overly-permissive `USING true`, missing `WITH CHECK`, anon exposure, and tables relying on client-set `user_id`.
+   - Verify `GRANT`s match policy intent on every table.
+   - Run `supabase--linter` and `supabase--db_health`.
+   - Audit SECURITY DEFINER functions for `search_path`, privilege escalation, and input validation.
+   - Check sensitive PII columns (email, phone, KYC) for read exposure.
 
-The browser shows `Error: forbidden`. That string comes from **line 76** of `supabase/functions/river-ops-chat/index.ts`:
+2. **Edge function review** (all 20+ functions)
+   - JWT verification, CORS, input validation (Zod), error handling, rate limiting.
+   - Stripe webhook signature enforcement, idempotency, race conditions on order creation.
+   - `river-ops-chat`, `river-chat`, `ai-search`: prompt-injection surface, cost controls.
+   - Secret usage and least-privilege service role usage.
 
-```ts
-const { data: prof } = await admin.from("profiles").select("role").eq("id", userId).maybeSingle();
-if (prof?.role !== "admin")
-  return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, ... });
-```
+3. **Frontend auth & route guards**
+   - `ProtectedRoute` role enforcement, admin-only routes, redirect loops.
+   - Client-side checks that should be server-enforced.
+   - Realtime subscriptions and RLS interaction.
 
-It is a **403 from our own admin-role guard**, returned *before* the function ever calls Anthropic. The Anthropic API key is not involved in this code path.
+4. **Payments & escrow integrity**
+   - Stripe checkout → webhook → order → transaction → withdrawal chain.
+   - Refund reversal math, dispute-hold logic, auto-complete cron, Connect transfers.
+   - Idempotency of `checkout.session.completed` vs `payment_intent.succeeded` (currently both create transactions — possible double-credit).
 
-Evidence:
-- `ANTHROPIC_API_KEY` is already configured (visible in the project secrets list).
-- Edge-function logs for `river-ops-chat` show only `booted`/`shutdown` — no Anthropic errors, no 5xx.
-- `profiles` shows the signed-in user `katexs@katexs.com` currently has `role = 'admin'`, but the React app uses a stale `useAuth` profile snapshot from before the most recent role promotion migration. The browser session was loaded before the promotion took effect, so locally the route renders but the edge function (re-checking the DB via service role) sees… actually the DB row is admin. So the most likely remaining cause is the **JWT itself is stale** (issued before the role-change/session refresh) OR the user is signed in as a different account in this preview tab than the one we promoted.
+5. **Notification, messaging, review pipelines**
+   - Trigger correctness, duplicate notifications, review visibility gating, response-stats recompute cost.
 
-### Why the suggested edit is wrong here
+## Phase 2 — Dynamic testing
 
-1. `ANTHROPIC_API_KEY` is already set — the new `if (!anthropicApiKey)` branch would never trigger.
-2. The replacement fetch removes the existing `ctxBlock` (live platform data) from the `system` prompt, drops `max_tokens` from 1200 → 1000, and hardcodes an old model (`claude-sonnet-4-20250514`) instead of the current `claude-sonnet-4-6`. That's a regression with no upside.
-3. It changes nothing about the 403 path that is actually firing.
-4. There is no separate "Edge Function Secrets vs Vault" split in Lovable Cloud — secrets shown in the project are already injected into every edge function's `Deno.env`.
+- Use `supabase--curl_edge_functions` to exercise each function with valid, invalid, unauthorized, and adversarial inputs.
+- Use `supabase--analytics_query` to inspect recent edge/DB logs for silent errors.
+- Browser tool: walk the buyer journey (browse → River search → checkout → requirements → delivery → review) and the seller journey (signup → onboarding → gig create → order → deliver → withdraw).
+- Sample-query the DB for orphan rows, negative balances, stuck `pending_payment` orders, expired promotions still active.
 
-### What I recommend instead (one of these, your call)
+## Phase 3 — Categorized findings report
 
-- **A. Verify the signed-in account.** Open DevTools → Application → Local Storage → copy the `sb-…-auth-token` `user.email`. Confirm it is `katexs@katexs.com`. If it is a different demo account, sign out and sign back in as the admin.
-- **B. Force-refresh the session** so the JWT is reissued: sign out, hard-reload, sign back in, then retry River Ops.
-- **C. If A and B don't resolve it,** add one diagnostic line to the edge function (temporary) that logs `userId` and `prof?.role` when the 403 returns, redeploy, and re-test — that will pinpoint whether it's a wrong user, missing profile row, or stale token.
+Each finding will include: severity, file/table, root cause, reproduction, recommended fix, and whether I auto-fixed it.
 
-I will not apply the dictated edit because it would silently break River Ops' live-context briefings without fixing the 403. If you still want it applied verbatim after reading this, say "apply it anyway" and I will.
+Severity tiers:
+- **P0** Security / money / data loss
+- **P1** Broken core flow
+- **P2** Reliability / scalability risk
+- **P3** UX / polish
+
+## Phase 4 — Fixes (build mode)
+
+I will fix P0 and P1 issues directly. P2/P3 will be listed with recommended migrations or refactors so you can prioritize. Anything touching money or schema will be a single reviewable migration.
+
+## Phase 5 — Scalability & architecture recommendations
+
+Covering: read replicas / instance sizing, indexing gaps, N+1 queries, virtualization on long lists, edge function cold starts, Stripe Connect vs current dual-flow, observability (logs/metrics/alerts), background job runner vs cron functions, secret rotation, backup/restore drills, abuse rate-limiting, and a path to SOC2-readiness.
+
+---
+
+## What I need from you before starting
+
+Because the scope is large and some areas are destructive to probe, please confirm:
+
+1. **Scope of fixes during this pass** — fix P0/P1 immediately, or audit-only and you review fixes first?
+2. **Test data permission** — may I create test buyer/seller accounts, place a $1 test order via Stripe test mode, and clean up after? (Required for true end-to-end payment validation.)
+3. **Time budget** — a thorough pass will span many tool calls across several turns. Confirm you want depth over speed.
+4. **Priority areas** — anything you already suspect (payments? River AI? admin?) that I should front-load.
+
+Once you confirm, I'll switch to build mode and begin Phase 1, posting findings incrementally rather than waiting until the very end.
