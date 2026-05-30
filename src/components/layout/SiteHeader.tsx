@@ -43,21 +43,12 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         }}
       >
         <div className="flex items-center gap-6 h-16" style={{ padding: "0 40px" }}>
-          <Link
-            to="/"
-            className="flex items-center"
-            style={{
-              background: "transparent",
-              border: "none",
-              padding: 0,
-              color: "#fff",
-              fontSize: 18,
-              fontWeight: 600,
-              letterSpacing: "0.12em",
-              textDecoration: "none",
-            }}
-          >
-            KATEXS
+          <Link to="/" className="flex items-center" style={{ background: "transparent", border: "none", padding: 0 }}>
+            <img
+              src={katexsLogo}
+              alt="KATEXS"
+              style={{ height: 36, width: "auto", display: "block", background: "transparent", filter: "invert(1)" }}
+            />
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-[13px] ml-4">
