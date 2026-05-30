@@ -1986,6 +1986,10 @@ export type Database = {
         Args: { _source: string; _source_id: string }
         Returns: string
       }
+      create_gig_order: {
+        Args: { _extra_ids?: string[]; _package_id: string }
+        Returns: string
+      }
       create_notification: {
         Args: {
           _body: string
