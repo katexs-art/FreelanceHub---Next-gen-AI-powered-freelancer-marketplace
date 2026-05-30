@@ -34,21 +34,41 @@ Deno.serve(async (req) => {
     if (!acct?.stripe_account_id || !acct.payouts_enabled) throw new Error("Payout account not connected");
     if (amountCents > (acct.available_balance ?? 0)) throw new Error("Amount exceeds available balance");
 
+    // Atomic balance decrement — fails if balance changed in the meantime,
+    // preventing double-withdrawals from concurrent requests.
+    const { data: locked, error: lockErr } = await admin
+      .from("seller_accounts")
+      .update({ available_balance: (acct.available_balance ?? 0) - amountCents })
+      .eq("seller_id", u.user.id)
+      .eq("available_balance", acct.available_balance ?? 0)
+      .select("available_balance")
+      .maybeSingle();
+    if (lockErr || !locked) throw new Error("Balance changed, please retry");
+
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
 
     let payout: any;
     let method: "stripe_instant" | "stripe_bank" = "stripe_instant";
     try {
-      payout = await stripe.payouts.create(
-        { amount: amountCents, currency: "usd", method: "instant" },
-        { stripeAccount: acct.stripe_account_id },
-      );
-    } catch (_e) {
-      payout = await stripe.payouts.create(
-        { amount: amountCents, currency: "usd", method: "standard" },
-        { stripeAccount: acct.stripe_account_id },
-      );
-      method = "stripe_bank";
+      try {
+        payout = await stripe.payouts.create(
+          { amount: amountCents, currency: "usd", method: "instant" },
+          { stripeAccount: acct.stripe_account_id },
+        );
+      } catch (_e) {
+        payout = await stripe.payouts.create(
+          { amount: amountCents, currency: "usd", method: "standard" },
+          { stripeAccount: acct.stripe_account_id },
+        );
+        method = "stripe_bank";
+      }
+    } catch (stripeErr) {
+      // Refund the optimistic decrement so the seller doesn't lose balance
+      await admin
+        .from("seller_accounts")
+        .update({ available_balance: (locked.available_balance ?? 0) + amountCents })
+        .eq("seller_id", u.user.id);
+      throw stripeErr;
     }
 
     await admin.from("withdrawals").insert({

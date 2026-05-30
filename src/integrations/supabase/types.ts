@@ -1224,6 +1224,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          bucket: string
+          count: number
+          id: string
+          identifier: string
+          window_start: string
+        }
+        Insert: {
+          bucket: string
+          count?: number
+          id?: string
+          identifier: string
+          window_start?: string
+        }
+        Update: {
+          bucket?: string
+          count?: number
+          id?: string
+          identifier?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       reports: {
         Row: {
           created_at: string
@@ -1699,6 +1723,27 @@ export type Database = {
           },
         ]
       }
+      webhook_events: {
+        Row: {
+          event_type: string
+          id: string
+          processed_at: string
+          source: string
+        }
+        Insert: {
+          event_type: string
+          id: string
+          processed_at?: string
+          source: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          processed_at?: string
+          source?: string
+        }
+        Relationships: []
+      }
       webhook_logs: {
         Row: {
           created_at: string
@@ -1952,6 +1997,46 @@ export type Database = {
         Returns: undefined
       }
       expire_promotions: { Args: never; Returns: undefined }
+      get_my_profile: {
+        Args: never
+        Returns: {
+          application_submitted_at: string | null
+          avatar_url: string | null
+          average_rating: number | null
+          bio: string | null
+          country: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          is_online: boolean
+          languages: string[] | null
+          last_seen: string | null
+          location: string | null
+          member_since: string
+          pending_packages: Json
+          portfolio_urls: string[]
+          primary_category: string | null
+          rejection_reason: string | null
+          response_rate: number | null
+          response_time_minutes: number | null
+          river_score: number | null
+          role: Database["public"]["Enums"]["user_role"]
+          secondary_category: string | null
+          seller_skills: string[]
+          seller_status: string
+          suspended_at: string | null
+          total_reviews: number
+          updated_at: string
+          username: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "profiles"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_my_promotion_stats: {
         Args: never
         Returns: {

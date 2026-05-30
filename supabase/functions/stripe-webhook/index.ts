@@ -18,6 +18,10 @@ Deno.serve(async (req) => {
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
   if (!stripeKey) return new Response("missing key", { status: 500 });
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not configured — refusing to process webhook");
+    return new Response("webhook secret not configured", { status: 500 });
+  }
 
   const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
   const body = await req.text();
@@ -25,11 +29,8 @@ Deno.serve(async (req) => {
 
   try {
     const sig = req.headers.get("stripe-signature");
-    if (webhookSecret && sig) {
-      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
-    } else {
-      event = JSON.parse(body) as Stripe.Event;
-    }
+    if (!sig) return new Response("missing signature", { status: 400 });
+    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
   } catch (e) {
     console.error("webhook signature error", e);
     return new Response("invalid signature", { status: 400 });
@@ -41,6 +42,18 @@ Deno.serve(async (req) => {
   );
 
   try {
+    // Idempotency: skip if this event id has already been processed
+    const { error: dedupErr } = await admin
+      .from("webhook_events")
+      .insert({ id: event.id, source: "stripe", event_type: event.type });
+    if (dedupErr) {
+      // unique violation = already processed; ack so Stripe stops retrying
+      console.log("webhook event already processed", event.id);
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
       const md = session.metadata ?? {};

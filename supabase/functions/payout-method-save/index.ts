@@ -39,7 +39,10 @@ Deno.serve(async (req) => {
       const email = String(body.paypal_email ?? "").trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Valid PayPal email required");
       update.paypal_email = email;
-      update.payouts_enabled = true;
+      // Do NOT auto-enable payouts: PayPal email must be admin-verified before
+      // it can receive funds, otherwise anyone could redirect payouts to an
+      // arbitrary address.
+      update.payouts_enabled = false;
     } else {
       // stripe_bank
       const country = String(body.country ?? "").toUpperCase();
