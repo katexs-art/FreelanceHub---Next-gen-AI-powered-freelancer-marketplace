@@ -1982,6 +1982,7 @@ export type Database = {
       auto_complete_orders: { Args: never; Returns: undefined }
       auto_publish_reviews: { Args: never; Returns: undefined }
       clear_due_seller_credits: { Args: never; Returns: undefined }
+      clear_test_messages: { Args: never; Returns: undefined }
       create_escrow_order: {
         Args: { _source: string; _source_id: string }
         Returns: string
@@ -2102,7 +2103,17 @@ export type Database = {
         Args: { _reason: string; _seller: string }
         Returns: undefined
       }
+      reset_test_orders: { Args: never; Returns: undefined }
+      reset_test_users: { Args: never; Returns: undefined }
       seller_follower_count: { Args: { _seller: string }; Returns: number }
+      simulate_mark_order_paid: {
+        Args: { _order_id: string }
+        Returns: undefined
+      }
+      simulate_order_time_advance: {
+        Args: { _mode: string; _order_id: string }
+        Returns: undefined
+      }
       submit_bid: {
         Args: {
           _attachments?: string[]
