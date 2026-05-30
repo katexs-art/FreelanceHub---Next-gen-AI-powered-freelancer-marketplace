@@ -81,6 +81,7 @@ const App = () => (
             <Route path="/category/:slug" element={<CategoryPage />} />
             <Route path="/gig/:slug" element={<GigDetail />} />
             <Route path="/u/:username" element={<SellerProfile />} />
+            <Route path="/seller/:username" element={<SellerIntelligenceProfile />} />
             <Route path="/become-a-seller" element={<BecomeSeller />} />
 
             {/* Buyer */}
