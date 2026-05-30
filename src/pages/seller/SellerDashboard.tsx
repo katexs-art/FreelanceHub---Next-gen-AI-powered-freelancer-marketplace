@@ -42,7 +42,7 @@ export default function SellerDashboard() {
         supabase.from("gigs").select("id", { count: "exact", head: true }).eq("seller_id", user.id).eq("status", "active"),
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("seller_id", user.id).in("status", ["in_progress","delivered","revision_requested","active"] as any),
         supabase.from("gigs").select("total_orders,total_reviews,average_rating,impressions,clicks").eq("seller_id", user.id),
-        supabase.from("seller_accounts").select("lifetime_earnings,available_balance,pending_balance").eq("seller_id", user.id).maybeSingle(),
+        supabase.from("seller_accounts").select("lifetime_earnings,available_balance,pending_balance,charges_enabled,onboarding_complete").eq("seller_id", user.id).maybeSingle(),
         supabase.from("orders").select("created_at").eq("seller_id", user.id).gte("created_at", since30).order("created_at"),
       ]);
 
