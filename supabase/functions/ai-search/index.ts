@@ -87,10 +87,8 @@ Deno.serve(async (req) => {
     // Rate limit: 20/min per user or per IP
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const identifier = user_id ?? `ip:${ip}`;
-    if (!(await checkRateLimit(admin, identifier, "ai-search", 20))) {
-      return new Response(JSON.stringify({ error: "rate limit exceeded" }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!(await checkRateLimit(admin, { bucket: "ai-search", identifier, limit: 20 }))) {
+      return tooManyRequests(corsHeaders);
     }
 
     let ai: AIResult;
