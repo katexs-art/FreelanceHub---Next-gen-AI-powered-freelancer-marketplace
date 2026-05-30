@@ -1,12 +1,12 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
+const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-const SYSTEM_PROMPT = `You are River, an AI matching engine for Katexs, the world's first AI-native freelance marketplace. When a buyer describes what they need you analyze their request and identify the most important skills, tools, categories, and expertise required. You return a JSON object with these fields — required_skills as an array of strings, category as a string matching our platform categories, budget_signal as low medium or high, urgency_signal as low medium or high, and match_summary as one sentence describing the ideal seller for this job. Return only valid JSON with no additional text.`;
+const SYSTEM_PROMPT = `You are River, an AI matching engine for Katexs, the world's first AI-native freelance marketplace. When a buyer describes what they need you analyze their request and identify the most important skills, tools, categories, and expertise required. You return ONLY a JSON object with these fields — required_skills as an array of strings, category as a string matching our platform categories, budget_signal as low medium or high, urgency_signal as low medium or high, and match_summary as one sentence describing the ideal seller for this job. Return only valid JSON with no additional text or markdown.`;
 
 type Signals = {
   required_skills: string[];
@@ -16,24 +16,22 @@ type Signals = {
   match_summary: string;
 };
 
-async function callClaude(query: string): Promise<Signals> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+async function callAI(query: string): Promise<Signals> {
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
     method: "POST",
-    headers: {
-      "x-api-key": ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
+    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${LOVABLE_API_KEY}` },
     body: JSON.stringify({
-      model: "claude-sonnet-4-6",
-      max_tokens: 600,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: query }],
+      model: "google/gemini-2.5-flash",
+      max_tokens: 400,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: query },
+      ],
     }),
   });
-  if (!res.ok) throw new Error(`anthropic ${res.status}: ${await res.text()}`);
+  if (!res.ok) throw new Error(`ai gateway ${res.status}: ${await res.text()}`);
   const data = await res.json();
-  const text = data?.content?.[0]?.text ?? "{}";
+  const text = data?.choices?.[0]?.message?.content ?? "{}";
   const jsonStr = text.replace(/```json|```/g, "").trim();
   const parsed = JSON.parse(jsonStr);
   return {
@@ -86,9 +84,9 @@ Deno.serve(async (req) => {
 
     let signals: Signals;
     try {
-      signals = await callClaude(query);
+      signals = await callAI(query);
     } catch (e) {
-      console.warn("claude fallback", (e as Error).message);
+      console.warn("ai fallback", (e as Error).message);
       signals = { required_skills: [], category: "", budget_signal: "medium", urgency_signal: "medium", match_summary: "" };
     }
 

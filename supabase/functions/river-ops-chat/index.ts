@@ -62,13 +62,13 @@ Deno.serve(async (req) => {
     });
   }
   try {
-    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY')
-    if (!anthropicApiKey) {
-      return new Response(JSON.stringify({ error: 'API key not configured' }), {
+    if (!Deno.env.get('LOVABLE_API_KEY')) {
+      return new Response(JSON.stringify({ error: 'AI not configured' }), {
         status: 500,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -90,27 +90,28 @@ Deno.serve(async (req) => {
     const ctx = await gatherContext();
     const ctxBlock = `\n\nLive platform data (UTC, today so far):\n- Orders today: ${ctx.orders_today}\n- Revenue today (platform fees, cents): ${ctx.revenue_today_cents}\n- Open disputes: ${ctx.open_disputes}\n- Pending seller applications: ${ctx.pending_seller_applications}\n- Active orders: ${ctx.active_orders}\n- Top 5 sellers by completed orders this week: ${ctx.top_sellers_week.join(", ") || "none"}\n- New signups today: ${ctx.new_signups_today}\n- River searches today: ${ctx.river_searches_today}`;
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': anthropicApiKey,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'google/gemini-2.5-pro',
         max_tokens: 1000,
-        system: SYSTEM_PROMPT + ctxBlock,
-        messages: messages.map((m: any) => ({ role: m.role === "user" ? "user" : "assistant", content: String(m.content ?? "") })),
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT + ctxBlock },
+          ...messages.map((m: any) => ({ role: m.role === "user" ? "user" : "assistant", content: String(m.content ?? "") })),
+        ],
       }),
     });
 
     if (!res.ok) {
       const txt = await res.text();
-      return new Response(JSON.stringify({ error: "anthropic error", details: txt }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return new Response(JSON.stringify({ error: "ai error", details: txt }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
     const data = await res.json();
-    const reply = data?.content?.[0]?.text ?? "";
+    const reply = data?.choices?.[0]?.message?.content ?? "";
 
     const lastUser = [...messages].reverse().find((m: any) => m.role === "user");
     const inserts: any[] = [];
