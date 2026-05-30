@@ -1,7 +1,6 @@
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -63,6 +62,14 @@ Deno.serve(async (req) => {
     });
   }
   try {
+    const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY')
+    if (!anthropicApiKey) {
+      return new Response(JSON.stringify({ error: 'API key not configured' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) return new Response(JSON.stringify({ error: "unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -83,12 +90,16 @@ Deno.serve(async (req) => {
     const ctx = await gatherContext();
     const ctxBlock = `\n\nLive platform data (UTC, today so far):\n- Orders today: ${ctx.orders_today}\n- Revenue today (platform fees, cents): ${ctx.revenue_today_cents}\n- Open disputes: ${ctx.open_disputes}\n- Pending seller applications: ${ctx.pending_seller_applications}\n- Active orders: ${ctx.active_orders}\n- Top 5 sellers by completed orders this week: ${ctx.top_sellers_week.join(", ") || "none"}\n- New signups today: ${ctx.new_signups_today}\n- River searches today: ${ctx.river_searches_today}`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "x-api-key": ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01", "content-type": "application/json" },
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': anthropicApiKey,
+        'anthropic-version': '2023-06-01'
+      },
       body: JSON.stringify({
-        model: "claude-sonnet-4-6",
-        max_tokens: 1200,
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
         system: SYSTEM_PROMPT + ctxBlock,
         messages: messages.map((m: any) => ({ role: m.role === "user" ? "user" : "assistant", content: String(m.content ?? "") })),
       }),

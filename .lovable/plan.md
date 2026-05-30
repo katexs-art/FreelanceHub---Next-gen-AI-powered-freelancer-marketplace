@@ -1,58 +1,36 @@
-# Services page at `/services`
 
-Scope: new page + one nav-link insertion + one small read of an existing prop in `Browse.tsx`. No other changes.
+## Heads up — the proposed fix won't resolve this error
 
-## 1. New file `src/pages/Services.tsx`
+I want to flag this before changing code, because applying the suggested edit will not fix the problem and will introduce a different bug.
 
-Single self-contained page using existing tokens where possible, with inline styles for the exact hex/px values from the spec.
+### What the error actually is
 
-Sections:
-- **Header**: `<h1>AI Services</h1>` (28px / 700) + subtitle (14px / #666). Full-width, container-padded.
-- **Services grid** — 4-col responsive grid (1→2→4 cols). 8 hard-coded category objects in the exact order: `Build with AI`, `Sound and Speak with AI`, `Create with AI`, `Grow with AI`, `Run with AI`, `Understand AI`, `Write with AI`, `Learn AI`, each with the spec description and 3 hard-coded top skill tags relevant to the category.
-  - Card: white bg, 1px #e5e5e5 border, 12px radius, 24px padding, cursor pointer. Hover: `box-shadow: 0 4px 16px rgba(0,0,0,0.08)`, `border-color: #000`, `transition: 0.2s`.
-  - Title 16/700, description 13/#666, count `X services available` 12/#999 from a single Supabase query (see below), tag pills (grey #f5f5f5 / #333), bottom link `Browse services →` 13/600 black.
-  - Click → `navigate('/browse?category=' + encodeURIComponent(name))`.
-- **Featured sellers strip**: heading `Top Experts This Week` 20/700. Horizontal scrollable strip (`overflow-x:auto`, `scroll-snap-x`) of top 5 approved sellers ordered by `river_score desc` over the last 7 days (query: `profiles where seller_status='approved' and suspended_at is null order by river_score desc nulls last limit 5`). Small card: avatar, name, "River Score X.X" pill, top skill tag, "View Profile" button linking to `/u/:username`.
-- **How it works**: heading 20/700, three columns. Step number 48/700/#e5e5e5, title 16/700, description 13/#666. Exact copy from spec.
-- **Bottom CTA**: full-width black banner, white heading 24/700 `Ready to get started?`, subtext 14/#ccc, white pill button (radius 999px, padding 12px 32px) `Find My Expert` → `/` (homepage River search bar).
-
-Data fetching:
-- One `supabase.from('gigs').select('category', { count: 'exact', head: false }).eq('status','active')` — group counts client-side by mapping each gig's `category` to its parent display name. Mapping uses a lookup table from category-name aliases (`build`, `sound`, `voice`, etc.) to the 8 parent labels. Anything unmatched is ignored.
-- One realtime-free `profiles` query for the top sellers strip.
-
-No existing styles, tokens, or components are modified.
-
-## 2. Route registration — `src/App.tsx`
-
-Add a lazy import:
-```ts
-const Services = lazy(() => import('./pages/Services'));
-```
-and a `<Route path="/services" element={<Services />} />` next to the existing `/browse` route. No other route changes.
-
-## 3. Nav link — `src/components/layout/SiteHeader.tsx`
-
-Insert one new link between the existing `Browse` link (line 28) and the `Messages` link (line 38) — placed right after the `Browse` link so it reads Browse · Services · Sell · Projects … Messages, matching the spec ("between Browse and Messages"):
-
-```tsx
-<Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Services</Link>
-```
-
-No styles or other links change.
-
-## 4. Browse pre-select — `src/pages/Browse.tsx`
-
-The Browse page already keeps a `category` state initialised to `"All"`. Read an initial value from the URL query string so `/browse?category=Build%20with%20AI` lands with that pill active:
+The browser shows `Error: forbidden`. That string comes from **line 76** of `supabase/functions/river-ops-chat/index.ts`:
 
 ```ts
-const [searchParams] = useSearchParams();
-const [category, setCategory] = useState(searchParams.get('category') ?? 'All');
+const { data: prof } = await admin.from("profiles").select("role").eq("id", userId).maybeSingle();
+if (prof?.role !== "admin")
+  return new Response(JSON.stringify({ error: "forbidden" }), { status: 403, ... });
 ```
 
-Add `useSearchParams` to the existing `react-router-dom` import. No other change to Browse (no filter logic, layout, styles, or queries touched).
+It is a **403 from our own admin-role guard**, returned *before* the function ever calls Anthropic. The Anthropic API key is not involved in this code path.
 
-## Out of scope
+Evidence:
+- `ANTHROPIC_API_KEY` is already configured (visible in the project secrets list).
+- Edge-function logs for `river-ops-chat` show only `booted`/`shutdown` — no Anthropic errors, no 5xx.
+- `profiles` shows the signed-in user `katexs@katexs.com` currently has `role = 'admin'`, but the React app uses a stale `useAuth` profile snapshot from before the most recent role promotion migration. The browser session was loaded before the promotion took effect, so locally the route renders but the edge function (re-checking the DB via service role) sees… actually the DB row is admin. So the most likely remaining cause is the **JWT itself is stale** (issued before the role-change/session refresh) OR the user is signed in as a different account in this preview tab than the one we promoted.
 
-- No DB migrations, edge functions, types, or other pages.
-- No changes to colors, fonts, images, layout, or styling anywhere else.
-- No new components, hooks, or utilities outside `Services.tsx`.
+### Why the suggested edit is wrong here
+
+1. `ANTHROPIC_API_KEY` is already set — the new `if (!anthropicApiKey)` branch would never trigger.
+2. The replacement fetch removes the existing `ctxBlock` (live platform data) from the `system` prompt, drops `max_tokens` from 1200 → 1000, and hardcodes an old model (`claude-sonnet-4-20250514`) instead of the current `claude-sonnet-4-6`. That's a regression with no upside.
+3. It changes nothing about the 403 path that is actually firing.
+4. There is no separate "Edge Function Secrets vs Vault" split in Lovable Cloud — secrets shown in the project are already injected into every edge function's `Deno.env`.
+
+### What I recommend instead (one of these, your call)
+
+- **A. Verify the signed-in account.** Open DevTools → Application → Local Storage → copy the `sb-…-auth-token` `user.email`. Confirm it is `katexs@katexs.com`. If it is a different demo account, sign out and sign back in as the admin.
+- **B. Force-refresh the session** so the JWT is reissued: sign out, hard-reload, sign back in, then retry River Ops.
+- **C. If A and B don't resolve it,** add one diagnostic line to the edge function (temporary) that logs `userId` and `prof?.role` when the 403 returns, redeploy, and re-test — that will pinpoint whether it's a wrong user, missing profile row, or stale token.
+
+I will not apply the dictated edit because it would silently break River Ops' live-context briefings without fixing the 403. If you still want it applied verbatim after reading this, say "apply it anyway" and I will.
