@@ -74,6 +74,84 @@ export type Database = {
           },
         ]
       }
+      announcements: {
+        Row: {
+          audience: string
+          body: string
+          channel: string
+          created_at: string
+          created_by: string
+          id: string
+          open_count: number
+          recipient_count: number
+          scheduled_for: string | null
+          sent_at: string | null
+          title: string
+        }
+        Insert: {
+          audience: string
+          body: string
+          channel?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          open_count?: number
+          recipient_count?: number
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title: string
+        }
+        Update: {
+          audience?: string
+          body?: string
+          channel?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          open_count?: number
+          recipient_count?: number
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      audit_log: {
+        Row: {
+          action_type: string
+          admin_id: string
+          admin_name: string | null
+          created_at: string
+          description: string | null
+          id: string
+          ip_address: string | null
+          target_id: string | null
+          target_type: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          admin_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          admin_name?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          target_id?: string | null
+          target_type?: string | null
+        }
+        Relationships: []
+      }
       bids: {
         Row: {
           attachments: string[]
@@ -403,6 +481,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      featured_sellers: {
+        Row: {
+          created_at: string
+          id: string
+          position: number
+          seller_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          position?: number
+          seller_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          position?: number
+          seller_id?: string
+        }
+        Relationships: []
       }
       gig_extras: {
         Row: {
