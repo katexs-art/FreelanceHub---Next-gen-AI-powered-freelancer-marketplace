@@ -45,6 +45,7 @@ const LeaveReviewPage = lazy(() => import("./pages/orders/LeaveReviewPage"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const Earnings = lazy(() => import("./pages/seller/Earnings"));
 const Admin = lazy(() => import("./pages/admin/Admin"));
+const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 
 const RiverOps = lazy(() => import("./pages/admin/RiverOps"));
 const NotificationPreferences = lazy(() => import("./pages/account/NotificationPreferences"));
@@ -118,6 +119,7 @@ const App = () => (
             <Route path="/settings/notifications" element={<ProtectedRoute><NotificationPreferences /></ProtectedRoute>} />
 
             {/* Admin */}
+            <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/river-ops" element={<ProtectedRoute roles={["admin"]}><RiverOps /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
             <Route path="/admin/:section" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
