@@ -31,10 +31,24 @@ export default function RiverOps() {
   const sendMessages = async (next: Msg[], dailyBriefing = false) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke("river-ops-chat", {
-        body: { messages: next.map((m) => ({ role: m.role, content: m.content })), daily_briefing: dailyBriefing },
+      const { data: { session } } = await supabase.auth.getSession();
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
+      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+      const token = session?.access_token ?? supabaseAnonKey;
+
+      const response = await fetch(supabaseUrl + '/functions/v1/river-ops-chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          messages: next.map((m) => ({ role: m.role, content: m.content })),
+          daily_briefing: dailyBriefing,
+        }),
       });
-      if (error) throw error;
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error((data as any)?.error || 'request failed');
       const reply = (data as any)?.reply || (data as any)?.error || "Couldn't reach River Ops.";
       setMessages([...next, { role: "assistant", content: reply, daily_briefing: dailyBriefing }]);
     } catch (e: any) {
