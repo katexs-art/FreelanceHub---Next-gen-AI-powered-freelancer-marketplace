@@ -63,7 +63,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div style={{ background: "#fff", color: "#000", minHeight: "100vh" }}>
+    <div style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
       <SEO
         title="KATEXS — Hire AI experts. Ship faster."
         description="Tell River what you need — the best AI experts come to you in seconds. The world's first AI-native freelance marketplace."
@@ -80,10 +80,10 @@ export default function Landing() {
           .kx-grid-stats { grid-template-columns: 1fr 1fr !important; }
         }
         .kx-cat-card { transition: all 0.2s ease; }
-        .kx-cat-card:hover { border-color: #000 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .kx-btn-primary:hover { background: #111 !important; }
+        .kx-cat-card:hover { border-color: #fff !important; box-shadow: 0 4px 20px rgba(255,255,255,0.08); transform: translateY(-2px); }
+        .kx-btn-primary:hover { background: #eee !important; }
         .kx-seller-card { transition: all 0.2s ease; }
-        .kx-seller-card:hover { border-color: #000 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .kx-seller-card:hover { border-color: #fff !important; box-shadow: 0 4px 20px rgba(255,255,255,0.06); }
       `}</style>
 
       <SiteHeader variant="transparent" />
