@@ -69,78 +69,252 @@ function sellerStatusVariant(s: string): StatusVariant {
   return "approved";
 }
 
-/* ------------- Real-time nav indicators ------------- */
-function useAdminNavIndicators() {
-  const [disputes, setDisputes] = useState(0);
-  const [pendingSellers, setPendingSellers] = useState(0);
-  const [activeOrders, setActiveOrders] = useState(0);
+/* ------------- Real-time admin indicators ------------- */
+type Indicators = {
+  buyersToday: number; pendingSellers: number; pendingVerifications: number;
+  activeOrders: number; lateOrders: number; openProjects: number; activeGigs: number;
+  openDisputes: number; reviewsToday: number;
+  escrowHeld: number; pendingPayouts: number; refundsWeek: number;
+  riverSearchesToday: number; riverOpsUnread: number;
+  activeCategories: number;
+};
+
+function startOfTodayIso() { const d = new Date(); d.setHours(0,0,0,0); return d.toISOString(); }
+function weekAgoIso() { return new Date(Date.now() - 7*24*3600*1000).toISOString(); }
+
+function useAdminIndicators(): Indicators {
+  const [s, setS] = useState<Indicators>({
+    buyersToday: 0, pendingSellers: 0, pendingVerifications: 0,
+    activeOrders: 0, lateOrders: 0, openProjects: 0, activeGigs: 0,
+    openDisputes: 0, reviewsToday: 0,
+    escrowHeld: 0, pendingPayouts: 0, refundsWeek: 0,
+    riverSearchesToday: 0, riverOpsUnread: 0, activeCategories: 0,
+  });
 
   useEffect(() => {
     let cancelled = false;
     const recount = async () => {
-      const [d, p, o] = await Promise.all([
-        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "disputed"),
-        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("seller_status", "pending_approval"),
-        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["pending_requirements", "delivered", "revision_requested", "active"] as any),
+      const today = startOfTodayIso();
+      const week = weekAgoIso();
+      const nowIso = new Date().toISOString();
+      const lastSeen = localStorage.getItem("river_ops_last_seen") ?? "1970-01-01";
+      const [bt, ps, pv, ao, lo, op, ag, od, rt, eh, pp, rw, rs, ro, ac] = await Promise.all([
+        supabase.from("profiles").select("id", { count: "exact", head: true }).eq("role", "client").gte("created_at", today),
+        supabase.from("seller_applications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("seller_verifications").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["in_progress","delivered","revision_requested","pending_requirements"] as any),
+        supabase.from("orders").select("id", { count: "exact", head: true }).lt("delivery_deadline", nowIso).not("status", "in", "(completed,cancelled,refunded)" as any),
+        supabase.from("project_posts").select("id", { count: "exact", head: true }).eq("status", "open"),
+        supabase.from("gigs").select("id", { count: "exact", head: true }).eq("status", "active"),
+        supabase.from("disputes").select("id", { count: "exact", head: true }).eq("status", "open"),
+        supabase.from("reviews").select("id", { count: "exact", head: true }).gte("created_at", today),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("escrow_status", "held"),
+        supabase.from("withdrawals").select("id", { count: "exact", head: true }).eq("status", "requested"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).gte("refunded_at", week),
+        supabase.from("ai_search_sessions").select("id", { count: "exact", head: true }).gte("created_at", today),
+        supabase.from("river_ops_conversations").select("id", { count: "exact", head: true }).eq("role", "assistant").gt("created_at", lastSeen),
+        supabase.from("categories").select("id", { count: "exact", head: true }).eq("is_active", true),
       ]);
       if (cancelled) return;
-      setDisputes(d.count ?? 0);
-      setPendingSellers(p.count ?? 0);
-      setActiveOrders(o.count ?? 0);
+      setS({
+        buyersToday: bt.count ?? 0, pendingSellers: ps.count ?? 0, pendingVerifications: pv.count ?? 0,
+        activeOrders: ao.count ?? 0, lateOrders: lo.count ?? 0, openProjects: op.count ?? 0, activeGigs: ag.count ?? 0,
+        openDisputes: od.count ?? 0, reviewsToday: rt.count ?? 0,
+        escrowHeld: eh.count ?? 0, pendingPayouts: pp.count ?? 0, refundsWeek: rw.count ?? 0,
+        riverSearchesToday: rs.count ?? 0, riverOpsUnread: ro.count ?? 0, activeCategories: ac.count ?? 0,
+      });
     };
     recount();
-
-    const ch = supabase
-      .channel("admin-nav-indicators")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, recount)
-      .on("postgres_changes", { event: "*", schema: "public", table: "disputes" }, recount)
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, recount)
-      .subscribe();
-    return () => { cancelled = true; supabase.removeChannel(ch); };
+    const tables = ["profiles","seller_applications","seller_verifications","orders","project_posts","gigs","disputes","reviews","withdrawals","ai_search_sessions","river_ops_conversations","categories"];
+    const ch = supabase.channel("admin-indicators");
+    tables.forEach((t) => ch.on("postgres_changes" as any, { event: "*", schema: "public", table: t }, recount));
+    ch.subscribe();
+    const interval = setInterval(recount, 60_000);
+    return () => { cancelled = true; supabase.removeChannel(ch); clearInterval(interval); };
   }, []);
 
-  return { disputes, pendingSellers, activeOrders };
+  return s;
+}
+
+/* ------------- System health (60s) ------------- */
+type Health = {
+  supabase: { status: "connected"|"down"; latency_ms?: number };
+  stripe: { status: "live"|"error"; mode?: "live"|"test" };
+  anthropic: { status: "active"|"error" };
+  email?: { status: "connected"|"error" };
+  last_checked?: string;
+} | null;
+
+function useSystemHealth(): Health {
+  const [h, setH] = useState<Health>(null);
+  useEffect(() => {
+    let cancelled = false;
+    const ping = async () => {
+      try {
+        const { data } = await supabase.functions.invoke("system-health", { body: {} });
+        if (!cancelled && data) setH({ ...data, last_checked: new Date().toISOString() });
+      } catch { /* noop */ }
+    };
+    ping();
+    const id = setInterval(ping, 60_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, []);
+  return h;
 }
 
 /* ------------- Sidebar ------------- */
-function AdminNav({
-  active, onChange, indicators,
-}: { active: NavKey; onChange: (k: NavKey) => void; indicators: ReturnType<typeof useAdminNavIndicators> }) {
-  const items: { key: NavKey; label: string; icon: any; dot?: "red" | "yellow" | "green" | "blue" | null }[] = [
-    { key: "buyers",        label: "Buyers",        icon: UserCircle2 },
-    { key: "sellers",       label: "Sellers",       icon: Users,        dot: indicators.pendingSellers > 0 ? "yellow" : null },
-    { key: "orders",        label: "Orders",        icon: ShoppingBag,  dot: indicators.activeOrders > 0 ? "blue" : null },
-    { key: "revenue",       label: "Revenue",       icon: DollarSign,   dot: "green" },
-    { key: "disputes",      label: "Disputes",      icon: AlertTriangle, dot: indicators.disputes > 0 ? "red" : null },
-    { key: "withdrawals",   label: "Withdrawals",   icon: Banknote },
-    { key: "verifications", label: "Verifications", icon: BadgeCheck },
-    { key: "reports",       label: "Reports",       icon: Flag },
+type Dot = "green" | "red" | "yellow" | "blue" | "orange" | null;
+type Badge = { value: number; tone: "blue" | "grey" | "red" | "orange" | "yellow" } | null;
+type NavItem = { key: NavKey; label: string; icon: any; dot?: Dot; badge?: Badge };
+
+function AdminSidebar({ active, indicators, health }: { active: NavKey; indicators: Indicators; health: Health }) {
+  const i = indicators;
+  const sections: { label: string; items: NavItem[] }[] = [
+    { label: "Overview", items: [
+      { key: "overview", label: "Overview", icon: LayoutDashboard, dot: health ? (health.supabase.status === "connected" && health.stripe.status === "live" && health.anthropic.status === "active" ? "green" : "red") : "green" },
+    ]},
+    { label: "People", items: [
+      { key: "buyers", label: "Buyers", icon: UserCircle2, badge: i.buyersToday > 0 ? { value: i.buyersToday, tone: "blue" } : null },
+      { key: "sellers", label: "Sellers", icon: Users, dot: i.pendingSellers > 0 ? "yellow" : null },
+      { key: "verifications", label: "Verifications", icon: BadgeCheck, badge: i.pendingVerifications > 0 ? { value: i.pendingVerifications, tone: "yellow" } : null },
+    ]},
+    { label: "Marketplace", items: [
+      { key: "orders", label: "Orders", icon: ShoppingBag, dot: i.activeOrders > 0 ? "blue" : null, badge: i.lateOrders > 0 ? { value: i.lateOrders, tone: "red" } : null },
+      { key: "projects", label: "Projects and Bids", icon: Briefcase, badge: i.openProjects > 0 ? { value: i.openProjects, tone: "blue" } : null },
+      { key: "gigs", label: "Gigs", icon: Folder, badge: { value: i.activeGigs, tone: "grey" } },
+      { key: "disputes", label: "Disputes", icon: AlertTriangle, badge: i.openDisputes > 0 ? { value: i.openDisputes, tone: "red" } : null },
+      { key: "reviews", label: "Reviews", icon: Star, badge: i.reviewsToday > 0 ? { value: i.reviewsToday, tone: "blue" } : null },
+    ]},
+    { label: "Money", items: [
+      { key: "revenue", label: "Revenue", icon: DollarSign, dot: "green" },
+      { key: "escrow", label: "Escrow", icon: Lock, badge: i.escrowHeld > 0 ? { value: i.escrowHeld, tone: "orange" } : null },
+      { key: "payouts", label: "Payouts", icon: Banknote, badge: i.pendingPayouts > 0 ? { value: i.pendingPayouts, tone: "blue" } : null },
+      { key: "refunds", label: "Refunds", icon: RefreshCcw, badge: i.refundsWeek > 0 ? { value: i.refundsWeek, tone: "grey" } : null },
+    ]},
+    { label: "River", items: [
+      { key: "river", label: "River Controls", icon: Bot, dot: health ? (health.anthropic.status === "active" ? "green" : "red") : "green" },
+      { key: "river-analytics", label: "River Analytics", icon: BarChart3, badge: { value: i.riverSearchesToday, tone: "grey" } },
+      { key: "river-ops", label: "River Ops Chat", icon: Sparkles, badge: i.riverOpsUnread > 0 ? { value: i.riverOpsUnread, tone: "red" } : null } as any,
+    ]},
+    { label: "Content", items: [
+      { key: "categories", label: "Categories", icon: Folder, badge: { value: i.activeCategories, tone: "grey" } },
+      { key: "announcements", label: "Announcements", icon: Megaphone },
+      { key: "featured", label: "Featured Sellers", icon: Pin },
+    ]},
+    { label: "System", items: [
+      { key: "notifications", label: "Notifications", icon: Bell },
+      { key: "settings", label: "Settings", icon: SettingsIcon },
+      { key: "audit", label: "Audit Log", icon: ScrollText },
+      { key: "health", label: "System Health", icon: Activity },
+    ]},
   ];
+
+  const linkBase: React.CSSProperties = {
+    display: "flex", alignItems: "center", gap: 10,
+    fontSize: 13, color: "#333",
+    padding: "10px 16px", borderRadius: 8, marginBottom: 2,
+    textDecoration: "none", transition: "background-color 120ms",
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em",
+    color: "#bbb", padding: "8px 20px 4px",
+  };
+
   return (
-    <aside className="w-56 shrink-0 border border-border rounded-xl bg-background p-2 self-start sticky top-4">
-      <nav className="flex flex-col gap-0.5">
-        {items.map((it) => {
-          const Icon = it.icon;
-          const isActive = active === it.key;
-          return (
-            <button
-              key={it.key}
-              onClick={() => onChange(it.key)}
-              className={cn(
-                "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-left transition-colors",
-                isActive ? "bg-background-elevated font-medium" : "hover:bg-background-elevated/60"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0 text-foreground-muted" />
-              <span className="flex-1">{it.label}</span>
-              {it.dot && <span className={`admin-dot admin-dot-${it.dot}`} aria-hidden />}
-            </button>
-          );
-        })}
+    <aside style={{
+      width: 220, background: "#fff", borderRight: "1px solid #e5e5e5",
+      position: "sticky", top: 0, alignSelf: "flex-start",
+      height: "100vh", overflowY: "auto", display: "flex", flexDirection: "column",
+      flexShrink: 0,
+    }}>
+      <div style={{ padding: "18px 20px 8px" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#111", letterSpacing: "-0.01em" }}>KATEXS</div>
+        <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#999", marginTop: 2 }}>Admin Panel</div>
+      </div>
+
+      <nav style={{ flex: 1, padding: "4px 8px 12px", overflowY: "auto" }}>
+        {sections.map((sec) => (
+          <div key={sec.label}>
+            <div style={labelStyle}>{sec.label}</div>
+            {sec.items.map((it) => {
+              const Icon = it.icon;
+              const to = it.key === "overview" ? "/admin" : `/admin/${it.key}`;
+              const isActive = active === it.key;
+              return (
+                <NavLink
+                  key={it.key as string}
+                  to={to}
+                  end={it.key === "overview"}
+                  style={({ isActive: a }) => ({
+                    ...linkBase,
+                    background: (a || isActive) ? "#000" : "transparent",
+                    color: (a || isActive) ? "#fff" : "#333",
+                  })}
+                  onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "#f5f5f5"; }}
+                  onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                >
+                  <Icon style={{ width: 14, height: 14, flexShrink: 0 }} />
+                  <span style={{ flex: 1 }}>{it.label}</span>
+                  {it.badge && <NavBadge tone={it.badge.tone} value={it.badge.value} active={isActive} />}
+                  {it.dot && <NavDot color={it.dot} />}
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
       </nav>
+
+      <HealthStrip health={health} />
     </aside>
   );
 }
+
+function NavDot({ color }: { color: Exclude<Dot, null> }) {
+  const c = { green: "#10b981", red: "#ef4444", yellow: "#eab308", blue: "#3b82f6", orange: "#f97316" }[color];
+  return <span style={{ width: 8, height: 8, borderRadius: 999, background: c, display: "inline-block" }} />;
+}
+
+function NavBadge({ tone, value, active }: { tone: "blue"|"grey"|"red"|"orange"|"yellow"; value: number; active: boolean }) {
+  const tones: Record<string, { bg: string; fg: string }> = {
+    blue: { bg: "#dbeafe", fg: "#1e40af" },
+    grey: { bg: "#f1f1f1", fg: "#555" },
+    red: { bg: "#fee2e2", fg: "#991b1b" },
+    orange: { bg: "#ffedd5", fg: "#9a3412" },
+    yellow: { bg: "#fef3c7", fg: "#92400e" },
+  };
+  const t = tones[tone];
+  return (
+    <span style={{
+      background: active ? "rgba(255,255,255,0.16)" : t.bg,
+      color: active ? "#fff" : t.fg,
+      fontSize: 10, fontWeight: 600,
+      padding: "2px 6px", borderRadius: 999, minWidth: 18, textAlign: "center",
+    }}>{value}</span>
+  );
+}
+
+function HealthStrip({ health }: { health: Health }) {
+  const items = [
+    { label: "Supabase", ok: !!health && health.supabase.status === "connected", okLabel: "Connected", badLabel: "Disconnected", warn: false },
+    { label: "Stripe", ok: !!health && health.stripe.status === "live", okLabel: health?.stripe?.mode === "live" ? "Live" : "Test", badLabel: "Error", warn: health?.stripe?.mode !== "live" },
+    { label: "Anthropic", ok: !!health && health.anthropic.status === "active", okLabel: "Active", badLabel: "Error", warn: false },
+  ];
+  return (
+    <div style={{ borderTop: "1px solid #e5e5e5", padding: "10px 16px", display: "flex", flexDirection: "column", gap: 6 }}>
+      {items.map((it) => (
+        <div key={it.label} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 10, color: "#666" }}>
+          <span style={{
+            width: 7, height: 7, borderRadius: 999,
+            background: it.ok ? (it.warn ? "#eab308" : "#10b981") : "#ef4444",
+          }} />
+          <span style={{ fontWeight: 600 }}>{it.label}</span>
+          <span style={{ color: "#999" }}>{it.ok ? it.okLabel : it.badLabel}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 
 /* ============================================================
    Admin page
