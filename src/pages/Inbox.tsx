@@ -25,6 +25,9 @@ interface Msg {
   id: string; conversation_id: string; sender_id: string; recipient_id: string;
   content: string | null; created_at: string; is_read: boolean;
   custom_offer_id: string | null;
+  message_type?: string | null;
+  pitch_price?: number | null;
+  pitch_delivery_days?: number | null;
 }
 
 export default function Inbox() {
