@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,8 @@ const EMPTY_PKGS: Record<"basic" | "standard" | "premium", Pkg> = {
 };
 
 const STEP_LABELS = ["Profile", "Skills", "Category", "Packages", "Submit"];
+
+const draftKey = (uid: string) => `katexs:seller-onboarding-draft:${uid}`;
 
 export default function SellerOnboarding() {
   const { user, profile, refresh, loading } = useAuth();
@@ -49,12 +51,41 @@ export default function SellerOnboarding() {
   // Step 4
   const [packages, setPackages] = useState(EMPTY_PKGS);
 
+  // Autosave state
+  const hydratedRef = useRef(false);
+  const hadDraftRef = useRef(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+
+  // Restore draft (or fall back to profile defaults) once user is known
   useEffect(() => {
-    if (!profile) return;
-    setFullName(profile.full_name || "");
-    setAvatarUrl(profile.avatar_url || "");
-    setBio(profile.bio || "");
-  }, [profile]);
+    if (!user || hydratedRef.current) return;
+    try {
+      const raw = localStorage.getItem(draftKey(user.id));
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (typeof d.step === "number") setStep(d.step);
+        if (typeof d.fullName === "string") setFullName(d.fullName);
+        if (typeof d.avatarUrl === "string") setAvatarUrl(d.avatarUrl);
+        if (typeof d.bio === "string") setBio(d.bio);
+        if (typeof d.location === "string") setLocation(d.location);
+        if (typeof d.language === "string") setLanguage(d.language);
+        if (Array.isArray(d.skills)) setSkills(d.skills);
+        if (typeof d.primaryCat === "string") setPrimaryCat(d.primaryCat);
+        if (typeof d.secondaryCat === "string") setSecondaryCat(d.secondaryCat);
+        if (typeof d.experience === "string") setExperience(d.experience);
+        if (d.packages && typeof d.packages === "object") setPackages({ ...EMPTY_PKGS, ...d.packages });
+        hadDraftRef.current = true;
+        setSaveStatus("saved");
+      } else if (profile) {
+        setFullName(profile.full_name || "");
+        setAvatarUrl(profile.avatar_url || "");
+        setBio(profile.bio || "");
+      }
+    } catch {
+      // ignore corrupt draft
+    }
+    hydratedRef.current = true;
+  }, [user, profile]);
 
   // Load top 10 common skills from approved seller profiles
   useEffect(() => {
@@ -80,10 +111,35 @@ export default function SellerOnboarding() {
     })();
   }, []);
 
+  // Autosave (debounced) on any field change
+  useEffect(() => {
+    if (!user || !hydratedRef.current) return;
+    setSaveStatus("saving");
+    const t = setTimeout(() => {
+      try {
+        const payload = {
+          step, fullName, avatarUrl, bio, location, language,
+          skills, primaryCat, secondaryCat, experience, packages,
+        };
+        localStorage.setItem(draftKey(user.id), JSON.stringify(payload));
+        hadDraftRef.current = true;
+        setSaveStatus("saved");
+      } catch {
+        setSaveStatus("idle");
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [user, step, fullName, avatarUrl, bio, location, language, skills, primaryCat, secondaryCat, experience, packages]);
+
+  const clearDraft = () => {
+    if (!user) return;
+    try { localStorage.removeItem(draftKey(user.id)); } catch {}
+  };
+
   if (loading) return <AppShell><div className="text-sm text-foreground-muted">Loading…</div></AppShell>;
   if (!user) return <Navigate to="/login?redirect=/seller-onboarding" replace />;
-  if (profile?.seller_status === "approved") return <Navigate to="/seller/dashboard" replace />;
-  if (profile?.seller_status === "pending_approval") return <Navigate to="/seller/dashboard" replace />;
+  if (profile?.seller_status === "approved") { clearDraft(); return <Navigate to="/seller/dashboard" replace />; }
+  if (profile?.seller_status === "pending_approval") { clearDraft(); return <Navigate to="/seller/dashboard" replace />; }
 
   const addSkill = (raw?: string) => {
     const v = (raw ?? skillInput).trim();
@@ -149,9 +205,28 @@ export default function SellerOnboarding() {
     });
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    clearDraft();
     toast.success("Application submitted");
     await refresh();
     nav("/seller/dashboard");
+  };
+
+  const startOver = () => {
+    clearDraft();
+    setStep(1);
+    setFullName(profile?.full_name || "");
+    setAvatarUrl(profile?.avatar_url || "");
+    setBio(profile?.bio || "");
+    setLocation("");
+    setLanguage("");
+    setSkills([]);
+    setSkillInput("");
+    setPrimaryCat("");
+    setSecondaryCat("");
+    setExperience("");
+    setPackages(EMPTY_PKGS);
+    hadDraftRef.current = false;
+    setSaveStatus("idle");
   };
 
   const setPkg = (tier: keyof typeof packages, field: keyof Pkg, value: string) =>
@@ -164,7 +239,6 @@ export default function SellerOnboarding() {
           <div className="flex items-center justify-between mb-2">
             {STEP_LABELS.map((label, i) => {
               const n = i + 1;
-              const done = n < step;
               const active = n === step;
               return (
                 <div key={label} className="flex-1 flex flex-col items-center">
@@ -179,6 +253,15 @@ export default function SellerOnboarding() {
             {STEP_LABELS.map((_, i) => (
               <div key={i} className={`h-1 flex-1 rounded-full ${i + 1 <= step ? "bg-foreground" : "bg-border"}`} />
             ))}
+          </div>
+          <div className="mt-2 flex items-center justify-end gap-3 text-xs text-foreground-muted">
+            <span>
+              {saveStatus === "saving" && "Saving…"}
+              {saveStatus === "saved" && "Draft saved"}
+            </span>
+            {hadDraftRef.current && (
+              <button onClick={startOver} className="underline hover:text-foreground">Start over</button>
+            )}
           </div>
         </div>
 
