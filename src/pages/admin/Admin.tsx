@@ -179,30 +179,30 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="disputes">
-            <Table headers={["Order", "Reason", "Status", "Opened", "Actions"]}>
-              {disputes.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
+            <Table headers={["Order", "Reason", "Status", "Funds", "Opened", "Actions"]}>
+              {disputes.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
               {disputes.map((d) => (
                 <tr key={d.id} className="border-t border-border">
                   <td className="p-3 font-mono text-xs">{d.order_id.slice(0, 8)}</td>
                   <td className="p-3 max-w-md truncate">{d.reason}</td>
                   <td className="p-3"><span className={cn("text-xs px-2 py-0.5 rounded-full capitalize",
                     d.status === "open" ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}>{d.status}</span></td>
+                  <td className="p-3">
+                    {d.order?.escrow_status === "held" ? <FundsLockedBadge /> : <span className="text-xs text-foreground-muted">—</span>}
+                  </td>
                   <td className="p-3 text-foreground-muted">{new Date(d.created_at).toLocaleDateString()}</td>
                   <td className="p-3 flex gap-1.5">
                     {d.status === "open" && (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id)}>Refund buyer</Button>
-                        <Button size="sm" variant="ghost" onClick={async () => {
-                          await supabase.from("orders").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", d.order_id);
-                          await supabase.from("disputes").update({ status: "resolved_release", resolution_outcome: "released", resolved_at: new Date().toISOString() }).eq("id", d.id);
-                          toast.success("Released to seller"); load();
-                        }}>Release to seller</Button>
+                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id, d.id)}>Refund buyer</Button>
+                        <Button size="sm" variant="ghost" onClick={() => releaseToSeller(d.order_id, d.id)}>Release to seller</Button>
                       </>
                     )}
                   </td>
                 </tr>
               ))}
             </Table>
+
           </TabsContent>
 
           <TabsContent value="verifications"><VerificationsQueue /></TabsContent>
