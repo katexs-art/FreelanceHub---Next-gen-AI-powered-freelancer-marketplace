@@ -2,6 +2,7 @@
 // a refined query, suggested categories, budget/delivery filters, and ranked gig IDs.
 // Logs every session to ai_search_sessions.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { checkRateLimit, tooManyRequests } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -56,22 +57,6 @@ Respond ONLY with valid JSON of shape:
   };
 }
 
-async function checkRateLimit(admin: any, identifier: string, bucket: string, limit: number) {
-  const windowMs = 60_000;
-  const windowStart = new Date(Math.floor(Date.now() / windowMs) * windowMs).toISOString();
-  const { data: existing } = await admin
-    .from("rate_limits")
-    .select("id,count")
-    .eq("bucket", bucket).eq("identifier", identifier).eq("window_start", windowStart)
-    .maybeSingle();
-  if (existing) {
-    if (existing.count >= limit) return false;
-    await admin.from("rate_limits").update({ count: existing.count + 1 }).eq("id", existing.id);
-  } else {
-    await admin.from("rate_limits").insert({ bucket, identifier, window_start: windowStart, count: 1 });
-  }
-  return true;
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -102,10 +87,8 @@ Deno.serve(async (req) => {
     // Rate limit: 20/min per user or per IP
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
     const identifier = user_id ?? `ip:${ip}`;
-    if (!(await checkRateLimit(admin, identifier, "ai-search", 20))) {
-      return new Response(JSON.stringify({ error: "rate limit exceeded" }), {
-        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (!(await checkRateLimit(admin, { bucket: "ai-search", identifier, limit: 20 }))) {
+      return tooManyRequests(corsHeaders);
     }
 
     let ai: AIResult;

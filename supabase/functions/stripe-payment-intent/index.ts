@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     if (order.buyer_id !== user.id) throw new Error("Forbidden");
     if (order.status !== "pending_payment") throw new Error("Order is not awaiting payment");
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
 
     let pi: Stripe.PaymentIntent | null = null;
     if (order.stripe_payment_intent_id) {

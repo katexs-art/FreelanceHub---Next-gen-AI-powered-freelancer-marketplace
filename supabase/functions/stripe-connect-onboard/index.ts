@@ -24,7 +24,7 @@ Deno.serve(async (req) => {
     if (!u.user) throw new Error("Unauthenticated");
 
     const admin = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
 
     const { return_url } = await req.json();
     const baseUrl = return_url || "https://katexs.lovable.app/seller/earnings";

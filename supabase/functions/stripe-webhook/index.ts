@@ -23,7 +23,7 @@ Deno.serve(async (req) => {
     return new Response("webhook secret not configured", { status: 500 });
   }
 
-  const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+  const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
   const body = await req.text();
   let event: Stripe.Event;
 

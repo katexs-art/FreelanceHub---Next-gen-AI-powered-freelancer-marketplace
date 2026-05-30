@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (lockErr || !locked) throw new Error("Balance changed, please retry");
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-04-30.basil" });
 
     let payout: any;
     let method: "stripe_instant" | "stripe_bank" = "stripe_instant";

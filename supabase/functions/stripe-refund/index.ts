@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
       if (canc?.status !== "accepted") throw new Error("Both parties must agree to cancel first");
     }
 
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-04-30.basil" });
 
     let chargeId = order.stripe_charge_id as string | null;
     if (!chargeId && order.stripe_payment_intent_id) {

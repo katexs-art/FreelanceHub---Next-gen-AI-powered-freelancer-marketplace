@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       if (!country || country.length !== 2) throw new Error("country (ISO-2) required");
       if (!bank_token.startsWith("btok_")) throw new Error("bank_token required (from Stripe.js)");
 
-      const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2024-06-20" });
+      const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-04-30.basil" });
       let stripeAccountId = acct?.stripe_account_id as string | null;
 
       if (!stripeAccountId) {
