@@ -92,18 +92,28 @@ export default function SellerDashboard() {
   if (profile?.seller_status === "onboarding") return <Navigate to="/seller-onboarding" replace />;
   const pending = profile?.seller_status === "pending_approval";
   const rejected = profile?.seller_status === "rejected";
+  const approved = profile?.seller_status === "approved";
+
+  // One-time approval toast
+  useEffect(() => {
+    if (!user || !approved) return;
+    const key = `katexs:seller-approved-toast:${user.id}`;
+    if (localStorage.getItem(key)) return;
+    localStorage.setItem(key, "1");
+    toast.success("You are approved — start selling on Katexs now.");
+  }, [user, approved]);
 
   return (
     <AppShell>
       <div className="max-w-5xl">
         {pending && (
-          <div className="mb-6 rounded-xl border border-border bg-background-elevated p-4 text-sm">
-            Your application is under review. We will notify you within 24 hours.
+          <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900 p-4 text-sm">
+            Your seller application is under review. We will notify you within 24 hours.
           </div>
         )}
         {rejected && (
-          <div className="mb-6 rounded-xl border border-border bg-background-elevated p-4 text-sm">
-            Your application was not approved.{profile?.rejection_reason ? ` Reason: ${profile.rejection_reason}` : ""}{" "}
+          <div className="mb-6 rounded-xl border border-red-300 bg-red-50 text-red-900 p-4 text-sm">
+            Your application was not approved.{profile?.rejection_reason ? ` ${profile.rejection_reason}` : ""}{" "}
             <Link to="/seller-onboarding" className="underline">Update and resubmit</Link>.
           </div>
         )}
