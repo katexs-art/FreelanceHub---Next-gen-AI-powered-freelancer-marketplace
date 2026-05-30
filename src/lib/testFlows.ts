@@ -101,7 +101,7 @@ export const TEST_CASES: TestCase[] = [
       const { error } = await supabase.rpc("simulate_mark_order_paid", { _order_id: id });
       if (error) return fail(error.message);
       const { data } = await supabase.from("orders").select("status, escrow_status").eq("id", id).maybeSingle();
-      return data?.status === "in_progress" && data?.escrow_status === "held" ? ok() : fail(JSON.stringify(data));
+      return (data?.status as string) === "in_progress" && (data?.escrow_status as string) === "held" ? ok() : fail(JSON.stringify(data));
     } catch (e: any) { return fail(e.message); }
   }},
 
