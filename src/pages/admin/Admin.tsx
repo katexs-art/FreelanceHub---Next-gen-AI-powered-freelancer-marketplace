@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, ShoppingBag, Wallet, AlertTriangle } from "lucide-react";
+import { Users, ShoppingBag, Wallet, AlertTriangle, Lock } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { VerificationsQueue } from "@/pages/admin/sections/VerificationsQueue";
@@ -30,7 +30,7 @@ export default function Admin() {
       supabase.from("profiles").select("id, full_name, username, email, role, created_at").order("created_at", { ascending: false }).limit(25),
       supabase.from("orders").select("id, order_number, status, price, created_at, buyer:buyer_id(username), seller:seller_id(username)").order("created_at", { ascending: false }).limit(25),
       supabase.from("withdrawals").select("id, amount, status, created_at, method, failure_reason, seller_id, seller:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(25),
-      supabase.from("disputes").select("id, status, reason, created_at, order_id").order("created_at", { ascending: false }).limit(25),
+      supabase.from("disputes").select("id, status, reason, created_at, order_id, order:order_id(escrow_status, status)").order("created_at", { ascending: false }).limit(25),
     ]);
     setStats({
       users: u.count ?? 0, gigs: g.count ?? 0, orders: o.count ?? 0,
@@ -56,12 +56,35 @@ export default function Admin() {
     load();
   };
 
-  const refundOrder = async (orderId: string) => {
+  const refundOrder = async (orderId: string, disputeId?: string) => {
     const { data, error } = await supabase.functions.invoke("stripe-refund", { body: { order_id: orderId } });
     if (error || data?.error) return toast.error(error?.message || data?.error || "Refund failed");
+    await supabase.from("orders").update({ escrow_status: "refunded" }).eq("id", orderId);
+    if (disputeId) {
+      await supabase.from("disputes").update({
+        status: "resolved_refund", resolution_outcome: "refunded", resolved_at: new Date().toISOString(),
+      }).eq("id", disputeId);
+    }
     toast.success("Refund issued");
     load();
   };
+
+  const releaseToSeller = async (orderId: string, disputeId: string) => {
+    const nowIso = new Date().toISOString();
+    const { error: oe } = await supabase.from("orders").update({
+      status: "completed", completed_at: nowIso,
+      escrow_status: "released", escrow_released_at: nowIso,
+    }).eq("id", orderId);
+    if (oe) return toast.error(oe.message);
+    await supabase.from("transactions").update({ status: "cleared", clears_at: nowIso })
+      .eq("order_id", orderId).eq("type", "seller_credit").eq("status", "pending");
+    await supabase.from("disputes").update({
+      status: "resolved_release", resolution_outcome: "released", resolved_at: nowIso,
+    }).eq("id", disputeId);
+    toast.success("Released to seller — transfer will be sent shortly");
+    load();
+  };
+
 
   if (profile && profile.role !== "admin") {
     return <AppShell><div className="text-sm">Admin access required.</div></AppShell>;
@@ -114,7 +137,12 @@ export default function Admin() {
                   <td className="p-3">{o.buyer?.username ?? "—"}</td>
                   <td className="p-3">{o.seller?.username ?? "—"}</td>
                   <td className="p-3 font-medium">{dollars(o.price)}</td>
-                  <td className="p-3 capitalize">{o.status.replace(/_/g, " ")}</td>
+                  <td className="p-3 capitalize">
+                    <span className="inline-flex items-center gap-2">
+                      {o.status.replace(/_/g, " ")}
+                      {o.status === "disputed" && <FundsLockedBadge />}
+                    </span>
+                  </td>
                   <td className="p-3 text-foreground-muted">{new Date(o.created_at).toLocaleDateString()}</td>
                 </tr>
               ))}
@@ -151,30 +179,30 @@ export default function Admin() {
           </TabsContent>
 
           <TabsContent value="disputes">
-            <Table headers={["Order", "Reason", "Status", "Opened", "Actions"]}>
-              {disputes.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
+            <Table headers={["Order", "Reason", "Status", "Funds", "Opened", "Actions"]}>
+              {disputes.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
               {disputes.map((d) => (
                 <tr key={d.id} className="border-t border-border">
                   <td className="p-3 font-mono text-xs">{d.order_id.slice(0, 8)}</td>
                   <td className="p-3 max-w-md truncate">{d.reason}</td>
                   <td className="p-3"><span className={cn("text-xs px-2 py-0.5 rounded-full capitalize",
                     d.status === "open" ? "bg-warning/10 text-warning" : "bg-success/10 text-success")}>{d.status}</span></td>
+                  <td className="p-3">
+                    {d.order?.escrow_status === "held" ? <FundsLockedBadge /> : <span className="text-xs text-foreground-muted">—</span>}
+                  </td>
                   <td className="p-3 text-foreground-muted">{new Date(d.created_at).toLocaleDateString()}</td>
                   <td className="p-3 flex gap-1.5">
                     {d.status === "open" && (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id)}>Refund buyer</Button>
-                        <Button size="sm" variant="ghost" onClick={async () => {
-                          await supabase.from("orders").update({ status: "completed", completed_at: new Date().toISOString() }).eq("id", d.order_id);
-                          await supabase.from("disputes").update({ status: "resolved_release", resolution_outcome: "released", resolved_at: new Date().toISOString() }).eq("id", d.id);
-                          toast.success("Released to seller"); load();
-                        }}>Release to seller</Button>
+                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id, d.id)}>Refund buyer</Button>
+                        <Button size="sm" variant="ghost" onClick={() => releaseToSeller(d.order_id, d.id)}>Release to seller</Button>
                       </>
                     )}
                   </td>
                 </tr>
               ))}
             </Table>
+
           </TabsContent>
 
           <TabsContent value="verifications"><VerificationsQueue /></TabsContent>
@@ -192,6 +220,14 @@ function Stat({ icon: Icon, label, value }: { icon: any; label: string; value: s
       <div className="flex items-center gap-2 text-xs text-foreground-muted"><Icon className="h-3.5 w-3.5" />{label}</div>
       <div className="mt-2 text-2xl font-bold">{value}</div>
     </div>
+  );
+}
+
+function FundsLockedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-destructive/10 text-destructive">
+      <Lock className="h-3 w-3" /> Funds Locked
+    </span>
   );
 }
 
