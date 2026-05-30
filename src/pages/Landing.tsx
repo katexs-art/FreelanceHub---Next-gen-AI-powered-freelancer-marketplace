@@ -63,7 +63,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div style={{ background: "#fff", color: "#000", minHeight: "100vh" }}>
+    <div style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
       <SEO
         title="KATEXS — Hire AI experts. Ship faster."
         description="Tell River what you need — the best AI experts come to you in seconds. The world's first AI-native freelance marketplace."
@@ -80,10 +80,10 @@ export default function Landing() {
           .kx-grid-stats { grid-template-columns: 1fr 1fr !important; }
         }
         .kx-cat-card { transition: all 0.2s ease; }
-        .kx-cat-card:hover { border-color: #000 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.08); transform: translateY(-2px); }
-        .kx-btn-primary:hover { background: #111 !important; }
+        .kx-cat-card:hover { border-color: #fff !important; box-shadow: 0 4px 20px rgba(255,255,255,0.08); transform: translateY(-2px); }
+        .kx-btn-primary:hover { background: #eee !important; }
         .kx-seller-card { transition: all 0.2s ease; }
-        .kx-seller-card:hover { border-color: #000 !important; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
+        .kx-seller-card:hover { border-color: #fff !important; box-shadow: 0 4px 20px rgba(255,255,255,0.06); }
       `}</style>
 
       <SiteHeader variant="transparent" />
@@ -188,8 +188,8 @@ export default function Landing() {
       </section>
 
       {/* CATEGORIES */}
-      <section className="kx-section" style={{ background: "#fff", padding: "60px 80px" }}>
-        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#999", marginBottom: 24 }}>
+      <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
+        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#666", marginBottom: 24 }}>
           What do you need done?
         </div>
         <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
@@ -199,68 +199,68 @@ export default function Landing() {
               to={`/category/${c.slug}`}
               className="kx-cat-card"
               style={{
-                background: "#fff", border: "1px solid #f0f0f0", borderRadius: 16,
+                background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16,
                 padding: 28, display: "block", textDecoration: "none",
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 500, color: "#000", marginBottom: 8 }}>{c.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 500, color: "#fff", marginBottom: 8 }}>{c.label}</div>
               <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
-              <div style={{ fontSize: 12, color: "#bbb" }}>Browse experts</div>
-              <div style={{ fontSize: 14, color: "#000", marginTop: 16 }}>→</div>
+              <div style={{ fontSize: 12, color: "#555" }}>Browse experts</div>
+              <div style={{ fontSize: 14, color: "#fff", marginTop: 16 }}>→</div>
             </Link>
           ))}
         </div>
       </section>
 
       {/* TOP PERFORMERS */}
-      <section className="kx-section" style={{ background: "#fff", padding: "60px 80px" }}>
+      <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
-          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#000", margin: 0 }}>Top performers this week</h2>
-          <Link to="/explore" style={{ fontSize: 14, color: "#000", textDecoration: "none" }}>Browse all experts →</Link>
+          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: 0 }}>Top performers this week</h2>
+          <Link to="/explore" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all experts →</Link>
         </div>
         <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {sellers.length === 0
             ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 16, padding: 24, height: 240 }} />
+                <div key={i} style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 24, height: 240 }} />
               ))
             : sellers.map((s) => {
                 const displayName = s.full_name || s.username || "Expert";
                 const initial = displayName.charAt(0).toUpperCase();
                 return (
-                  <div key={s.id} className="kx-seller-card" style={{ background: "#fff", border: "1px solid #f0f0f0", borderRadius: 16, padding: 24 }}>
+                  <div key={s.id} className="kx-seller-card" style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 24 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                       {s.avatar_url ? (
                         <img src={s.avatar_url} alt={displayName} style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
                       ) : (
-                        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#f0f0f0", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500, color: "#666" }}>
+                        <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#1a1a1a", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, fontWeight: 500, color: "#ccc" }}>
                           {initial}
                         </div>
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 500, color: "#000" }}>{displayName}</div>
+                        <div style={{ fontSize: 15, fontWeight: 500, color: "#fff" }}>{displayName}</div>
                         {s.river_score != null && (
-                          <span style={{ display: "inline-block", marginTop: 4, background: "#000", color: "#fff", fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>
+                          <span style={{ display: "inline-block", marginTop: 4, background: "#fff", color: "#000", fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>
                             River Score {s.river_score}
                           </span>
                         )}
                       </div>
                     </div>
-                    <div style={{ fontSize: 13, color: "#666", lineHeight: 1.5, marginBottom: 12, minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <div style={{ fontSize: 13, color: "#999", lineHeight: 1.5, marginBottom: 12, minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {s.bio || "AI specialist on Katexs."}
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                       {(s.seller_skills ?? []).slice(0, 3).map((sk) => (
-                        <span key={sk} style={{ background: "#f4f4f4", color: "#333", fontSize: 11, padding: "4px 10px", borderRadius: 999 }}>{sk}</span>
+                        <span key={sk} style={{ background: "#1a1a1a", color: "#ccc", fontSize: 11, padding: "4px 10px", borderRadius: 999 }}>{sk}</span>
                       ))}
                     </div>
                     {s.startingPrice != null && (
-                      <div style={{ fontSize: 14, fontWeight: 500, color: "#000", marginBottom: 12 }}>From ${s.startingPrice}</div>
+                      <div style={{ fontSize: 14, fontWeight: 500, color: "#fff", marginBottom: 12 }}>From ${s.startingPrice}</div>
                     )}
                     <div style={{ display: "flex", gap: 8 }}>
-                      <Link to={`/seller/${s.username ?? s.id}`} style={{ flex: 1, textAlign: "center", background: "#000", color: "#fff", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
+                      <Link to={`/seller/${s.username ?? s.id}`} style={{ flex: 1, textAlign: "center", background: "#fff", color: "#000", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
                         View Profile
                       </Link>
-                      <Link to={`/inbox?to=${s.id}`} style={{ flex: 1, textAlign: "center", background: "#fff", color: "#000", border: "1px solid #000", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
+                      <Link to={`/inbox?to=${s.id}`} style={{ flex: 1, textAlign: "center", background: "transparent", color: "#fff", border: "1px solid #fff", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
                         Message
                       </Link>
                     </div>
@@ -288,7 +288,7 @@ export default function Landing() {
       </section>
 
       {/* TRUST STATS */}
-      <section className="kx-section" style={{ background: "#fff", padding: "60px 80px" }}>
+      <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
         <div className="kx-grid-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
           {[
             { v: "2,400+", l: "Verified AI experts" },
@@ -296,13 +296,14 @@ export default function Landing() {
             { v: "3 days", l: "Average payment time" },
             { v: "98%", l: "Satisfaction rate" },
           ].map((s, i) => (
-            <div key={s.l} style={{ padding: "0 32px", borderLeft: i === 0 ? "none" : "1px solid #f0f0f0" }}>
-              <div style={{ fontSize: 48, fontWeight: 500, color: "#000", lineHeight: 1.1 }}>{s.v}</div>
+            <div key={s.l} style={{ padding: "0 32px", borderLeft: i === 0 ? "none" : "1px solid #1a1a1a" }}>
+              <div style={{ fontSize: 48, fontWeight: 500, color: "#fff", lineHeight: 1.1 }}>{s.v}</div>
               <div style={{ fontSize: 14, color: "#888", marginTop: 8 }}>{s.l}</div>
             </div>
           ))}
         </div>
       </section>
+
 
       {/* BOTTOM CTA */}
       <section style={{ background: "#000", padding: "100px 80px", textAlign: "center" }}>
