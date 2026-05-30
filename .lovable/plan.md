@@ -1,24 +1,49 @@
 ## Goal
-Preserve a seller's progress through the 5-step `/seller-onboarding` flow if they refresh, close the tab, or navigate away before submitting.
+Wire Stripe Connect Express end-to-end for approved sellers: yellow setup banner, automatic transfer on order release, and an instant Withdraw button. Reuses the existing `stripe-connect-onboard` function, `seller_accounts` table (`stripe_account_id`, `onboarding_complete`, `charges_enabled`, `payouts_enabled`), and `STRIPE_SECRET_KEY` secret. No visual tokens, fonts, images, or unrelated layout changes.
 
-## Approach
-Use `localStorage` (per-user key) for autosave. No backend changes — keeps scope tight, works offline, instant restore, and avoids partial rows in `seller_applications`. The draft is cleared on successful submission.
+## 1. Seller dashboard banner + return handling (`src/pages/seller/SellerDashboard.tsx`)
 
-## Changes (single file: `src/pages/SellerOnboarding.tsx`)
+- Load `seller_accounts.charges_enabled` and `onboarding_complete` alongside existing stats.
+- When `seller_status === "approved"` and (`!charges_enabled` or `!onboarding_complete`): render a yellow banner at the top — same yellow style as the existing pending banner — text "Add your payout account to start receiving payments", with a black `Button` "Set Up Payouts" that calls `supabase.functions.invoke("stripe-connect-onboard", { body: { return_url: \`${origin}/seller/dashboard?payout=connected\` } })` and redirects to `data.url`.
+- On mount, if `searchParams.get("payout") === "connected"`:
+  1. Invoke a new `stripe-connect-status` edge function to re-pull the Stripe account and persist `charges_enabled` / `onboarding_complete` / `payouts_enabled`.
+  2. If `charges_enabled` is now true and `localStorage[\`katexs:payouts-connected-toast:${user.id}\`]` is unset, fire `toast.success("Payout account connected — you will receive payments automatically after every completed order.")` and set the key.
+  3. Strip the query param via `nav("/seller/dashboard", { replace: true })`.
+- The literal `/dashboard?payout=connected` in the spec maps to the seller dashboard (no `/dashboard` route exists).
 
-1. **Storage key**: `katexs:seller-onboarding-draft:{user.id}` so drafts are scoped per account.
+Note: the user-facing route uses `?payout=connected`; for the seller dashboard path I use the actual `/seller/dashboard` because no plain `/dashboard` route exists in the app.
 
-2. **Restore on mount**: After `user` loads, read the key and hydrate `step`, `fullName`, `avatarUrl`, `bio`, `location`, `language`, `skills`, `primaryCat`, `secondaryCat`, `experience`, and `packages`. Profile defaults only apply when no draft exists (so a draft doesn't get overwritten by the profile-prefill effect).
+## 2. New edge function `stripe-connect-status`
 
-3. **Autosave on change**: A single `useEffect` that depends on every form field writes the serialized state to localStorage. Debounce with a 400ms timeout to avoid thrashing on each keystroke. Skip writes until restore has completed (guarded by a `hydrated` ref) so we don't clobber the saved draft with empty defaults on first render.
+Reads the caller's `seller_accounts.stripe_account_id`, calls `stripe.accounts.retrieve`, and updates `charges_enabled`, `payouts_enabled`, `onboarding_complete = details_submitted`. Returns the flags. Used by the dashboard return handler and the existing `StripeConnectCard` initial load (refresh path).
 
-4. **Subtle status indicator**: Small "Saved" / "Saving…" text near the progress bar (uses existing `text-foreground-muted` token — no new colors). Updates from the same effect.
+## 3. Automatic transfer on escrow release
 
-5. **Clear on submit**: After `submit()` succeeds, `localStorage.removeItem(key)` before navigating to `/seller/dashboard`. Also clear if the user reaches the dashboard already approved/pending (the existing `Navigate` guards) — handled by a small cleanup on those redirect paths.
+The product spec says "in the Supabase edge function that handles order completion and fund release after the 3 day window". Today this is the SQL function `auto_complete_orders` (cron-driven) plus the buyer-driven `approve_delivery` RPC. We do not call Stripe from SQL. Plan:
 
-6. **Optional "Start over" link**: Tiny ghost button next to the saved indicator that clears the draft and resets state to empty. Only shown when a draft is detected.
+- Add a new edge function `stripe-auto-transfer` (cron-triggered, every 5 minutes) that:
+  - Selects `transactions` rows where `type='seller_credit'`, `status='cleared'`, and a new column `stripe_transfer_id IS NULL`.
+  - For each, loads `seller_accounts` for the seller; if `stripe_account_id` and `charges_enabled` are present, computes the seller payout = `amount` (the row is already net of the 10% platform fee since the fee is stored as a separate `platform_fee` transaction), and calls `stripe.transfers.create({ amount, currency: "usd", destination: stripe_account_id, transfer_group: order_id, metadata: { transaction_id, order_id, seller_id } })`.
+  - Writes the returned `transfer.id` to `transactions.stripe_transfer_id`.
+  - Skips (logs only) when the seller has not connected — funds stay available until they connect.
+- Migration: `ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS stripe_transfer_id text;`
+- Schedule via `pg_cron` + `pg_net` inserting into the project's existing cron config (separate `supabase--insert` call with the deployed function URL and anon key — not in the migration).
 
-## Out of scope
-- No DB schema change, no new RPC, no edge function.
-- Avatar uploads already persist to storage; only the resulting URL is saved in the draft.
-- No styling, color, font, or layout changes elsewhere in the app.
+The 3-day window remains enforced by the existing `dispute_deadline` / `auto_complete_at` logic on orders; no changes there.
+
+## 4. Instant Withdraw on Earnings page (`src/pages/seller/Earnings.tsx` + new edge function)
+
+- Replace the "Request" withdrawal flow with an immediate Stripe payout:
+  - On click, invoke new edge function `stripe-instant-payout` with `{ amount_cents }`.
+  - Function: auth user → loads `seller_accounts` → validates `stripe_account_id` and `payouts_enabled` → calls `stripe.payouts.create({ amount, currency: "usd", method: "instant" }, { stripeAccount: stripe_account_id })`. If "instant" fails (no debit card eligible), retries with `method: "standard"`.
+  - On success: inserts a `withdrawals` row with `status='paid'`, `stripe_payout_id = payout.id`, `method = payout.method === 'instant' ? 'stripe_instant' : 'stripe_bank'`. This will trigger `recompute_seller_balance` via the existing trigger.
+- Button stays disabled until `acct.charges_enabled && acct.payouts_enabled`. Helper text: "Instant for debit cards, 1–2 business days for bank accounts."
+- Existing `PayoutMethodCard` (paypal/bank manual entry) stays unchanged — out of scope; the Stripe Connect card is now the canonical path.
+
+## 5. Files touched
+
+- New: `supabase/functions/stripe-connect-status/index.ts`, `supabase/functions/stripe-auto-transfer/index.ts`, `supabase/functions/stripe-instant-payout/index.ts`.
+- New migration: add `transactions.stripe_transfer_id`.
+- New scheduled job via `supabase--insert` (pg_cron) calling `stripe-auto-transfer` every 5 minutes.
+- Edited: `src/pages/seller/SellerDashboard.tsx` (banner, return handler, status load), `src/pages/seller/Earnings.tsx` (Withdraw → instant payout, button gating).
+- No changes to global styles, fonts, layout, or any other page.
