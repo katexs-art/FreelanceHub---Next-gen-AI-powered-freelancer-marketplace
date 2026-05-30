@@ -71,7 +71,7 @@ function useAdminNavIndicators() {
       const [d, p, o] = await Promise.all([
         supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "disputed"),
         supabase.from("profiles").select("id", { count: "exact", head: true }).eq("seller_status", "pending_approval"),
-        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["pending_requirements", "in_progress", "delivered", "in_revision"]),
+        supabase.from("orders").select("id", { count: "exact", head: true }).in("status", ["pending_requirements", "delivered", "revision_requested", "active"] as any),
       ]);
       if (cancelled) return;
       setDisputes(d.count ?? 0);
@@ -725,7 +725,7 @@ function SellerDetail({
 
   useEffect(() => {
     (async () => {
-      const queries: Promise<any>[] = [
+      const queries: any[] = [
         supabase.from("gigs").select("id, title, status, starting_price, total_orders, average_rating").eq("seller_id", sellerId).order("created_at", { ascending: false }).limit(50),
         supabase.from("orders").select("id, order_number, price, status, created_at, buyer:buyer_id(username)").eq("seller_id", sellerId).order("created_at", { ascending: false }).limit(50),
         supabase.from("reviews").select("id, rating, review_text, created_at, reviewer_role").eq("seller_id", sellerId).eq("reviewer_role", "buyer").order("created_at", { ascending: false }).limit(20),
