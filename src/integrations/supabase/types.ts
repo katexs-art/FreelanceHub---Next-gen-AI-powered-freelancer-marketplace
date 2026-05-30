@@ -1295,6 +1295,33 @@ export type Database = {
           },
         ]
       }
+      river_ops_conversations: {
+        Row: {
+          created_at: string
+          daily_briefing: boolean
+          id: string
+          message: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          daily_briefing?: boolean
+          id?: string
+          message: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          daily_briefing?: boolean
+          id?: string
+          message?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_gigs: {
         Row: {
           created_at: string
