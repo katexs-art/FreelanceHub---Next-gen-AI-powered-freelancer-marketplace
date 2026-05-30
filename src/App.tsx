@@ -25,6 +25,7 @@ const MyGigs = lazy(() => import("./pages/seller/MyGigs"));
 const GigEditor = lazy(() => import("./pages/seller/GigEditor"));
 const Explore = lazy(() => import("./pages/Explore"));
 const Browse = lazy(() => import("./pages/Browse"));
+const Services = lazy(() => import("./pages/Services"));
 const Search = lazy(() => import("./pages/Search"));
 const RiverResults = lazy(() => import("./pages/RiverResults"));
 const Pitch = lazy(() => import("./pages/Pitch"));
