@@ -288,6 +288,8 @@ export default function Inbox() {
               const isActive = conversationId === c.id;
               const isHover = hoverRow === c.id;
               const online = !!c.other?.is_online;
+              const unread = (c.unread_count ?? 0) > 0;
+              const leftBorderColor = isActive ? "#0A0A0A" : unread ? "#16A34A" : "transparent";
               return (
                 <button
                   key={c.id}
@@ -298,9 +300,9 @@ export default function Inbox() {
                     width: "100%",
                     textAlign: "left",
                     border: "none",
-                    background: isActive ? "#F0F0F0" : isHover ? "#F7F7F7" : "#FFFFFF",
+                    background: isActive ? "#F5F5F5" : isHover ? "#F7F7F7" : "#FFFFFF",
                     borderBottom: "1px solid #F5F5F5",
-                    borderLeft: isActive ? "3px solid #0A0A0A" : "3px solid transparent",
+                    borderLeft: `3px solid ${leftBorderColor}`,
                     padding: "14px 16px",
                     cursor: "pointer",
                     display: "flex",
