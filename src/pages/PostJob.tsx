@@ -94,14 +94,7 @@ export default function PostJob() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const addSkill = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && skillInput.trim()) {
-      e.preventDefault();
-      const t = skillInput.trim();
-      if (!skills.includes(t)) setSkills([...skills, t]);
-      setSkillInput("");
-    }
-  };
+
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user) return;
