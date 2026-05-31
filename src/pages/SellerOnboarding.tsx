@@ -362,7 +362,7 @@ export default function SellerOnboarding() {
               <Textarea
                 value={experience}
                 onChange={(e) => setExperience(e.target.value)}
-                placeholder="Tell buyers what you have built, what tools you use, and what results you deliver."
+                placeholder="Tell partners what you have built, what tools you use, and what results you deliver."
                 rows={6}
               />
               <p className="text-xs text-foreground-muted">

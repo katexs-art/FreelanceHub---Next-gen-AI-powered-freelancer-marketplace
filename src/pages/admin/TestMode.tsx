@@ -127,7 +127,7 @@ export default function TestMode() {
         <Card>
           <CardHeader><CardTitle>Test data</CardTitle></CardHeader>
           <CardContent className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={() => reset("reset_test_orders", "Cleared test orders")}>
+            <Button variant="outline" onClick={() => reset("reset_test_orders", "Cleared test projects")}>
               <Trash2 className="h-3.5 w-3.5" /> Clear all test orders
             </Button>
             <Button variant="outline" onClick={() => reset("reset_test_users", "Reset test users")}>

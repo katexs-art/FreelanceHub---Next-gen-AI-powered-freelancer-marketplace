@@ -19,7 +19,7 @@ export default function CheckoutSuccess() {
     let attempts = 0;
     const tick = async () => {
       const { data } = await supabase
-        .from("orders").select("id, order_number, price, buyer_id, seller_id, gigs:gig_id(title), buyer:buyer_id(full_name, username, email), seller:seller_id(full_name, username, email)")
+        .from("orders").select("id, order_number, price, buyer_id, seller_id, plays:gig_id(title), partner:buyer_id(full_name, username, email), expert:seller_id(full_name, username, email)")
         .eq("buyer_id", user.id)
         .order("created_at", { ascending: false }).limit(1).maybeSingle();
       if (!cancelled && data) {
@@ -50,11 +50,11 @@ export default function CheckoutSuccess() {
         </p>
         <div className="mt-8 flex gap-3 justify-center">
           {orderId ? (
-            <Button asChild size="lg"><Link to={`/orders/${orderId}`}>Open order</Link></Button>
+            <Button asChild size="lg"><Link to={`/orders/${orderId}`}>Open project</Link></Button>
           ) : (
-            <Button size="lg" disabled>Preparing your order…</Button>
+            <Button size="lg" disabled>Preparing your project…</Button>
           )}
-          <Button asChild size="lg" variant="outline"><Link to="/buyer/orders">All orders</Link></Button>
+          <Button asChild size="lg" variant="outline"><Link to="/buyer/orders">All projects</Link></Button>
         </div>
       </main>
       <SiteFooter />

@@ -61,7 +61,7 @@ export function OrderResolutionActions({
       if (refundErr || data?.error) {
         toast.error(refundErr?.message || data?.error || "Refund failed — contact support");
       } else {
-        toast.success("Order cancelled — refund sent to buyer");
+        toast.success("Project cancelled — refund sent to partner");
       }
     } else {
       setBusy(false);
@@ -93,7 +93,7 @@ export function OrderResolutionActions({
             <div>
               <div className="font-medium">Cancellation requested</div>
               {canc?.reason && <div className="text-foreground-muted mt-0.5">{canc.reason}</div>}
-              <div className="text-xs text-foreground-muted mt-1">Accepting will refund the buyer automatically.</div>
+              <div className="text-xs text-foreground-muted mt-1">Accepting will refund the partner automatically.</div>
             </div>
             <div className="flex gap-2 shrink-0">
               <Button size="sm" onClick={() => respondCancel(true)} disabled={busy}>
@@ -116,7 +116,7 @@ export function OrderResolutionActions({
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Request cancellation</DialogTitle></DialogHeader>
-            <p className="text-sm text-foreground-muted">If the other party accepts, the buyer is refunded automatically.</p>
+            <p className="text-sm text-foreground-muted">If the other party accepts, the partner is refunded automatically.</p>
             <Textarea placeholder="Reason" value={reason} onChange={(e) => setReason(e.target.value)} rows={4} />
             <Button onClick={requestCancel} disabled={busy || !reason.trim()}>Send request</Button>
           </DialogContent>
@@ -130,7 +130,7 @@ export function OrderResolutionActions({
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Open a dispute</DialogTitle></DialogHeader>
-            <p className="text-sm text-foreground-muted">Our team will review the order and mediate.</p>
+            <p className="text-sm text-foreground-muted">Our team will review the project and mediate.</p>
             <Textarea placeholder="What happened?" value={reason} onChange={(e) => setReason(e.target.value)} rows={5} />
             <Button onClick={openDispute} disabled={busy || !reason.trim()}>Submit dispute</Button>
           </DialogContent>

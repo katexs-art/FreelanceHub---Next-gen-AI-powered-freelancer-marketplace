@@ -40,7 +40,7 @@ function LinkWrap({ to, onClick, children }: { to: string; onClick: () => void; 
 }
 
 function renderCard(gig: GigCardData, promoted?: boolean) {
-  const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Seller";
+  const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Expert";
   return (
     <>
       <div className="relative aspect-[4/3] overflow-hidden border-hairline bg-background-subtle transition-colors group-hover:border-white/20">

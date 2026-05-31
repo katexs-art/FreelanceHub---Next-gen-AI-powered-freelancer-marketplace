@@ -8,10 +8,10 @@ import { toast } from "sonner";
 import { useState } from "react";
 
 const STEPS = [
-  { num: "01", title: "Create your seller account", desc: "Pick a username and tell us about you." },
-  { num: "02", title: "Publish your first gig", desc: "Describe a service with clear pricing tiers." },
-  { num: "03", title: "Get discovered", desc: "Buyers find you through search and category browsing." },
-  { num: "04", title: "Deliver and earn", desc: "Payments held in escrow, released when buyers approve." },
+  { num: "01", title: "Create your expert account", desc: "Pick a username and tell us about you." },
+  { num: "02", title: "Publish your first play", desc: "Describe a service with clear pricing tiers." },
+  { num: "03", title: "Get discovered", desc: "Partners find you through search and category browsing." },
+  { num: "04", title: "Deliver and earn", desc: "Payments held in escrow, released when partners approve." },
 ];
 
 export default function BecomeSeller() {
@@ -27,7 +27,7 @@ export default function BecomeSeller() {
     if (!error) {
       // make sure seller_accounts row exists
       await supabase.from("seller_accounts").upsert({ seller_id: user.id }, { onConflict: "seller_id" });
-      toast.success("Welcome aboard! You're now a seller.");
+      toast.success("Welcome aboard! You're now a expert.");
       await refresh();
       navigate("/seller/dashboard");
     } else toast.error(error.message);
@@ -47,13 +47,13 @@ export default function BecomeSeller() {
             </p>
             <div className="mt-8 flex gap-3">
               {!user ? (
-                <Link to="/signup"><Button size="lg" variant="secondary">Become a seller</Button></Link>
+                <Link to="/signup"><Button size="lg" variant="secondary">Become a expert</Button></Link>
               ) : isAlreadySeller ? (
-                <Link to="/seller/dashboard"><Button size="lg" variant="secondary">Go to seller dashboard</Button></Link>
+                <Link to="/seller/dashboard"><Button size="lg" variant="secondary">Go to expert dashboard</Button></Link>
 
               ) : (
                 <Button size="lg" variant="secondary" onClick={becomeSeller} disabled={loading}>
-                  {loading ? "Setting up…" : "Activate seller mode"}
+                  {loading ? "Setting up…" : "Activate expert mode"}
                 </Button>
               )}
             </div>

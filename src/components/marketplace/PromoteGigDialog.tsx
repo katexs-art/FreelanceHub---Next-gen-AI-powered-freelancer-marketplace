@@ -26,7 +26,7 @@ export function PromoteGigDialog({ gigId, onPromoted }: { gigId: string; onPromo
     });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Gig is now promoted");
+    toast.success("Play is now promoted");
     setOpen(false); onPromoted?.();
   };
 
@@ -38,8 +38,8 @@ export function PromoteGigDialog({ gigId, onPromoted }: { gigId: string; onPromo
         </button>
       </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Promote your gig</DialogTitle></DialogHeader>
-        <p className="text-sm text-foreground-muted">Boost your gig to the top of Search & Explore.</p>
+        <DialogHeader><DialogTitle>Promote your play</DialogTitle></DialogHeader>
+        <p className="text-sm text-foreground-muted">Boost your play to the top of Search & Explore.</p>
         <div className="grid grid-cols-2 gap-3 mt-2">
           <div>
             <label className="text-xs font-medium text-foreground-muted">Duration (days)</label>

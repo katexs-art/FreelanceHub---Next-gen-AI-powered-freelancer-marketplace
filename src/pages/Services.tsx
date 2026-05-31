@@ -122,7 +122,7 @@ export default function Services() {
         .order("created_at", { ascending: false })
         .limit(4);
       (revs ?? []).forEach((r: any) => {
-        const name = r.reviewer?.full_name || r.reviewer?.username || "A buyer";
+        const name = r.reviewer?.full_name || r.reviewer?.username || "A partner";
         items.push({
           id: r.id,
           type: "review",
@@ -138,8 +138,8 @@ export default function Services() {
         .order("created_at", { ascending: false })
         .limit(4);
       (ords ?? []).forEach((o: any) => {
-        const name = o.buyer?.full_name || o.buyer?.username || "A buyer";
-        items.push({ id: o.id, type: "order", text: "placed a new order", who: name, when: ago(o.created_at), accent: "blue" });
+        const name = o.buyer?.full_name || o.buyer?.username || "A partner";
+        items.push({ id: o.id, type: "order", text: "placed a new project", who: name, when: ago(o.created_at), accent: "blue" });
       });
       const { data: joined } = await supabase
         .from("profiles")
@@ -374,7 +374,7 @@ export default function Services() {
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 16 }}>
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px", letterSpacing: "-0.01em" }}>Intelligence Verified</h2>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>Top-ranked sellers by River Score.</p>
+              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>Top-ranked experts by River Score.</p>
             </div>
             <Link to="/browse" style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", textDecoration: "none", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
               Browse all experts →
@@ -444,7 +444,7 @@ export default function Services() {
       <section className="svc-section" style={{ padding: "100px 80px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", marginBottom: 32, gap: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Gigs</h2>
+            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Plays</h2>
             <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
             <Link to="/explore" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>View all →</Link>
           </div>

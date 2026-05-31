@@ -109,7 +109,7 @@ export default function CategoryPage() {
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)
             : gigs.length === 0
-              ? <p className="col-span-full text-foreground-muted">No active gigs in this category yet.</p>
+              ? <p className="col-span-full text-foreground-muted">No active plays in this category yet.</p>
               : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
         </div>
       </main>

@@ -194,14 +194,14 @@ function AdminSidebar({ active, indicators, health }: { active: NavKey; indicato
       { key: "overview", label: "Overview", icon: LayoutDashboard, dot: health ? (health.supabase.status === "connected" && health.stripe.status === "live" && health.anthropic.status === "active" ? "green" : "red") : "green" },
     ]},
     { label: "People", items: [
-      { key: "buyers", label: "Buyers", icon: UserCircle2, badge: i.buyersToday > 0 ? { value: i.buyersToday, tone: "blue" } : null },
-      { key: "sellers", label: "Sellers", icon: Users, dot: i.pendingSellers > 0 ? "yellow" : null },
+      { key: "buyers", label: "Partners", icon: UserCircle2, badge: i.buyersToday > 0 ? { value: i.buyersToday, tone: "blue" } : null },
+      { key: "sellers", label: "Experts", icon: Users, dot: i.pendingSellers > 0 ? "yellow" : null },
       { key: "verifications", label: "Verifications", icon: BadgeCheck, badge: i.pendingVerifications > 0 ? { value: i.pendingVerifications, tone: "yellow" } : null },
     ]},
     { label: "Marketplace", items: [
-      { key: "orders", label: "Orders", icon: ShoppingBag, dot: i.activeOrders > 0 ? "blue" : null, badge: i.lateOrders > 0 ? { value: i.lateOrders, tone: "red" } : null },
-      { key: "projects", label: "Projects and Bids", icon: Briefcase, badge: i.openProjects > 0 ? { value: i.openProjects, tone: "blue" } : null },
-      { key: "gigs", label: "Gigs", icon: Folder, badge: { value: i.activeGigs, tone: "grey" } },
+      { key: "orders", label: "Projects", icon: ShoppingBag, dot: i.activeOrders > 0 ? "blue" : null, badge: i.lateOrders > 0 ? { value: i.lateOrders, tone: "red" } : null },
+      { key: "projects", label: "Projects and Proposals", icon: Briefcase, badge: i.openProjects > 0 ? { value: i.openProjects, tone: "blue" } : null },
+      { key: "gigs", label: "Plays", icon: Folder, badge: { value: i.activeGigs, tone: "grey" } },
       { key: "disputes", label: "Disputes", icon: AlertTriangle, badge: i.openDisputes > 0 ? { value: i.openDisputes, tone: "red" } : null },
       { key: "reviews", label: "Reviews", icon: Star, badge: i.reviewsToday > 0 ? { value: i.reviewsToday, tone: "blue" } : null },
     ]},
@@ -219,7 +219,7 @@ function AdminSidebar({ active, indicators, health }: { active: NavKey; indicato
     { label: "Content", items: [
       { key: "categories", label: "Categories", icon: Folder, badge: { value: i.activeCategories, tone: "grey" } },
       { key: "announcements", label: "Announcements", icon: Megaphone },
-      { key: "featured", label: "Featured Sellers", icon: Pin },
+      { key: "featured", label: "Featured Experts", icon: Pin },
     ]},
     { label: "System", items: [
       { key: "notifications", label: "Notifications", icon: Bell },
@@ -379,9 +379,9 @@ export default function Admin() {
       supabase.from("profiles")
         .select("id, full_name, username, email, avatar_url, suspended_at, created_at, last_seen, role, seller_status, river_score, rejection_reason, application_submitted_at")
         .eq("role", "seller").order("created_at", { ascending: false }).limit(300),
-      supabase.from("orders").select("id, order_number, status, price, escrow_status, created_at, buyer:buyer_id(username), seller:seller_id(username)").order("created_at", { ascending: false }).limit(50),
-      supabase.from("withdrawals").select("id, amount, status, created_at, method, failure_reason, seller_id, seller:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(25),
-      supabase.from("disputes").select("id, status, reason, created_at, order_id, order:order_id(escrow_status, status)").order("created_at", { ascending: false }).limit(25),
+      supabase.from("orders").select("id, order_number, status, price, escrow_status, created_at, partner:buyer_id(username), expert:seller_id(username)").order("created_at", { ascending: false }).limit(50),
+      supabase.from("withdrawals").select("id, amount, status, created_at, method, failure_reason, seller_id, expert:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(25),
+      supabase.from("disputes").select("id, status, reason, created_at, order_id, project:order_id(escrow_status, status)").order("created_at", { ascending: false }).limit(25),
       supabase.from("orders").select("buyer_id, seller_id, status, price, seller_earnings"),
       supabase.from("seller_accounts").select("seller_id, lifetime_earnings, available_balance, pending_balance, payouts_enabled, onboarding_complete"),
       supabase.from("seller_applications").select("*").eq("status", "pending").order("created_at", { ascending: false }),
@@ -465,7 +465,7 @@ export default function Admin() {
     await supabase.from("disputes").update({
       status: "resolved_release", resolution_outcome: "released", resolved_at: nowIso,
     }).eq("id", disputeId);
-    toast.success("Released to seller — transfer will be sent shortly");
+    toast.success("Released to expert — transfer will be sent shortly");
     load();
   };
 
@@ -484,13 +484,13 @@ export default function Admin() {
   const approveSeller = async (id: string) => {
     const { error } = await supabase.rpc("approve_seller", { _seller: id });
     if (error) return toast.error(error.message);
-    toast.success("Seller approved"); load();
+    toast.success("Expert approved"); load();
   };
   const submitReject = async (reason: string) => {
     if (!rejectSeller) return;
     const { error } = await supabase.rpc("reject_seller", { _seller: rejectSeller.id, _reason: reason });
     if (error) return toast.error(error.message);
-    toast.success("Seller rejected"); setRejectSeller(null); load();
+    toast.success("Expert rejected"); setRejectSeller(null); load();
   };
   const submitNotification = async (title: string, body: string) => {
     if (!notifyUser) return;
@@ -537,8 +537,8 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="grid sm:grid-cols-4 gap-4">
                 <Stat icon={Users} label="Users" value={stats.users.toString()} />
-                <Stat icon={ShoppingBag} label="Gigs" value={stats.gigs.toString()} />
-                <Stat icon={Wallet} label="Orders" value={stats.orders.toString()} />
+                <Stat icon={ShoppingBag} label="Plays" value={stats.gigs.toString()} />
+                <Stat icon={Wallet} label="Projects" value={stats.orders.toString()} />
                 <Stat icon={Wallet} label="GMV" value={dollars(stats.gmv)} />
               </div>
               <OverviewPanel indicators={indicators} health={health} />
@@ -570,7 +570,7 @@ export default function Admin() {
           )}
 
           {active === "orders" && (
-            <Table headers={["Order", "Buyer", "Seller", "Amount", "Status", "Funds", "Date"]}>
+            <Table headers={["Project", "Partner", "Expert", "Amount", "Status", "Funds", "Date"]}>
               {orders.map((o) => (
                 <tr key={o.id} className="border-t border-border">
                   <td className="p-3 font-mono text-xs">{o.order_number}</td>
@@ -594,7 +594,7 @@ export default function Admin() {
           {active === "revenue" && <RevenuePanel rows={revenueRows} />}
 
           {active === "withdrawals" && (
-            <Table headers={["Seller", "Method", "Amount", "Status", "Requested", "Actions"]}>
+            <Table headers={["Expert", "Method", "Amount", "Status", "Requested", "Actions"]}>
               {withdrawals.map((w) => {
                 const v: StatusVariant = w.status === "paid" ? "completed" : w.status === "failed" ? "banned" : "in-progress";
                 return (
@@ -626,7 +626,7 @@ export default function Admin() {
           )}
 
           {active === "disputes" && (
-            <Table headers={["Order", "Reason", "Status", "Funds", "Opened", "Actions"]}>
+            <Table headers={["Project", "Reason", "Status", "Funds", "Opened", "Actions"]}>
               {disputes.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No disputes.</td></tr>}
               {disputes.map((d) => (
                 <tr key={d.id} className="border-t border-border">
@@ -646,8 +646,8 @@ export default function Admin() {
                   <td className="p-3 flex gap-1.5">
                     {d.status === "open" && (
                       <>
-                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id, d.id)}>Refund buyer</Button>
-                        <Button size="sm" variant="ghost" onClick={() => releaseToSeller(d.order_id, d.id)}>Release to seller</Button>
+                        <Button size="sm" variant="outline" onClick={() => refundOrder(d.order_id, d.id)}>Refund partner</Button>
+                        <Button size="sm" variant="ghost" onClick={() => releaseToSeller(d.order_id, d.id)}>Release to expert</Button>
                       </>
                     )}
                   </td>
@@ -750,7 +750,7 @@ function RevenuePanel({ rows }: { rows: any[] }) {
         <Stat icon={DollarSign} label="Lifetime revenue" value={dollars(total)} />
       </div>
       <div className="bg-background border border-border rounded-xl p-5">
-        <div className="text-xs text-foreground-muted">Revenue = platform fees collected on completed orders.</div>
+        <div className="text-xs text-foreground-muted">Revenue = platform fees collected on completed projects.</div>
       </div>
     </div>
   );
@@ -765,7 +765,7 @@ function BuyersTable({
   onNotify: (u: any) => void; onSuspend: (u: any) => void; onBan: (u: any) => void;
 }) {
   const [expanded, setExpanded] = useState<string | null>(null);
-  const headers = ["", "", "Name", "Email", "Status", "Member Since", "Orders", "Spent", "Last Active", "Actions"];
+  const headers = ["", "", "Name", "Email", "Status", "Member Since", "Projects", "Spent", "Last Active", "Actions"];
   return (
     <div className="bg-background border border-border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
@@ -773,7 +773,7 @@ function BuyersTable({
           <tr>{headers.map((h, i) => <th key={i} className="text-left p-3 font-medium">{h}</th>)}</tr>
         </thead>
         <tbody>
-          {rows.length === 0 && <tr><td colSpan={headers.length} className="p-6 text-center text-sm text-foreground-muted">No buyers.</td></tr>}
+          {rows.length === 0 && <tr><td colSpan={headers.length} className="p-6 text-center text-sm text-foreground-muted">No partners.</td></tr>}
           {rows.map((u) => {
             const a = aggs[u.id] ?? { placed: 0, spent: 0 };
             const isOpen = expanded === u.id;
@@ -823,7 +823,7 @@ function BuyerDetail({ buyerId }: { buyerId: string }) {
   useEffect(() => {
     (async () => {
       const [o, m, r, s] = await Promise.all([
-        supabase.from("orders").select("id, order_number, price, status, created_at, seller:seller_id(username)").eq("buyer_id", buyerId).order("created_at", { ascending: false }).limit(50),
+        supabase.from("orders").select("id, order_number, price, status, created_at, expert:seller_id(username)").eq("buyer_id", buyerId).order("created_at", { ascending: false }).limit(50),
         supabase.from("messages").select("id", { count: "exact", head: true }).eq("sender_id", buyerId),
         supabase.from("reviews").select("id", { count: "exact", head: true }).eq("buyer_id", buyerId).eq("reviewer_role", "buyer"),
         supabase.from("saved_gigs").select("id", { count: "exact", head: true }).eq("user_id", buyerId),
@@ -840,17 +840,17 @@ function BuyerDetail({ buyerId }: { buyerId: string }) {
       <div className="grid grid-cols-3 gap-3 text-xs">
         <MiniStat label="Messages Sent" value={msgCount?.toString() ?? "…"} />
         <MiniStat label="Reviews Left" value={reviewCount?.toString() ?? "…"} />
-        <MiniStat label="Saved Gigs" value={savedCount?.toString() ?? "…"} />
+        <MiniStat label="Saved Plays" value={savedCount?.toString() ?? "…"} />
       </div>
       <div>
-        <div className="text-xs font-semibold mb-2 text-foreground-muted">Order History</div>
+        <div className="text-xs font-semibold mb-2 text-foreground-muted">Project History</div>
         <div className="border border-border rounded-lg overflow-hidden">
           <table className="w-full text-xs">
             <thead className="bg-background-elevated text-foreground-muted">
-              <tr><th className="text-left p-2">Order</th><th className="text-left p-2">Seller</th><th className="text-left p-2">Amount</th><th className="text-left p-2">Status</th><th className="text-left p-2">Date</th></tr>
+              <tr><th className="text-left p-2">Project</th><th className="text-left p-2">Expert</th><th className="text-left p-2">Amount</th><th className="text-left p-2">Status</th><th className="text-left p-2">Date</th></tr>
             </thead>
             <tbody>
-              {(orders ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{orders === null ? "Loading…" : "No orders."}</td></tr>}
+              {(orders ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{orders === null ? "Loading…" : "No projects."}</td></tr>}
               {(orders ?? []).map((o) => (
                 <tr key={o.id} className="border-t border-border">
                   <td className="p-2 font-mono">{o.order_number}</td>
@@ -886,7 +886,7 @@ function SellersTable({
           <tr>{headers.map((h, i) => <th key={i} className="text-left p-3 font-medium">{h}</th>)}</tr>
         </thead>
         <tbody>
-          {rows.length === 0 && <tr><td colSpan={headers.length} className="p-6 text-center text-sm text-foreground-muted">No sellers.</td></tr>}
+          {rows.length === 0 && <tr><td colSpan={headers.length} className="p-6 text-center text-sm text-foreground-muted">No experts.</td></tr>}
           {rows.map((u) => {
             const a = aggs[u.id] ?? { completed: 0, cancelled: 0, earnings: 0 };
             const acct = accts[u.id];
@@ -914,7 +914,7 @@ function SellersTable({
                   <td className="p-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1.5 flex-wrap">
                       <Button size="sm" variant="ghost" asChild><a href={viewProfileHref(u)} target="_blank" rel="noreferrer">View</a></Button>
-                      <Button size="sm" variant="ghost" asChild><a href={viewProfileHref(u)} target="_blank" rel="noreferrer">Gigs</a></Button>
+                      <Button size="sm" variant="ghost" asChild><a href={viewProfileHref(u)} target="_blank" rel="noreferrer">Plays</a></Button>
                       {sellerStatus !== "approved" && <Button size="sm" onClick={() => onApprove(u)}>Approve</Button>}
                       {sellerStatus !== "rejected" && <Button size="sm" variant="outline" onClick={() => onReject(u)}>Reject</Button>}
                       <Button size="sm" variant="ghost" onClick={() => onNotify(u)}>Notify</Button>
@@ -959,7 +959,7 @@ function SellerDetail({
     (async () => {
       const queries: any[] = [
         supabase.from("gigs").select("id, title, status, starting_price, total_orders, average_rating").eq("seller_id", sellerId).order("created_at", { ascending: false }).limit(50),
-        supabase.from("orders").select("id, order_number, price, status, created_at, buyer:buyer_id(username)").eq("seller_id", sellerId).order("created_at", { ascending: false }).limit(50),
+        supabase.from("orders").select("id, order_number, price, status, created_at, partner:buyer_id(username)").eq("seller_id", sellerId).order("created_at", { ascending: false }).limit(50),
         supabase.from("reviews").select("id, rating, review_text, created_at, reviewer_role").eq("seller_id", sellerId).eq("reviewer_role", "buyer").order("created_at", { ascending: false }).limit(20),
         supabase.from("transactions").select("id, type, amount, status, created_at").eq("seller_id", sellerId).order("created_at", { ascending: false }).limit(20),
       ];
@@ -1023,9 +1023,9 @@ function SellerDetail({
         )}
       </Section>
 
-      <Section title="Gigs">
-        <MiniTable headers={["Title", "Status", "Price", "Orders", "Rating"]}>
-          {(gigs ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{gigs === null ? "Loading…" : "No gigs."}</td></tr>}
+      <Section title="Plays">
+        <MiniTable headers={["Title", "Status", "Price", "Projects", "Rating"]}>
+          {(gigs ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{gigs === null ? "Loading…" : "No plays."}</td></tr>}
           {(gigs ?? []).map((g) => (
             <tr key={g.id} className="border-t border-border">
               <td className="p-2">{g.title}</td>
@@ -1038,9 +1038,9 @@ function SellerDetail({
         </MiniTable>
       </Section>
 
-      <Section title="Orders">
-        <MiniTable headers={["Order", "Buyer", "Amount", "Status", "Date"]}>
-          {(orders ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{orders === null ? "Loading…" : "No orders."}</td></tr>}
+      <Section title="Projects">
+        <MiniTable headers={["Project", "Partner", "Amount", "Status", "Date"]}>
+          {(orders ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{orders === null ? "Loading…" : "No projects."}</td></tr>}
           {(orders ?? []).map((o) => (
             <tr key={o.id} className="border-t border-border">
               <td className="p-2 font-mono">{o.order_number}</td>
@@ -1166,11 +1166,11 @@ function RejectSellerDialog({
 /* ============= Section titles ============= */
 function sectionTitle(k: NavKey) {
   const m: Record<string, string> = {
-    overview: "Overview", buyers: "Buyers", sellers: "Sellers", verifications: "Verifications",
-    orders: "Orders", projects: "Projects and Bids", gigs: "Gigs", disputes: "Disputes", reviews: "Reviews",
+    overview: "Overview", buyers: "Partners", sellers: "Experts", verifications: "Verifications",
+    orders: "Projects", projects: "Projects and Proposals", gigs: "Plays", disputes: "Disputes", reviews: "Reviews",
     revenue: "Revenue", escrow: "Escrow", payouts: "Payouts", refunds: "Refunds", withdrawals: "Withdrawals",
     river: "River Controls", "river-analytics": "River Analytics",
-    categories: "Categories", announcements: "Announcements", featured: "Featured Sellers",
+    categories: "Categories", announcements: "Announcements", featured: "Featured Experts",
     notifications: "Notifications", settings: "Settings", audit: "Audit Log", health: "System Health", reports: "Reports",
   };
   return m[k] ?? "Admin";
@@ -1188,10 +1188,10 @@ function OverviewPanel({ indicators, health }: { indicators: Indicators; health:
   return (
     <div className="space-y-4">
       <div className="grid sm:grid-cols-3 gap-4">
-        <MiniStat label="Pending sellers" value={String(indicators.pendingSellers)} />
+        <MiniStat label="Pending experts" value={String(indicators.pendingSellers)} />
         <MiniStat label="Open disputes" value={String(indicators.openDisputes)} />
-        <MiniStat label="Active orders" value={String(indicators.activeOrders)} />
-        <MiniStat label="Escrow held (orders)" value={String(indicators.escrowHeld)} />
+        <MiniStat label="Active projects" value={String(indicators.activeOrders)} />
+        <MiniStat label="Escrow held (projects)" value={String(indicators.escrowHeld)} />
         <MiniStat label="Pending payouts" value={String(indicators.pendingPayouts)} />
         <MiniStat label="River searches today" value={String(indicators.riverSearchesToday)} />
       </div>
@@ -1211,7 +1211,7 @@ function EscrowPanel() {
   const load = async () => {
     const { data } = await supabase
       .from("orders")
-      .select("id, order_number, price, platform_fee, status, escrow_status, created_at, auto_complete_at, delivered_at, buyer:buyer_id(username, full_name), seller:seller_id(username, full_name)")
+      .select("id, order_number, price, platform_fee, status, escrow_status, created_at, auto_complete_at, delivered_at, partner:buyer_id(username, full_name), expert:seller_id(username, full_name)")
       .eq("escrow_status", "held")
       .order("created_at", { ascending: false });
     setRows(data ?? []);
@@ -1220,7 +1220,7 @@ function EscrowPanel() {
 
   const total = rows.reduce((s, r) => s + (r.price ?? 0), 0);
   const releaseEarly = async (id: string) => {
-    if (!confirm("Release these funds to the seller now?")) return;
+    if (!confirm("Release these funds to the expert now?")) return;
     setBusy(id);
     const nowIso = new Date().toISOString();
     await supabase.from("orders").update({ status: "completed", completed_at: nowIso, escrow_status: "released", escrow_released_at: nowIso }).eq("id", id);
@@ -1246,7 +1246,7 @@ function EscrowPanel() {
         <div className="text-xs mt-1" style={{ color: "#9a3412" }}>{rows.length} orders held</div>
       </div>
       <div className="flex justify-end"><Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button></div>
-      <Table headers={["Order","Buyer","Seller","Held","Fee","Status","Created","Actions"]}>
+      <Table headers={["Project","Partner","Expert","Held","Fee","Status","Created","Actions"]}>
         {rows.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-sm text-foreground-muted">No funds held in escrow.</td></tr>}
         {rows.map((r) => {
           const disputed = r.status === "disputed";
@@ -1280,9 +1280,9 @@ function PayoutsPanel() {
   const [paypalPending, setPaypalPending] = useState<any[]>([]);
   const load = async () => {
     const [p, h, pp] = await Promise.all([
-      supabase.from("withdrawals").select("*, seller:seller_id(username, full_name, river_score)").eq("status", "requested").order("created_at", { ascending: false }),
-      supabase.from("withdrawals").select("*, seller:seller_id(username, full_name)").in("status", ["paid","failed"] as any).order("paid_at", { ascending: false }).limit(100),
-      supabase.from("seller_accounts").select("seller_id, paypal_email, payout_method, created_at, seller:seller_id(username, full_name, email)").eq("payout_method", "paypal").eq("payouts_enabled", false),
+      supabase.from("withdrawals").select("*, expert:seller_id(username, full_name, river_score)").eq("status", "requested").order("created_at", { ascending: false }),
+      supabase.from("withdrawals").select("*, expert:seller_id(username, full_name)").in("status", ["paid","failed"] as any).order("paid_at", { ascending: false }).limit(100),
+      supabase.from("seller_accounts").select("seller_id, paypal_email, payout_method, created_at, expert:seller_id(username, full_name, email)").eq("payout_method", "paypal").eq("payouts_enabled", false),
     ]);
     setPending(p.data ?? []); setHistory(h.data ?? []); setPaypalPending(pp.data ?? []);
   };
@@ -1312,7 +1312,7 @@ function PayoutsPanel() {
     <div className="space-y-6">
       <div>
         <h3 className="text-sm font-semibold mb-2">PayPal Verification Queue ({paypalPending.length})</h3>
-        <Table headers={["Seller","Email","PayPal email","Submitted","Action"]}>
+        <Table headers={["Expert","Email","PayPal email","Submitted","Action"]}>
           {paypalPending.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-sm text-foreground-muted">No PayPal accounts awaiting verification.</td></tr>}
           {paypalPending.map((s) => (
             <tr key={s.seller_id} className="border-t border-border">
@@ -1330,7 +1330,7 @@ function PayoutsPanel() {
           <h3 className="text-sm font-semibold">Pending Payouts ({pending.length})</h3>
           {pending.length > 0 && <Button size="sm" onClick={bulkApprove}>Bulk Approve All</Button>}
         </div>
-        <Table headers={["Seller","River","Amount","Orders","Stripe","Requested","Action"]}>
+        <Table headers={["Expert","River","Amount","Projects","Stripe","Requested","Action"]}>
           {pending.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-sm text-foreground-muted">No pending payouts.</td></tr>}
           {pending.map((w) => (
             <tr key={w.id} className="border-t border-border">
@@ -1347,7 +1347,7 @@ function PayoutsPanel() {
       </div>
       <div>
         <h3 className="text-sm font-semibold mb-2">Payout History</h3>
-        <Table headers={["Date","Seller","Amount","Transfer ID","Status"]}>
+        <Table headers={["Date","Expert","Amount","Transfer ID","Status"]}>
           {history.map((w) => (
             <tr key={w.id} className="border-t border-border">
               <td className="p-3 text-foreground-muted">{fmtDate(w.paid_at ?? w.created_at)}</td>
@@ -1369,7 +1369,7 @@ function RefundsPanel() {
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const load = async () => {
-    let q = supabase.from("orders").select("id, order_number, price, platform_fee, refund_id, refunded_at, buyer:buyer_id(username, full_name), seller:seller_id(username, full_name)").not("refunded_at", "is", null).order("refunded_at", { ascending: false }).limit(500);
+    let q = supabase.from("orders").select("id, order_number, price, platform_fee, refund_id, refunded_at, partner:buyer_id(username, full_name), expert:seller_id(username, full_name)").not("refunded_at", "is", null).order("refunded_at", { ascending: false }).limit(500);
     if (from) q = q.gte("refunded_at", from);
     if (to) q = q.lte("refunded_at", to);
     const { data } = await q;
@@ -1395,7 +1395,7 @@ function RefundsPanel() {
         <div className="flex-1" />
         <Button size="sm" variant="outline" onClick={exportCsv}>Export CSV</Button>
       </div>
-      <Table headers={["Date","Order","Buyer","Seller","Amount","Refund ID"]}>
+      <Table headers={["Date","Project","Partner","Expert","Amount","Refund ID"]}>
         {rows.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No refunds.</td></tr>}
         {rows.map((r) => (
           <tr key={r.id} className="border-t border-border">
@@ -1419,7 +1419,7 @@ function ReviewsPanel() {
   const [q, setQ] = useState("");
   const [open, setOpen] = useState<string | null>(null);
   const load = async () => {
-    let qy = supabase.from("reviews").select("id, rating, review_text, created_at, order_id, buyer:buyer_id(username, full_name), seller:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(500);
+    let qy = supabase.from("reviews").select("id, rating, review_text, created_at, order_id, partner:buyer_id(username, full_name), expert:seller_id(username, full_name)").order("created_at", { ascending: false }).limit(500);
     if (filter !== "all") qy = qy.eq("rating", Number(filter));
     const { data } = await qy;
     setRows(data ?? []);
@@ -1438,12 +1438,12 @@ function ReviewsPanel() {
   return (
     <div className="space-y-3">
       <div className="flex gap-2">
-        <Input placeholder="Search seller or buyer…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
+        <Input placeholder="Search expert or partner…" value={q} onChange={(e) => setQ(e.target.value)} className="max-w-xs" />
         <select className="border border-border rounded px-2 text-sm bg-background" value={filter} onChange={(e) => setFilter(e.target.value)}>
           {["all","5","4","3","2","1"].map(o => <option key={o} value={o}>{o === "all" ? "All ratings" : `${o} star`}</option>)}
         </select>
       </div>
-      <Table headers={["Date","Buyer","Seller","Rating","Preview","Actions"]}>
+      <Table headers={["Date","Partner","Expert","Rating","Preview","Actions"]}>
         {filtered.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No reviews.</td></tr>}
         {filtered.map((r) => (
           <Fragment key={r.id}>
@@ -1477,7 +1477,7 @@ function GigsPanel() {
   const [cat, setCat] = useState("all");
   const [status, setStatus] = useState("all");
   const load = async () => {
-    let qy = supabase.from("gigs").select("id, title, thumbnail_url, category, status, starting_price, total_orders, average_rating, created_at, seller:seller_id(username, full_name, river_score)").order("created_at", { ascending: false }).limit(500);
+    let qy = supabase.from("gigs").select("id, title, thumbnail_url, category, status, starting_price, total_orders, average_rating, created_at, expert:seller_id(username, full_name, river_score)").order("created_at", { ascending: false }).limit(500);
     if (status !== "all") qy = qy.eq("status", status as any);
     if (cat !== "all") qy = qy.eq("category", cat);
     const { data } = await qy;
@@ -1487,7 +1487,7 @@ function GigsPanel() {
   const cats = Array.from(new Set(rows.map(r => r.category))).filter(Boolean);
   const filtered = rows.filter(r => !q.trim() || r.title?.toLowerCase().includes(q.toLowerCase()) || r.seller?.username?.toLowerCase().includes(q.toLowerCase()));
   const setGigStatus = async (id: string, s: string) => { await supabase.from("gigs").update({ status: s as any }).eq("id", id); load(); };
-  const remove = async (id: string) => { if (!confirm("Delete gig?")) return; await supabase.from("gigs").delete().eq("id", id); load(); };
+  const remove = async (id: string) => { if (!confirm("Delete play?")) return; await supabase.from("gigs").delete().eq("id", id); load(); };
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">
@@ -1500,7 +1500,7 @@ function GigsPanel() {
           <option value="all">All status</option><option value="active">Active</option><option value="paused">Paused</option><option value="draft">Draft</option>
         </select>
       </div>
-      <Table headers={["","Title","Seller","Category","Price","Orders","Rating","Status","Actions"]}>
+      <Table headers={["","Title","Expert","Category","Price","Projects","Rating","Status","Actions"]}>
         {filtered.map((g) => (
           <tr key={g.id} className="border-t border-border">
             <td className="p-2">{g.thumbnail_url ? <img src={g.thumbnail_url} alt="" className="h-10 w-14 object-cover rounded" /> : <div className="h-10 w-14 rounded bg-background-elevated" />}</td>
@@ -1529,10 +1529,10 @@ function GigsPanel() {
 function ProjectsPanel() {
   const [rows, setRows] = useState<any[]>([]);
   useEffect(() => {
-    supabase.from("project_posts").select("id, title, category, status, budget_min, budget_max, bid_count, created_at, buyer:buyer_id(username)").order("created_at", { ascending: false }).limit(200).then(({ data }) => setRows(data ?? []));
+    supabase.from("project_posts").select("id, title, category, status, budget_min, budget_max, bid_count, created_at, partner:buyer_id(username)").order("created_at", { ascending: false }).limit(200).then(({ data }) => setRows(data ?? []));
   }, []);
   return (
-    <Table headers={["Title","Buyer","Category","Budget","Bids","Status","Posted"]}>
+    <Table headers={["Title","Partner","Category","Budget","Proposals","Status","Posted"]}>
       {rows.map((p) => (
         <tr key={p.id} className="border-t border-border">
           <td className="p-3 max-w-xs truncate">{p.title}</td>
@@ -1566,7 +1566,7 @@ function FeaturedSellersPanel() {
     supabase.from("profiles").select("id, full_name, username, avatar_url, primary_category, river_score").eq("role", "seller").eq("seller_status", "approved").or(`username.ilike.%${search}%,full_name.ilike.%${search}%`).limit(8).then(({ data }) => setResults(data ?? []));
   }, [search]);
   const add = async (id: string) => {
-    if (items.length >= 12) return toast.error("Max 12 featured sellers");
+    if (items.length >= 12) return toast.error("Max 12 featured experts");
     if (items.some(i => i.seller_id === id)) return;
     await supabase.from("featured_sellers").insert({ seller_id: id, position: items.length } as any);
     setSearch(""); setResults([]); load();
@@ -1582,7 +1582,7 @@ function FeaturedSellersPanel() {
   return (
     <div className="space-y-4">
       <div className="relative max-w-md">
-        <Input placeholder="Search approved sellers to add…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <Input placeholder="Search approved experts to add…" value={search} onChange={(e) => setSearch(e.target.value)} />
         {results.length > 0 && (
           <div className="absolute z-10 left-0 right-0 mt-1 bg-background border border-border rounded shadow-lg">
             {results.map((r) => (
@@ -1592,7 +1592,7 @@ function FeaturedSellersPanel() {
         )}
       </div>
       <div className="grid sm:grid-cols-3 gap-3">
-        {items.length === 0 && <div className="text-sm text-foreground-muted">No featured sellers yet.</div>}
+        {items.length === 0 && <div className="text-sm text-foreground-muted">No featured experts yet.</div>}
         {items.map((it, i) => (
           <div key={it.id} className="border border-border rounded-lg p-3 flex items-center gap-3">
             <Avatar url={it.profile?.avatar_url} name={it.profile?.full_name} />
@@ -1649,8 +1649,8 @@ function AnnouncementsPanel() {
         <div className="flex gap-2 flex-wrap">
           <select className="border rounded px-2 text-sm bg-background" value={audience} onChange={(e) => setAudience(e.target.value)}>
             <option value="all">All users</option>
-            <option value="buyers">All buyers</option>
-            <option value="sellers">All sellers</option>
+            <option value="buyers">All partners</option>
+            <option value="sellers">All experts</option>
           </select>
           <select className="border rounded px-2 text-sm bg-background" value={channel} onChange={(e) => setChannel(e.target.value)}>
             <option value="in_app">In-app only</option>

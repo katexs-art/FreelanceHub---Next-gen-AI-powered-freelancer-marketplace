@@ -8,7 +8,7 @@ export function VerificationsQueue() {
 
   const load = async () => {
     const { data } = await supabase.from("seller_verifications")
-      .select("id, seller_id, status, submitted_at, id_document_url, selfie_url, rejection_reason, seller:seller_id(full_name, username, email)")
+      .select("id, seller_id, status, submitted_at, id_document_url, selfie_url, rejection_reason, expert:seller_id(full_name, username, email)")
       .order("submitted_at", { ascending: false, nullsFirst: false });
     setRows(data ?? []);
   };
@@ -28,7 +28,7 @@ export function VerificationsQueue() {
     };
     const { error } = await supabase.from("seller_verifications").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
-    toast.success(approve ? "Seller verified" : "Verification rejected");
+    toast.success(approve ? "Expert verified" : "Verification rejected");
     load();
   };
 
@@ -37,7 +37,7 @@ export function VerificationsQueue() {
       <table className="w-full text-sm">
         <thead className="bg-background-elevated text-xs text-foreground-muted">
           <tr>
-            <th className="text-left p-3 font-medium">Seller</th>
+            <th className="text-left p-3 font-medium">Expert</th>
             <th className="text-left p-3 font-medium">Status</th>
             <th className="text-left p-3 font-medium">Submitted</th>
             <th className="text-left p-3 font-medium">Documents</th>

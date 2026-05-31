@@ -17,16 +17,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isSeller = profile?.role === "seller" || profile?.role === "admin";
 
   const sellerLinks = [
-    { to: "/seller/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/seller/gigs", icon: Package, label: "My gigs" },
-    { to: "/seller/orders", icon: ShoppingBag, label: "Orders" },
+    { to: "/seller/dashboard", icon: LayoutDashboard, label: "HQ" },
+    { to: "/seller/gigs", icon: Package, label: "My plays" },
+    { to: "/seller/orders", icon: ShoppingBag, label: "Projects" },
     { to: "/seller/earnings", icon: Wallet, label: "Earnings" },
     { to: "/seller/analytics", icon: BarChart3, label: "Analytics" },
     { to: "/seller/verification", icon: BadgeCheck, label: "Verification" },
   ];
   const buyerLinks = [
-    { to: "/buyer/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-    { to: "/buyer/orders", icon: ShoppingCart, label: "My orders" },
+    { to: "/buyer/dashboard", icon: LayoutDashboard, label: "HQ" },
+    { to: "/buyer/orders", icon: ShoppingCart, label: "My projects" },
     { to: "/saved", icon: Bookmark, label: "Saved" },
     { to: "/explore", icon: Search, label: "Explore" },
   ];

@@ -145,7 +145,7 @@ export default function Projects() {
             className="h-9 rounded-[4px] bg-white/[0.03] border border-white/10 px-3 text-sm"
           >
             <option value="newest">Newest</option>
-            <option value="most_bids">Most Bids</option>
+            <option value="most_bids">Most Proposals</option>
             <option value="ending_soon">Ending Soon</option>
             <option value="budget_high">Budget High to Low</option>
           </select>
@@ -179,11 +179,11 @@ export default function Projects() {
                     </div>
                     {profile?.role === "seller" || profile?.role === "admin" ? (
                       <Link to={`/projects/${p.id}/bid`} onClick={(e) => e.stopPropagation()}>
-                        <Button variant="outline">Place a Bid</Button>
+                        <Button variant="outline">Submit a Proposal</Button>
                       </Link>
                     ) : (
                       <Link to={`/projects/${p.id}/bids`} onClick={(e) => e.stopPropagation()}>
-                        <Button variant="outline">View Bids</Button>
+                        <Button variant="outline">View Proposals</Button>
                       </Link>
                     )}
                   </div>

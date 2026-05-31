@@ -95,7 +95,7 @@ export default function ProjectBids() {
     });
     setActing(false);
     if (error || !data) {
-      toast({ title: "Could not accept bid", description: error?.message, variant: "destructive" });
+      toast({ title: "Could not accept proposal", description: error?.message, variant: "destructive" });
       return;
     }
     nav(`/checkout/${data}`);
@@ -136,7 +136,7 @@ export default function ProjectBids() {
         <p className="text-sm text-foreground-muted mb-8">{bids.length} bid{bids.length === 1 ? "" : "s"} received</p>
 
         {bids.length === 0 ? (
-          <div className="text-sm text-foreground-muted">No bids yet.</div>
+          <div className="text-sm text-foreground-muted">No proposals yet.</div>
         ) : (
           <ul className="space-y-3">
             {bids.map((b) => {
@@ -146,12 +146,12 @@ export default function ProjectBids() {
                 <li key={b.id} className="surface border border-white/10 rounded-lg p-5 flex items-start gap-4">
                   <img
                     src={p?.avatar_url || "/placeholder.svg"}
-                    alt={p?.full_name || "Seller"}
+                    alt={p?.full_name || "Expert"}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <div className="font-medium text-sm">{p?.full_name || p?.username || "Seller"}</div>
+                      <div className="font-medium text-sm">{p?.full_name || p?.username || "Expert"}</div>
                       <span className="text-[10px] font-mono uppercase tracking-[0.12em] px-2 py-0.5 rounded-full border border-white/15">
                         River {score.toFixed(1)}/100
                       </span>

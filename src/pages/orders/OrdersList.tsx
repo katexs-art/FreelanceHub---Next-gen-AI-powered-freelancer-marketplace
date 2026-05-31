@@ -51,7 +51,7 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
     })();
   }, [user, as]);
 
-  const title = as === "buyer" ? "My orders" : "Active orders";
+  const title = as === "buyer" ? "My projects" : "Active projects";
   const counterpartKey = as === "buyer" ? "seller" : "buyer";
 
   return (
@@ -68,8 +68,8 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
           <table className="w-full text-sm">
             <thead className="bg-background-elevated text-xs text-foreground-muted">
               <tr>
-                <th className="text-left px-4 py-3 font-medium">Order</th>
-                <th className="text-left px-4 py-3 font-medium">{as === "buyer" ? "Seller" : "Buyer"}</th>
+                <th className="text-left px-4 py-3 font-medium">Project</th>
+                <th className="text-left px-4 py-3 font-medium">{as === "buyer" ? "Expert" : "Partner"}</th>
                 <th className="text-left px-4 py-3 font-medium">Status</th>
                 <th className="text-right px-4 py-3 font-medium">Total</th>
               </tr>
@@ -85,7 +85,7 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
                           {o.gigs?.thumbnail_url && <img src={o.gigs.thumbnail_url} alt="" className="w-full h-full object-cover" />}
                         </div>
                         <div>
-                          <div className="font-medium line-clamp-1">{o.gigs?.title ?? "Gig"}</div>
+                          <div className="font-medium line-clamp-1">{o.gigs?.title ?? "Play"}</div>
                           <div className="text-xs text-foreground-muted">{o.order_number}</div>
                         </div>
                       </Link>

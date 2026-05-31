@@ -24,15 +24,15 @@ const QUICK_FILTERS = [
   "Top Rated",
   "Fast Delivery under 3 days",
   "Budget under $50",
-  "Pro Sellers",
-  "Elite Sellers",
+  "Pro Experts",
+  "Elite Experts",
 ] as const;
 type Quick = (typeof QUICK_FILTERS)[number];
 
 const SORTS = [
   "River Recommended",
   "Highest Rated",
-  "Most Orders",
+  "Most Projects",
   "Fastest Delivery",
   "Lowest Price",
   "Newest",
@@ -223,14 +223,14 @@ export default function Browse() {
       out = out.filter((s) => s.minDelivery > 0 && s.minDelivery < 3);
     if (quick.has("Budget under $50"))
       out = out.filter((s) => s.startingPrice > 0 && s.startingPrice < 5000);
-    if (quick.has("Pro Sellers")) out = out.filter((s) => (s.river_score ?? 0) >= 7);
-    if (quick.has("Elite Sellers")) out = out.filter((s) => (s.river_score ?? 0) >= 9);
+    if (quick.has("Pro Experts")) out = out.filter((s) => (s.river_score ?? 0) >= 7);
+    if (quick.has("Elite Experts")) out = out.filter((s) => (s.river_score ?? 0) >= 9);
 
     switch (sort) {
       case "Highest Rated":
         out.sort((a, b) => (b.average_rating ?? 0) - (a.average_rating ?? 0));
         break;
-      case "Most Orders":
+      case "Most Projects":
         out.sort((a, b) => b.totalOrders - a.totalOrders);
         break;
       case "Fastest Delivery":

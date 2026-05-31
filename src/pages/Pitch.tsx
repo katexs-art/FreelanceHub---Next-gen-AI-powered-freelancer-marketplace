@@ -61,14 +61,14 @@ export default function Pitch() {
             subject: "Someone pitched your project on Katexs",
             data: {
               conversation_id: convId,
-              preview: "A qualified seller responded to your request. Log in to review their pitch and get your project started.",
+              preview: "A qualified expert responded to your request. Log in to review their pitch and get your project started.",
             },
           },
         });
       }
     } catch { /* best effort */ }
 
-    toast({ title: "Pitch sent", description: "The buyer has been notified." });
+    toast({ title: "Pitch sent", description: "The partner has been notified." });
     nav(`/inbox/${convId}`);
   };
 
@@ -104,7 +104,7 @@ export default function Pitch() {
               <textarea
                 value={pitch}
                 onChange={(e) => setPitch(e.target.value)}
-                placeholder="Tell this buyer exactly why you are the best person for this job. Describe your approach, what you will deliver, and why they should choose you over everyone else."
+                placeholder="Tell this partner exactly why you are the best person for this job. Describe your approach, what you will deliver, and why they should choose you over everyone else."
                 style={{
                   width: "100%", minHeight: 200, padding: 12,
                   border: "1px solid #e5e5e5", borderRadius: 8, fontSize: 14,

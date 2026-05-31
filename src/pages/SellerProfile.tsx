@@ -68,20 +68,20 @@ export default function SellerProfile() {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 container py-20 text-center">
-          <h1 className="text-2xl font-bold">Seller not found</h1>
-          <Link to="/explore" className="text-primary mt-2 inline-block">Browse sellers</Link>
+          <h1 className="text-2xl font-bold">Expert not found</h1>
+          <Link to="/explore" className="text-primary mt-2 inline-block">Browse experts</Link>
         </main>
         <SiteFooter />
       </div>
     );
   }
 
-  const name = seller.full_name ?? seller.username ?? "Seller";
+  const name = seller.full_name ?? seller.username ?? "Expert";
 
   return (
     <div className="min-h-screen flex flex-col">
       <SEO
-        title={`${seller.full_name ?? seller.username ?? "Seller"} — Profile`}
+        title={`${seller.full_name ?? seller.username ?? "Expert"} — Profile`}
         description={(seller.bio ?? `Hire ${seller.full_name ?? seller.username} on Katexs.`).slice(0, 155)}
       />
       <SiteHeader />
@@ -107,7 +107,7 @@ export default function SellerProfile() {
               {seller.is_online && <p className="mt-1 text-xs text-success">● Online</p>}
               <div className="mt-4 flex flex-col items-center gap-2">
                 <FollowSellerButton sellerId={seller.id} />
-                <ReportDialog targetType="user" targetId={seller.id} label="Report seller" />
+                <ReportDialog targetType="user" targetId={seller.id} label="Report expert" />
               </div>
               <div className="mt-5 space-y-2 text-sm text-left">
                 {seller.country && (
@@ -148,7 +148,7 @@ export default function SellerProfile() {
               <h2 className="text-xl font-bold mb-6">{name}'s gigs</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {gigs.length === 0
-                  ? <p className="text-foreground-muted col-span-full">No active gigs yet.</p>
+                  ? <p className="text-foreground-muted col-span-full">No active plays yet.</p>
                   : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
               </div>
             </div>

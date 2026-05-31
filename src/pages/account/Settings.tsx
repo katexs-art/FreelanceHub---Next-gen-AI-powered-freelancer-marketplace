@@ -79,7 +79,7 @@ export default function Settings() {
         <section className="space-y-2 text-sm">
           <Eyebrow className="mb-3">Preferences</Eyebrow>
           <p><Link className="underline" to="/settings/notifications">Notification preferences →</Link></p>
-          <p><Link className="underline" to="/saved">Saved gigs →</Link></p>
+          <p><Link className="underline" to="/saved">Saved plays →</Link></p>
           {(profile?.role === "seller" || profile?.role === "admin") && (
             <p><Link className="underline" to="/seller/verification">Identity verification →</Link></p>
           )}

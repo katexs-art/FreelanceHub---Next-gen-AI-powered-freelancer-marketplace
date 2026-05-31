@@ -90,7 +90,7 @@ export default function PostJob() {
             Tell us what you need — qualified sellers will bid on your job within hours
           </div>
         </div>
-        <h1 className="text-2xl font-semibold mb-6">Post a Job</h1>
+        <h1 className="text-2xl font-semibold mb-6">Post a Project</h1>
         <form onSubmit={submit} className="space-y-6">
           <div>
             <label className="block text-sm mb-2">Project Title</label>

@@ -53,7 +53,7 @@ export default function SellerAnalytics() {
 
   return (
     <AppShell>
-      <SEO title="Analytics" description="Track impressions, clicks, orders and earnings across your gigs." />
+      <SEO title="Analytics" description="Track impressions, clicks, projects and earnings across your plays." />
       <div className="max-w-5xl">
         <h1 className="text-3xl font-bold mb-2">Analytics</h1>
         <p className="text-sm text-foreground-muted mb-8">Last 30 days</p>
@@ -63,10 +63,10 @@ export default function SellerAnalytics() {
             <div className="grid sm:grid-cols-3 gap-3">
               <Card label="Impressions" value={funnel.impressions} />
               <Card label="Clicks" value={funnel.clicks} sub={funnel.impressions ? `${Math.round((funnel.clicks/funnel.impressions)*100)}% CTR` : "—"} />
-              <Card label="Orders" value={funnel.orders} sub={funnel.clicks ? `${Math.round((funnel.orders/funnel.clicks)*100)}% conv` : "—"} />
+              <Card label="Projects" value={funnel.orders} sub={funnel.clicks ? `${Math.round((funnel.orders/funnel.clicks)*100)}% conv` : "—"} />
             </div>
 
-            <Section title="Orders per day">
+            <Section title="Projects per day">
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={days}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -90,15 +90,15 @@ export default function SellerAnalytics() {
               </ResponsiveContainer>
             </Section>
 
-            <Section title="Top gigs">
+            <Section title="Top plays">
               <div className="border border-border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-background-elevated text-foreground-muted text-xs">
-                    <tr><th className="text-left p-3">Gig</th><th className="text-right p-3">Orders</th><th className="text-right p-3">Rating</th><th className="text-right p-3">Impr.</th><th className="text-right p-3">Clicks</th></tr>
+                    <tr><th className="text-left p-3">Play</th><th className="text-right p-3">Projects</th><th className="text-right p-3">Rating</th><th className="text-right p-3">Impr.</th><th className="text-right p-3">Clicks</th></tr>
                   </thead>
                   <tbody>
                     {gigs.length === 0 ? (
-                      <tr><td colSpan={5} className="p-6 text-center text-foreground-muted">No gigs yet</td></tr>
+                      <tr><td colSpan={5} className="p-6 text-center text-foreground-muted">No plays yet</td></tr>
                     ) : gigs.map(g => (
                       <tr key={g.id} className="border-t border-border">
                         <td className="p-3 truncate max-w-xs">{g.title}</td>

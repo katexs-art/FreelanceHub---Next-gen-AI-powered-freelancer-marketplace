@@ -127,14 +127,14 @@ export function LeaveReview({ orderId, gigId, buyerId, sellerId, currentUserId, 
   if (role === "seller") {
     return (
       <div className="border border-border rounded-lg p-5 space-y-3">
-        <h4 className="font-semibold text-sm">Rate this buyer</h4>
+        <h4 className="font-semibold text-sm">Rate this partner</h4>
         <StarRow value={sellerRating} onChange={setSellerRating} />
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
           maxLength={500}
-          placeholder="Feedback on this buyer"
+          placeholder="Feedback on this partner"
         />
         <Button onClick={submit} disabled={busy}>
           Submit review

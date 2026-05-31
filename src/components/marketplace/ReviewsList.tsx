@@ -35,7 +35,7 @@ export function ReviewsList({ gigId, sellerId }: { gigId?: string; sellerId?: st
     let q = supabase
       .from("reviews")
       .select(
-        "id, rating, review_text, created_at, reply, seller_id, communication_rating, service_rating, recommend_rating, buyer:buyer_id (full_name, username, avatar_url)"
+        "id, rating, review_text, created_at, reply, seller_id, communication_rating, service_rating, recommend_rating, partner:buyer_id (full_name, username, avatar_url)"
       )
       .eq("reviewer_role", "buyer")
       .eq("is_public", true)
@@ -118,7 +118,7 @@ export function ReviewsList({ gigId, sellerId }: { gigId?: string; sellerId?: st
 
             {r.reply && (
               <div className="mt-3 ml-12 bg-background-elevated rounded-lg p-3 text-sm">
-                <div className="text-xs text-foreground-muted mb-1">Seller's reply</div>
+                <div className="text-xs text-foreground-muted mb-1">Expert's reply</div>
                 <p className="whitespace-pre-line">{r.reply}</p>
               </div>
             )}

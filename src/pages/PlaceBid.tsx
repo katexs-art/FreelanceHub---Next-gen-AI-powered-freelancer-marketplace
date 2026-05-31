@@ -58,7 +58,7 @@ export default function PlaceBid() {
     });
     setSaving(false);
     if (error) {
-      toast({ title: "Could not submit bid", description: error.message, variant: "destructive" });
+      toast({ title: "Could not submit proposal", description: error.message, variant: "destructive" });
       return;
     }
     // Best-effort email
@@ -66,12 +66,12 @@ export default function PlaceBid() {
       supabase.functions.invoke("send-marketplace-email", {
         body: {
           to_user_id: project.buyer_id,
-          subject: "A new bid came in on your project",
-          body: "A new bid came in on your project — review it now.",
+          subject: "A new proposal came in on your project",
+          body: "A new proposal came in on your project — review it now.",
         },
       }).catch(() => {});
     }
-    toast({ title: "Your bid was submitted successfully" });
+    toast({ title: "Your proposal was submitted successfully" });
     nav("/projects");
   };
 
@@ -91,10 +91,10 @@ export default function PlaceBid() {
               </div>
             </div>
 
-            <h2 className="text-lg font-semibold mb-4">Place your bid</h2>
+            <h2 className="text-lg font-semibold mb-4">Place your proposal</h2>
             <form onSubmit={submit} className="space-y-5">
               <div>
-                <label className="block text-sm mb-2">Your bid amount</label>
+                <label className="block text-sm mb-2">Your proposal amount</label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-foreground-muted">$</span>
                   <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} className="pl-7" />
@@ -138,7 +138,7 @@ export default function PlaceBid() {
                 className="w-full h-12 bg-foreground text-background font-mono uppercase tracking-[0.12em] text-[13px] disabled:opacity-50"
                 style={{ borderRadius: 999 }}
               >
-                {saving ? "Submitting…" : "Submit My Bid"}
+                {saving ? "Submitting…" : "Submit My Proposal"}
               </button>
             </form>
           </>

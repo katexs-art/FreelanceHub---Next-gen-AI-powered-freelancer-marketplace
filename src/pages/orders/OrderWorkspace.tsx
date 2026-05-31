@@ -68,7 +68,7 @@ export default function OrderWorkspace() {
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
   if (loading) return <AppShell><div className="text-foreground-muted text-sm">Loading…</div></AppShell>;
-  if (!order || !user) return <AppShell><div>Order not found.</div></AppShell>;
+  if (!order || !user) return <AppShell><div>Project not found.</div></AppShell>;
 
   const isBuyer = user.id === order.buyer_id;
   const isSeller = user.id === order.seller_id;
@@ -239,7 +239,7 @@ export default function OrderWorkspace() {
           <section className="mt-8 bg-background border border-border rounded-xl p-6">
             <h2 className="text-lg font-semibold mb-1">Requirements</h2>
             <p className="text-sm text-foreground-muted mb-4">
-              {isBuyer ? "Answer the seller's questions to start the order." : "Waiting for buyer to send requirements."}
+              {isBuyer ? "Answer the expert's questions to start the project." : "Waiting for partner to send requirements."}
             </p>
             {reqs.length === 0 && isBuyer && (
               <p className="text-sm text-foreground-muted italic">No questions — confirm to start.</p>
@@ -299,7 +299,7 @@ export default function OrderWorkspace() {
           {isSeller && (order.status === "active" || order.status === "revision_requested") && (
             <div className="mt-6 border-t border-border pt-6 space-y-3">
               <h3 className="text-sm font-semibold">Send a delivery</h3>
-              <Textarea placeholder="Message to the buyer" value={deliveryMsg} onChange={(e) => setDeliveryMsg(e.target.value)} rows={3} />
+              <Textarea placeholder="Message to the partner" value={deliveryMsg} onChange={(e) => setDeliveryMsg(e.target.value)} rows={3} />
               <Input type="file" multiple onChange={(e) => setDeliveryFiles(Array.from(e.target.files ?? []))} />
               <Button onClick={deliver} disabled={busy || (!deliveryMsg && deliveryFiles.length === 0)}>
                 <Upload className="h-4 w-4" /> Deliver
