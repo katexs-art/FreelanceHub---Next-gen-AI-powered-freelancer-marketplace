@@ -4,8 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { toast } from "sonner";
 import { AuthLayout } from "@/components/auth/AuthLayout";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import {
+  KxField,
+  KxPassword,
+  KxGoogleButton,
+  KxDivider,
+  KxSubmit,
+  KxTrustLine,
+  KxAuthStyles,
+} from "@/components/auth/KxAuthControls";
 import { cn } from "@/lib/utils";
 
 type Role = "client" | "seller";
@@ -23,7 +30,6 @@ export default function Signup() {
   });
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "ok" | "taken" | "invalid">("idle");
 
-  // live username check (sellers only)
   useEffect(() => {
     if (role !== "seller" || !form.username) {
       setUsernameStatus("idle");
@@ -77,51 +83,57 @@ export default function Signup() {
     <AuthLayout
       title="Create your account"
       subtitle="Buy services or start selling on katexs"
-      footer={<>Already have an account? <Link to="/login" className="text-primary font-medium">Sign in</Link></>}
+      footer={<>Already have an account? <Link to="/login">Sign in</Link></>}
     >
-      <div className="space-y-5">
-        <div className="grid grid-cols-2 gap-2 p-1 bg-background-elevated rounded-full">
+      <KxAuthStyles />
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div className="kx-toggle">
           {(["client", "seller"] as Role[]).map((r) => (
-            <button key={r} type="button" onClick={() => setRole(r)} className={cn(
-              "py-2 rounded-full text-sm font-medium transition-colors",
-              role === r ? "bg-background text-foreground shadow-sm" : "text-foreground-muted"
-            )}>
+            <button
+              key={r}
+              type="button"
+              onClick={() => setRole(r)}
+              className={cn(role === r ? "on" : "off")}
+            >
               {r === "client" ? "I'm buying" : "I'm selling"}
             </button>
           ))}
         </div>
 
-        <Button variant="outline" className="w-full" onClick={handleGoogle}>
-          Continue with Google
-        </Button>
+        <KxGoogleButton onClick={handleGoogle} />
 
-        <div className="relative text-center">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>
-          <span className="relative bg-background px-3 text-xs text-foreground-muted uppercase tracking-wider">or</span>
-        </div>
+        <KxDivider />
 
-        <form onSubmit={handleSubmit} className="space-y-3.5">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Full name</label>
-            <Input required value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} />
-          </div>
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <KxField
+            label="Full name"
+            required
+            value={form.full_name}
+            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+          />
 
           {role === "seller" && (
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium">Username</label>
-              <Input
+            <div>
+              <KxField
+                label="Username"
                 required
                 value={form.username}
-                onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
                 placeholder="3-20 chars, a-z 0-9 _"
+                onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
               />
               {form.username && (
-                <p className={cn("text-xs",
-                  usernameStatus === "ok" && "text-success",
-                  usernameStatus === "taken" && "text-destructive",
-                  usernameStatus === "invalid" && "text-destructive",
-                  usernameStatus === "checking" && "text-foreground-muted"
-                )}>
+                <p
+                  style={{
+                    fontSize: 12,
+                    marginTop: 6,
+                    color:
+                      usernameStatus === "ok"
+                        ? "#16a34a"
+                        : usernameStatus === "checking"
+                        ? "#888"
+                        : "#dc2626",
+                  }}
+                >
                   {usernameStatus === "checking" && "Checking…"}
                   {usernameStatus === "ok" && "✓ Available"}
                   {usernameStatus === "taken" && "Username is taken"}
@@ -131,22 +143,32 @@ export default function Signup() {
             </div>
           )}
 
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Email</label>
-            <Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">Password</label>
-            <Input type="password" required minLength={8} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
-            <p className="text-xs text-foreground-subtle">At least 8 characters</p>
+          <KxField
+            label="Email"
+            type="email"
+            required
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+
+          <KxPassword
+            value={form.password}
+            onChange={(v) => setForm({ ...form, password: v })}
+            required
+            minLength={8}
+          />
+          <p style={{ fontSize: 12, color: "#bbb", marginTop: -8 }}>At least 8 characters</p>
+
+          <div style={{ marginTop: 4 }}>
+            <KxSubmit loading={loading}>{loading ? "Creating account…" : "Create account"}</KxSubmit>
+            <KxTrustLine />
           </div>
 
-          <Button type="submit" disabled={loading} className="w-full">
-            {loading ? "Creating account…" : "Create account"}
-          </Button>
-
-          <p className="text-xs text-foreground-subtle text-center">
-            By joining you agree to our <Link to="/terms" className="underline">Terms</Link> and <Link to="/privacy" className="underline">Privacy Policy</Link>.
+          <p style={{ fontSize: 12, color: "#bbb", textAlign: "center", marginTop: 4 }}>
+            By joining you agree to our{" "}
+            <Link to="/terms" style={{ color: "#888", textDecoration: "underline" }}>Terms</Link>{" "}
+            and{" "}
+            <Link to="/privacy" style={{ color: "#888", textDecoration: "underline" }}>Privacy Policy</Link>.
           </p>
         </form>
       </div>
