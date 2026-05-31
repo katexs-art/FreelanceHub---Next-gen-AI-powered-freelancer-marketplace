@@ -77,6 +77,17 @@ Deno.serve(async (req) => {
       }
     }
 
+    const subtotal = pkg.price + extrasTotal;
+    const partnerFee = Math.round(subtotal * 0.05);
+    lineItems.push({
+      price_data: {
+        currency: "usd",
+        product_data: { name: "Service fee (5%)" },
+        unit_amount: partnerFee * 100,
+      },
+      quantity: 1,
+    });
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
     const origin = req.headers.get("origin") || "https://katexs.com";
 
