@@ -608,23 +608,6 @@ export default function Browse() {
             />
           ) : filtered.length === 0 ? (
             <EmptyCategoryState surface="light" />
-              <button
-                onClick={clearAll}
-                style={{
-                  marginTop: 16,
-                  background: "#000",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 999,
-                  padding: "10px 22px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Clear Search
-              </button>
-            </div>
           ) : (
             <>
               <div className="mt-5 grid gap-5 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -924,16 +907,7 @@ function RiverSections({
   onMessage: (id: string) => void;
 }) {
   if (top.length === 0 && others.length === 0) {
-    return (
-      <div className="mt-16 text-center">
-        <div style={{ fontSize: 18, fontWeight: 600, color: "#111" }}>
-          No experts found for "{query}"
-        </div>
-        <div style={{ fontSize: 14, color: "#666", marginTop: 8 }}>
-          Try a different keyword or browse all categories
-        </div>
-      </div>
-    );
+    return <EmptyCategoryState surface="light" />;
   }
   return (
     <div className="mt-6" style={{ marginLeft: -20, marginRight: -20 }}>
