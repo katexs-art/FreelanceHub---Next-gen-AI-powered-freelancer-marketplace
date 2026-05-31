@@ -279,7 +279,7 @@ export function CategoryMegaNav() {
           padding: 32px 80px; z-index: 100; }
         .kx-catnav-heading { font-size: 13px; font-weight: 600; color: #000; margin-bottom: 14px; }
         .kx-catnav-sub { display: block; width: 100%; text-align: left; background: transparent; border: 0; padding: 0;
-          font-size: 13px; color: #555; line-height: 2; cursor: pointer; transition: color .12s, font-weight .12s; }
+          font-size: 13px; color: #444; line-height: 2; cursor: pointer; transition: color .12s, font-weight .12s; }
         .kx-catnav-sub:hover { color: #000; font-weight: 500; }
       `}</style>
       <div className="kx-catnav-wrap" onMouseLeave={() => setOpen(null)}>
