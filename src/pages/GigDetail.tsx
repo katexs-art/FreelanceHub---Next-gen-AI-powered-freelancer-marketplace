@@ -316,7 +316,7 @@ export default function GigDetail() {
                       <MessageSquare className="h-4 w-4" /> Contact
                     </Button>
                     <Button variant="outline" size="sm" onClick={toggleSave}>
-                      <Heart className={cn("h-4 w-4", isSaved && "fill-destructive text-destructive")} />
+                      <Bookmark className={cn("h-4 w-4", isSaved && "fill-current")} />
                       {isSaved ? "Saved" : "Save"}
                     </Button>
                   </div>
