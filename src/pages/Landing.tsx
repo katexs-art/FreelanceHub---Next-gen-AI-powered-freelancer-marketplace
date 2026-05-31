@@ -268,7 +268,7 @@ export default function Landing() {
             >
               <div style={{ fontSize: 15, fontWeight: 500, color: "#fff", marginBottom: 8 }}>{c.label}</div>
               <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
-              <div style={{ fontSize: 12, color: "#555" }}>Browse experts</div>
+              <div style={{ fontSize: 12, color: "#888" }}>Browse experts</div>
               <div style={{ fontSize: 14, color: "#fff", marginTop: 16 }}>→</div>
             </Link>
           ))}
@@ -325,7 +325,7 @@ export default function Landing() {
                       <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>From ${s.startingPrice}</div>
                     )}
                     <div style={{ display: "flex", gap: 8 }}>
-                      <Link to={`/seller/${s.username ?? s.id}`} style={{ flex: 1, textAlign: "center", background: "transparent", color: "#fff", border: "1px solid #444", fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 999, textDecoration: "none" }}>
+                      <Link to={`/seller/${s.username ?? s.id}`} style={{ flex: 1, textAlign: "center", background: "transparent", color: "#fff", border: "1px solid #555", fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 999, textDecoration: "none" }}>
                         View Profile
                       </Link>
                       <Link to={`/inbox?to=${s.id}`} style={{ flex: 1, textAlign: "center", background: "#fff", color: "#000", border: "none", fontSize: 12, fontWeight: 600, padding: "8px 18px", borderRadius: 999, textDecoration: "none" }}>
@@ -347,7 +347,7 @@ export default function Landing() {
             { n: "3", t: "Ship it", d: "Pay securely into escrow. Approve delivery. Funds release in 3 days automatically." },
           ].map((s) => (
             <div key={s.n}>
-              <div style={{ fontSize: 72, fontWeight: 500, color: "#222", lineHeight: 1 }}>{s.n}</div>
+              <div style={{ fontSize: 72, fontWeight: 500, color: "#f0f0f0", lineHeight: 1 }}>{s.n}</div>
               <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
               <div style={{ fontSize: 14, color: "#888", lineHeight: 1.6 }}>{s.d}</div>
             </div>

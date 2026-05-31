@@ -197,7 +197,7 @@ export function AuthLayout({
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 500, color: "#fff" }}>{e.name}</div>
-                    <div style={{ fontSize: 11, color: "#555", marginTop: 2 }}>{e.sub}</div>
+                    <div style={{ fontSize: 11, color: "#aaaaaa", marginTop: 2 }}>{e.sub}</div>
                   </div>
                   <span
                     style={{
@@ -214,7 +214,7 @@ export function AuthLayout({
                 </div>
               ))}
             </div>
-            <div style={{ fontSize: 13, color: "#555", textAlign: "center", marginTop: 8 }}>
+            <div style={{ fontSize: 13, color: "#aaaaaa", textAlign: "center", marginTop: 8 }}>
               Join them today — it's free
             </div>
           </div>
