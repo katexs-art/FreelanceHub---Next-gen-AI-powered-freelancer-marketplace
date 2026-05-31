@@ -101,13 +101,26 @@ export default function GigDetail() {
   }, [gigId, user]);
 
   const toggleSave = async () => {
-    if (!user || !gig) return nav("/login");
-    if (isSaved) {
-      await supabase.from("saved_gigs").delete().eq("user_id", user.id).eq("gig_id", gig.id);
-      setIsSaved(false);
-    } else {
-      const { error } = await supabase.from("saved_gigs").insert({ user_id: user.id, gig_id: gig.id });
-      if (!error) setIsSaved(true);
+    if (!gig) return;
+    const { data: { user: authed } } = await supabase.auth.getUser();
+    if (!authed) return nav("/login");
+    try {
+      if (isSaved) {
+        const { error } = await supabase.from("saved_gigs")
+          .delete().eq("user_id", authed.id).eq("gig_id", gig.id);
+        if (error) throw error;
+        setIsSaved(false);
+        toast.success("Removed from saved");
+      } else {
+        const { error } = await supabase.from("saved_gigs")
+          .insert({ user_id: authed.id, gig_id: gig.id });
+        if (error) throw error;
+        setIsSaved(true);
+        toast.success("Saved");
+      }
+    } catch (e: any) {
+      console.error("toggleSave failed", e);
+      toast.error(e?.message || "Could not update saved gigs");
     }
   };
 
