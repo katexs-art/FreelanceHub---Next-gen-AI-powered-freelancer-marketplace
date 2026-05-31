@@ -7,6 +7,7 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
+import { ShieldCheck } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +23,7 @@ interface OrderRow {
   project_title: string | null;
   delivery_deadline: string | null;
   stripe_payment_intent_id: string | null;
+  gig_id: string | null;
 }
 
 interface SellerProfile {
@@ -29,21 +31,21 @@ interface SellerProfile {
   full_name: string | null;
   username: string | null;
   avatar_url: string | null;
-  bio: string | null;
-  average_rating?: number;
-  total_reviews?: number;
-  total_orders?: number;
-  starting_price?: number | null;
 }
 
-function riverScore(p: SellerProfile): number {
-  const completion = (p.total_orders ?? 0) > 0 ? Math.min(100, 80 + Math.min(20, p.total_reviews ?? 0)) : 50;
-  const completeness = (p.bio ? 25 : 0) + (p.avatar_url ? 25 : 0) + (p.starting_price ? 25 : 0) + 25;
-  const r = ((p.average_rating ?? 0) / 5) * 40 + completion * 0.35 + completeness * 0.25;
-  return Math.round(r * 10) / 10;
+interface GigInfo {
+  title: string | null;
+  images: string[] | null;
+  package_name?: string | null;
 }
 
-function PayForm({ orderId }: { orderId: string }) {
+function PayBlock({
+  orderId,
+  total,
+}: {
+  orderId: string;
+  total: number;
+}) {
   const stripe = useStripe();
   const elements = useElements();
   const nav = useNavigate();
@@ -64,50 +66,95 @@ function PayForm({ orderId }: { orderId: string }) {
       setBusy(false);
       return;
     }
-    if (paymentIntent && (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")) {
+    if (
+      paymentIntent &&
+      (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")
+    ) {
       setSucceeded(true);
       setBusy(false);
-      setTimeout(() => nav(`/orders/${orderId}`), 2000);
+      setTimeout(() => nav(`/orders/${orderId}/confirmed`, { replace: true }), 800);
       return;
     }
     setErrorMsg("Payment did not complete. Please try again.");
     setBusy(false);
   };
 
-  const bg = succeeded ? "#16a34a" : "#000";
-  const label = succeeded ? "✓ Payment successful" : busy ? "Processing…" : "Pay & Start Project";
+  const bg = succeeded ? "#15803D" : "#16A34A";
+  const label = succeeded
+    ? "✓ Payment successful"
+    : busy
+    ? "Processing…"
+    : `Pay Now — $${total}`;
 
   return (
     <>
-      <div style={{ background: "#fff", border: "1px solid #e5e5e5", borderRadius: 8, padding: 16 }}>
-        <PaymentElement />
-      </div>
-      {errorMsg && (
-        <div role="alert" style={{
-          marginTop: 12, padding: "10px 12px", borderRadius: 8,
-          background: "#fef2f2", border: "1px solid #fecaca", color: "#b91c1c", fontSize: 13,
-        }}>{errorMsg}</div>
-      )}
-      {succeeded && (
-        <div role="status" style={{
-          marginTop: 12, padding: "10px 12px", borderRadius: 8,
-          background: "#f0fdf4", border: "1px solid #bbf7d0", color: "#15803d", fontSize: 13,
-        }}>Payment successful — your project has started. Redirecting…</div>
-      )}
       <button
         type="button"
         onClick={onPay}
         disabled={!stripe || busy || succeeded}
+        onMouseOver={(e) => {
+          if (!busy && !succeeded) (e.currentTarget as HTMLButtonElement).style.background = "#15803D";
+        }}
+        onMouseOut={(e) => {
+          if (!busy && !succeeded) (e.currentTarget as HTMLButtonElement).style.background = "#16A34A";
+        }}
         style={{
-          width: "100%", marginTop: 20,
-          background: bg, color: "#fff", border: "none",
-          borderRadius: 999, height: 52, fontSize: 16, fontWeight: 700,
+          width: "100%",
+          marginTop: 4,
+          background: bg,
+          color: "#FFFFFF",
+          border: "none",
+          borderRadius: 12,
+          height: 52,
+          fontSize: 16,
+          fontWeight: 600,
           cursor: busy ? "wait" : succeeded ? "default" : "pointer",
-          opacity: busy ? 0.7 : 1,
+          transition: "background 0.2s",
+          opacity: busy ? 0.85 : 1,
         }}
       >
         {label}
       </button>
+      {errorMsg && (
+        <div
+          role="alert"
+          style={{
+            marginTop: 12,
+            padding: "10px 12px",
+            borderRadius: 8,
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#b91c1c",
+            fontSize: 13,
+          }}
+        >
+          {errorMsg}
+        </div>
+      )}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          marginTop: 10,
+          fontSize: 12,
+          color: "#888",
+        }}
+      >
+        <ShieldCheck size={14} /> Safe and secure payment
+      </div>
+      <div
+        style={{
+          marginTop: 8,
+          fontSize: 11,
+          color: "#AAAAAA",
+          textAlign: "center",
+          lineHeight: 1.5,
+        }}
+      >
+        By clicking Pay Now you agree to Katexs Terms of Service and Payment Terms
+      </div>
     </>
   );
 }
@@ -118,54 +165,67 @@ export default function Checkout() {
   const nav = useNavigate();
   const [order, setOrder] = useState<OrderRow | null>(null);
   const [seller, setSeller] = useState<SellerProfile | null>(null);
+  const [gig, setGig] = useState<GigInfo | null>(null);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [stripePromise, setStripePromise] = useState<Promise<StripeJs | null> | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPromo, setShowPromo] = useState(false);
+  const [promo, setPromo] = useState("");
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { nav(`/login?redirect=/checkout/${order_id}`); return; }
+    if (!user) {
+      nav(`/login?redirect=/checkout/${order_id}`);
+      return;
+    }
     if (!order_id) return;
     (async () => {
       setLoading(true);
       const { data: o, error } = await supabase
         .from("orders")
-        .select("id, buyer_id, seller_id, price, status, project_title, delivery_deadline, stripe_payment_intent_id")
+        .select(
+          "id, buyer_id, seller_id, price, status, project_title, delivery_deadline, stripe_payment_intent_id, gig_id",
+        )
         .eq("id", order_id)
         .maybeSingle();
-      if (error || !o) { setErr("Project not found"); setLoading(false); return; }
-      if (o.buyer_id !== user.id) { setErr("This project belongs to another partner."); setLoading(false); return; }
+      if (error || !o) {
+        setErr("Project not found");
+        setLoading(false);
+        return;
+      }
+      if (o.buyer_id !== user.id) {
+        setErr("This project belongs to another partner.");
+        setLoading(false);
+        return;
+      }
       setOrder(o as OrderRow);
 
-      // Seller profile + river score data
-      const { data: p } = await supabase.from("profiles")
-        .select("id,full_name,username,avatar_url,bio").eq("id", o.seller_id).maybeSingle();
-      const { data: gigs } = await supabase.from("gigs")
-        .select("starting_price,average_rating,total_reviews,total_orders").eq("seller_id", o.seller_id);
-      const agg: SellerProfile = {
-        ...(p as any), average_rating: 0, total_reviews: 0, total_orders: 0, starting_price: null,
-      };
-      (gigs ?? []).forEach((g: any) => {
-        agg.total_reviews! += g.total_reviews || 0;
-        agg.total_orders! += g.total_orders || 0;
-        agg.average_rating = Math.max(agg.average_rating ?? 0, Number(g.average_rating) || 0);
-        if (g.starting_price && (agg.starting_price == null || g.starting_price < agg.starting_price)) {
-          agg.starting_price = g.starting_price;
-        }
-      });
-      setSeller(agg);
+      const { data: p } = await supabase
+        .from("profiles")
+        .select("id, full_name, username, avatar_url")
+        .eq("id", o.seller_id)
+        .maybeSingle();
+      setSeller(p as SellerProfile | null);
+
+      if (o.gig_id) {
+        const { data: g } = await supabase
+          .from("gigs")
+          .select("title, images")
+          .eq("id", o.gig_id)
+          .maybeSingle();
+        if (g) setGig(g as GigInfo);
+      }
 
       if (o.status !== "pending_payment") {
-        // Already paid (or beyond) — bounce to workspace.
         nav(`/orders/${o.id}`, { replace: true });
         return;
       }
 
-      // Mint a PaymentIntent
-      const { data: pi, error: piErr } = await supabase.functions.invoke("stripe-payment-intent", {
-        body: { order_id: o.id },
-      });
+      const { data: pi, error: piErr } = await supabase.functions.invoke(
+        "stripe-payment-intent",
+        { body: { order_id: o.id } },
+      );
       if (piErr || !pi?.client_secret) {
         setErr(piErr?.message || pi?.error || "Could not initialize payment");
         setLoading(false);
@@ -177,110 +237,294 @@ export default function Checkout() {
     })();
   }, [authLoading, user, order_id, nav]);
 
-  const partnerFee = useMemo(() => order ? Math.round(order.price * 0.05) : 0, [order]);
-  const total = useMemo(() => order ? order.price + partnerFee : 0, [order, partnerFee]);
+  const partnerFee = useMemo(() => (order ? Math.round(order.price * 0.05) : 0), [order]);
+  const total = useMemo(() => (order ? order.price + partnerFee : 0), [order, partnerFee]);
 
-  if (loading) return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-      <main className="flex-1 container-page py-10 text-sm text-foreground-muted">Loading…</main>
-      <SiteFooter />
-    </div>
-  );
+  if (loading)
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SiteHeader />
+        <main className="flex-1 container-page py-10 text-sm text-foreground-muted">
+          Loading…
+        </main>
+        <SiteFooter />
+      </div>
+    );
 
-  if (err || !order) return (
-    <div className="min-h-screen flex flex-col">
-      <SiteHeader />
-      <main className="flex-1 container-page py-10 text-sm">{err ?? "Project not found"}</main>
-      <SiteFooter />
-    </div>
-  );
+  if (err || !order)
+    return (
+      <div className="min-h-screen flex flex-col">
+        <SiteHeader />
+        <main className="flex-1 container-page py-10 text-sm">{err ?? "Project not found"}</main>
+        <SiteFooter />
+      </div>
+    );
 
-  const score = seller ? riverScore(seller) : 0;
   const deadline = order.delivery_deadline ? new Date(order.delivery_deadline) : null;
+  const itemTitle = gig?.title || order.project_title || "Project";
+  const itemSubtitle = order.gig_id ? "Standard package" : "Custom project";
+  const thumb = gig?.images?.[0] || "/placeholder.svg";
+  const sellerName = seller?.full_name || seller?.username || "Expert";
+  const sellerAvatar = seller?.avatar_url || "/placeholder.svg";
+  const amountLabel = order.gig_id ? "Selected package" : "Project amount";
 
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen flex flex-col" style={{ background: "#F7F7F7" }}>
       <SiteHeader />
-      <main className="flex-1" style={{ maxWidth: 720, margin: "0 auto", width: "100%", padding: "32px 16px" }}>
-        {/* Order summary */}
-        <div style={{
-          background: "#fff", border: "1px solid #eee", borderRadius: 12, padding: 20,
-          display: "flex", alignItems: "center", gap: 16,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
-            <img
-              src={seller?.avatar_url || "/placeholder.svg"}
-              alt={seller?.full_name || "Expert"}
-              style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover" }}
-            />
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontSize: 15, fontWeight: 600, color: "#111" }}>
-                {seller?.full_name || seller?.username || "Expert"}
-              </div>
-              <div style={{
-                display: "inline-block", marginTop: 4,
-                fontSize: 11, fontFamily: "ui-monospace, monospace",
-                textTransform: "uppercase", letterSpacing: "0.08em",
-                padding: "2px 8px", borderRadius: 999, border: "1px solid #ddd", color: "#444",
-              }}>
-                River {score.toFixed(1)}/100
-              </div>
-            </div>
-          </div>
-          <div style={{ textAlign: "right" }}>
-            <div style={{ fontSize: 13, color: "#666", marginBottom: 4 }}>
-              {order.project_title || "Project"}
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: "#111", lineHeight: 1 }}>
-              ${order.price}
-            </div>
-            {deadline && (
-              <div style={{ fontSize: 12, color: "#666", marginTop: 6 }}>
-                Delivery by {deadline.toLocaleDateString()}
-              </div>
-            )}
-          </div>
-        </div>
+      <main
+        className="flex-1"
+        style={{ maxWidth: 960, margin: "0 auto", width: "100%", padding: "48px 24px" }}
+      >
+        {clientSecret && stripePromise ? (
+          <Elements
+            stripe={stripePromise}
+            options={{
+              clientSecret,
+              appearance: {
+                theme: "stripe",
+                variables: {
+                  colorPrimary: "#0A0A0A",
+                  colorText: "#0A0A0A",
+                  colorBackground: "#F7F7F7",
+                  borderRadius: "8px",
+                  fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+                },
+              },
+            }}
+          >
+            <div className="checkout-grid">
+              <style>{`
+                .checkout-grid {
+                  display: grid;
+                  grid-template-columns: 65% 35%;
+                  gap: 32px;
+                  align-items: start;
+                }
+                @media (max-width: 900px) {
+                  .checkout-grid { grid-template-columns: 1fr; }
+                  .checkout-right { position: static !important; }
+                }
+              `}</style>
 
-        {/* Payment */}
-        <div style={{ marginTop: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 700, color: "#111", marginBottom: 12 }}>
-            Secure Payment
-          </h2>
-          <div style={{
-            background: "#f5f5f5", borderRadius: 8, padding: 12,
-            fontSize: 13, color: "#666", marginBottom: 16, lineHeight: 1.5,
-          }}>
-            Your payment is held securely in escrow. The seller only gets paid after you approve the delivery or 3 days pass with no dispute.
-          </div>
+              {/* LEFT COLUMN */}
+              <div>
+                {/* Order summary card */}
+                <div
+                  style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #EBEBEB",
+                    borderRadius: 16,
+                    padding: 24,
+                    marginBottom: 20,
+                    display: "flex",
+                    gap: 16,
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <img
+                    src={thumb}
+                    alt={itemTitle}
+                    style={{
+                      width: 80,
+                      height: 80,
+                      borderRadius: 8,
+                      objectFit: "cover",
+                      flexShrink: 0,
+                      background: "#F7F7F7",
+                    }}
+                  />
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: "#0A0A0A", lineHeight: 1.3 }}>
+                      {itemTitle}
+                    </div>
+                    <div style={{ fontSize: 13, color: "#888", marginTop: 4 }}>{itemSubtitle}</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        marginTop: 10,
+                        fontSize: 13,
+                        color: "#555",
+                      }}
+                    >
+                      <img
+                        src={sellerAvatar}
+                        alt={sellerName}
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: "50%",
+                          objectFit: "cover",
+                        }}
+                      />
+                      <span>{sellerName}</span>
+                    </div>
+                    {deadline && (
+                      <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>
+                        Delivery by {deadline.toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-          {clientSecret && stripePromise ? (
-            <Elements stripe={stripePromise} options={{ clientSecret, appearance: { theme: "stripe" } }}>
-              <PayForm orderId={order.id} />
-            </Elements>
-          ) : (
-            <div style={{ fontSize: 13, color: "#666" }}>Loading payment form…</div>
-          )}
+                {/* Payment method card */}
+                <div
+                  style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #EBEBEB",
+                    borderRadius: 16,
+                    padding: 24,
+                    marginBottom: 20,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: 15,
+                      fontWeight: 600,
+                      color: "#0A0A0A",
+                      marginBottom: 16,
+                    }}
+                  >
+                    Payment method
+                  </h2>
+                  <div
+                    style={{
+                      background: "#F7F7F7",
+                      border: "1px solid #EBEBEB",
+                      borderRadius: 12,
+                      padding: 16,
+                    }}
+                  >
+                    <PaymentElement />
+                  </div>
+                </div>
 
-          <div style={{ marginTop: 20, fontSize: 14, color: "#111" }}>
-            <Row label="Project price" value={`$${order.price}`} />
-            <Row label="Service fee (5%)" value={`$${partnerFee}`} />
-            <div style={{ height: 1, background: "#eee", margin: "10px 0" }} />
-            <Row label="Total" value={`$${total}`} bold />
-          </div>
-        </div>
+                {/* Promo code row */}
+                <div>
+                  {!showPromo ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowPromo(true)}
+                      onMouseOver={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#0A0A0A")}
+                      onMouseOut={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#888")}
+                      style={{
+                        background: "transparent",
+                        border: "none",
+                        padding: 0,
+                        fontSize: 14,
+                        color: "#888",
+                        cursor: "pointer",
+                      }}
+                    >
+                      + Apply promo code
+                    </button>
+                  ) : (
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <input
+                        type="text"
+                        value={promo}
+                        onChange={(e) => setPromo(e.target.value)}
+                        placeholder="Enter promo code"
+                        style={{
+                          flex: 1,
+                          height: 44,
+                          padding: "0 14px",
+                          border: "1px solid #EBEBEB",
+                          borderRadius: 12,
+                          fontSize: 14,
+                          background: "#FFFFFF",
+                          outline: "none",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => toast.message("Promo codes coming soon")}
+                        style={{
+                          height: 44,
+                          padding: "0 20px",
+                          background: "#0A0A0A",
+                          color: "#FFFFFF",
+                          border: "none",
+                          borderRadius: 12,
+                          fontSize: 14,
+                          fontWeight: 500,
+                          cursor: "pointer",
+                        }}
+                      >
+                        Apply
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN */}
+              <aside
+                className="checkout-right"
+                style={{ position: "sticky", top: 24 }}
+              >
+                <div
+                  style={{
+                    background: "#FFFFFF",
+                    border: "1px solid #EBEBEB",
+                    borderRadius: 16,
+                    padding: 24,
+                  }}
+                >
+                  <h2
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      color: "#0A0A0A",
+                      marginBottom: 20,
+                    }}
+                  >
+                    Order details
+                  </h2>
+                  <Row label={amountLabel} value={`$${order.price}`} />
+                  <Row label="Katexs service fee (5%)" value={`$${partnerFee}`} />
+                  <div style={{ height: 1, background: "#EBEBEB", margin: "14px 0" }} />
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: "#0A0A0A",
+                      marginBottom: 20,
+                    }}
+                  >
+                    <span>Total</span>
+                    <span>${total}</span>
+                  </div>
+
+                  <PayBlock orderId={order.id} total={total} />
+                </div>
+              </aside>
+            </div>
+          </Elements>
+        ) : (
+          <div style={{ fontSize: 13, color: "#666" }}>Loading payment form…</div>
+        )}
       </main>
       <SiteFooter />
     </div>
   );
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", padding: "4px 0", fontWeight: bold ? 700 : 400 }}>
-      <span style={{ color: bold ? "#111" : "#666" }}>{label}</span>
-      <span>{value}</span>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        padding: "6px 0",
+        fontSize: 14,
+      }}
+    >
+      <span style={{ color: "#555" }}>{label}</span>
+      <span style={{ color: "#0A0A0A" }}>{value}</span>
     </div>
   );
 }
