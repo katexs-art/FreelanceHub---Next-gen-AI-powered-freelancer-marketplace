@@ -216,7 +216,7 @@ export default function Inbox() {
           margin: "-2.5rem",
           height: "calc(100vh - 3.5rem)",
           display: "grid",
-          gridTemplateColumns: "320px 1fr",
+          gridTemplateColumns: active ? "320px 1fr 260px" : "320px 1fr",
           background: "#fff",
         }}
       >
