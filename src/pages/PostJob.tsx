@@ -175,21 +175,74 @@ export default function PostJob() {
               />
             </div>
 
-            <div>
+            <div ref={categoryWrapRef} style={{ position: "relative" }}>
               <label style={labelStyle}>Service Category</label>
-              <select
+              <input
                 className="pj-input"
-                style={selectStyle}
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                onFocus={onFocus}
+                style={inputStyle}
+                value={categoryText}
+                onChange={(e) => {
+                  setCategoryText(e.target.value);
+                  setCategorySlug("");
+                  setCategoryOpen(true);
+                }}
+                onFocus={(e) => { onFocus(e); setCategoryOpen(true); }}
                 onBlur={onBlur}
-              >
-                <option value="">Select a category</option>
-                {categories.filter((c) => !c.parent_id).map((c) => (
-                  <option key={c.id} value={c.slug}>{c.name}</option>
-                ))}
-              </select>
+                placeholder="Type to search — example: Voice AI, GHL, Chatbot, Marketing..."
+                autoComplete="off"
+              />
+              <input type="hidden" name="category_slug" value={categorySlug} />
+              {categoryOpen && categoryText.trim().length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    left: 0,
+                    right: 0,
+                    background: "#FFFFFF",
+                    border: "1px solid #EBEBEB",
+                    borderRadius: 12,
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                    maxHeight: 280,
+                    overflowY: "auto",
+                    zIndex: 50,
+                  }}
+                >
+                  {categorySuggestions.length === 0 ? (
+                    <div style={{ padding: "12px 16px", fontSize: 13, color: "#AAAAAA" }}>
+                      No category found — your project will be reviewed by our team
+                    </div>
+                  ) : (
+                    categorySuggestions.map((c) => {
+                      const parent = c.parent_id ? categoriesById.get(c.parent_id) : null;
+                      const isHover = categoryHover === c.id;
+                      return (
+                        <div
+                          key={c.id}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setCategoryText(c.name);
+                            setCategorySlug(c.slug);
+                            setCategoryOpen(false);
+                          }}
+                          onMouseEnter={() => setCategoryHover(c.id)}
+                          onMouseLeave={() => setCategoryHover((h) => (h === c.id ? null : h))}
+                          style={{
+                            padding: "12px 16px",
+                            cursor: "pointer",
+                            background: isHover ? "#F7F7F7" : "transparent",
+                          }}
+                        >
+                          <div style={{ fontSize: 14, fontWeight: 500, color: "#0A0A0A" }}>{c.name}</div>
+                          {parent && (
+                            <div style={{ fontSize: 11, color: "#AAAAAA", marginTop: 2 }}>{parent.name}</div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
