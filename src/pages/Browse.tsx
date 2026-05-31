@@ -92,10 +92,10 @@ export default function Browse() {
   const [loading, setLoading] = useState(true);
   const [totalApproved, setTotalApproved] = useState(0);
 
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-  const [pendingQuery, setPendingQuery] = useState(searchParams.get("q") ?? "");
   const [searchParams] = useSearchParams();
   const urlQ = (searchParams.get("q") ?? "").trim();
+  const [query, setQuery] = useState(urlQ);
+  const [pendingQuery, setPendingQuery] = useState(urlQ);
   const [category, setCategory] = useState(searchParams.get("category") ?? "All");
   const [quick, setQuick] = useState<Set<Quick>>(new Set());
   const [sort, setSort] = useState<Sort>("River Recommended");
