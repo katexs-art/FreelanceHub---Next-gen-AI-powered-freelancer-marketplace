@@ -233,105 +233,48 @@ export default function RiverResults() {
           </div>
         ) : (
           <>
+            {/* SECTION 1 HEADER STRIP */}
+            <div style={{
+              background: "#111", borderBottom: "1px solid #222", padding: "16px 80px",
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+            }}>
+              <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: "#a855f7", display: "inline-block" }} />
+                <span style={{ fontSize: 13, fontWeight: 500, color: "#fff", letterSpacing: "0.05em" }}>
+                  River's Top 15 Matches
+                </span>
+              </div>
+              <span style={{ fontSize: 11, color: "#555" }}>Ranked by River Score and skill match</span>
+            </div>
+
             {/* SECTION 1 */}
             <section style={{ background: "#0a0a0a", padding: "48px 80px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                  <span style={{
-                    width: 14, height: 14, borderRadius: 999,
-                    background: "linear-gradient(135deg,#7F77DD,#a78bfa)", display: "inline-block",
-                  }} />
-                  <span style={{ fontSize: 13, color: "#fff", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                    River's top 15 matches
-                  </span>
-                </div>
-                <div style={{ fontSize: 11, color: "#444" }}>Ranked by River Score + skill match</div>
-              </div>
-
               {topSellers.length === 0 ? (
                 <div style={{ color: "#fff", fontSize: 14, textAlign: "center", padding: 32 }}>
                   River is still learning this category — browse all experts below
                 </div>
               ) : (
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-                  {topSellers.map((s) => {
-                    const badge = s.matchedSkills >= 3
-                      ? { label: "Perfect match", bg: "rgba(34,197,94,0.15)", color: "#4ade80" }
-                      : s.matchedSkills === 2
-                      ? { label: "Strong match", bg: "rgba(59,130,246,0.15)", color: "#60a5fa" }
-                      : { label: "Good match", bg: "rgba(255,255,255,0.06)", color: "#aaa" };
-                    const tagsToShow = s.allTags.slice(0, 3);
-                    return (
-                      <div key={s.id} style={{
-                        background: "#111", border: "0.5px solid #1e1e1e", borderRadius: 16, padding: 20,
-                        display: "flex", flexDirection: "column",
-                      }}>
-                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
-                          <div style={{ fontSize: 32, fontWeight: 500, color: "#fff", lineHeight: 1 }}>
-                            {Math.round(s.riverScore)}
-                          </div>
-                          <span style={{
-                            background: badge.bg, color: badge.color, fontSize: 11, fontWeight: 500,
-                            padding: "4px 10px", borderRadius: 999,
-                          }}>{badge.label}</span>
-                        </div>
-
-                        <div style={{ fontSize: 15, fontWeight: 500, color: "#fff", marginTop: 16, marginBottom: 4 }}>
-                          {s.full_name || s.username || "Anonymous"}
-                        </div>
-                        <div style={{ fontSize: 12, color: "#555", marginBottom: 12 }}>
-                          {s.primary_category || "AI Expert"}
-                        </div>
-
-                        {tagsToShow.length > 0 && (
-                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                            {tagsToShow.map((t) => (
-                              <span key={t} style={{
-                                background: "#1a1a1a", border: "0.5px solid #222", borderRadius: 999,
-                                padding: "4px 10px", fontSize: 11,
-                                color: s.matchedTags.has(t) ? "#fff" : "#444",
-                              }}>{t}</span>
-                            ))}
-                          </div>
-                        )}
-
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#555", flexWrap: "wrap" }}>
-                          <Stars rating={Number(s.average_rating) || 0} count={s.total_reviews || 0} />
-                          <span style={{ color: "#333" }}>·</span>
-                          <span>{s.response_time_minutes ? `~${s.response_time_minutes < 60 ? `${s.response_time_minutes}m` : `${Math.round(s.response_time_minutes / 60)}h`}` : "—"}</span>
-                          <span style={{ color: "#333" }}>·</span>
-                          <span style={{ color: "#fff", fontWeight: 500 }}>{s.startingPrice ? `From ${fmtPrice(s.startingPrice)}` : "—"}</span>
-                        </div>
-
-                        <div style={{
-                          marginTop: 16, paddingTop: 12, borderTop: "0.5px solid #1a1a1a",
-                          display: "flex", gap: 8,
-                        }}>
-                          <Link to={`/u/${s.username || s.id}`} style={{
-                            flex: 1, textAlign: "center",
-                            background: "transparent", color: "#fff",
-                            border: "1px solid #fff", borderRadius: 999,
-                            padding: "6px 14px", fontSize: 12, textDecoration: "none",
-                          }}>View Profile</Link>
-                          <button onClick={() => openMessage(s.id)} style={{
-                            flex: 1, background: "#fff", color: "#000", border: "none",
-                            borderRadius: 999, padding: "6px 14px", fontSize: 12, fontWeight: 500, cursor: "pointer",
-                          }}>Get a Pitch</button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+                  {topSellers.map((s) => (
+                    <TopCard key={s.id} s={s} onPitch={() => openMessage(s.id)} />
+                  ))}
                 </div>
               )}
             </section>
 
+            {/* DIVIDER */}
+            <div style={{
+              background: "#fff", padding: "20px 80px", textAlign: "center",
+              borderTop: "1px solid #1a1a1a", borderBottom: "1px solid #f0f0f0",
+              fontSize: 13, color: "#999",
+            }}>
+              River's picks are above · All matching experts are below
+            </div>
+
             {/* SECTION 2 */}
             <section style={{ background: "#fff", padding: "48px 80px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-                <span style={{ fontSize: 13, color: "#999", letterSpacing: "0.1em", textTransform: "uppercase" }}>
-                  More experts for this search
-                </span>
-                <span style={{ fontSize: 11, color: "#bbb" }}>Sorted by rating — highest first</span>
+              <div style={{ marginBottom: 16, fontSize: 13, color: "#999" }}>
+                Showing {otherSellers.length} expert{otherSellers.length === 1 ? "" : "s"} for [{query}]
               </div>
 
               {otherSellers.length === 0 ? (
@@ -341,76 +284,9 @@ export default function RiverResults() {
               ) : (
                 <>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
-                    {otherSellers.slice(0, visibleOther).map((s) => {
-                      const tagsToShow = s.allTags.slice(0, 3);
-                      return (
-                        <div key={s.id} style={{
-                          background: "#fff", border: "0.5px solid #e5e5e5", borderRadius: 16, padding: 20,
-                          display: "flex", flexDirection: "column",
-                        }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                            <div style={{ width: 44, height: 44, borderRadius: 999, overflow: "hidden", background: "#f3f4f6", flexShrink: 0 }}>
-                              {s.avatar_url ? (
-                                <img src={s.avatar_url} alt={s.full_name || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                              ) : (
-                                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 14 }}>
-                                  {(s.full_name || s.username || "?").slice(0, 1).toUpperCase()}
-                                </div>
-                              )}
-                            </div>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontSize: 14, fontWeight: 500, color: "#000" }}>{s.full_name || s.username || "Anonymous"}</div>
-                              <div style={{ marginTop: 2 }}>
-                                <Stars rating={Number(s.average_rating) || 0} count={s.total_reviews || 0} />
-                              </div>
-                            </div>
-                          </div>
-
-                          <div style={{
-                            marginTop: 12, fontSize: 12, color: "#666", lineHeight: 1.5,
-                            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
-                            overflow: "hidden", marginBottom: 10,
-                          }}>
-                            {s.bio || s.primary_category || ""}
-                          </div>
-
-                          {tagsToShow.length > 0 && (
-                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                              {tagsToShow.map((t) => (
-                                <span key={t} style={{
-                                  background: "#f3f4f6", color: "#555", borderRadius: 999,
-                                  padding: "3px 9px", fontSize: 11,
-                                }}>{t}</span>
-                              ))}
-                            </div>
-                          )}
-
-                          <div style={{
-                            marginTop: "auto", paddingTop: 10, borderTop: "0.5px solid #f0f0f0",
-                            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap",
-                          }}>
-                            <span style={{ fontSize: 12, color: "#000", fontWeight: 500 }}>
-                              {s.startingPrice ? `From ${fmtPrice(s.startingPrice)}` : "—"}
-                            </span>
-                            <span style={{ fontSize: 12, color: "#888" }}>
-                              {s.response_time_minutes ? `~${s.response_time_minutes < 60 ? `${s.response_time_minutes}m` : `${Math.round(s.response_time_minutes / 60)}h`}` : ""}
-                            </span>
-                            <div style={{ display: "flex", gap: 6 }}>
-                              <Link to={`/u/${s.username || s.id}`} style={{
-                                background: "transparent", color: "#000",
-                                border: "1px solid #d4d4d4", borderRadius: 999,
-                                padding: "6px 12px", fontSize: 12, textDecoration: "none",
-                              }}>View Profile</Link>
-                              <button onClick={() => openMessage(s.id)} style={{
-                                background: "transparent", color: "#000",
-                                border: "1px solid #d4d4d4", borderRadius: 999,
-                                padding: "6px 12px", fontSize: 12, cursor: "pointer",
-                              }}>Message</button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {otherSellers.slice(0, visibleOther).map((s) => (
+                      <OtherCard key={s.id} s={s} onMessage={() => openMessage(s.id)} />
+                    ))}
                   </div>
 
                   {visibleOther < otherSellers.length && (
@@ -432,6 +308,207 @@ export default function RiverResults() {
     </div>
   );
 }
+
+function TopCard({ s, onPitch }: { s: Seller; onPitch: () => void }) {
+  const [viewHover, setViewHover] = useState(false);
+  const [pitchHover, setPitchHover] = useState(false);
+  const badge = s.matchedSkills >= 3
+    ? { label: "Perfect match", bg: "#1a3a1a", color: "#4ade80" }
+    : s.matchedSkills === 2
+    ? { label: "Strong match", bg: "#1a1a3a", color: "#60a5fa" }
+    : { label: "Good match", bg: "#2a2a2a", color: "#aaa" };
+  const tagsToShow = s.allTags.slice(0, 3);
+  return (
+    <div style={{
+      background: "#1a1a1a", border: "1px solid #333", borderRadius: 20, padding: 24,
+      boxShadow: "0 4px 24px rgba(255,255,255,0.04)",
+      display: "flex", flexDirection: "column",
+    }}>
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 40, fontWeight: 600, color: "#fff", lineHeight: 1 }}>
+            {Math.round(s.riverScore)}
+          </div>
+          <div style={{ fontSize: 10, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 6 }}>
+            River Score
+          </div>
+        </div>
+        <span style={{
+          background: badge.bg, color: badge.color, fontSize: 11, fontWeight: 500,
+          padding: "4px 12px", borderRadius: 999,
+        }}>{badge.label}</span>
+      </div>
+
+      <div style={{ fontSize: 16, fontWeight: 600, color: "#fff", marginTop: 12, marginBottom: 4 }}>
+        {s.full_name || s.username || "Anonymous"}
+      </div>
+      <div style={{ fontSize: 13, color: "#888", marginBottom: 14 }}>
+        {s.primary_category || "AI Expert"}
+      </div>
+
+      {tagsToShow.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+          {tagsToShow.map((t) => {
+            const matched = s.matchedTags.has(t);
+            return (
+              <span key={t} style={{
+                background: matched ? "#1a3a1a" : "#252525",
+                border: `1px solid ${matched ? "#4ade80" : "#333"}`,
+                color: matched ? "#4ade80" : "#ccc",
+                borderRadius: 999, padding: "4px 10px", fontSize: 11,
+              }}>{t}</span>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          {[1,2,3,4,5].map((i) => (
+            <Star key={i} size={12} fill={i <= Math.round(Number(s.average_rating) || 0) ? "#f59e0b" : "transparent"} stroke="#f59e0b" strokeWidth={1.5} />
+          ))}
+          <span style={{ fontSize: 12, color: "#666", marginLeft: 2 }}>({s.total_reviews || 0})</span>
+        </span>
+        <span style={{ color: "#333" }}>·</span>
+        <span style={{ fontSize: 12, color: "#777" }}>
+          {s.response_time_minutes ? `~${s.response_time_minutes < 60 ? `${s.response_time_minutes}m` : `${Math.round(s.response_time_minutes / 60)}h`}` : "—"}
+        </span>
+        <span style={{ color: "#333" }}>·</span>
+        <span style={{ fontSize: 15, color: "#fff", fontWeight: 600 }}>
+          {s.startingPrice ? `From ${fmtPrice(s.startingPrice)}` : "—"}
+        </span>
+      </div>
+
+      <div style={{
+        marginTop: 18, paddingTop: 14, borderTop: "1px solid #2a2a2a",
+        display: "flex", gap: 8,
+      }}>
+        <Link to={`/u/${s.username || s.id}`}
+          onMouseEnter={() => setViewHover(true)} onMouseLeave={() => setViewHover(false)}
+          style={{
+            flex: 1, textAlign: "center",
+            background: viewHover ? "#fff" : "transparent",
+            color: viewHover ? "#000" : "#fff",
+            border: "1px solid #444", borderRadius: 999,
+            padding: "8px 18px", fontSize: 12, fontWeight: 500, textDecoration: "none",
+            transition: "all 0.2s",
+          }}>View Profile</Link>
+        <button onClick={onPitch}
+          onMouseEnter={() => setPitchHover(true)} onMouseLeave={() => setPitchHover(false)}
+          style={{
+            flex: 1, background: pitchHover ? "#e5e5e5" : "#fff", color: "#000", border: "none",
+            borderRadius: 999, padding: "8px 18px", fontSize: 12, fontWeight: 600, cursor: "pointer",
+            transition: "all 0.2s",
+          }}>Get a Pitch</button>
+      </div>
+    </div>
+  );
+}
+
+function OtherCard({ s, onMessage }: { s: Seller; onMessage: () => void }) {
+  const [cardHover, setCardHover] = useState(false);
+  const [viewHover, setViewHover] = useState(false);
+  const [msgHover, setMsgHover] = useState(false);
+  const tagsToShow = s.allTags.slice(0, 3);
+  const rating = Number(s.average_rating) || 0;
+  const full = Math.round(rating);
+  const online = false; // last_seen not selected; keep dot off unless we add it
+  return (
+    <div
+      onMouseEnter={() => setCardHover(true)} onMouseLeave={() => setCardHover(false)}
+      style={{
+        background: "#fff", border: "1px solid #e5e5e5", borderRadius: 16, padding: 20,
+        boxShadow: cardHover ? "0 2px 12px rgba(0,0,0,0.04)" : "none",
+        transition: "box-shadow 0.2s",
+        display: "flex", flexDirection: "column",
+      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ position: "relative", width: 48, height: 48, flexShrink: 0 }}>
+          <div style={{
+            width: 48, height: 48, borderRadius: 999, overflow: "hidden", background: "#f5f5f5",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            {s.avatar_url ? (
+              <img src={s.avatar_url} alt={s.full_name || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              <span style={{ color: "#888", fontSize: 15, fontWeight: 500 }}>
+                {(s.full_name || s.username || "?").slice(0, 1).toUpperCase()}
+              </span>
+            )}
+          </div>
+          {online && (
+            <span style={{
+              position: "absolute", bottom: 0, right: 0, width: 8, height: 8, borderRadius: 999,
+              background: "#22c55e", border: "2px solid #fff",
+            }} />
+          )}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#000" }}>{s.full_name || s.username || "Anonymous"}</div>
+          <div style={{ marginTop: 2, display: "inline-flex", alignItems: "center", gap: 4 }}>
+            {[1,2,3,4,5].map((i) => (
+              <Star key={i} size={12} fill={i <= full ? "#f59e0b" : "transparent"} stroke="#f59e0b" strokeWidth={1.5} />
+            ))}
+            <span style={{ fontSize: 12, fontWeight: 500, color: "#000", marginLeft: 2 }}>{rating ? rating.toFixed(1) : "—"}</span>
+            <span style={{ fontSize: 12, color: "#888" }}>({s.total_reviews || 0})</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{
+        marginTop: 12, fontSize: 13, color: "#666", lineHeight: 1.5,
+        display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+        overflow: "hidden", marginBottom: 12,
+      }}>
+        {s.bio || s.primary_category || ""}
+      </div>
+
+      {tagsToShow.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+          {tagsToShow.map((t) => (
+            <span key={t} style={{
+              background: "#f5f5f5", color: "#555", borderRadius: 999,
+              padding: "3px 10px", fontSize: 11,
+            }}>{t}</span>
+          ))}
+        </div>
+      )}
+
+      <div style={{
+        marginTop: "auto", paddingTop: 12, borderTop: "1px solid #f0f0f0",
+        display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap",
+      }}>
+        <span style={{ fontSize: 14, color: "#000", fontWeight: 600 }}>
+          {s.startingPrice ? `From ${fmtPrice(s.startingPrice)}` : "—"}
+        </span>
+        <span style={{ fontSize: 13, color: "#888" }}>
+          {s.response_time_minutes ? `~${s.response_time_minutes < 60 ? `${s.response_time_minutes}m` : `${Math.round(s.response_time_minutes / 60)}h`}` : ""}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <Link to={`/u/${s.username || s.id}`}
+            onMouseEnter={() => setViewHover(true)} onMouseLeave={() => setViewHover(false)}
+            style={{
+              background: viewHover ? "#000" : "#fff",
+              color: viewHover ? "#fff" : "#000",
+              border: "1px solid #000", borderRadius: 999,
+              padding: "7px 16px", fontSize: 12, fontWeight: 500, textDecoration: "none",
+              transition: "all 0.2s",
+            }}>View Profile</Link>
+          <button onClick={onMessage}
+            onMouseEnter={() => setMsgHover(true)} onMouseLeave={() => setMsgHover(false)}
+            style={{
+              background: "#fff",
+              color: msgHover ? "#000" : "#555",
+              border: `1px solid ${msgHover ? "#000" : "#e5e5e5"}`,
+              borderRadius: 999, padding: "7px 16px", fontSize: 12, cursor: "pointer",
+              transition: "all 0.2s",
+            }}>Message</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function pillBtn(filled: boolean): React.CSSProperties {
   return filled
