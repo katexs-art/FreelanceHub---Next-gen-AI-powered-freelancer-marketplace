@@ -29,7 +29,7 @@ const Browse = lazy(() => import("./pages/Browse"));
 const Services = lazy(() => import("./pages/Services"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Search = lazy(() => import("./pages/Search"));
-const RiverResults = lazy(() => import("./pages/RiverResults"));
+
 const Pitch = lazy(() => import("./pages/Pitch"));
 const PostJob = lazy(() => import("./pages/PostJob"));
 const Projects = lazy(() => import("./pages/Projects"));
