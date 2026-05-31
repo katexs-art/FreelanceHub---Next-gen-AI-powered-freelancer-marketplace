@@ -643,9 +643,9 @@ export default function Inbox() {
                           <div style={{ maxWidth: "65%" }}>
                             <div
                               style={{
-                                background: mine ? "#0A0A0A" : "#FFFFFF",
+                                background: mine ? "#0A0A0A" : "#FAFAFA",
                                 color: mine ? "#FFFFFF" : "#333333",
-                                border: mine ? "none" : "1px solid #EBEBEB",
+                                border: mine ? "none" : "1px solid #E5E5E5",
                                 borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                                 padding: "12px 16px",
                                 fontSize: 14,
