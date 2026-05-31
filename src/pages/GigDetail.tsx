@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Star, Clock, RefreshCw, Check, Heart, MessageSquare } from "lucide-react";
+import { Star, Clock, RefreshCw, Check, Bookmark, MessageSquare } from "lucide-react";
 import { ReviewsList } from "@/components/marketplace/ReviewsList";
 import { SEO } from "@/components/SEO";
 import { RatingBreakdown } from "@/components/marketplace/RatingBreakdown";
