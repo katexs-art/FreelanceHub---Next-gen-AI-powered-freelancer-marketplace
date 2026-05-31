@@ -6,6 +6,7 @@ import { CategoryMegaNav } from "@/components/layout/CategoryMegaNav";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
+import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 const CATEGORIES = [
   { label: "Build with AI", slug: "build-with-ai" },
@@ -205,7 +206,7 @@ export default function Services() {
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
         <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/browse?q=${encodeURIComponent(q.trim())}`); }}
+          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/services?q=${encodeURIComponent(q.trim())}`); }}
           style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}
         >
           <div style={{ position: "absolute", top: -22, left: 4, display: "flex", alignItems: "center", gap: 6 }}>
@@ -283,8 +284,8 @@ export default function Services() {
                         {s.bio || "Specialist on Katexs."}
                       </p>
                       <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid #181818" }}>
-                        <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#9aa" }}>
-                          {i === 0 ? `River ${Number(s.river_score ?? 0).toFixed(1)}` :
+                        <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#888" }}>
+                          {i === 0 ? (riverScoreText(s.river_score, { digits: 1 }) ? `River ${riverScoreText(s.river_score, { digits: 1 })}` : "New") :
                            i === 1 ? (s.startingPrice != null ? `From $${s.startingPrice}` : "Best rate") :
                            (s.minDelivery ? `${s.minDelivery}d avg` : "Rapid")}
                         </span>
@@ -378,7 +379,7 @@ export default function Services() {
               <h2 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px", letterSpacing: "-0.01em" }}>Intelligence Verified</h2>
               <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>Top-ranked experts by River Score.</p>
             </div>
-            <Link to="/browse" style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", textDecoration: "none", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
+            <Link to="/services" style={{ fontSize: 12, color: "#888", textDecoration: "none", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
               Browse all experts →
             </Link>
           </div>
@@ -387,39 +388,46 @@ export default function Services() {
               <div
                 key={s?.id ?? i}
                 className="svc-intel"
-                style={{ background: "#000", border: "1px solid #161616", borderRadius: 10, padding: 24, display: "flex", flexDirection: "column" }}
+                style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 16, padding: 20, display: "flex", flexDirection: "column" }}
               >
                 <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 18 }}>
                   <div style={{ display: "flex", gap: 12, minWidth: 0 }}>
                     {s?.avatar_url ? (
                       <img src={s.avatar_url} alt="" style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: 44, height: 44, borderRadius: 8, background: "#161616", flexShrink: 0 }} />
+                      <div style={{ width: 44, height: 44, borderRadius: 8, background: "#252525", flexShrink: 0 }} />
                     )}
                     <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 14, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {s?.full_name || s?.username || "Expert"}
                       </div>
-                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginTop: 2, letterSpacing: "0.08em" }}>
+                      <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
                         {(s?.seller_skills ?? [])[0] || "AI Specialist"}
                       </div>
                     </div>
                   </div>
-                  <button aria-label="Save" style={{ background: "transparent", border: "none", color: "#444", cursor: "pointer", padding: 0 }}>
+                  <button aria-label="Save" style={{ background: "transparent", border: "none", color: "#888", cursor: "pointer", padding: 0 }}>
                     <Bookmark size={16} />
                   </button>
                 </div>
-                <div style={{ background: "#0a0a0a", border: "1px solid #161616", borderRadius: 6, padding: "10px 12px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(255,255,255,0.4)", letterSpacing: "0.15em", textTransform: "uppercase" }}>
+                <div style={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 8, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#888", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                     River Score
                   </span>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: "#10b981", fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}>
-                    {Number(s?.river_score ?? 0).toFixed(2)}
-                  </span>
+                  {(() => {
+                    const txt = riverScoreText(s?.river_score, { digits: 2 });
+                    return txt ? (
+                      <span style={{ fontSize: 22, fontWeight: 600, color: "#fff", fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}>
+                        {txt}
+                      </span>
+                    ) : (
+                      <RiverNewPill surface="dark" />
+                    );
+                  })()}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 24, minHeight: 22 }}>
                   {((s?.seller_skills ?? []) as string[]).slice(0, 3).map((sk) => (
-                    <span key={sk} style={{ fontSize: 10, padding: "3px 8px", border: "1px solid #1a1a1a", color: "rgba(255,255,255,0.6)", borderRadius: 3 }}>
+                    <span key={sk} style={{ fontSize: 11, padding: "4px 10px", border: "1px solid #333", background: "#252525", color: "#cccccc", borderRadius: 999 }}>
                       {sk}
                     </span>
                   ))}
@@ -428,9 +436,9 @@ export default function Services() {
                   to={s ? `/seller/${s.username ?? s.id}` : "#"}
                   className="svc-pitch"
                   style={{
-                    marginTop: "auto", textAlign: "center", background: "#0e0e0e",
-                    color: "#fff", padding: "12px", fontSize: 11, fontWeight: 700, letterSpacing: "0.18em",
-                    textTransform: "uppercase", textDecoration: "none", borderRadius: 4, border: "1px solid #1a1a1a",
+                    marginTop: "auto", textAlign: "center", background: "#fff",
+                    color: "#000", padding: "10px 18px", fontSize: 12, fontWeight: 600,
+                    textDecoration: "none", borderRadius: 999, border: "none",
                     transition: "all 0.2s ease",
                   }}
                 >
