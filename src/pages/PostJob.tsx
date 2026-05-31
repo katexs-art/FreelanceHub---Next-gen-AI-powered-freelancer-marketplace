@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent, useRef } from "react";
+import { useState, KeyboardEvent, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
