@@ -177,8 +177,8 @@ export default function Checkout() {
     })();
   }, [authLoading, user, order_id, nav]);
 
-  const platformFee = useMemo(() => order ? Math.round(order.price * 0.10) : 0, [order]);
-  const total = useMemo(() => order ? order.price + 0 : 0, [order]); // Buyer pays the agreed price; fee is split out of it.
+  const partnerFee = useMemo(() => order ? Math.round(order.price * 0.05) : 0, [order]);
+  const total = useMemo(() => order ? order.price + partnerFee : 0, [order, partnerFee]);
 
   if (loading) return (
     <div className="min-h-screen flex flex-col">
@@ -264,8 +264,8 @@ export default function Checkout() {
           )}
 
           <div style={{ marginTop: 20, fontSize: 14, color: "#111" }}>
-            <Row label="Subtotal" value={`$${order.price}`} />
-            <Row label="Katexs Service Fee (10%)" value={`$${platformFee}`} />
+            <Row label="Project price" value={`$${order.price}`} />
+            <Row label="Service fee (5%)" value={`$${partnerFee}`} />
             <div style={{ height: 1, background: "#eee", margin: "10px 0" }} />
             <Row label="Total" value={`$${total}`} bold />
           </div>

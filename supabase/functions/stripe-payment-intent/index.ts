@@ -52,8 +52,10 @@ Deno.serve(async (req) => {
       } catch { pi = null; }
     }
     if (!pi) {
+      const partnerFee = Math.round(order.price * 0.05);
+      const chargeAmount = (order.price + partnerFee) * 100;
       pi = await stripe.paymentIntents.create({
-        amount: order.price * 100,
+        amount: chargeAmount,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
         metadata: {
