@@ -471,7 +471,12 @@ export default function SellerIntelligenceProfile() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold truncate">{s.full_name ?? s.username}</div>
-                          <div className="text-xs truncate" style={{ color: "#999" }}>River Score {Math.round(s.river_score ?? 0)}</div>
+                          <div className="text-xs truncate" style={{ color: "#555" }}>
+                            {(() => {
+                              const txt = riverScoreText(s.river_score, { reviews: s.total_reviews, digits: 0 });
+                              return txt ? `River Score ${txt}` : "New Expert";
+                            })()}
+                          </div>
                         </div>
                       </Link>
                     ))}
