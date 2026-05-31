@@ -1,41 +1,75 @@
+## Part 1 — Voice search on homepage River bar
 
-## Scope
+Edit `src/pages/Landing.tsx` (the existing form at lines ~144–172 only — no other styling touched).
 
-Create a brand-new `/how-it-works` page that fully matches the provided spec, register the route, and add a "How It Works" link to the existing navigation. No other pages, components, colors, fonts, or functionality change.
+- Detect Web Speech API once on mount:
+  ```ts
+  const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+  const [voiceSupported] = useState(!!SR);
+  const [listening, setListening] = useState(false);
+  const recogRef = useRef<any>(null);
+  ```
+- Add a mic `<button type="button">` inside the white pill, placed left of the existing `<Search>` icon (or replacing its position — left side of the input as specified). Hidden entirely when `!voiceSupported`.
+  - Idle: simple inline SVG mic, `#999`, 18px, hover `#000` (via `onMouseEnter/Leave` since inline styles).
+  - Listening: red pulsing dot (red circle + CSS `@keyframes kx-pulse` injected via a scoped `<style>` tag in the component, no global CSS edits).
+- Click handler:
+  ```ts
+  const r = new SR();
+  r.continuous = false; r.interimResults = true; r.lang = 'en-US';
+  r.onresult = (e) => { 
+    const t = Array.from(e.results).map((x:any)=>x[0].transcript).join('');
+    setQ(t);
+  };
+  r.onend = () => setListening(false);
+  r.onerror = () => setListening(false);
+  recogRef.current = r; setListening(true); r.start();
+  ```
+- Show small grey "Listening..." text (12px, `#999`) directly below the form only while `listening`.
+- Submit behavior unchanged — still navigates to `/river-results?q=...`.
 
-## Files
+No other Landing.tsx markup, colors, or layout changes.
 
-1. **Create `src/pages/HowItWorks.tsx`** — single self-contained page component containing all 8 sections below. Styles applied via inline `style={{...}}` for the spec-exact values (px sizes, hex colors, paddings, radii) so the rest of the design system stays untouched. Wrap the page in the existing `SiteHeader` (default variant) + `SiteFooter` so it matches site chrome.
+## Part 2 — Rebuild `/river-results`
 
-   Sections, in order:
-   - **Hero** — full-bleed video background using the exact Supabase URL provided (`autoPlay muted loop playsInline`, absolutely positioned, `object-fit: cover`), `rgba(0,0,0,0.65)` overlay, centered pill badge "Simple by design", H1 "How Katexs Works" (56px desktop / 36px mobile via a CSS media query injected with a `<style>` tag scoped by class), subhead. Min-height 500px.
-   - **Terminology** — white bg, 4-col grid (responsive: 4 / 2 / 1), 8 term cards (Play, Expert, Partner, Project, Proposal, Brief, HQ, River Score) each with the small "formerly X" or green "Unique to Katexs" pill and description text exactly as specified.
-   - **Two Paths** — two large cards side-by-side (stack on mobile). Left card black top border, right card green (`#22c55e`) top border. Buttons smooth-scroll to `#partner-flow` and `#expert-flow` via `scrollIntoView({ behavior: "smooth" })`.
-   - **Partner Flow** (`id="partner-flow"`) — 5 vertical numbered steps on white, with thin connecting line, right-side grey example pill.
-   - **Expert Flow** (`id="expert-flow"`) — 6 vertical numbered steps on `#0a0a0a` dark, white circles with black numbers, `#1a1a1a` example pills.
-   - **River AI** — two-column (stack on mobile). Left: copy + 4 stat rows (15 / 98.9 / 3 days / 24hrs). Right: dark mock card with mock search input and 3 mock Expert rows (avatars are initials in colored circles, no real data fetched).
-   - **Trust** — 3-card grid (Escrow / 3-day review / Same day payouts).
-   - **Bottom CTA** — black bg, headline, two buttons: outline-white "Hire an Expert" → `/browse`, green filled "Become an Expert" → `/sign-up`.
+Replace the contents of `src/pages/RiverResults.tsx` with a new self-contained page (keep `SiteHeader`/`SiteFooter` wrapper as it already has, but remove the existing surface container styling and use only inline styles per spec). No other files touched.
 
-   All copy is the exact text supplied by the user. All numeric style values are applied as specified.
+### Data fetch (single Supabase round-trip block on mount when `q` changes)
 
-2. **Edit `src/App.tsx`** — add lazy import `const HowItWorks = lazy(() => import("./pages/HowItWorks"));` and a public route `<Route path="/how-it-works" element={<HowItWorks />} />` in the Public marketplace block.
+1. `profiles` where `seller_status = 'approved'` selecting `id, username, full_name, avatar_url, bio, primary_category, secondary_category, seller_skills, average_rating, total_reviews, river_score, response_time_minutes`.
+2. `gigs` where `status = 'active'` selecting `seller_id, title, tags, category, starting_price, average_rating, total_reviews` — used to enrich tags + starting price per seller.
 
-3. **Edit `src/components/layout/SiteHeader.tsx`** — add a "How It Works" link to both header variants:
-   - **Transparent (homepage)**: insert `<Link to="/how-it-works">How It Works</Link>` into the nav, replacing the current anchor that smooth-scrolls to `#how-it-works` (since the spec says the link should go to `/how-it-works`). Keep the same `linkCls` styling.
-   - **Default (all other pages)**: add `<Link to="/how-it-works" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">How It Works</Link>` alongside the other nav links.
+Tokenize the query: lowercase, split on non-alphanumerics, drop tokens length <= 2.
 
-4. **Edit `src/components/layout/AppShell.tsx`** — if it has a primary nav list, add the same How It Works link so the spec's "all pages" requirement holds for AppShell-wrapped pages. (Will verify the file's nav structure during build and only add if there's a top nav; sidebar already shown separately.)
+For each approved seller compute:
+- `matchedSkills`: count of distinct `seller_skills` tags (and gig tags) that contain any query token.
+- `hayMatch`: bool — any token appears in `full_name|bio|primary_category|secondary_category|gig.title|gig.tags|gig.category`.
+- `startingPrice`: min `gigs.starting_price` for that seller.
+- `riverScore`: use existing `profiles.river_score` if non-null, else fallback `(average_rating/5)*100`.
 
-## Not changed
+Section 1 list: sellers with `hayMatch` true (or `matchedSkills > 0`), sorted by `(matchedSkills desc, riverScore desc, average_rating desc)`, take top 15.
 
-- All other pages, routes, components.
-- Existing colors, fonts, design tokens.
-- Auth, routing logic, business logic, database.
-- The homepage `#how-it-works` scroll target is replaced by the new page link per spec.
+Section 2 list: all other approved sellers where `hayMatch` true OR `matchedSkills > 0`, excluding Section 1 ids; sort by `average_rating desc, total_reviews desc`; cap 50; paginate client-side 24 at a time with a "Load More" button.
 
-## Technical notes
+Match-strength badge per Section 1 card: `matchedSkills >= 3` → "Perfect match" green pill; `===2` → "Strong match" blue pill; otherwise "Good match" grey pill.
 
-- Inline styles are used intentionally for this page because the spec dictates exact non-token pixel values and hex colors that should not bleed into the design system.
-- Mobile responsiveness handled via a scoped `<style>` block at the top of `HowItWorks.tsx` using unique class prefixes (`hiw-*`) for the few values that need media queries (hero H1 size, grid columns).
-- No new dependencies. No data fetching. No backend changes.
+### Layout (all inline styles, exact spec)
+
+- Page header: white bg, `padding: 32px 80px`, `borderBottom: 1px solid #f0f0f0`. Left: back arrow `<Link to="/">`. Center: "Results for" 13px `#888`, below `"q"` 20px weight 500 `#000`. Right: `{totalCount} experts found` 13px `#888`.
+- Section 1 wrapper: `background: #0a0a0a; padding: 48px 80px;`. Label row + 3-col grid `gap: 16px` (`grid-template-columns: repeat(3, 1fr)`). Each dark card per spec (bg `#111`, border `0.5px solid #1e1e1e`, radius 16, padding 20) with River Score 32px, badge pill, name 15px, specialty 12px `#555`, up to 3 skill tag pills (matching → white text, non-matching → `#444`), stats row (★ rating yellow, reviews `#555`, delivery `#555`, starting price white) separated by `·` in `#333`, border-top divider, two pill buttons "View Profile" (outlined) → `/u/:username`, "Get a Pitch" (filled white) → opens conversation via `get_or_create_conversation` then navigates to `/inbox/:id` (reuses existing pattern already in the file).
+- Empty-Section-1 fallback inside the dark section: "River is still learning this category — browse all experts below" centered 14px white padding 32.
+- Section 2 wrapper: white bg `padding: 48px 80px`. Label row + responsive grid (`repeat(auto-fill, minmax(320px, 1fr))`, gap 16) of light cards per spec (white bg, border `0.5px solid #e5e5e5`, radius 16, padding 20). 44px avatar, name 14/500, ★ rating + (count) `#888`, bio 2-line clamp `#666`, up to 3 grey skill pills, divider, starting price + delivery + "View Profile"/"Message" pill buttons.
+- "Load More" button below the grid when more remain (outlined, 999 radius, centered).
+- Empty state (both sections empty): white centered block — circle icon (lucide `Search` in a `#f5f5f5` 64px circle), heading 20/500 "No experts found for this search", subtext 14 `#888` "Try different keywords or browse all experts", two pill buttons "Try Another Search" → `/` and "Browse All Experts" → `/browse`.
+
+### Preserved behavior
+
+- Keep the existing `notify_river_match` RPC call after results load (so matched sellers still get a notification) — unchanged from current file.
+- Keep `SiteHeader` and `SiteFooter`.
+- No DB / RPC / route changes. `/river-results` route already exists in `App.tsx`.
+
+## Files touched
+
+- `src/pages/Landing.tsx` — mic button + listening state inside the existing form only.
+- `src/pages/RiverResults.tsx` — full rewrite of page body per spec.
+
+Nothing else changes.
