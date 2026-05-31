@@ -108,6 +108,12 @@ export default function Browse() {
     setPendingQuery(urlQ);
   }, [urlQ]);
 
+  // Keep category in sync with URL ?category=
+  const urlCategory = searchParams.get("category") ?? "All";
+  useEffect(() => {
+    setCategory(urlCategory);
+  }, [urlCategory]);
+
   // Initial load
   useEffect(() => {
     (async () => {
@@ -226,11 +232,36 @@ export default function Browse() {
 
     if (category !== "All") {
       const c = category.toLowerCase();
-      out = out.filter(
-        (s) =>
-          (s.primary_category ?? "").toLowerCase() === c ||
-          (s.secondary_category ?? "").toLowerCase() === c
-      );
+      const slugify = (v: string) =>
+        v.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+      const isSlug = /^[a-z0-9]+(?:-[a-z0-9]+)+$/.test(c);
+      if (isSlug) {
+        const words = c.split("-").filter((w) => w.length > 2);
+        out = out.filter((s) => {
+          const skills = (s.seller_skills ?? []).map(slugify);
+          const tags = (s.gigTags ?? []).map(slugify);
+          if (slugify(s.primary_category ?? "") === c) return true;
+          if (slugify(s.secondary_category ?? "") === c) return true;
+          if (skills.includes(c) || tags.includes(c)) return true;
+          const hay = [
+            s.primary_category ?? "",
+            s.secondary_category ?? "",
+            s.bio ?? "",
+            ...(s.seller_skills ?? []),
+            ...s.gigTitles,
+            ...s.gigTags,
+          ]
+            .join(" ")
+            .toLowerCase();
+          return words.length > 0 && words.every((w) => hay.includes(w));
+        });
+      } else {
+        out = out.filter(
+          (s) =>
+            (s.primary_category ?? "").toLowerCase() === c ||
+            (s.secondary_category ?? "").toLowerCase() === c
+        );
+      }
     }
 
     if (quick.has("Available Now")) out = out.filter(isOnline);
