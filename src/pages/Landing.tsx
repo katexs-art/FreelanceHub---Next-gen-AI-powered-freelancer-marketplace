@@ -349,7 +349,7 @@ export default function Landing() {
             <div key={s.n}>
               <div style={{ fontSize: 72, fontWeight: 500, color: "#f0f0f0", lineHeight: 1 }}>{s.n}</div>
               <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
-              <div style={{ fontSize: 14, color: "#888", lineHeight: 1.6 }}>{s.d}</div>
+              <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6 }}>{s.d}</div>
             </div>
           ))}
         </div>
@@ -366,7 +366,7 @@ export default function Landing() {
           ].map((s, i) => (
             <div key={s.l} style={{ padding: "0 32px", borderLeft: i === 0 ? "none" : "1px solid #1a1a1a" }}>
               <div style={{ fontSize: 48, fontWeight: 500, color: "#fff", lineHeight: 1.1 }}>{s.v}</div>
-              <div style={{ fontSize: 14, color: "#888", marginTop: 8 }}>{s.l}</div>
+              <div style={{ fontSize: 14, color: "#cccccc", marginTop: 8 }}>{s.l}</div>
             </div>
           ))}
         </div>
@@ -378,7 +378,7 @@ export default function Landing() {
         <h2 style={{ fontSize: 52, fontWeight: 500, color: "#fff", maxWidth: 600, margin: "0 auto 20px", lineHeight: 1.1 }}>
           Stop searching. Tell River.
         </h2>
-        <p style={{ fontSize: 18, color: "#888", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 18, color: "#cccccc", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
           The best AI experts are waiting. Describe your project and get matched in seconds.
         </p>
         <Link
@@ -397,7 +397,7 @@ export default function Landing() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 32 }}>
           <div>
             <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, letterSpacing: "0.1em", marginBottom: 12 }}>KATEXS</div>
-            <div style={{ fontSize: 14, color: "#888", maxWidth: 320 }}>
+            <div style={{ fontSize: 14, color: "#cccccc", maxWidth: 320 }}>
               The world's first AI-native freelance marketplace
             </div>
           </div>
@@ -409,10 +409,10 @@ export default function Landing() {
           </div>
         </div>
         <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ fontSize: 12, color: "#888" }}>© 2026 Katexs. All rights reserved.</div>
+          <div style={{ fontSize: 12, color: "#aaaaaa" }}>© 2026 Katexs. All rights reserved.</div>
           <div style={{ display: "flex", gap: 24 }}>
-            <Link to="/privacy" style={{ fontSize: 12, color: "#888", textDecoration: "none" }}>Privacy Policy</Link>
-            <Link to="/terms" style={{ fontSize: 12, color: "#888", textDecoration: "none" }}>Terms of Service</Link>
+            <Link to="/privacy" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>Terms of Service</Link>
           </div>
         </div>
       </footer>

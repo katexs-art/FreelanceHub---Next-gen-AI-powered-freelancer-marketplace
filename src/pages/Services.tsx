@@ -202,7 +202,7 @@ export default function Services() {
         <h1 className="svc-h1" style={{ fontSize: 64, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: 880, margin: "0 auto 20px" }}>
           The freelance market,<br />rebuilt from first principles
         </h1>
-        <p style={{ fontSize: 18, color: "#aaaaaa", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 18, color: "#cccccc", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
         <form
@@ -280,7 +280,7 @@ export default function Services() {
                       <h3 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 8px" }}>
                         {s.full_name || s.username || "Expert"}
                       </h3>
-                      <p style={{ fontSize: 13, color: "#aaaaaa", lineHeight: 1.5, margin: "0 0 24px", minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      <p style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.5, margin: "0 0 24px", minHeight: 42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                         {s.bio || "Specialist on Katexs."}
                       </p>
                       <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid #181818" }}>
@@ -326,7 +326,7 @@ export default function Services() {
                     <h3 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 10px" }}>
                       {featured.full_name || featured.username || "Top Expert"}
                     </h3>
-                    <p style={{ fontSize: 14, color: "#aaaaaa", lineHeight: 1.6, margin: "0 0 24px" }}>
+                    <p style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6, margin: "0 0 24px" }}>
                       {featured.bio || "A top-ranked AI specialist on Katexs."}
                     </p>
                     <div style={{ display: "inline-block", alignSelf: "flex-start", background: "#fff", color: "#000", padding: "12px 24px", fontSize: 13, fontWeight: 700 }}>
@@ -377,7 +377,7 @@ export default function Services() {
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 16 }}>
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px", letterSpacing: "-0.01em" }}>Intelligence Verified</h2>
-              <p style={{ fontSize: 14, color: "#aaaaaa", margin: 0 }}>Top-ranked experts by River Score.</p>
+              <p style={{ fontSize: 14, color: "#cccccc", margin: 0 }}>Top-ranked experts by River Score.</p>
             </div>
             <Link to="/services" style={{ fontSize: 12, color: "#888", textDecoration: "none", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
               Browse all experts →
