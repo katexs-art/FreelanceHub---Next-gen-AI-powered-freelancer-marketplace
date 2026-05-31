@@ -67,7 +67,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
           </nav>
 
           <form
-            onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/search?q=${encodeURIComponent(q)}`); }}
+            onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/browse?q=${encodeURIComponent(q)}`); }}
             className="flex-1 max-w-md relative hidden lg:block"
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/50" />
@@ -140,7 +140,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         </nav>
 
         <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/search?q=${encodeURIComponent(q)}`); }}
+          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/browse?q=${encodeURIComponent(q)}`); }}
           className="flex-1 max-w-md relative hidden lg:block"
         >
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground-subtle" />
