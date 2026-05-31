@@ -180,41 +180,6 @@ const CATS_RAW: { label: string; columns: Column[] }[] = [
     ],
   },
   {
-    label: "Writing & Content",
-    columns: [
-      mk("Writing", [
-        "Blog Posts and Articles", "Website Copywriting", "Product Descriptions",
-        "Press Releases", "Email Copywriting", "Sales Copy",
-        "Technical Writing", "Ghostwriting",
-      ]),
-      mk("Creative Writing", [
-        "Scriptwriting", "Storytelling", "Speechwriting",
-        "Book Writing", "Resume Writing", "LinkedIn Profiles",
-        "Social Media Captions", "UX Writing",
-      ]),
-      mk("AI Content", [
-        "AI Content Editing", "Custom AI Writing Prompts", "AI Scriptwriting",
-        "AI SEO Content", "AI Research and Summaries", "AI Translation",
-        "AI Social Media Copy", "AI Content Strategy",
-      ]),
-    ],
-  },
-  {
-    label: "Music & Audio",
-    columns: [
-      mk("Music", [
-        "Music Production", "Beat Making", "Songwriting",
-        "Mixing and Mastering", "Jingles and Intros", "Podcast Music",
-        "Background Music", "Sound Design",
-      ]),
-      mk("Voice and AI Audio", [
-        "Voice Over", "Podcast Editing", "Audio Ads",
-        "AI Voice Synthesis", "Voice Cloning", "Text to Speech",
-        "AI Sonic Branding", "Audio Cleanup",
-      ]),
-    ],
-  },
-  {
     label: "Design & Creative",
     columns: [
       mk("Brand and Identity", [
