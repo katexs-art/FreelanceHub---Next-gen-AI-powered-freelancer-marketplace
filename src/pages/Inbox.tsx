@@ -3,10 +3,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Send, MessageSquare } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
 import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
@@ -19,7 +16,15 @@ interface Conv {
   order_id: string | null;
   last_message_at: string;
   last_message_preview: string | null;
-  other?: { id: string; full_name: string | null; username: string | null; avatar_url: string | null };
+  unread_count?: number;
+  other?: {
+    id: string;
+    full_name: string | null;
+    username: string | null;
+    avatar_url: string | null;
+    is_online?: boolean | null;
+    last_seen_at?: string | null;
+  };
 }
 interface Msg {
   id: string; conversation_id: string; sender_id: string; recipient_id: string;
@@ -30,6 +35,35 @@ interface Msg {
   pitch_delivery_days?: number | null;
 }
 
+function initials(name?: string | null, username?: string | null) {
+  return (name?.[0] ?? username?.[0] ?? "?").toUpperCase();
+}
+
+function formatTime(d: string) {
+  return new Date(d).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+}
+
+function formatListTimestamp(d: string) {
+  const date = new Date(d);
+  const now = new Date();
+  const same = date.toDateString() === now.toDateString();
+  if (same) return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const diffDays = Math.floor((now.getTime() - date.getTime()) / 86400000);
+  if (diffDays < 7) return date.toLocaleDateString([], { weekday: "short" });
+  return date.toLocaleDateString([], { month: "short", day: "numeric" });
+}
+
+function formatDateLabel(d: Date) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const that = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today.getTime() - that.getTime()) / 86400000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  if (diffDays < 7) return d.toLocaleDateString([], { weekday: "long" });
+  return d.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+}
+
 export default function Inbox() {
   const { conversationId } = useParams();
   const { user } = useAuth();
@@ -38,7 +72,13 @@ export default function Inbox() {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [hoverRow, setHoverRow] = useState<string | null>(null);
+  const [hoverIcon, setHoverIcon] = useState<string | null>(null);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
   const active = useMemo(() => convs.find((c) => c.id === conversationId) ?? null, [convs, conversationId]);
 
@@ -53,12 +93,25 @@ export default function Inbox() {
     const otherIds = Array.from(new Set(list.map((c) => (c.participant_one === user.id ? c.participant_two : c.participant_one))));
     if (otherIds.length) {
       const { data: profs } = await supabase
-        .from("profiles").select("id, full_name, username, avatar_url").in("id", otherIds);
+        .from("profiles").select("id, full_name, username, avatar_url, is_online, last_seen_at").in("id", otherIds);
       const byId = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p]));
       list.forEach((c) => {
         const oid = c.participant_one === user.id ? c.participant_two : c.participant_one;
         c.other = byId[oid];
       });
+
+      // Unread counts (per conversation, recipient = me, unread)
+      const { data: unread } = await supabase
+        .from("messages")
+        .select("conversation_id")
+        .eq("recipient_id", user.id)
+        .eq("is_read", false)
+        .in("conversation_id", list.map((c) => c.id));
+      const counts: Record<string, number> = {};
+      (unread ?? []).forEach((m: any) => {
+        counts[m.conversation_id] = (counts[m.conversation_id] ?? 0) + 1;
+      });
+      list.forEach((c) => { c.unread_count = counts[c.id] ?? 0; });
     }
     setConvs(list);
     setLoading(false);
@@ -67,7 +120,6 @@ export default function Inbox() {
   const loadMessages = async (cid: string) => {
     const { data } = await supabase.from("messages").select("*").eq("conversation_id", cid).order("created_at");
     setMessages((data ?? []) as Msg[]);
-    // mark read
     if (user) {
       await supabase.from("messages").update({ is_read: true })
         .eq("conversation_id", cid).eq("recipient_id", user.id).eq("is_read", false);
@@ -78,7 +130,6 @@ export default function Inbox() {
   useEffect(() => { loadConvs(); /* eslint-disable-next-line */ }, [user?.id]);
   useEffect(() => { if (conversationId) loadMessages(conversationId); }, [conversationId]);
 
-  // Realtime
   useEffect(() => {
     if (!user) return;
     const ch = supabase.channel("inbox")
@@ -108,174 +159,583 @@ export default function Inbox() {
     if (error) { toast.error(error.message); setDraft(text); }
   };
 
+  const filteredConvs = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return convs;
+    return convs.filter((c) => {
+      const name = (c.other?.full_name ?? "").toLowerCase();
+      const uname = (c.other?.username ?? "").toLowerCase();
+      const prev = (c.last_message_preview ?? "").toLowerCase();
+      return name.includes(q) || uname.includes(q) || prev.includes(q);
+    });
+  }, [convs, search]);
+
+  // Group messages by day
+  const grouped = useMemo(() => {
+    const groups: { label: string; items: Msg[] }[] = [];
+    let currentKey = "";
+    messages.forEach((m) => {
+      const d = new Date(m.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      if (key !== currentKey) {
+        groups.push({ label: formatDateLabel(d), items: [m] });
+        currentKey = key;
+      } else {
+        groups[groups.length - 1].items.push(m);
+      }
+    });
+    return groups;
+  }, [messages]);
+
+  const iconBtn = (id: string, on = false) => ({
+    background: "transparent",
+    border: "none",
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    display: "flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    cursor: "pointer",
+    color: hoverIcon === id || on ? "#0A0A0A" : "#888",
+    transition: "color 0.15s",
+  });
+
   return (
     <AppShell>
-      <div className="grid grid-cols-[300px_1fr] gap-0 h-[calc(100vh-9rem)] bg-background border border-border rounded-xl overflow-hidden">
-        {/* List */}
-        <aside className="border-r border-border overflow-y-auto">
-          <div className="px-4 py-3 border-b border-border font-semibold text-sm">Messages</div>
-          {loading && <div className="p-4 text-xs text-foreground-muted">Loading…</div>}
-          {!loading && convs.length === 0 && (
-            <div className="p-6 text-center text-xs text-foreground-muted">
-              <MessageSquare className="h-6 w-6 mx-auto mb-2 opacity-40" />
-              No conversations yet.
-            </div>
-          )}
-          {convs.map((c) => (
-            <button key={c.id} onClick={() => nav(`/inbox/${c.id}`)}
-              className={cn("w-full text-left px-4 py-3 border-b border-border/60 hover:bg-background-elevated",
-                conversationId === c.id && "bg-primary/5")}>
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium shrink-0">
-                  {(c.other?.full_name?.[0] ?? c.other?.username?.[0] ?? "?").toUpperCase()}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-sm font-medium truncate">{c.other?.full_name ?? c.other?.username ?? "User"}</span>
-                    <span className="text-[10px] text-foreground-muted shrink-0">
-                      {new Date(c.last_message_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  <div className="text-xs text-foreground-muted truncate">{c.last_message_preview ?? "—"}</div>
-                </div>
-              </div>
+      <div
+        style={{
+          margin: "-2.5rem",
+          height: "calc(100vh - 3.5rem)",
+          display: "grid",
+          gridTemplateColumns: "320px 1fr",
+          background: "#fff",
+        }}
+      >
+        {/* COLUMN 2 — Conversation list */}
+        <aside
+          style={{
+            background: "#FFFFFF",
+            borderRight: "1px solid #EBEBEB",
+            display: "flex",
+            flexDirection: "column",
+            minHeight: 0,
+          }}
+        >
+          <div
+            style={{
+              padding: "20px 16px",
+              borderBottom: "1px solid #EBEBEB",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>Messages</h2>
+            <button
+              type="button"
+              aria-label="Compose"
+              style={iconBtn("compose")}
+              onMouseEnter={() => setHoverIcon("compose")}
+              onMouseLeave={() => setHoverIcon(null)}
+            >
+              <Pencil size={16} />
             </button>
-          ))}
+          </div>
+
+          <div style={{ padding: "12px 16px" }}>
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              placeholder="Search messages..."
+              style={{
+                width: "100%",
+                background: "#F7F7F7",
+                border: `1px solid ${searchFocused ? "#0A0A0A" : "#EBEBEB"}`,
+                borderRadius: 999,
+                padding: "8px 16px",
+                fontSize: 13,
+                color: "#333",
+                outline: "none",
+                boxSizing: "border-box",
+                transition: "border-color 0.15s",
+              }}
+            />
+          </div>
+
+          <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+            {loading && (
+              <div style={{ padding: 16, fontSize: 12, color: "#888" }}>Loading…</div>
+            )}
+            {!loading && filteredConvs.length === 0 && (
+              <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#888" }}>
+                <MessageSquare size={20} style={{ opacity: 0.4, margin: "0 auto 8px" }} />
+                <div>No conversations yet.</div>
+              </div>
+            )}
+            {filteredConvs.map((c) => {
+              const isActive = conversationId === c.id;
+              const isHover = hoverRow === c.id;
+              const online = !!c.other?.is_online;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => nav(`/inbox/${c.id}`)}
+                  onMouseEnter={() => setHoverRow(c.id)}
+                  onMouseLeave={() => setHoverRow(null)}
+                  style={{
+                    width: "100%",
+                    textAlign: "left",
+                    border: "none",
+                    background: isActive ? "#F0F0F0" : isHover ? "#F7F7F7" : "#FFFFFF",
+                    borderBottom: "1px solid #F5F5F5",
+                    borderLeft: isActive ? "3px solid #0A0A0A" : "3px solid transparent",
+                    padding: "14px 16px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    transition: "background 0.15s",
+                  }}
+                >
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: "50%",
+                        background: "#F0F0F0",
+                        color: "#0A0A0A",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {c.other?.avatar_url ? (
+                        <img src={c.other.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        initials(c.other?.full_name, c.other?.username)
+                      )}
+                    </div>
+                    {online && (
+                      <div
+                        style={{
+                          position: "absolute",
+                          bottom: 0,
+                          right: 0,
+                          width: 8,
+                          height: 8,
+                          background: "#16A34A",
+                          borderRadius: "50%",
+                          border: "2px solid #fff",
+                          boxSizing: "content-box",
+                          marginRight: -1,
+                          marginBottom: -1,
+                        }}
+                      />
+                    )}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: "#0A0A0A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {c.other?.full_name ?? c.other?.username ?? "User"}
+                    </div>
+                    <div style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
+                      {c.last_message_preview ?? "—"}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, color: "#AAAAAA" }}>{formatListTimestamp(c.last_message_at)}</span>
+                    {(c.unread_count ?? 0) > 0 && (
+                      <span
+                        style={{
+                          minWidth: 18,
+                          height: 18,
+                          padding: "0 5px",
+                          background: "#16A34A",
+                          color: "#fff",
+                          borderRadius: 999,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          boxSizing: "border-box",
+                        }}
+                      >
+                        {c.unread_count}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </aside>
 
-        {/* Thread */}
-        <section className="flex flex-col min-w-0">
+        {/* COLUMN 3 — Active conversation */}
+        <section style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
           {!active ? (
-            <div className="flex-1 flex items-center justify-center text-sm text-foreground-muted">
-              Select a conversation
+            <div
+              style={{
+                flex: 1,
+                background: "#F7F7F7",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
+              <div>
+                <div
+                  style={{
+                    width: 80,
+                    height: 80,
+                    borderRadius: "50%",
+                    background: "#F0F0F0",
+                    color: "#AAAAAA",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 20px",
+                  }}
+                >
+                  <MessageSquare size={32} />
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 500, color: "#888", marginBottom: 6 }}>Select a conversation</div>
+                <div style={{ fontSize: 14, color: "#AAAAAA" }}>Choose a conversation from the left to start messaging</div>
+              </div>
             </div>
           ) : (
             <>
-              <header className="px-5 py-3 border-b border-border flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-medium">
-                  {(active.other?.full_name?.[0] ?? active.other?.username?.[0] ?? "?").toUpperCase()}
+              {/* Chat header */}
+              <header
+                style={{
+                  background: "#FFFFFF",
+                  borderBottom: "1px solid #EBEBEB",
+                  padding: "16px 24px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  height: 64,
+                  boxSizing: "border-box",
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  <div
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: "#F0F0F0",
+                      color: "#0A0A0A",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 14,
+                      fontWeight: 600,
+                      overflow: "hidden",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {active.other?.avatar_url ? (
+                      <img src={active.other.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                    ) : (
+                      initials(active.other?.full_name, active.other?.username)
+                    )}
+                  </div>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#0A0A0A" }}>
+                      {active.other?.full_name ?? active.other?.username ?? "User"}
+                    </div>
+                    <div style={{ fontSize: 12, color: active.other?.is_online ? "#16A34A" : "#AAAAAA" }}>
+                      {active.other?.is_online
+                        ? "Online"
+                        : active.other?.last_seen_at
+                          ? `Last seen ${new Date(active.other.last_seen_at).toLocaleString()}`
+                          : active.other?.username
+                            ? (
+                              <Link to={`/u/${active.other.username}`} style={{ color: "#AAAAAA", textDecoration: "none" }}>
+                                @{active.other.username}
+                              </Link>
+                            )
+                            : ""}
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold truncate">{active.other?.full_name ?? active.other?.username}</div>
-                  {active.other?.username && (
-                    <Link to={`/u/${active.other.username}`} className="text-xs text-foreground-muted hover:text-foreground">
-                      @{active.other.username}
-                    </Link>
+                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                  {user && active.other?.id && (
+                    <CustomOfferComposer
+                      conversationId={active.id}
+                      sellerId={user.id}
+                      buyerId={active.participant_one === user.id ? active.participant_two : active.participant_one}
+                    />
                   )}
+                  <button
+                    type="button"
+                    aria-label="Video call"
+                    style={iconBtn("video")}
+                    onMouseEnter={() => setHoverIcon("video")}
+                    onMouseLeave={() => setHoverIcon(null)}
+                  >
+                    <Video size={18} />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="More options"
+                    style={iconBtn("more")}
+                    onMouseEnter={() => setHoverIcon("more")}
+                    onMouseLeave={() => setHoverIcon(null)}
+                  >
+                    <MoreHorizontal size={18} />
+                  </button>
                 </div>
-                {user && active.other?.id && (
-                  <CustomOfferComposer
-                    conversationId={active.id}
-                    sellerId={user.id}
-                    buyerId={active.participant_one === user.id ? active.participant_two : active.participant_one}
-                  />
-                )}
               </header>
 
-              <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
-                {messages.map((m) => {
-                  const mine = m.sender_id === user?.id;
-                  if (m.custom_offer_id) {
-                    return (
-                      <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-                        <CustomOfferCard offerId={m.custom_offer_id} />
-                      </div>
-                    );
-                  }
-                  if (m.message_type === "pitch") {
-                    const priceDollars = m.pitch_price != null ? (m.pitch_price / 100).toFixed(0) : null;
-                    return (
-                      <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-                        <div style={{
-                          background: "#fff", borderLeft: "3px solid #000",
-                          padding: 16, borderRadius: 8, maxWidth: "70%",
-                          boxShadow: "0 1px 2px rgba(0,0,0,0.04)", border: "1px solid #eee", borderLeftWidth: 3,
-                        }}>
-                          <div style={{ fontSize: 11, color: "#999", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 8 }}>
-                            Pitch
-                          </div>
-                          <div style={{ whiteSpace: "pre-line", fontSize: 14, color: "#111", lineHeight: 1.5 }}>
-                            {m.content}
-                          </div>
-                          <hr style={{ borderColor: "#eee", borderTop: "1px solid #eee", borderBottom: "none", margin: "12px 0" }} />
-                          {priceDollars && (
-                            <div style={{ fontSize: 14, marginBottom: 4 }}>
-                              <span style={{ color: "#666" }}>Proposed Price: </span>
-                              <span style={{ color: "#15803d", fontWeight: 700 }}>${priceDollars}</span>
-                            </div>
-                          )}
-                          {m.pitch_delivery_days != null && (
-                            <div style={{ fontSize: 14, color: "#111" }}>
-                              <span style={{ color: "#666" }}>Delivery Time: </span>
-                              <span style={{ fontWeight: 600 }}>{m.pitch_delivery_days} days</span>
-                            </div>
-                          )}
-                          {!mine && (
-                            <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                              <button
-                                onClick={async () => {
-                                  const { data, error } = await supabase.rpc("create_escrow_order", {
-                                    _source: "pitch", _source_id: m.id,
-                                  });
-                                  if (error || !data) {
-                                    alert(error?.message || "Could not start checkout");
-                                    return;
-                                  }
-                                  nav(`/checkout/${data}`);
-                                }}
-                                style={{
-                                  background: "#000", color: "#fff", border: "none",
-                                  padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: "pointer",
-                                }}
-                              >
-                                Accept & Place Order
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const el = document.querySelector<HTMLInputElement>('input[placeholder="Write a message…"]');
-                                  el?.focus();
-                                }}
-                                style={{
-                                  background: "#fff", color: "#000", border: "1px solid #000",
-                                  padding: "10px 16px", borderRadius: 999, fontSize: 13, fontWeight: 600, cursor: "pointer",
-                                }}
-                              >
-                                Reply
-                              </button>
-                            </div>
-                          )}
-                          <div style={{ fontSize: 10, color: "#999", marginTop: 8 }}>
-                            {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return (
-                    <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
-                      <div className={cn("max-w-[70%] rounded-2xl px-4 py-2 text-sm",
-                        mine ? "bg-primary text-primary-foreground" : "bg-background-elevated text-foreground")}>
-                        <div className="whitespace-pre-line">{m.content}</div>
-                        <div className={cn("text-[10px] mt-1 opacity-70")}>
-                          {new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </div>
-                      </div>
+              {/* Messages area */}
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  padding: 24,
+                  background: "#F7F7F7",
+                  minHeight: 0,
+                }}
+              >
+                {grouped.map((g, gi) => (
+                  <div key={gi}>
+                    <div style={{ textAlign: "center", margin: "16px 0" }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          fontSize: 11,
+                          color: "#AAAAAA",
+                          background: "#FFFFFF",
+                          border: "1px solid #EBEBEB",
+                          padding: "4px 12px",
+                          borderRadius: 999,
+                        }}
+                      >
+                        {g.label}
+                      </span>
                     </div>
-                  );
-                })}
+                    {g.items.map((m) => {
+                      const mine = m.sender_id === user?.id;
+
+                      if (m.custom_offer_id) {
+                        return (
+                          <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 12 }}>
+                            <CustomOfferCard offerId={m.custom_offer_id} />
+                          </div>
+                        );
+                      }
+
+                      if (m.message_type === "pitch") {
+                        const priceDollars = m.pitch_price != null ? (m.pitch_price / 100).toFixed(0) : null;
+                        return (
+                          <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 12 }}>
+                            <div
+                              style={{
+                                background: "#FAFAFA",
+                                border: "1px solid #EBEBEB",
+                                borderLeft: "3px solid #7C3AED",
+                                borderRadius: 12,
+                                padding: 16,
+                                maxWidth: "65%",
+                              }}
+                            >
+                              <div style={{ fontSize: 11, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 8 }}>
+                                Proposal
+                              </div>
+                              <div style={{ whiteSpace: "pre-line", fontSize: 14, color: "#333", lineHeight: 1.5 }}>
+                                {m.content}
+                              </div>
+                              <hr style={{ border: "none", borderTop: "1px solid #EBEBEB", margin: "12px 0" }} />
+                              {priceDollars && (
+                                <div style={{ fontSize: 14, marginBottom: 4 }}>
+                                  <span style={{ fontSize: 12, color: "#888" }}>Proposed Price: </span>
+                                  <span style={{ fontSize: 15, color: "#16A34A", fontWeight: 700 }}>${priceDollars}</span>
+                                </div>
+                              )}
+                              {m.pitch_delivery_days != null && (
+                                <div style={{ fontSize: 12, color: "#888" }}>
+                                  Delivery Time: <span style={{ color: "#333", fontWeight: 600 }}>{m.pitch_delivery_days} days</span>
+                                </div>
+                              )}
+                              {!mine && (
+                                <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                                  <button
+                                    onClick={async () => {
+                                      const { data, error } = await supabase.rpc("create_escrow_order", {
+                                        _source: "pitch", _source_id: m.id,
+                                      });
+                                      if (error || !data) {
+                                        toast.error(error?.message || "Could not start checkout");
+                                        return;
+                                      }
+                                      nav(`/checkout/${data}`);
+                                    }}
+                                    style={{
+                                      background: "#16A34A", color: "#fff", border: "none",
+                                      padding: "6px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                                    }}
+                                  >
+                                    Accept Proposal
+                                  </button>
+                                  <button
+                                    onClick={() => chatInputRef.current?.focus()}
+                                    style={{
+                                      background: "#fff", color: "#0A0A0A", border: "1px solid #0A0A0A",
+                                      padding: "6px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                                    }}
+                                  >
+                                    Reply
+                                  </button>
+                                </div>
+                              )}
+                              <div style={{ fontSize: 11, color: "#AAAAAA", marginTop: 8 }}>{formatTime(m.created_at)}</div>
+                            </div>
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 12, gap: 8, alignItems: "flex-end" }}>
+                          {!mine && (
+                            <div
+                              style={{
+                                width: 32,
+                                height: 32,
+                                borderRadius: "50%",
+                                background: "#F0F0F0",
+                                color: "#0A0A0A",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                fontSize: 12,
+                                fontWeight: 600,
+                                flexShrink: 0,
+                                overflow: "hidden",
+                              }}
+                            >
+                              {active.other?.avatar_url ? (
+                                <img src={active.other.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              ) : (
+                                initials(active.other?.full_name, active.other?.username)
+                              )}
+                            </div>
+                          )}
+                          <div style={{ maxWidth: "65%" }}>
+                            <div
+                              style={{
+                                background: mine ? "#0A0A0A" : "#FFFFFF",
+                                color: mine ? "#FFFFFF" : "#333333",
+                                border: mine ? "none" : "1px solid #EBEBEB",
+                                borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                                padding: "12px 16px",
+                                fontSize: 14,
+                                whiteSpace: "pre-line",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {m.content}
+                            </div>
+                            <div style={{ fontSize: 11, color: "#AAAAAA", marginTop: 4, textAlign: mine ? "right" : "left" }}>
+                              {formatTime(m.created_at)}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ))}
                 <div ref={endRef} />
               </div>
 
-              <footer className="border-t border-border p-3 flex gap-2">
-                <Input
+              {/* Chat input */}
+              <footer
+                style={{
+                  background: "#FFFFFF",
+                  borderTop: "1px solid #EBEBEB",
+                  padding: "16px 24px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  flexShrink: 0,
+                }}
+              >
+                <button
+                  type="button"
+                  aria-label="Attach"
+                  style={{
+                    background: "transparent",
+                    border: "none",
+                    width: 32,
+                    height: 32,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    color: hoverIcon === "attach" ? "#0A0A0A" : "#AAAAAA",
+                    transition: "color 0.15s",
+                  }}
+                  onMouseEnter={() => setHoverIcon("attach")}
+                  onMouseLeave={() => setHoverIcon(null)}
+                >
+                  <Paperclip size={18} />
+                </button>
+                <input
+                  ref={chatInputRef}
+                  type="text"
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
+                  onFocus={() => setInputFocused(true)}
+                  onBlur={() => setInputFocused(false)}
                   onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
-                  placeholder="Write a message…"
+                  placeholder="Type a message..."
+                  style={{
+                    flex: 1,
+                    background: inputFocused ? "#FFFFFF" : "#F7F7F7",
+                    border: `1px solid ${inputFocused ? "#0A0A0A" : "#EBEBEB"}`,
+                    borderRadius: 999,
+                    padding: "12px 20px",
+                    fontSize: 14,
+                    color: "#333",
+                    outline: "none",
+                    transition: "all 0.15s",
+                  }}
                 />
-                <Button onClick={send} disabled={!draft.trim()}>
-                  <Send className="h-4 w-4" />
-                </Button>
+                <button
+                  type="button"
+                  onClick={send}
+                  disabled={!draft.trim()}
+                  aria-label="Send"
+                  style={{
+                    background: "#0A0A0A",
+                    color: "#FFFFFF",
+                    border: "none",
+                    borderRadius: 999,
+                    width: 42,
+                    height: 42,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: draft.trim() ? "pointer" : "not-allowed",
+                    opacity: draft.trim() ? 1 : 0.4,
+                    transition: "background 0.2s",
+                    flexShrink: 0,
+                  }}
+                  onMouseEnter={(e) => { if (draft.trim()) (e.currentTarget as HTMLButtonElement).style.background = "#333"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#0A0A0A"; }}
+                >
+                  <ArrowRight size={18} />
+                </button>
               </footer>
             </>
           )}
