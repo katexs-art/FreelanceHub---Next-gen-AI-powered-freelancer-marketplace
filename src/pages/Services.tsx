@@ -6,6 +6,7 @@ import { CategoryMegaNav } from "@/components/layout/CategoryMegaNav";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
+import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 const CATEGORIES = [
@@ -54,6 +55,7 @@ export default function Services() {
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [activity, setActivity] = useState<Activity[]>([]);
   const [gigs, setGigs] = useState<GigCardData[]>([]);
+  const [gigsLoaded, setGigsLoaded] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -114,6 +116,7 @@ export default function Services() {
         : { data: [] as any };
       const byId = new Map((ss ?? []).map((s: any) => [s.id, s]));
       setGigs((data ?? []).map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
+      setGigsLoaded(true);
     })();
 
     (async () => {
@@ -458,13 +461,19 @@ export default function Services() {
             <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
             <Link to="/explore" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>View all →</Link>
           </div>
-          <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-            {gigs.length === 0
-              ? Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} style={{ background: "#0a0a0a", aspectRatio: "4/3", borderRadius: 8 }} />
-                ))
-              : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
-          </div>
+          {!gigsLoaded ? (
+            <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} style={{ background: "#0a0a0a", aspectRatio: "4/3", borderRadius: 8 }} />
+              ))}
+            </div>
+          ) : gigs.length === 0 ? (
+            <EmptyCategoryState surface="dark" />
+          ) : (
+            <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
+              {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+            </div>
+          )}
         </div>
       </section>
     </div>

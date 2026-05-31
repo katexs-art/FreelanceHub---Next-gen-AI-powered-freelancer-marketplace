@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { supabase } from "@/integrations/supabase/client";
 
 type Cat = { id: string; name: string; slug: string; parent_id: string | null };
@@ -105,13 +106,17 @@ export default function CategoryPage() {
           </div>
         )}
 
-        <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {loading
-            ? Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)
-            : gigs.length === 0
-              ? <p className="col-span-full text-foreground-muted">No active plays in this category yet.</p>
-              : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
-        </div>
+        {loading ? (
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)}
+          </div>
+        ) : gigs.length === 0 ? (
+          <EmptyCategoryState surface="light" />
+        ) : (
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+          </div>
+        )}
       </main>
       <SiteFooter />
     </div>

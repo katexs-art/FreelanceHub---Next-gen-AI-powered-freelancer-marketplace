@@ -1,59 +1,36 @@
-## Global Contrast & Dark Card Fix
+## Category / Filter Empty State
 
-Single sweep across the entire site. Colors only — no layout, spacing, image, routing, or functionality changes.
+### 1. New component
 
-### 1. Canonical Dark Card Spec (Play / Gig / Service / Expert cards)
+`src/components/marketplace/EmptyCategoryState.tsx`
 
-Apply to every card with a dark background on Landing, Services, Browse (dark variants), Explore, Search, CategoryPage, SellerProfile, SellerIntelligenceProfile, RecentlyViewed, Saved, dashboards, and any modal/drawer using dark surfaces.
+- Props: `surface?: "light" | "dark"` (default `"light"`), optional `heading`, `subtext`, `categoryLabel` overrides.
+- Renders the exact spec:
+  - Wrapper: `bg #fff` (light) or `#0a0a0a` (dark) · `max-width: 480px` · `margin: 0 auto` · `padding: 80px 24px` · centered text.
+  - Icon: 64px circle, 2px border `#e5e5e5` (light) / `#333` (dark), Lucide `Plus` 28px, color matches border, centered, 24px bottom margin.
+  - Heading "No experts in this category yet" — 22px / 500 / `#000` light, `#fff` dark / 12px bottom margin.
+  - Subtext "Be the first expert in this category and get early access to all partner requests — zero competition." — 14px / `#666` light, `#888` dark / line-height 1.6 / 32px bottom margin.
+  - Two buttons row, centered, gap 12px:
+    - Primary "Apply as an Expert" → `/sign-up`, pill, padding 12px 28px, 14px / 500. Light: bg `#000` text `#fff`. Dark: bg `#fff` text `#000`.
+    - Outline "Browse all experts" → `/services`, pill, padding 12px 28px, 14px. Light: border `#000` color `#000`. Dark: border `#555` color `#888`, hover border `#fff` hover color `#fff`.
+  - Trust line: 12px `#bbb` "Free to apply · Approved within 24 hours · Start earning immediately."
 
-- Card: `bg-[#1a1a1a]` · `border border-[#333]` · `rounded-2xl` (16px)
-- Body wrapper under image: `bg-[#1a1a1a]` · `p-[14px]`
-- Avatar: 32px circle (unchanged size)
-- Expert name: `#ffffff` · 13px · weight 500 · tracking 0.04em
-- Title / description: `#dddddd` · 14px · leading 1.5 · weight 400 (never darker than `#aaa`)
-- Star icon + rating number: `#f59e0b` (rating weight 600)
-- Review count: `#888888`
-- "FROM" label: `#777777` · 10px · uppercase · tracking 0.08em
-- Price: `#ffffff` · 18px · weight 700
-- Bookmark button: icon `#ffffff` · bg `rgba(0,0,0,0.5)` · border `1px solid rgba(255,255,255,0.2)`
+### 2. Wire-in points (replace existing empty fallbacks only — no layout/logic change)
 
-### 2. Global Text Contrast Rules
+- `src/pages/CategoryPage.tsx` line 112 — replace `<p>No active plays…</p>` with `<EmptyCategoryState surface="light" />` (wrapped in `col-span-full`).
+- `src/pages/Explore.tsx` line 85 — replace `<p>No plays published yet.</p>` with `<EmptyCategoryState surface="light" />`.
+- `src/pages/Search.tsx` line 180 — replace `<p>No plays match those filters.</p>` with `<EmptyCategoryState surface="light" />`.
+- `src/pages/Services.tsx`:
+  - Trending Plays grid (line ~462): when `gigs.length === 0` after loading, render `<EmptyCategoryState surface="dark" />` in place of the skeleton fallback once a category filter is active.
+  - River Intel grid (line ~261/387): when filtered `picks`/`intel` empty under a category, render `<EmptyCategoryState surface="dark" />`.
+- `src/pages/Browse.tsx`:
+  - line 608–611 (filtered empty) — swap the existing empty block for `<EmptyCategoryState surface="light" />`.
+  - line 931–935 (River search empty) — same swap, surface light.
 
-**On dark backgrounds (`#000`–`#222`):**
-- Headings: `#ffffff` weight 600
-- Body: `#cccccc` min
-- Labels: `#888888` min
-- Sublabels: `#666666` min
-- Floor for any visible body text: `#aaaaaa`
+### 3. Out of scope
 
-**On white / very light backgrounds:**
-- Headings: `#000000`
-- Body: `#444444`
-- Meta: `#777777`
-- Never `#999` or lighter for body
+No changes to routing, data fetching, grid layout, card components, colors elsewhere, fonts, images, or any other page. Empty-state only renders when the relevant collection is empty after loading (existing condition reused).
 
-### 3. Files Touched (colors-only sweep)
+### 4. Verification
 
-- **Cards / marketplace:** `src/pages/Landing.tsx`, `src/pages/Services.tsx`, `src/pages/Browse.tsx`, `src/pages/Explore.tsx`, `src/pages/Search.tsx`, `src/pages/CategoryPage.tsx`, `src/pages/SellerProfile.tsx`, `src/pages/SellerIntelligenceProfile.tsx`, `src/pages/GigDetail.tsx`, `src/components/marketplace/GigCard.tsx`, `src/components/marketplace/CustomOfferCard.tsx`, `src/components/marketplace/RecentlyViewed.tsx`, `src/components/marketplace/SaveGigButton.tsx`, `src/components/marketplace/SellerLevelBadge.tsx`, `src/components/marketplace/VerifiedBadge.tsx`
-- **Layout / nav:** `SiteHeader.tsx`, `SiteFooter.tsx`, `CategoryMegaNav.tsx`, `CategoryBar.tsx`, `AppShell.tsx`, `NotificationBell.tsx`, `TestModeBanner.tsx`, `RiverWidget.tsx`
-- **Marketing:** `HowItWorks.tsx`, `Pitch.tsx`, `BecomeSeller.tsx`, `Projects.tsx`, `PostJob.tsx`
-- **Auth:** `AuthLayout.tsx`, `KxAuthControls.tsx`, `Login.tsx`, `Signup.tsx`, `ForgotPassword.tsx`, `ResetPassword.tsx`
-- **Dashboards / orders / inbox:** `BuyerDashboard.tsx`, `SellerDashboard.tsx`, `MyGigs.tsx`, `Earnings.tsx`, `GigEditor.tsx`, `SellerAnalytics.tsx`, `Verification.tsx`, `SellerOnboarding.tsx`, `OrdersList.tsx`, `OrderWorkspace.tsx`, `CheckoutSuccess.tsx`, `LeaveReviewPage.tsx`, `Settings.tsx`, `Saved.tsx`, `NotificationPreferences.tsx`, `Inbox.tsx`, `Checkout.tsx`, `PlaceBid.tsx`, `ProjectBids.tsx`, `DashboardPlaceholder.tsx`, `Placeholder.tsx`, `NotFound.tsx`
-- **Admin:** `Admin.tsx`, `AdminLogin.tsx`, `RiverOps.tsx`, `TestMode.tsx`, `admin/sections/*`
-- **UI primitives:** `badge.tsx`, `alert.tsx`, `tooltip.tsx`, `toast.tsx`, `sonner.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `select.tsx`, `tabs.tsx`, `popover.tsx`, `command.tsx`, `sheet.tsx`, `drawer.tsx`, `modal.tsx`, `input.tsx`, `textarea.tsx`, `label.tsx`, `table.tsx`, `pagination.tsx`, `breadcrumb.tsx`, `hover-card.tsx`, `menubar.tsx`, `context-menu.tsx`, `navigation-menu.tsx`
-
-### 4. Method
-
-For each file:
-1. Identify surface (dark vs light) by container bg.
-2. Replace any hardcoded greys below the floor (`#333`–`#7f7f7f` text on dark, `#999`+ on white) with the canonical values above.
-3. Remove `opacity-*` / `text-white/60` style fades on dark surfaces that drop text below `#aaa` equivalent.
-4. Standardize dark cards to the spec in §1.
-
-### 5. Out of Scope
-
-No changes to: JSX structure, sizing, spacing, images, icons, routing, data, handlers, design tokens in `index.css` / `tailwind.config.ts`, or any non-color CSS.
-
-### 6. Verification
-
-Spot-check `/`, `/services`, `/services?category=seo-strategy`, `/browse` (redirects), `/explore`, `/how-it-works`, `/login`, `/signup`, `/buyer/dashboard`, `/seller/dashboard`, `/inbox`, `/orders`, `/admin` — confirm every card matches the dark spec and no body text falls below the contrast floor.
+Visit `/services?category=facebook-marketing` (current route, no gigs), `/explore`, `/browse?q=zzzzzzz`, and a category page with no plays — confirm the empty state renders centered with correct surface variant.

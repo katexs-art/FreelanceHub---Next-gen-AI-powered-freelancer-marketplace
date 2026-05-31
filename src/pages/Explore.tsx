@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { CategoryMegaNav } from "@/components/layout/CategoryMegaNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
 import { useCategories } from "@/hooks/useCategories";
 import { useAuth } from "@/hooks/useAuth";
@@ -78,13 +79,17 @@ export default function Explore() {
         )}
 
         <h2 className="text-xl font-bold mt-12 mb-6">Trending right now</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {loading
-            ? Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)
-            : gigs.length === 0
-              ? <p className="text-foreground-muted col-span-full">No plays published yet.</p>
-              : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)}
+          </div>
+        ) : gigs.length === 0 ? (
+          <EmptyCategoryState surface="light" />
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+          </div>
+        )}
 
         <RecentlyViewed />
       </main>
