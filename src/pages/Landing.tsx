@@ -171,7 +171,7 @@ export default function Landing() {
           </p>
 
           <form
-            onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/river-results?q=${encodeURIComponent(q.trim())}`); }}
+            onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/browse?q=${encodeURIComponent(q.trim())}`); }}
             style={{
               background: "#fff", borderRadius: 999, overflow: "hidden",
               display: "flex", alignItems: "center", maxWidth: 580, width: "100%",

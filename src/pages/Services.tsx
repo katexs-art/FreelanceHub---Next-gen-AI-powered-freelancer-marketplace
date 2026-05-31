@@ -203,7 +203,7 @@ export default function Services() {
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
         <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/river-results?q=${encodeURIComponent(q.trim())}`); }}
+          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/browse?q=${encodeURIComponent(q.trim())}`); }}
           style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}
         >
           <div style={{ position: "absolute", top: -22, left: 4, display: "flex", alignItems: "center", gap: 6 }}>

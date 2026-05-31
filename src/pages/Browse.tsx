@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Star, X } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+
+function tokenizeQ(s: string): string[] {
+  return s.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 2);
+}
+function fmtCents(cents: number | null | undefined): string {
+  if (cents == null || cents <= 0) return "—";
+  return `$${Math.round(cents / 100)}`;
+}
 
 const CATEGORIES = [
   "All",
@@ -84,13 +92,21 @@ export default function Browse() {
   const [loading, setLoading] = useState(true);
   const [totalApproved, setTotalApproved] = useState(0);
 
-  const [query, setQuery] = useState("");
-  const [pendingQuery, setPendingQuery] = useState("");
   const [searchParams] = useSearchParams();
+  const urlQ = (searchParams.get("q") ?? "").trim();
+  const [query, setQuery] = useState(urlQ);
+  const [pendingQuery, setPendingQuery] = useState(urlQ);
   const [category, setCategory] = useState(searchParams.get("category") ?? "All");
   const [quick, setQuick] = useState<Set<Quick>>(new Set());
   const [sort, setSort] = useState<Sort>("River Recommended");
   const [page, setPage] = useState(1);
+  const [riverOtherVisible, setRiverOtherVisible] = useState(24);
+
+  // Keep search state in sync with URL ?q=
+  useEffect(() => {
+    setQuery(urlQ);
+    setPendingQuery(urlQ);
+  }, [urlQ]);
 
   // Initial load
   useEffect(() => {
@@ -258,6 +274,65 @@ export default function Browse() {
   }, [query, category, quick, sort]);
 
   const visible = filtered.slice(0, page * PAGE);
+
+  // River-style search results when ?q= is present in URL
+  const riverResults = useMemo(() => {
+    if (!urlQ) return null;
+    const tokens = tokenizeQ(urlQ);
+    const qLower = urlQ.toLowerCase();
+    const scored = sellers.map((s) => {
+      const allTags = Array.from(
+        new Set([...(s.seller_skills ?? []), ...s.gigTags])
+      );
+      const matchedTags = new Set<string>();
+      allTags.forEach((t) => {
+        const tl = t.toLowerCase();
+        if (tokens.length ? tokens.some((tok) => tl.includes(tok)) : tl.includes(qLower)) {
+          matchedTags.add(t);
+        }
+      });
+      const hay = [
+        s.full_name ?? "",
+        s.username ?? "",
+        s.bio ?? "",
+        s.primary_category ?? "",
+        s.secondary_category ?? "",
+        ...allTags,
+        ...s.gigTitles,
+      ].join(" ").toLowerCase();
+      const hayMatch = tokens.length
+        ? tokens.some((tok) => hay.includes(tok))
+        : hay.includes(qLower);
+      const match = hayMatch || matchedTags.size > 0;
+      const riverScore =
+        s.river_score != null
+          ? Number(s.river_score)
+          : Math.round(((Number(s.average_rating) || 0) / 5) * 100);
+      return { s, match, matchedTags, allTags, riverScore };
+    });
+    const matched = scored.filter((x) => x.match);
+    const top = [...matched]
+      .sort(
+        (a, b) =>
+          b.matchedTags.size - a.matchedTags.size ||
+          b.riverScore - a.riverScore ||
+          (Number(b.s.average_rating) || 0) - (Number(a.s.average_rating) || 0)
+      )
+      .slice(0, 15);
+    const topIds = new Set(top.map((x) => x.s.id));
+    const others = matched
+      .filter((x) => !topIds.has(x.s.id))
+      .sort(
+        (a, b) =>
+          (Number(b.s.average_rating) || 0) - (Number(a.s.average_rating) || 0) ||
+          (b.s.total_reviews || 0) - (a.s.total_reviews || 0)
+      );
+    return { top, others };
+  }, [urlQ, sellers]);
+
+  useEffect(() => {
+    setRiverOtherVisible(24);
+  }, [urlQ]);
 
   const runSearch = () => setQuery(pendingQuery);
   const clearAll = () => {
@@ -489,6 +564,15 @@ export default function Browse() {
           {/* Grid / empty / loading */}
           {loading ? (
             <div className="mt-6 text-sm" style={{ color: "#666" }}>Loading experts…</div>
+          ) : urlQ && riverResults ? (
+            <RiverSections
+              query={urlQ}
+              top={riverResults.top}
+              others={riverResults.others}
+              visibleOther={riverOtherVisible}
+              onLoadMore={() => setRiverOtherVisible((v) => v + 24)}
+              onMessage={openMessage}
+            />
           ) : filtered.length === 0 ? (
             <div className="mt-16 text-center">
               <div style={{ fontSize: 18, fontWeight: 600, color: "#111" }}>
@@ -777,6 +861,474 @@ function SellerCard({
         >
           Message
         </button>
+      </div>
+    </div>
+  );
+}
+
+type RiverItem = {
+  s: Seller;
+  match: boolean;
+  matchedTags: Set<string>;
+  allTags: string[];
+  riverScore: number;
+};
+
+function RiverSections({
+  query,
+  top,
+  others,
+  visibleOther,
+  onLoadMore,
+  onMessage,
+}: {
+  query: string;
+  top: RiverItem[];
+  others: RiverItem[];
+  visibleOther: number;
+  onLoadMore: () => void;
+  onMessage: (id: string) => void;
+}) {
+  if (top.length === 0 && others.length === 0) {
+    return (
+      <div className="mt-16 text-center">
+        <div style={{ fontSize: 18, fontWeight: 600, color: "#111" }}>
+          No experts found for "{query}"
+        </div>
+        <div style={{ fontSize: 14, color: "#666", marginTop: 8 }}>
+          Try a different keyword or browse all categories
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="mt-6" style={{ marginLeft: -20, marginRight: -20 }}>
+      {/* SECTION 1 — Dark, River Top 15 */}
+      {top.length > 0 && (
+        <>
+          <div
+            style={{
+              background: "#111",
+              borderBottom: "1px solid #222",
+              padding: "16px 80px",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              flexWrap: "wrap",
+              gap: 12,
+            }}
+          >
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: "#a855f7" }} />
+              <span style={{ fontSize: 13, fontWeight: 500, color: "#fff", letterSpacing: "0.05em" }}>
+                River's Top 15 Matches
+              </span>
+            </div>
+            <span style={{ fontSize: 11, color: "#555" }}>Ranked by River Score and skill match</span>
+          </div>
+          <section style={{ background: "#0a0a0a", padding: "48px 80px" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 20,
+              }}
+            >
+              {top.map((x) => (
+                <RiverTopCard key={x.s.id} item={x} onPitch={() => onMessage(x.s.id)} />
+              ))}
+            </div>
+          </section>
+        </>
+      )}
+
+      {/* DIVIDER */}
+      <div
+        style={{
+          background: "#fff",
+          padding: "16px 80px",
+          textAlign: "center",
+          fontSize: 13,
+          color: "#999",
+          borderTop: "1px solid #1a1a1a",
+          borderBottom: "1px solid #f0f0f0",
+        }}
+      >
+        River's picks are above · All matching experts are below
+      </div>
+
+      {/* SECTION 2 — White, more experts */}
+      <section style={{ background: "#fff", padding: "48px 80px" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "baseline",
+            marginBottom: 20,
+            flexWrap: "wrap",
+            gap: 8,
+          }}
+        >
+          <span style={{ fontSize: 13, color: "#999", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+            More experts for this search
+          </span>
+          <span style={{ fontSize: 11, color: "#bbb" }}>Sorted by rating — highest first</span>
+        </div>
+
+        {others.length === 0 ? (
+          <div style={{ fontSize: 14, color: "#888", textAlign: "center", padding: 32 }}>
+            No additional experts for this search.
+          </div>
+        ) : (
+          <>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gap: 16,
+              }}
+            >
+              {others.slice(0, visibleOther).map((x) => (
+                <RiverOtherCard key={x.s.id} item={x} onMessage={() => onMessage(x.s.id)} />
+              ))}
+            </div>
+            {visibleOther < others.length && (
+              <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+                <button
+                  onClick={onLoadMore}
+                  style={{
+                    background: "transparent",
+                    color: "#000",
+                    border: "1px solid #d4d4d4",
+                    borderRadius: 999,
+                    padding: "10px 24px",
+                    fontSize: 13,
+                    cursor: "pointer",
+                  }}
+                >
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function RiverTopCard({ item, onPitch }: { item: RiverItem; onPitch: () => void }) {
+  const { s, matchedTags, allTags, riverScore } = item;
+  const [viewHover, setViewHover] = useState(false);
+  const [pitchHover, setPitchHover] = useState(false);
+  const badge =
+    matchedTags.size >= 3
+      ? { label: "Perfect match", bg: "#1a3a1a", color: "#4ade80" }
+      : matchedTags.size === 2
+      ? { label: "Strong match", bg: "#1a1a3a", color: "#60a5fa" }
+      : { label: "Good match", bg: "#2a2a2a", color: "#aaa" };
+  const tagsToShow = allTags.slice(0, 3);
+  const rating = Number(s.average_rating) || 0;
+  const profileHref = s.username ? `/u/${s.username}` : `/u/${s.id}`;
+  return (
+    <div
+      style={{
+        background: "#1a1a1a",
+        border: "1px solid #333",
+        borderRadius: 20,
+        padding: 24,
+        boxShadow: "0 4px 24px rgba(255,255,255,0.04)",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+        <div>
+          <div style={{ fontSize: 40, fontWeight: 600, color: "#fff", lineHeight: 1 }}>
+            {Math.round(riverScore)}
+          </div>
+          <div style={{ fontSize: 10, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 6 }}>
+            River Score
+          </div>
+        </div>
+        <span
+          style={{
+            background: badge.bg,
+            color: badge.color,
+            fontSize: 11,
+            fontWeight: 500,
+            padding: "4px 12px",
+            borderRadius: 999,
+          }}
+        >
+          {badge.label}
+        </span>
+      </div>
+
+      <div style={{ fontSize: 16, fontWeight: 600, color: "#fff", marginTop: 12, marginBottom: 4 }}>
+        {s.full_name || s.username || "Anonymous"}
+      </div>
+      <div style={{ fontSize: 13, color: "#888", marginBottom: 14 }}>
+        {s.primary_category || "AI Expert"}
+      </div>
+
+      {tagsToShow.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+          {tagsToShow.map((t) => {
+            const matched = matchedTags.has(t);
+            return (
+              <span
+                key={t}
+                style={{
+                  background: matched ? "#1a3a1a" : "#252525",
+                  border: `1px solid ${matched ? "#4ade80" : "#333"}`,
+                  color: matched ? "#4ade80" : "#ccc",
+                  borderRadius: 999,
+                  padding: "4px 10px",
+                  fontSize: 11,
+                }}
+              >
+                {t}
+              </span>
+            );
+          })}
+        </div>
+      )}
+
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Star
+              key={i}
+              size={12}
+              fill={i <= Math.round(rating) ? "#f59e0b" : "transparent"}
+              stroke="#f59e0b"
+              strokeWidth={1.5}
+            />
+          ))}
+          <span style={{ fontSize: 12, color: "#666", marginLeft: 2 }}>({s.total_reviews || 0})</span>
+        </span>
+        <span style={{ color: "#333" }}>·</span>
+        <span style={{ fontSize: 12, color: "#777" }}>
+          {s.minDelivery ? `${s.minDelivery}d delivery` : "—"}
+        </span>
+        <span style={{ color: "#333" }}>·</span>
+        <span style={{ fontSize: 15, color: "#fff", fontWeight: 600 }}>
+          {s.startingPrice ? `From ${fmtCents(s.startingPrice)}` : "—"}
+        </span>
+      </div>
+
+      <div
+        style={{
+          marginTop: 18,
+          paddingTop: 14,
+          borderTop: "1px solid #2a2a2a",
+          display: "flex",
+          gap: 8,
+        }}
+      >
+        <Link
+          to={profileHref}
+          onMouseEnter={() => setViewHover(true)}
+          onMouseLeave={() => setViewHover(false)}
+          style={{
+            flex: 1,
+            textAlign: "center",
+            background: viewHover ? "#fff" : "transparent",
+            color: viewHover ? "#000" : "#fff",
+            border: "1px solid #444",
+            borderRadius: 999,
+            padding: "8px 18px",
+            fontSize: 12,
+            fontWeight: 500,
+            textDecoration: "none",
+            transition: "all 0.2s",
+          }}
+        >
+          View Profile
+        </Link>
+        <button
+          onClick={onPitch}
+          onMouseEnter={() => setPitchHover(true)}
+          onMouseLeave={() => setPitchHover(false)}
+          style={{
+            flex: 1,
+            background: pitchHover ? "#e5e5e5" : "#fff",
+            color: "#000",
+            border: "none",
+            borderRadius: 999,
+            padding: "8px 18px",
+            fontSize: 12,
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.2s",
+          }}
+        >
+          Get a Pitch
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function RiverOtherCard({ item, onMessage }: { item: RiverItem; onMessage: () => void }) {
+  const { s, allTags } = item;
+  const [cardHover, setCardHover] = useState(false);
+  const [viewHover, setViewHover] = useState(false);
+  const [msgHover, setMsgHover] = useState(false);
+  const rating = Number(s.average_rating) || 0;
+  const full = Math.round(rating);
+  const tagsToShow = allTags.slice(0, 3);
+  const profileHref = s.username ? `/u/${s.username}` : `/u/${s.id}`;
+  return (
+    <div
+      onMouseEnter={() => setCardHover(true)}
+      onMouseLeave={() => setCardHover(false)}
+      style={{
+        background: "#fff",
+        border: "1px solid #e5e5e5",
+        borderRadius: 16,
+        padding: 20,
+        boxShadow: cardHover ? "0 2px 12px rgba(0,0,0,0.04)" : "none",
+        transition: "box-shadow 0.2s",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div
+          style={{
+            width: 48,
+            height: 48,
+            borderRadius: 999,
+            overflow: "hidden",
+            background: "#f5f5f5",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+          }}
+        >
+          {s.avatar_url ? (
+            <img src={s.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) : (
+            <span style={{ color: "#888", fontSize: 15, fontWeight: 500 }}>
+              {(s.full_name || s.username || "?").slice(0, 1).toUpperCase()}
+            </span>
+          )}
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 600, color: "#000" }}>
+            {s.full_name || s.username || "Anonymous"}
+          </div>
+          <div style={{ marginTop: 2, display: "inline-flex", alignItems: "center", gap: 4 }}>
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Star
+                key={i}
+                size={12}
+                fill={i <= full ? "#f59e0b" : "transparent"}
+                stroke="#f59e0b"
+                strokeWidth={1.5}
+              />
+            ))}
+            <span style={{ fontSize: 12, fontWeight: 500, color: "#000", marginLeft: 2 }}>
+              {rating ? rating.toFixed(1) : "—"}
+            </span>
+            <span style={{ fontSize: 12, color: "#888" }}>({s.total_reviews || 0})</span>
+          </div>
+        </div>
+      </div>
+
+      <div
+        style={{
+          marginTop: 12,
+          fontSize: 13,
+          color: "#666",
+          lineHeight: 1.5,
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+          marginBottom: 12,
+        }}
+      >
+        {s.bio || s.primary_category || ""}
+      </div>
+
+      {tagsToShow.length > 0 && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+          {tagsToShow.map((t) => (
+            <span
+              key={t}
+              style={{
+                background: "#f5f5f5",
+                color: "#555",
+                borderRadius: 999,
+                padding: "3px 10px",
+                fontSize: 11,
+              }}
+            >
+              {t}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div
+        style={{
+          marginTop: "auto",
+          paddingTop: 12,
+          borderTop: "1px solid #f0f0f0",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 8,
+          flexWrap: "wrap",
+        }}
+      >
+        <span style={{ fontSize: 14, color: "#000", fontWeight: 600 }}>
+          {s.startingPrice ? `From ${fmtCents(s.startingPrice)}` : "—"}
+        </span>
+        <span style={{ fontSize: 13, color: "#888" }}>
+          {s.minDelivery ? `${s.minDelivery}d` : ""}
+        </span>
+        <div style={{ display: "flex", gap: 6 }}>
+          <Link
+            to={profileHref}
+            onMouseEnter={() => setViewHover(true)}
+            onMouseLeave={() => setViewHover(false)}
+            style={{
+              background: viewHover ? "#000" : "#fff",
+              color: viewHover ? "#fff" : "#000",
+              border: "1px solid #000",
+              borderRadius: 999,
+              padding: "7px 16px",
+              fontSize: 12,
+              fontWeight: 500,
+              textDecoration: "none",
+              transition: "all 0.2s",
+            }}
+          >
+            View Profile
+          </Link>
+          <button
+            onClick={onMessage}
+            onMouseEnter={() => setMsgHover(true)}
+            onMouseLeave={() => setMsgHover(false)}
+            style={{
+              background: "#fff",
+              color: msgHover ? "#000" : "#555",
+              border: `1px solid ${msgHover ? "#000" : "#e5e5e5"}`,
+              borderRadius: 999,
+              padding: "7px 16px",
+              fontSize: 12,
+              cursor: "pointer",
+              transition: "all 0.2s",
+            }}
+          >
+            Message
+          </button>
+        </div>
       </div>
     </div>
   );
