@@ -1,75 +1,37 @@
-## Part 1 — Voice search on homepage River bar
+Edit `src/pages/RiverResults.tsx` only. Visual/style fixes per spec, no routing/data shape changes.
 
-Edit `src/pages/Landing.tsx` (the existing form at lines ~144–172 only — no other styling touched).
+## Section 1 — River Top 15
 
-- Detect Web Speech API once on mount:
-  ```ts
-  const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-  const [voiceSupported] = useState(!!SR);
-  const [listening, setListening] = useState(false);
-  const recogRef = useRef<any>(null);
-  ```
-- Add a mic `<button type="button">` inside the white pill, placed left of the existing `<Search>` icon (or replacing its position — left side of the input as specified). Hidden entirely when `!voiceSupported`.
-  - Idle: simple inline SVG mic, `#999`, 18px, hover `#000` (via `onMouseEnter/Leave` since inline styles).
-  - Listening: red pulsing dot (red circle + CSS `@keyframes kx-pulse` injected via a scoped `<style>` tag in the component, no global CSS edits).
-- Click handler:
-  ```ts
-  const r = new SR();
-  r.continuous = false; r.interimResults = true; r.lang = 'en-US';
-  r.onresult = (e) => { 
-    const t = Array.from(e.results).map((x:any)=>x[0].transcript).join('');
-    setQ(t);
-  };
-  r.onend = () => setListening(false);
-  r.onerror = () => setListening(false);
-  recogRef.current = r; setListening(true); r.start();
-  ```
-- Show small grey "Listening..." text (12px, `#999`) directly below the form only while `listening`.
-- Submit behavior unchanged — still navigates to `/river-results?q=...`.
+- Section header strip above the grid: full-width `#111`, `borderBottom: 1px solid #222`, `padding: 16px 80px`, flex space-between. Left: 8px `#a855f7` dot + "River's Top 15 Matches" (13px/500 `#fff`, letter-spacing 0.05em, gap 10). Right: "Ranked by River Score and skill match" (11px `#555`). Remove the current in-section label row.
+- Grid: `gridTemplateColumns: repeat(auto-fit, minmax(280px, 1fr))`, gap 20.
+- Card: bg `#1a1a1a`, border `1px solid #333`, radius 20, padding 24, boxShadow `0 4px 24px rgba(255,255,255,0.04)`.
+- River Score: 40px/600 `#fff`; add "RIVER SCORE" label below — 10px uppercase, letter-spacing 0.1em, `#666`.
+- Match badge: 11px, padding `4px 12px`, radius 999.
+  - Perfect: bg `#1a3a1a`, color `#4ade80`.
+  - Strong: bg `#1a1a3a`, color `#60a5fa`.
+  - Good: bg `#2a2a2a`, color `#aaa`.
+- Name: 16px/600 `#fff`, marginTop 12. Specialty: 13px `#888`.
+- Skill tag pills: bg `#252525`, border `1px solid #333`, color `#ccc`, 11px, padding `4px 10px`. Matching tags: bg `#1a3a1a`, border `1px solid #4ade80`, color `#4ade80`.
+- Stats row: filled yellow stars `#f59e0b`, review count `#666`, delivery `#777`, starting price `#fff`/600/15px. Separators `·` in `#333`.
+- View Profile button: transparent bg, `1px solid #444`, `#fff`, radius 999, padding `8px 18px`, 12px/500, hover swap to bg `#fff`/color `#000` (use `onMouseEnter/Leave` state — inline styles, no CSS file edits), transition 0.2s.
+- Get a Pitch button: bg `#fff`, color `#000`, no border, radius 999, padding `8px 18px`, 12px/600, hover bg `#e5e5e5`.
 
-No other Landing.tsx markup, colors, or layout changes.
+## Divider between sections
 
-## Part 2 — Rebuild `/river-results`
+Full-width band: white bg, `padding: 20px 80px`, `borderTop: 1px solid #1a1a1a`, `borderBottom: 1px solid #f0f0f0`, centered text "River's picks are above · All matching experts are below" — 13px `#999`.
 
-Replace the contents of `src/pages/RiverResults.tsx` with a new self-contained page (keep `SiteHeader`/`SiteFooter` wrapper as it already has, but remove the existing surface container styling and use only inline styles per spec). No other files touched.
+## Section 2 — All Other Experts
 
-### Data fetch (single Supabase round-trip block on mount when `q` changes)
+- Data: keep approved-seller fetch. Tighten match predicate so a seller is included if **any** query token (case-insensitive) appears in: `seller_skills`, gig `tags`, `primary_category`, `secondary_category`, `bio`, or any gig `category`. Drop the current "hayMatch OR matchedSkills>0" formula in favor of this explicit predicate. Exclude Top 15 ids. Sort by `average_rating desc, total_reviews desc`. Keep 50-cap + 24 Load More (unchanged behavior).
+- Add count line at the top of Section 2: "Showing {N} experts for [{query}]" — 13px `#999`, marginBottom 16.
+- Card: bg `#fff`, border `1px solid #e5e5e5`, radius 16, padding 20. On hover apply `boxShadow: 0 2px 12px rgba(0,0,0,0.04)` via inline hover state.
+- Avatar circle: 48px, bg `#f5f5f5`, fallback initials. If `last_seen` within 24h, render a 8px green dot (`#22c55e`, `border: 2px solid #fff`) bottom-right of avatar.
+- Name: 15px/600 `#000`.
+- Stars: filled yellow `#f59e0b`, numeric rating like `4.8` in 500 + `(count)` `#888` 12px.
+- Bio: 13px `#666`, line-height 1.5, 2-line clamp.
+- Skill pills: bg `#f5f5f5`, color `#555`, 11px, padding `3px 10px`, radius 999.
+- Starting price: 14px/600 `#000`. Delivery: 13px `#888`.
+- View Profile: white bg, `1px solid #000`, `#000`, radius 999, padding `7px 16px`, 12px/500, hover bg `#000`/color `#fff`, transition 0.2s.
+- Message: white bg, `1px solid #e5e5e5`, `#555`, same shape; hover border `#000`/color `#000`.
 
-1. `profiles` where `seller_status = 'approved'` selecting `id, username, full_name, avatar_url, bio, primary_category, secondary_category, seller_skills, average_rating, total_reviews, river_score, response_time_minutes`.
-2. `gigs` where `status = 'active'` selecting `seller_id, title, tags, category, starting_price, average_rating, total_reviews` — used to enrich tags + starting price per seller.
-
-Tokenize the query: lowercase, split on non-alphanumerics, drop tokens length <= 2.
-
-For each approved seller compute:
-- `matchedSkills`: count of distinct `seller_skills` tags (and gig tags) that contain any query token.
-- `hayMatch`: bool — any token appears in `full_name|bio|primary_category|secondary_category|gig.title|gig.tags|gig.category`.
-- `startingPrice`: min `gigs.starting_price` for that seller.
-- `riverScore`: use existing `profiles.river_score` if non-null, else fallback `(average_rating/5)*100`.
-
-Section 1 list: sellers with `hayMatch` true (or `matchedSkills > 0`), sorted by `(matchedSkills desc, riverScore desc, average_rating desc)`, take top 15.
-
-Section 2 list: all other approved sellers where `hayMatch` true OR `matchedSkills > 0`, excluding Section 1 ids; sort by `average_rating desc, total_reviews desc`; cap 50; paginate client-side 24 at a time with a "Load More" button.
-
-Match-strength badge per Section 1 card: `matchedSkills >= 3` → "Perfect match" green pill; `===2` → "Strong match" blue pill; otherwise "Good match" grey pill.
-
-### Layout (all inline styles, exact spec)
-
-- Page header: white bg, `padding: 32px 80px`, `borderBottom: 1px solid #f0f0f0`. Left: back arrow `<Link to="/">`. Center: "Results for" 13px `#888`, below `"q"` 20px weight 500 `#000`. Right: `{totalCount} experts found` 13px `#888`.
-- Section 1 wrapper: `background: #0a0a0a; padding: 48px 80px;`. Label row + 3-col grid `gap: 16px` (`grid-template-columns: repeat(3, 1fr)`). Each dark card per spec (bg `#111`, border `0.5px solid #1e1e1e`, radius 16, padding 20) with River Score 32px, badge pill, name 15px, specialty 12px `#555`, up to 3 skill tag pills (matching → white text, non-matching → `#444`), stats row (★ rating yellow, reviews `#555`, delivery `#555`, starting price white) separated by `·` in `#333`, border-top divider, two pill buttons "View Profile" (outlined) → `/u/:username`, "Get a Pitch" (filled white) → opens conversation via `get_or_create_conversation` then navigates to `/inbox/:id` (reuses existing pattern already in the file).
-- Empty-Section-1 fallback inside the dark section: "River is still learning this category — browse all experts below" centered 14px white padding 32.
-- Section 2 wrapper: white bg `padding: 48px 80px`. Label row + responsive grid (`repeat(auto-fill, minmax(320px, 1fr))`, gap 16) of light cards per spec (white bg, border `0.5px solid #e5e5e5`, radius 16, padding 20). 44px avatar, name 14/500, ★ rating + (count) `#888`, bio 2-line clamp `#666`, up to 3 grey skill pills, divider, starting price + delivery + "View Profile"/"Message" pill buttons.
-- "Load More" button below the grid when more remain (outlined, 999 radius, centered).
-- Empty state (both sections empty): white centered block — circle icon (lucide `Search` in a `#f5f5f5` 64px circle), heading 20/500 "No experts found for this search", subtext 14 `#888` "Try different keywords or browse all experts", two pill buttons "Try Another Search" → `/` and "Browse All Experts" → `/browse`.
-
-### Preserved behavior
-
-- Keep the existing `notify_river_match` RPC call after results load (so matched sellers still get a notification) — unchanged from current file.
-- Keep `SiteHeader` and `SiteFooter`.
-- No DB / RPC / route changes. `/river-results` route already exists in `App.tsx`.
-
-## Files touched
-
-- `src/pages/Landing.tsx` — mic button + listening state inside the existing form only.
-- `src/pages/RiverResults.tsx` — full rewrite of page body per spec.
-
-Nothing else changes.
+No other files touched. Routing, RPCs, voice search, and overall page structure unchanged.
