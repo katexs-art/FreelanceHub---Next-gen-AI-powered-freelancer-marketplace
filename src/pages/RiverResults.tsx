@@ -2,30 +2,60 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Search as SearchIcon, Star } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "@/hooks/use-toast";
 
-type SellerMatch = {
+type Seller = {
   id: string;
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
   bio: string | null;
+  primary_category: string | null;
+  secondary_category: string | null;
+  seller_skills: string[] | null;
+  average_rating: number | null;
+  total_reviews: number | null;
+  river_score: number | null;
   response_time_minutes: number | null;
-  average_rating: number;
-  total_reviews: number;
-  total_orders: number;
-  starting_price: number | null;
-  tags: string[];
-  categories: string[];
-  matchScore: number;
+  // computed
+  startingPrice: number | null;
+  deliveryDays: number | null;
+  allTags: string[];
+  matchedSkills: number;
+  matchedTags: Set<string>;
+  hayMatch: boolean;
   riverScore: number;
 };
 
-function tokenize(s: string) {
+function tokenize(s: string): string[] {
   return s.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 2);
+}
+
+function fmtPrice(cents: number | null): string {
+  if (cents == null) return "—";
+  return `$${Math.round(cents / 100)}`;
+}
+
+function fmtDelivery(days: number | null): string {
+  if (!days) return "—";
+  return `${days} day${days === 1 ? "" : "s"}`;
+}
+
+function Stars({ rating, count }: { rating: number; count: number }) {
+  const full = Math.round(rating);
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+      <span style={{ display: "inline-flex" }}>
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Star key={i} size={12} fill={i <= full ? "#facc15" : "transparent"} stroke="#facc15" strokeWidth={1.5} />
+        ))}
+      </span>
+      <span style={{ color: "#888", fontSize: 12 }}>({count})</span>
+    </span>
+  );
 }
 
 export default function RiverResults() {
@@ -34,111 +64,121 @@ export default function RiverResults() {
   const nav = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [sellers, setSellers] = useState<SellerMatch[]>([]);
+  const [topSellers, setTopSellers] = useState<Seller[]>([]);
+  const [otherSellers, setOtherSellers] = useState<Seller[]>([]);
+  const [visibleOther, setVisibleOther] = useState(24);
   const notifiedRef = useRef<string>("");
 
   const tokens = useMemo(() => tokenize(query), [query]);
 
   useEffect(() => {
+    let cancelled = false;
     (async () => {
       setLoading(true);
+      setVisibleOther(24);
 
-      // Try Claude-powered matcher first
-      try {
-        const { data, error } = await supabase.functions.invoke("river-public-match", { body: { query } });
-        if (!error && data && Array.isArray((data as any).sellers) && (data as any).sellers.length) {
-          const list = ((data as any).sellers as any[]).map((s) => ({
-            id: s.id, username: s.username, full_name: s.full_name, avatar_url: s.avatar_url,
-            bio: s.bio, response_time_minutes: s.response_time_minutes,
-            average_rating: Number(s.average_rating) || 0,
-            total_reviews: s.total_reviews || 0, total_orders: s.total_orders || 0,
-            starting_price: s.starting_price ?? null,
-            tags: s.tags || [], categories: s.categories || [],
-            matchScore: s.matchScore || 0, riverScore: Number(s.riverScore) || 0,
-          })) as SellerMatch[];
-          setSellers(list);
-          setLoading(false);
-
-          const sig = `${query}::${list.map((s) => s.id).join(",")}`;
-          if (user && query.trim() && list.length && notifiedRef.current !== sig) {
-            notifiedRef.current = sig;
-            supabase.rpc("notify_river_match", { _query: query, _seller_ids: list.map((s) => s.id) })
-              .then(({ error }) => { if (error) console.warn("notify_river_match", error.message); });
-          }
-          return;
-        }
-      } catch (e) {
-        console.warn("river-public-match failed, using local fallback", e);
-      }
-
-      // Fallback: original client-side scoring
-      const { data: gigs } = await supabase
-        .from("gigs")
-        .select("seller_id,title,description,category,subcategory,tags,starting_price,average_rating,total_reviews,total_orders")
-        .eq("status", "active")
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id,username,full_name,avatar_url,bio,primary_category,secondary_category,seller_skills,average_rating,total_reviews,river_score,response_time_minutes")
+        .eq("seller_status", "approved")
         .limit(1000);
 
-      const sellerIds = [...new Set((gigs ?? []).map((g) => g.seller_id))];
-      if (!sellerIds.length) {
-        setSellers([]); setLoading(false); return;
+      const sellerIds = (profs ?? []).map((p: any) => p.id);
+      const gigsBySeller = new Map<string, any[]>();
+      if (sellerIds.length) {
+        const { data: gigs } = await supabase
+          .from("gigs")
+          .select("seller_id,title,tags,category,starting_price")
+          .eq("status", "active")
+          .in("seller_id", sellerIds)
+          .limit(2000);
+        (gigs ?? []).forEach((g: any) => {
+          const arr = gigsBySeller.get(g.seller_id) || [];
+          arr.push(g);
+          gigsBySeller.set(g.seller_id, arr);
+        });
       }
 
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("id,username,full_name,avatar_url,bio,response_time_minutes")
-        .in("id", sellerIds);
-
-      const byId = new Map<string, SellerMatch>();
-      (profiles ?? []).forEach((p: any) => {
-        byId.set(p.id, {
-          id: p.id, username: p.username, full_name: p.full_name, avatar_url: p.avatar_url,
-          bio: p.bio, response_time_minutes: p.response_time_minutes,
-          average_rating: 0, total_reviews: 0, total_orders: 0,
-          starting_price: null, tags: [], categories: [], matchScore: 0, riverScore: 0,
+      const enriched: Seller[] = (profs ?? []).map((p: any) => {
+        const gigs = gigsBySeller.get(p.id) || [];
+        const skills: string[] = Array.isArray(p.seller_skills) ? p.seller_skills : [];
+        const gigTags: string[] = [];
+        let minPrice: number | null = null;
+        gigs.forEach((g: any) => {
+          (g.tags || []).forEach((t: string) => { if (!gigTags.includes(t)) gigTags.push(t); });
+          if (g.starting_price != null && (minPrice == null || g.starting_price < minPrice)) minPrice = g.starting_price;
         });
+        const allTags = Array.from(new Set([...skills, ...gigTags]));
+
+        const matchedTags = new Set<string>();
+        allTags.forEach((t) => {
+          const tl = t.toLowerCase();
+          if (tokens.some((tok) => tl.includes(tok))) matchedTags.add(t);
+        });
+
+        const hay = [
+          p.full_name, p.bio, p.primary_category, p.secondary_category,
+          ...gigs.map((g: any) => g.title),
+          ...gigs.map((g: any) => g.category),
+          ...gigs.flatMap((g: any) => g.tags || []),
+        ].filter(Boolean).join(" ").toLowerCase();
+        const hayMatch = tokens.length === 0 ? true : tokens.some((tok) => hay.includes(tok)) || matchedTags.size > 0;
+
+        const riverScore = p.river_score != null ? Number(p.river_score) : Math.round(((Number(p.average_rating) || 0) / 5) * 100);
+
+        return {
+          id: p.id,
+          username: p.username,
+          full_name: p.full_name,
+          avatar_url: p.avatar_url,
+          bio: p.bio,
+          primary_category: p.primary_category,
+          secondary_category: p.secondary_category,
+          seller_skills: skills,
+          average_rating: p.average_rating,
+          total_reviews: p.total_reviews,
+          river_score: p.river_score,
+          response_time_minutes: p.response_time_minutes,
+          startingPrice: minPrice,
+          deliveryDays: null,
+          allTags,
+          matchedSkills: matchedTags.size,
+          matchedTags,
+          hayMatch,
+          riverScore,
+        };
       });
 
-      (gigs ?? []).forEach((g: any) => {
-        const s = byId.get(g.seller_id);
-        if (!s) return;
-        s.total_reviews += g.total_reviews || 0;
-        s.total_orders += g.total_orders || 0;
-        s.average_rating = Math.max(s.average_rating, Number(g.average_rating) || 0);
-        if (g.starting_price && (s.starting_price === null || g.starting_price < s.starting_price)) {
-          s.starting_price = g.starting_price;
-        }
-        (g.tags || []).forEach((t: string) => { if (!s.tags.includes(t)) s.tags.push(t); });
-        if (g.category && !s.categories.includes(g.category)) s.categories.push(g.category);
+      const matched = enriched.filter((s) => s.hayMatch || s.matchedSkills > 0);
 
-        const hay = [g.title, g.description, g.category, g.subcategory, (g.tags || []).join(" "), s.bio, s.full_name]
-          .filter(Boolean).join(" ").toLowerCase();
-        tokens.forEach((tok) => { if (hay.includes(tok)) s.matchScore += 1; });
-      });
+      const top = [...matched].sort((a, b) =>
+        (b.matchedSkills - a.matchedSkills) ||
+        (b.riverScore - a.riverScore) ||
+        ((Number(b.average_rating) || 0) - (Number(a.average_rating) || 0))
+      ).slice(0, 15);
 
-      const list = Array.from(byId.values())
-        .map((s) => {
-          const completion = s.total_orders > 0 ? Math.min(100, 80 + Math.min(20, s.total_reviews)) : 50;
-          const completeness =
-            (s.bio ? 25 : 0) + (s.avatar_url ? 25 : 0) + (s.tags.length ? 25 : 0) + (s.starting_price ? 25 : 0);
-          const river = (s.average_rating / 5) * 40 + completion * 0.35 + completeness * 0.25;
-          return { ...s, riverScore: Math.round(river * 10) / 10 };
-        })
-        .sort((a, b) => (b.matchScore - a.matchScore) || (b.riverScore - a.riverScore))
-        .slice(0, 15);
+      const topIds = new Set(top.map((s) => s.id));
+      const others = matched
+        .filter((s) => !topIds.has(s.id))
+        .sort((a, b) =>
+          ((Number(b.average_rating) || 0) - (Number(a.average_rating) || 0)) ||
+          ((b.total_reviews || 0) - (a.total_reviews || 0))
+        )
+        .slice(0, 50);
 
-      setSellers(list);
+      if (cancelled) return;
+      setTopSellers(top);
+      setOtherSellers(others);
       setLoading(false);
 
-      // Fire-and-forget: notify the matched sellers via River AI
-      const sig = `${query}::${list.map((s) => s.id).join(",")}`;
-      if (user && query.trim() && list.length && notifiedRef.current !== sig) {
+      const sig = `${query}::${top.map((s) => s.id).join(",")}`;
+      if (user && query.trim() && top.length && notifiedRef.current !== sig) {
         notifiedRef.current = sig;
-        supabase.rpc("notify_river_match", {
-          _query: query,
-          _seller_ids: list.map((s) => s.id),
-        }).then(({ error }) => { if (error) console.warn("notify_river_match", error.message); });
+        supabase.rpc("notify_river_match", { _query: query, _seller_ids: top.map((s) => s.id) })
+          .then(({ error }) => { if (error) console.warn("notify_river_match", error.message); });
       }
     })();
+    return () => { cancelled = true; };
   }, [query, user?.id]);
 
   const openMessage = async (sellerId: string) => {
@@ -148,81 +188,253 @@ export default function RiverResults() {
     nav(`/inbox/${data}`);
   };
 
+  const totalCount = topSellers.length + otherSellers.length;
+  const noResults = !loading && totalCount === 0;
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "#fff" }}>
       <SiteHeader />
-      <main className="flex-1 container-page py-12">
-        <div className="surface rounded-lg p-4 mb-8 text-sm text-foreground-muted">
-          River AI matched these experts to your exact need. Sorted by best fit.
+
+      {/* Page header */}
+      <div style={{
+        background: "#fff", padding: "32px 80px", borderBottom: "1px solid #f0f0f0",
+        display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16,
+      }}>
+        <div>
+          <Link to="/" style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "#000", textDecoration: "none", fontSize: 13 }}>
+            <ArrowLeft size={16} />
+            <span>Back</span>
+          </Link>
         </div>
+        <div style={{ textAlign: "center" }}>
+          <div style={{ fontSize: 13, color: "#888" }}>Results for</div>
+          <div style={{ fontSize: 20, fontWeight: 500, color: "#000", marginTop: 2 }}>"{query}"</div>
+        </div>
+        <div style={{ fontSize: 13, color: "#888", textAlign: "right" }}>
+          {loading ? "Searching…" : `${totalCount} expert${totalCount === 1 ? "" : "s"} found`}
+        </div>
+      </div>
 
-        <header className="mb-10">
-          <h1 className="display-md">River found your top matches</h1>
-          {query && <p className="mt-3 text-foreground-muted italic">"{query}"</p>}
-        </header>
-
-        {loading ? (
-          <p className="text-foreground-muted">Searching…</p>
-        ) : sellers.length === 0 ? (
-          <p className="text-foreground-muted">No matching experts found. Try a different query.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {sellers.map((s) => (
-              <div key={s.id} className="surface rounded-lg p-6 flex flex-col">
-                <div className="flex items-start gap-4">
-                  <div className="h-14 w-14 rounded-full overflow-hidden bg-background-subtle shrink-0">
-                    {s.avatar_url ? (
-                      <img src={s.avatar_url} alt={s.full_name || "Expert"} className="h-full w-full object-cover" />
-                    ) : (
-                      <div className="h-full w-full flex items-center justify-center text-foreground-muted text-sm">
-                        {(s.full_name || "?").slice(0, 1)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-heading text-base truncate">{s.full_name || s.username || "Anonymous"}</div>
-                    <div className="mt-1 inline-flex items-center gap-1 mono-tag">
-                      <span>RIVER SCORE</span>
-                      <span className="tabular">{s.riverScore.toFixed(1)}/100</span>
-                    </div>
-                  </div>
-                </div>
-
-                {s.tags.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {s.tags.slice(0, 3).map((t) => (
-                      <span key={t} className="mono-tag">{t}</span>
-                    ))}
-                  </div>
-                )}
-
-                {s.bio && <p className="mt-4 text-sm text-foreground-muted line-clamp-2">{s.bio}</p>}
-
-                <div className="mt-4 flex items-center justify-between text-xs text-foreground-subtle">
-                  <span>
-                    {s.response_time_minutes
-                      ? `Responds in ~${s.response_time_minutes < 60 ? `${s.response_time_minutes}m` : `${Math.round(s.response_time_minutes / 60)}h`}`
-                      : "Response time —"}
-                  </span>
-                  <span>
-                    {s.starting_price ? `From $${(s.starting_price / 100).toFixed(0)}` : "—"}
-                  </span>
-                </div>
-
-                <div className="mt-6 flex gap-2">
-                  <Link to={`/u/${s.username || s.id}`} className="flex-1">
-                    <Button className="w-full" size="sm">View Profile</Button>
-                  </Link>
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => openMessage(s.id)}>
-                    Message
-                  </Button>
-                </div>
-              </div>
-            ))}
+      <main style={{ flex: 1 }}>
+        {noResults ? (
+          <div style={{ background: "#fff", padding: "96px 80px", textAlign: "center" }}>
+            <div style={{
+              width: 64, height: 64, borderRadius: 999, background: "#f5f5f5",
+              display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 20,
+            }}>
+              <SearchIcon size={26} color="#999" />
+            </div>
+            <div style={{ fontSize: 20, fontWeight: 500, color: "#000" }}>No experts found for this search</div>
+            <div style={{ fontSize: 14, color: "#888", marginTop: 6 }}>Try different keywords or browse all experts</div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 10, marginTop: 24 }}>
+              <Link to="/" style={pillBtn(false)}>Try Another Search</Link>
+              <Link to="/browse" style={pillBtn(true)}>Browse All Experts</Link>
+            </div>
           </div>
+        ) : (
+          <>
+            {/* SECTION 1 */}
+            <section style={{ background: "#0a0a0a", padding: "48px 80px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                  <span style={{
+                    width: 14, height: 14, borderRadius: 999,
+                    background: "linear-gradient(135deg,#7F77DD,#a78bfa)", display: "inline-block",
+                  }} />
+                  <span style={{ fontSize: 13, color: "#fff", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                    River's top 15 matches
+                  </span>
+                </div>
+                <div style={{ fontSize: 11, color: "#444" }}>Ranked by River Score + skill match</div>
+              </div>
+
+              {topSellers.length === 0 ? (
+                <div style={{ color: "#fff", fontSize: 14, textAlign: "center", padding: 32 }}>
+                  River is still learning this category — browse all experts below
+                </div>
+              ) : (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
+                  {topSellers.map((s) => {
+                    const badge = s.matchedSkills >= 3
+                      ? { label: "Perfect match", bg: "rgba(34,197,94,0.15)", color: "#4ade80" }
+                      : s.matchedSkills === 2
+                      ? { label: "Strong match", bg: "rgba(59,130,246,0.15)", color: "#60a5fa" }
+                      : { label: "Good match", bg: "rgba(255,255,255,0.06)", color: "#aaa" };
+                    const tagsToShow = s.allTags.slice(0, 3);
+                    return (
+                      <div key={s.id} style={{
+                        background: "#111", border: "0.5px solid #1e1e1e", borderRadius: 16, padding: 20,
+                        display: "flex", flexDirection: "column",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                          <div style={{ fontSize: 32, fontWeight: 500, color: "#fff", lineHeight: 1 }}>
+                            {Math.round(s.riverScore)}
+                          </div>
+                          <span style={{
+                            background: badge.bg, color: badge.color, fontSize: 11, fontWeight: 500,
+                            padding: "4px 10px", borderRadius: 999,
+                          }}>{badge.label}</span>
+                        </div>
+
+                        <div style={{ fontSize: 15, fontWeight: 500, color: "#fff", marginTop: 16, marginBottom: 4 }}>
+                          {s.full_name || s.username || "Anonymous"}
+                        </div>
+                        <div style={{ fontSize: 12, color: "#555", marginBottom: 12 }}>
+                          {s.primary_category || "AI Expert"}
+                        </div>
+
+                        {tagsToShow.length > 0 && (
+                          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+                            {tagsToShow.map((t) => (
+                              <span key={t} style={{
+                                background: "#1a1a1a", border: "0.5px solid #222", borderRadius: 999,
+                                padding: "4px 10px", fontSize: 11,
+                                color: s.matchedTags.has(t) ? "#fff" : "#444",
+                              }}>{t}</span>
+                            ))}
+                          </div>
+                        )}
+
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12, color: "#555", flexWrap: "wrap" }}>
+                          <Stars rating={Number(s.average_rating) || 0} count={s.total_reviews || 0} />
+                          <span style={{ color: "#333" }}>·</span>
+                          <span>{s.response_time_minutes ? `~${s.response_time_minutes < 60 ? `${s.response_time_minutes}m` : `${Math.round(s.response_time_minutes / 60)}h`}` : "—"}</span>
+                          <span style={{ color: "#333" }}>·</span>
+                          <span style={{ color: "#fff", fontWeight: 500 }}>{s.startingPrice ? `From ${fmtPrice(s.startingPrice)}` : "—"}</span>
+                        </div>
+
+                        <div style={{
+                          marginTop: 16, paddingTop: 12, borderTop: "0.5px solid #1a1a1a",
+                          display: "flex", gap: 8,
+                        }}>
+                          <Link to={`/u/${s.username || s.id}`} style={{
+                            flex: 1, textAlign: "center",
+                            background: "transparent", color: "#fff",
+                            border: "1px solid #fff", borderRadius: 999,
+                            padding: "6px 14px", fontSize: 12, textDecoration: "none",
+                          }}>View Profile</Link>
+                          <button onClick={() => openMessage(s.id)} style={{
+                            flex: 1, background: "#fff", color: "#000", border: "none",
+                            borderRadius: 999, padding: "6px 14px", fontSize: 12, fontWeight: 500, cursor: "pointer",
+                          }}>Get a Pitch</button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+
+            {/* SECTION 2 */}
+            <section style={{ background: "#fff", padding: "48px 80px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
+                <span style={{ fontSize: 13, color: "#999", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  More experts for this search
+                </span>
+                <span style={{ fontSize: 11, color: "#bbb" }}>Sorted by rating — highest first</span>
+              </div>
+
+              {otherSellers.length === 0 ? (
+                <div style={{ fontSize: 14, color: "#888", textAlign: "center", padding: 32 }}>
+                  No additional experts for this search.
+                </div>
+              ) : (
+                <>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: 16 }}>
+                    {otherSellers.slice(0, visibleOther).map((s) => {
+                      const tagsToShow = s.allTags.slice(0, 3);
+                      return (
+                        <div key={s.id} style={{
+                          background: "#fff", border: "0.5px solid #e5e5e5", borderRadius: 16, padding: 20,
+                          display: "flex", flexDirection: "column",
+                        }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                            <div style={{ width: 44, height: 44, borderRadius: 999, overflow: "hidden", background: "#f3f4f6", flexShrink: 0 }}>
+                              {s.avatar_url ? (
+                                <img src={s.avatar_url} alt={s.full_name || ""} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                              ) : (
+                                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 14 }}>
+                                  {(s.full_name || s.username || "?").slice(0, 1).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontSize: 14, fontWeight: 500, color: "#000" }}>{s.full_name || s.username || "Anonymous"}</div>
+                              <div style={{ marginTop: 2 }}>
+                                <Stars rating={Number(s.average_rating) || 0} count={s.total_reviews || 0} />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{
+                            marginTop: 12, fontSize: 12, color: "#666", lineHeight: 1.5,
+                            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical",
+                            overflow: "hidden", marginBottom: 10,
+                          }}>
+                            {s.bio || s.primary_category || ""}
+                          </div>
+
+                          {tagsToShow.length > 0 && (
+                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
+                              {tagsToShow.map((t) => (
+                                <span key={t} style={{
+                                  background: "#f3f4f6", color: "#555", borderRadius: 999,
+                                  padding: "3px 9px", fontSize: 11,
+                                }}>{t}</span>
+                              ))}
+                            </div>
+                          )}
+
+                          <div style={{
+                            marginTop: "auto", paddingTop: 10, borderTop: "0.5px solid #f0f0f0",
+                            display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, flexWrap: "wrap",
+                          }}>
+                            <span style={{ fontSize: 12, color: "#000", fontWeight: 500 }}>
+                              {s.startingPrice ? `From ${fmtPrice(s.startingPrice)}` : "—"}
+                            </span>
+                            <span style={{ fontSize: 12, color: "#888" }}>
+                              {s.response_time_minutes ? `~${s.response_time_minutes < 60 ? `${s.response_time_minutes}m` : `${Math.round(s.response_time_minutes / 60)}h`}` : ""}
+                            </span>
+                            <div style={{ display: "flex", gap: 6 }}>
+                              <Link to={`/u/${s.username || s.id}`} style={{
+                                background: "transparent", color: "#000",
+                                border: "1px solid #d4d4d4", borderRadius: 999,
+                                padding: "6px 12px", fontSize: 12, textDecoration: "none",
+                              }}>View Profile</Link>
+                              <button onClick={() => openMessage(s.id)} style={{
+                                background: "transparent", color: "#000",
+                                border: "1px solid #d4d4d4", borderRadius: 999,
+                                padding: "6px 12px", fontSize: 12, cursor: "pointer",
+                              }}>Message</button>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {visibleOther < otherSellers.length && (
+                    <div style={{ display: "flex", justifyContent: "center", marginTop: 24 }}>
+                      <button onClick={() => setVisibleOther((v) => v + 24)} style={{
+                        background: "transparent", color: "#000", border: "1px solid #d4d4d4",
+                        borderRadius: 999, padding: "10px 24px", fontSize: 13, cursor: "pointer",
+                      }}>Load More</button>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          </>
         )}
       </main>
+
       <SiteFooter />
     </div>
   );
+}
+
+function pillBtn(filled: boolean): React.CSSProperties {
+  return filled
+    ? { background: "#000", color: "#fff", border: "none", borderRadius: 999, padding: "10px 22px", fontSize: 13, textDecoration: "none" }
+    : { background: "transparent", color: "#000", border: "1px solid #d4d4d4", borderRadius: 999, padding: "10px 22px", fontSize: 13, textDecoration: "none" };
 }
