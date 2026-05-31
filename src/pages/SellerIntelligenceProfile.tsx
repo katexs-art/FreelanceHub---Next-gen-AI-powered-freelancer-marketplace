@@ -7,6 +7,7 @@ import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, Check, X } from "lucide-react";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
+import { toast } from "sonner";
 
 interface Profile {
   id: string;
