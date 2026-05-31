@@ -1,5 +1,5 @@
 import { useState, forwardRef, InputHTMLAttributes } from "react";
-import { Eye, EyeOff, Lock } from "lucide-react";
+import { Eye, EyeOff, Lock, Shield, Check } from "lucide-react";
 
 export const KxField = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement> & { label: string }>(
   ({ label, id, ...props }, ref) => {
@@ -8,16 +8,11 @@ export const KxField = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInpu
       <div>
         <label
           htmlFor={inputId}
-          style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#333", marginBottom: 6 }}
+          style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#444", marginBottom: 6 }}
         >
           {label}
         </label>
-        <input
-          ref={ref}
-          id={inputId}
-          {...props}
-          className={"kx-input " + (props.className || "")}
-        />
+        <input ref={ref} id={inputId} {...props} className={"kx-input " + (props.className || "")} />
       </div>
     );
   }
@@ -40,7 +35,9 @@ export function KxPassword({
   const [show, setShow] = useState(false);
   return (
     <div>
-      <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#333", marginBottom: 6 }}>{label}</label>
+      <label style={{ display: "block", fontSize: 13, fontWeight: 500, color: "#444", marginBottom: 6 }}>
+        {label}
+      </label>
       <div style={{ position: "relative" }}>
         <input
           type={show ? "text" : "password"}
@@ -55,19 +52,7 @@ export function KxPassword({
           type="button"
           onClick={() => setShow((s) => !s)}
           aria-label={show ? "Hide password" : "Show password"}
-          style={{
-            position: "absolute",
-            right: 12,
-            top: 0,
-            bottom: 0,
-            display: "flex",
-            alignItems: "center",
-            background: "transparent",
-            border: 0,
-            color: "#bbb",
-            cursor: "pointer",
-            padding: 0,
-          }}
+          className="kx-eye-btn"
         >
           {show ? <EyeOff size={18} /> : <Eye size={18} />}
         </button>
@@ -92,9 +77,9 @@ export function KxGoogleButton({ onClick }: { onClick: () => void }) {
 
 export function KxDivider() {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
       <div style={{ flex: 1, height: 1, background: "#e5e5e5" }} />
-      <span style={{ color: "#bbb", fontSize: 12, letterSpacing: "0.1em" }}>OR</span>
+      <span style={{ color: "#bbb", fontSize: 12, padding: "0 12px" }}>OR</span>
       <div style={{ flex: 1, height: 1, background: "#e5e5e5" }} />
     </div>
   );
@@ -102,36 +87,55 @@ export function KxDivider() {
 
 export function KxSubmit({
   loading,
+  tone = "black",
   children,
 }: {
   loading?: boolean;
+  tone?: "black" | "green";
   children: React.ReactNode;
 }) {
   return (
-    <button type="submit" disabled={loading} className="kx-submit-btn">
+    <button
+      type="submit"
+      disabled={loading}
+      className={`kx-submit-btn ${tone === "green" ? "kx-submit-green" : "kx-submit-black"}`}
+    >
       <span>{children}</span>
       <span aria-hidden="true" style={{ marginLeft: 8 }}>→</span>
     </button>
   );
 }
 
-export function KxTrustLine() {
+export function KxTrustBadges() {
+  const badges = [
+    { Icon: Lock, label: "Secure signup" },
+    { Icon: Shield, label: "No spam" },
+    { Icon: Check, label: "Free forever" },
+  ];
   return (
     <div
       style={{
-        marginTop: 12,
+        marginTop: 16,
         display: "flex",
-        alignItems: "center",
         justifyContent: "center",
-        gap: 6,
-        fontSize: 12,
-        color: "#bbb",
+        alignItems: "center",
+        gap: 16,
+        flexWrap: "wrap",
       }}
     >
-      <Lock size={12} />
-      <span>Your data is secure and encrypted</span>
+      {badges.map(({ Icon, label }) => (
+        <div key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#bbb" }}>
+          <Icon size={12} />
+          <span>{label}</span>
+        </div>
+      ))}
     </div>
   );
+}
+
+/** Backwards-compat alias (was used by previous design) */
+export function KxTrustLine() {
+  return <KxTrustBadges />;
 }
 
 /** Global styles for kx auth controls — injected once */
@@ -140,26 +144,43 @@ export function KxAuthStyles() {
     <style>{`
       .kx-input {
         width: 100%;
-        background: #fff;
-        border: 1px solid #e5e5e5;
-        border-radius: 12px;
+        background: #fafafa;
+        border: 1.5px solid #e5e5e5;
+        border-radius: 14px;
         height: 52px;
         padding: 0 16px;
         font-size: 15px;
         color: #000;
         outline: none;
-        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+        transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+        box-sizing: border-box;
       }
       .kx-input::placeholder { color: #bbb; }
       .kx-input:focus {
         border-color: #000;
-        box-shadow: 0 0 0 3px rgba(0,0,0,0.06);
+        background: #fff;
+        box-shadow: 0 0 0 4px rgba(0,0,0,0.06);
       }
+      .kx-eye-btn {
+        position: absolute;
+        right: 12px;
+        top: 0;
+        bottom: 0;
+        display: flex;
+        align-items: center;
+        background: transparent;
+        border: 0;
+        color: #bbb;
+        cursor: pointer;
+        padding: 0;
+        transition: color 0.2s ease;
+      }
+      .kx-eye-btn:hover { color: #000; }
       .kx-google-btn {
         width: 100%;
-        height: 48px;
-        border: 1px solid #e5e5e5;
-        border-radius: 12px;
+        height: 52px;
+        border: 1.5px solid #e5e5e5;
+        border-radius: 14px;
         background: #fff;
         color: #333;
         font-size: 14px;
@@ -169,45 +190,60 @@ export function KxAuthStyles() {
         justify-content: center;
         gap: 10px;
         cursor: pointer;
-        transition: background 0.2s ease;
+        margin-top: 20px;
+        transition: background 0.2s ease, border-color 0.2s ease;
       }
-      .kx-google-btn:hover { background: #f8f8f8; }
+      .kx-google-btn:hover { background: #f8f8f8; border-color: #ccc; }
       .kx-submit-btn {
         width: 100%;
         height: 52px;
-        background: #000;
         color: #fff;
         border: 0;
-        border-radius: 12px;
+        border-radius: 14px;
         font-size: 15px;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
+        margin-top: 24px;
         transition: background 0.2s ease;
       }
-      .kx-submit-btn:hover { background: #111; }
+      .kx-submit-black { background: #000; }
+      .kx-submit-black:hover { background: #111; }
+      .kx-submit-green { background: #22c55e; }
+      .kx-submit-green:hover { background: #16a34a; }
       .kx-submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
       .kx-toggle {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        gap: 4px;
+        gap: 0;
         padding: 4px;
-        border: 1px solid #e5e5e5;
         border-radius: 999px;
-        background: #fff;
+        background: #f5f5f5;
       }
       .kx-toggle button {
-        height: 40px;
+        height: 44px;
         border-radius: 999px;
         font-size: 14px;
         font-weight: 500;
         cursor: pointer;
-        transition: background 0.15s ease, color 0.15s ease;
+        border: 0;
+        background: transparent;
+        color: #888;
+        transition: all 0.2s ease;
       }
-      .kx-toggle .on { background: #000; color: #fff; border: 0; }
-      .kx-toggle .off { background: #fff; color: #333; border: 1px solid #e5e5e5; }
+      .kx-toggle .on-black {
+        background: #000;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      }
+      .kx-toggle .on-green {
+        background: #22c55e;
+        color: #fff;
+        box-shadow: 0 2px 8px rgba(34,197,94,0.3);
+      }
     `}</style>
   );
 }
