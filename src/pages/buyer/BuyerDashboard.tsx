@@ -108,16 +108,16 @@ export default function BuyerDashboard() {
 
         <div className="grid grid-cols-3 border-hairline divide-x divide-white/[0.08]">
           <div className="p-6">
-            <Eyebrow>Active</Eyebrow>
-            <div className="mt-2 font-mono tabular-nums text-3xl">{stats.active}</div>
+            <Eyebrow className="text-primary">Active</Eyebrow>
+            <div className="mt-2 font-mono tabular-nums text-3xl text-primary">{stats.active}</div>
           </div>
           <div className="p-6">
-            <Eyebrow>Completed</Eyebrow>
-            <div className="mt-2 font-mono tabular-nums text-3xl">{stats.completed}</div>
+            <Eyebrow className="text-primary">Completed</Eyebrow>
+            <div className="mt-2 font-mono tabular-nums text-3xl text-primary">{stats.completed}</div>
           </div>
           <div className="p-6">
-            <Eyebrow>Lifetime spend</Eyebrow>
-            <div className="mt-2 font-mono tabular-nums text-3xl">${stats.spent}</div>
+            <Eyebrow className="text-primary">Lifetime spend</Eyebrow>
+            <div className="mt-2 font-mono tabular-nums text-3xl text-primary">${stats.spent}</div>
           </div>
         </div>
 
