@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Package, ShoppingBag, Wallet, MessageSquare,
-  Settings, ShoppingCart, Search, LogOut, Plus, Heart, BadgeCheck, BarChart3,
+  Settings, ShoppingCart, Search, LogOut, Plus, Bookmark, BadgeCheck, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
