@@ -1181,7 +1181,7 @@ function RiverTopCard({ item, onPitch }: { item: RiverItem; onPitch: () => void 
             transition: "all 0.2s",
           }}
         >
-          Get a Pitch
+          See Profile
         </button>
       </div>
     </div>

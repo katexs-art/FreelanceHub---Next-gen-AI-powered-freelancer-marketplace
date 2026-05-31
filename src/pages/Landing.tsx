@@ -329,7 +329,7 @@ export default function Landing() {
                         View Profile
                       </Link>
                       <Link to={`/inbox?to=${s.id}`} style={{ flex: 1, textAlign: "center", background: "#fff", color: "#000", border: "none", fontSize: 12, fontWeight: 600, padding: "8px 18px", borderRadius: 999, textDecoration: "none" }}>
-                        Get a Pitch
+                        See Profile
                       </Link>
                     </div>
                   </div>

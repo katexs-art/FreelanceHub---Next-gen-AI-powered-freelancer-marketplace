@@ -445,7 +445,7 @@ export default function Services() {
                     transition: "all 0.2s ease",
                   }}
                 >
-                  Get a Pitch
+                  See Profile
                 </Link>
               </div>
             ))}
