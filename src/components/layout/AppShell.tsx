@@ -28,7 +28,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { to: "/buyer/dashboard", icon: LayoutDashboard, label: "HQ" },
     { to: "/buyer/orders", icon: ShoppingCart, label: "Projects" },
     { to: "/saved", icon: Bookmark, label: "Saved" },
-    { to: "/explore", icon: Search, label: "Find experts" },
+    { to: "/services", icon: Search, label: "Find experts" },
   ];
   const links = isSeller ? sellerLinks : buyerLinks;
   const shared = [
