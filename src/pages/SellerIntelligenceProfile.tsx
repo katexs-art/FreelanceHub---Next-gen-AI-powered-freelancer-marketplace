@@ -6,6 +6,7 @@ import { ProfileReviewsSection } from "@/components/marketplace/ProfileReviewsSe
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, Check, X } from "lucide-react";
+import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 interface Profile {
   id: string;
@@ -296,10 +297,17 @@ export default function SellerIntelligenceProfile() {
                     {skillTags[0] ? `${skillTags[0]} specialist` : (tools[0] ? `${tools[0]} expert` : "Independent professional")}
                   </p>
                   <div className="flex flex-wrap gap-2 mt-3">
-                    <span className="inline-flex items-center"
-                      style={{ background: "#000", color: "#fff", padding: "6px 12px", borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
-                      River Score: {Math.round(seller.river_score ?? 0)}
-                    </span>
+                    {(() => {
+                      const txt = riverScoreText(seller.river_score, { reviews: seller.total_reviews, orders: stats.totalCompleted, digits: 0 });
+                      return txt ? (
+                        <span className="inline-flex items-center"
+                          style={{ background: "#000", color: "#fff", padding: "6px 12px", borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
+                          River Score: {txt}
+                        </span>
+                      ) : (
+                        <RiverNewPill surface="light" style={{ padding: "6px 12px", fontSize: 12 }} />
+                      );
+                    })()}
                     <span className="inline-flex items-center"
                       style={{ background: "#f5f5f5", color: "#333", padding: "6px 12px", borderRadius: 999, fontSize: 12, fontWeight: 600 }}>
                       {levelFromScore(seller.river_score)}
@@ -463,7 +471,12 @@ export default function SellerIntelligenceProfile() {
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-sm font-semibold truncate">{s.full_name ?? s.username}</div>
-                          <div className="text-xs truncate" style={{ color: "#999" }}>River Score {Math.round(s.river_score ?? 0)}</div>
+                          <div className="text-xs truncate" style={{ color: "#555" }}>
+                            {(() => {
+                              const txt = riverScoreText(s.river_score, { reviews: s.total_reviews, digits: 0 });
+                              return txt ? `River Score ${txt}` : "New Expert";
+                            })()}
+                          </div>
                         </div>
                       </Link>
                     ))}

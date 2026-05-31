@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,7 +25,10 @@ const SellerDashboard = lazy(() => import("./pages/seller/SellerDashboard"));
 const MyGigs = lazy(() => import("./pages/seller/MyGigs"));
 const GigEditor = lazy(() => import("./pages/seller/GigEditor"));
 const Explore = lazy(() => import("./pages/Explore"));
-const Browse = lazy(() => import("./pages/Browse"));
+function BrowseRedirect() {
+  const loc = useLocation();
+  return <Navigate to={`/services${loc.search}${loc.hash}`} replace />;
+}
 const Services = lazy(() => import("./pages/Services"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Search = lazy(() => import("./pages/Search"));
@@ -83,7 +86,7 @@ const App = () => (
 
             {/* Public marketplace */}
             <Route path="/explore" element={<Explore />} />
-            <Route path="/browse" element={<Browse />} />
+            <Route path="/browse" element={<BrowseRedirect />} />
             <Route path="/services" element={<Services />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/search" element={<Search />} />

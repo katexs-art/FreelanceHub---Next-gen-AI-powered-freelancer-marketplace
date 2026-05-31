@@ -17,7 +17,7 @@ export function SiteFooter() {
         </div>
 
         {[
-          { h: "CATALOG", items: [["Browse", "/explore"], ["Categories", "/explore"], ["AI services", "/explore"]] },
+          { h: "CATALOG", items: [["Find Experts", "/services"], ["Categories", "/services"], ["AI services", "/services"]] },
           { h: "SELLERS", items: [["Become a expert", "/become-a-seller"], ["Expert dashboard", "/seller/dashboard"], ["Earnings", "/seller/earnings"]] },
           { h: "COMPANY", items: [["About", "/about"], ["Trust & safety", "/trust"], ["Terms", "/terms"], ["Privacy", "/privacy"]] },
         ].map((col) => (

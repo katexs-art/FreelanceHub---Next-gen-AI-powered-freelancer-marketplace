@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SEO } from "@/components/SEO";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 
 const VIDEO_URL =
@@ -171,7 +172,7 @@ export default function Landing() {
           </p>
 
           <form
-            onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/browse?q=${encodeURIComponent(q.trim())}`); }}
+            onSubmit={(e) => { e.preventDefault(); if (q.trim()) nav(`/services?q=${encodeURIComponent(q.trim())}`); }}
             style={{
               background: "#fff", borderRadius: 999, overflow: "hidden",
               display: "flex", alignItems: "center", maxWidth: 580, width: "100%",
@@ -278,7 +279,7 @@ export default function Landing() {
       <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
           <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: 0 }}>Top performers this week</h2>
-          <Link to="/explore" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all experts →</Link>
+          <Link to="/services" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all experts →</Link>
         </div>
         <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {sellers.length === 0
@@ -299,31 +300,36 @@ export default function Landing() {
                         </div>
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 15, fontWeight: 500, color: "#fff" }}>{displayName}</div>
-                        {s.river_score != null && (
-                          <span style={{ display: "inline-block", marginTop: 4, background: "#fff", color: "#000", fontSize: 11, padding: "2px 10px", borderRadius: 999 }}>
-                            River Score {s.river_score}
-                          </span>
-                        )}
+                        <div style={{ fontSize: 15, fontWeight: 600, color: "#fff" }}>{displayName}</div>
+                        {(() => {
+                          const txt = riverScoreText(s.river_score, { digits: 1 });
+                          return txt ? (
+                            <span style={{ display: "inline-block", marginTop: 4, background: "#fff", color: "#000", fontSize: 11, padding: "3px 10px", borderRadius: 999, fontWeight: 500 }}>
+                              River Score {txt}
+                            </span>
+                          ) : (
+                            <RiverNewPill surface="dark" style={{ marginTop: 4 }} />
+                          );
+                        })()}
                       </div>
                     </div>
-                    <div style={{ fontSize: 13, color: "#999", lineHeight: 1.5, marginBottom: 12, minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5, marginBottom: 12, minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {s.bio || "AI specialist on Katexs."}
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
                       {(s.seller_skills ?? []).slice(0, 3).map((sk) => (
-                        <span key={sk} style={{ background: "#1a1a1a", color: "#ccc", fontSize: 11, padding: "4px 10px", borderRadius: 999 }}>{sk}</span>
+                        <span key={sk} style={{ background: "#252525", border: "1px solid #333", color: "#cccccc", fontSize: 11, padding: "4px 10px", borderRadius: 999 }}>{sk}</span>
                       ))}
                     </div>
                     {s.startingPrice != null && (
-                      <div style={{ fontSize: 14, fontWeight: 500, color: "#fff", marginBottom: 12 }}>From ${s.startingPrice}</div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#fff", marginBottom: 12 }}>From ${s.startingPrice}</div>
                     )}
                     <div style={{ display: "flex", gap: 8 }}>
-                      <Link to={`/seller/${s.username ?? s.id}`} style={{ flex: 1, textAlign: "center", background: "#fff", color: "#000", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
+                      <Link to={`/seller/${s.username ?? s.id}`} style={{ flex: 1, textAlign: "center", background: "transparent", color: "#fff", border: "1px solid #444", fontSize: 12, fontWeight: 500, padding: "8px 18px", borderRadius: 999, textDecoration: "none" }}>
                         View Profile
                       </Link>
-                      <Link to={`/inbox?to=${s.id}`} style={{ flex: 1, textAlign: "center", background: "transparent", color: "#fff", border: "1px solid #fff", fontSize: 13, fontWeight: 500, padding: "10px 12px", borderRadius: 8, textDecoration: "none" }}>
-                        Message
+                      <Link to={`/inbox?to=${s.id}`} style={{ flex: 1, textAlign: "center", background: "#fff", color: "#000", border: "none", fontSize: 12, fontWeight: 600, padding: "8px 18px", borderRadius: 999, textDecoration: "none" }}>
+                        Get a Pitch
                       </Link>
                     </div>
                   </div>
@@ -343,7 +349,7 @@ export default function Landing() {
             <div key={s.n}>
               <div style={{ fontSize: 72, fontWeight: 500, color: "#222", lineHeight: 1 }}>{s.n}</div>
               <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
-              <div style={{ fontSize: 14, color: "#666", lineHeight: 1.6 }}>{s.d}</div>
+              <div style={{ fontSize: 14, color: "#888", lineHeight: 1.6 }}>{s.d}</div>
             </div>
           ))}
         </div>
@@ -372,7 +378,7 @@ export default function Landing() {
         <h2 style={{ fontSize: 52, fontWeight: 500, color: "#fff", maxWidth: 600, margin: "0 auto 20px", lineHeight: 1.1 }}>
           Stop searching. Tell River.
         </h2>
-        <p style={{ fontSize: 18, color: "#666", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 18, color: "#888", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
           The best AI experts are waiting. Describe your project and get matched in seconds.
         </p>
         <Link
@@ -391,23 +397,22 @@ export default function Landing() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 32 }}>
           <div>
             <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, letterSpacing: "0.1em", marginBottom: 12 }}>KATEXS</div>
-            <div style={{ fontSize: 14, color: "#555", maxWidth: 320 }}>
+            <div style={{ fontSize: 14, color: "#888", maxWidth: 320 }}>
               The world's first AI-native freelance marketplace
             </div>
           </div>
           <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-            <Link to="/explore" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Browse</Link>
-            <Link to="/services" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Services</Link>
+            <Link to="/services" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Find Experts</Link>
             <Link to="/projects" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Projects</Link>
             <Link to="/about" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>About</Link>
             <Link to="/trust" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Contact</Link>
           </div>
         </div>
         <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ fontSize: 12, color: "#444" }}>© 2026 Katexs. All rights reserved.</div>
+          <div style={{ fontSize: 12, color: "#888" }}>© 2026 Katexs. All rights reserved.</div>
           <div style={{ display: "flex", gap: 24 }}>
-            <Link to="/privacy" style={{ fontSize: 12, color: "#444", textDecoration: "none" }}>Privacy Policy</Link>
-            <Link to="/terms" style={{ fontSize: 12, color: "#444", textDecoration: "none" }}>Terms of Service</Link>
+            <Link to="/privacy" style={{ fontSize: 12, color: "#888", textDecoration: "none" }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ fontSize: 12, color: "#888", textDecoration: "none" }}>Terms of Service</Link>
           </div>
         </div>
       </footer>
