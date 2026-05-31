@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Heart } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -30,8 +30,8 @@ export function SaveGigButton({ gigId, className }: { gigId: string; className?:
 
   return (
     <button onClick={toggle} aria-label={saved ? "Unsave gig" : "Save gig"}
-      className={cn("w-8 h-8 rounded-full bg-background/90 border border-border flex items-center justify-center hover:bg-background", className)}>
-      <Heart className={cn("h-4 w-4", saved && "fill-destructive text-destructive")} />
+      className={cn("w-8 h-8 rounded-full bg-background/90 border border-border flex items-center justify-center hover:bg-background group", className)}>
+      <Bookmark className={cn("h-4 w-4 transition-colors", saved ? "fill-current" : "group-hover:fill-current")} />
     </button>
   );
 }
