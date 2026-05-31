@@ -131,10 +131,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
             <Link to="/post-job" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Post a Project</Link>
           )}
           {user && (
-            <>
-              <Link to="/inbox" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Messages</Link>
-              <Link to="/buyer/orders" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Projects</Link>
-            </>
+            <Link to="/inbox" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Messages</Link>
           )}
         </nav>
 
