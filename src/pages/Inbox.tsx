@@ -525,10 +525,9 @@ export default function Inbox() {
                         style={{
                           display: "inline-block",
                           fontSize: 11,
-                          color: "#AAAAAA",
-                          background: "#FFFFFF",
-                          border: "1px solid #EBEBEB",
-                          padding: "4px 12px",
+                          color: "#888888",
+                          background: "#F0F0F0",
+                          padding: "3px 12px",
                           borderRadius: 999,
                         }}
                       >
