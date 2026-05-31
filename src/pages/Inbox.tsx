@@ -749,6 +749,13 @@ export default function Inbox() {
             </>
           )}
         </section>
+        {active && active.other && user && (
+          <ConversationDetailsPanel
+            otherUser={active.other}
+            conversationId={active.id}
+            currentUserId={user.id}
+          />
+        )}
       </div>
     </AppShell>
   );
