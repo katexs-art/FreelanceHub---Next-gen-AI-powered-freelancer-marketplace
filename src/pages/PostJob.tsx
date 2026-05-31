@@ -57,7 +57,11 @@ export default function PostJob() {
   const { data: categories } = useCategories();
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
-  const [category, setCategory] = useState("");
+  const [categoryText, setCategoryText] = useState("");
+  const [categorySlug, setCategorySlug] = useState("");
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [categoryHover, setCategoryHover] = useState<string | null>(null);
+  const categoryWrapRef = useRef<HTMLDivElement>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [min, setMin] = useState("");
