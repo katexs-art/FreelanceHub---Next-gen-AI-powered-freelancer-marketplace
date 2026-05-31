@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { TestModeBanner } from "@/components/layout/TestModeBanner";
+
 import { lazy, Suspense } from "react";
 
 const Loading = () => (
@@ -51,7 +51,7 @@ const LeaveReviewPage = lazy(() => import("./pages/orders/LeaveReviewPage"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const Earnings = lazy(() => import("./pages/seller/Earnings"));
 const Admin = lazy(() => import("./pages/admin/Admin"));
-const TestMode = lazy(() => import("./pages/admin/TestMode"));
+
 const AdminLogin = lazy(() => import("./pages/admin/AdminLogin"));
 
 const RiverOps = lazy(() => import("./pages/admin/RiverOps"));
@@ -71,7 +71,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <TestModeBanner />
+        
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -133,7 +133,7 @@ const App = () => (
             {/* Admin */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/river-ops" element={<ProtectedRoute roles={["admin"]}><RiverOps /></ProtectedRoute>} />
-            <Route path="/admin/test" element={<ProtectedRoute roles={["admin"]}><TestMode /></ProtectedRoute>} />
+            
             <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
             <Route path="/admin/:section" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
 
