@@ -30,73 +30,162 @@ export function GigCard({ gig, promoted }: { gig: GigCardData; promoted?: boolea
   const handleClick = () => {
     if (promoted && gig.promotion_id) trackPromotionEvent(gig.promotion_id, "click");
   };
-  return (
-    <LinkWrap onClick={handleClick} to={`/gig/${gig.id}`}>{renderCard(gig, promoted)}</LinkWrap>
-  );
-}
-
-function LinkWrap({ to, onClick, children }: { to: string; onClick: () => void; children: React.ReactNode }) {
-  return <Link to={to} onClick={onClick} className="group block">{children}</Link>;
-}
-
-function renderCard(gig: GigCardData, promoted?: boolean) {
   const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Expert";
   return (
-    <>
-      <div className="relative aspect-[4/3] overflow-hidden border-hairline bg-background-subtle transition-colors group-hover:border-white/20">
+    <Link
+      to={`/gig/${gig.id}`}
+      onClick={handleClick}
+      className="group block"
+      style={{
+        background: "#1a1a1a",
+        border: "1px solid #333333",
+        borderRadius: 16,
+        overflow: "hidden",
+        textDecoration: "none",
+        color: "#ffffff",
+      }}
+    >
+      <div className="relative aspect-[4/3] overflow-hidden" style={{ background: "#0a0a0a" }}>
         {gig.thumbnail_url ? (
-          <img src={gig.thumbnail_url} alt={gig.title}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]" />
+          <img
+            src={gig.thumbnail_url}
+            alt={gig.title}
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+          />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-foreground-subtle font-mono text-xs uppercase tracking-[0.18em]">
+          <div
+            className="w-full h-full flex items-center justify-center font-mono text-xs uppercase"
+            style={{ color: "#888888", letterSpacing: "0.18em" }}
+          >
             No image
           </div>
         )}
         {Number(gig.average_rating) >= 4.8 && gig.total_reviews >= 10 && (
-          <span className="absolute top-2 left-2 mono-tag bg-background/90 text-foreground">Top Rated</span>
+          <span
+            className="absolute top-2 left-2"
+            style={{
+              background: "rgba(0,0,0,0.7)",
+              color: "#ffffff",
+              border: "1px solid rgba(255,255,255,0.2)",
+              fontSize: 10,
+              fontWeight: 600,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              padding: "4px 8px",
+              borderRadius: 6,
+            }}
+          >
+            Top Rated
+          </span>
         )}
         {promoted && (
-          <span className="absolute bottom-2 left-2 mono-tag bg-foreground text-background border-foreground">Promoted</span>
+          <span
+            className="absolute bottom-2 left-2"
+            style={{
+              background: "#ffffff",
+              color: "#000000",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              padding: "4px 8px",
+              borderRadius: 6,
+            }}
+          >
+            Promoted
+          </span>
         )}
         <SaveGigButton gigId={gig.id} className="absolute top-2 right-2" />
       </div>
-      <div className="mt-4 space-y-2">
-        <div className="flex items-center gap-2">
-          <div className="w-5 h-5 rounded-full bg-background-elevated text-foreground-muted text-[10px] flex items-center justify-center font-mono overflow-hidden border-hairline">
-            {gig.seller?.avatar_url
-              ? <img src={gig.seller.avatar_url} alt="" className="w-full h-full object-cover" />
-              : sellerName[0]?.toUpperCase()}
+      <div style={{ background: "#1a1a1a", padding: 14 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: "50%",
+              overflow: "hidden",
+              background: "#252525",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#ffffff",
+              fontSize: 12,
+              fontWeight: 500,
+            }}
+          >
+            {gig.seller?.avatar_url ? (
+              <img src={gig.seller.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            ) : (
+              sellerName[0]?.toUpperCase()
+            )}
           </div>
-          <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-foreground-muted truncate">{sellerName}</span>
+          <span
+            style={{
+              color: "#ffffff",
+              fontSize: 13,
+              fontWeight: 500,
+              letterSpacing: "0.04em",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {sellerName}
+          </span>
         </div>
-        <p className="text-sm leading-snug line-clamp-2 text-foreground group-hover:text-foreground">
+        <p
+          style={{
+            color: "#dddddd",
+            fontSize: 14,
+            lineHeight: 1.5,
+            fontWeight: 400,
+            margin: "0 0 12px",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+            minHeight: 42,
+          }}
+        >
           {gig.title}
         </p>
-        <div className="flex items-center justify-between pt-2 border-t-hairline">
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid #2a2a2a" }}>
           {gig.total_reviews > 0 ? (
-            <div className="flex items-center gap-1 font-mono text-xs tabular">
-              <Star className="h-3 w-3 fill-foreground text-foreground" />
-              <span>{Number(gig.average_rating).toFixed(1)}</span>
-              <span className="text-foreground-subtle">({gig.total_reviews})</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+              <Star size={13} fill="#f59e0b" color="#f59e0b" />
+              <span style={{ color: "#f59e0b", fontSize: 13, fontWeight: 600 }}>
+                {Number(gig.average_rating).toFixed(1)}
+              </span>
+              <span style={{ color: "#888888", fontSize: 12 }}>({gig.total_reviews})</span>
             </div>
-          ) : <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-foreground-subtle">New</span>}
-          <div className="text-right">
-            <div className="font-mono text-[10px] uppercase tracking-[0.14em] text-foreground-subtle">From</div>
-            <div className="font-mono text-base tabular">${gig.starting_price}</div>
+          ) : (
+            <span style={{ color: "#888888", fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
+              New
+            </span>
+          )}
+          <div style={{ textAlign: "right" }}>
+            <div style={{ color: "#777777", fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+              From
+            </div>
+            <div style={{ color: "#ffffff", fontSize: 18, fontWeight: 700 }}>${gig.starting_price}</div>
           </div>
         </div>
       </div>
-    </>
+    </Link>
   );
 }
 
 export function GigCardSkeleton() {
   return (
-    <div>
-      <div className="aspect-[4/3] skeleton" />
-      <div className="mt-3 h-3 w-1/3 skeleton" />
-      <div className="mt-2 h-4 w-3/4 skeleton" />
-      <div className="mt-2 h-4 w-1/4 skeleton" />
+    <div style={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16, overflow: "hidden" }}>
+      <div className="aspect-[4/3]" style={{ background: "#0a0a0a" }} />
+      <div style={{ padding: 14 }}>
+        <div style={{ height: 12, width: "33%", background: "#252525", borderRadius: 4 }} />
+        <div style={{ marginTop: 10, height: 16, width: "75%", background: "#252525", borderRadius: 4 }} />
+        <div style={{ marginTop: 10, height: 14, width: "25%", background: "#252525", borderRadius: 4 }} />
+      </div>
     </div>
   );
 }

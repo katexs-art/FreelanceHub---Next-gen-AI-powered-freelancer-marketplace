@@ -228,7 +228,7 @@ export default function Landing() {
             </button>
           </form>
           {listening && (
-            <div style={{ marginTop: 8, fontSize: 12, color: "#999", textAlign: "left", maxWidth: 580, width: "100%" }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: "#cccccc", textAlign: "left", maxWidth: 580, width: "100%" }}>
               Listening...
             </div>
           )}
@@ -243,7 +243,7 @@ export default function Landing() {
             {["2,400+ Verified Experts", "$2.1M Paid Out", "3-Day Payments"].map((s, i) => (
               <div key={s} style={{ display: "flex", alignItems: "center" }}>
                 {i > 0 && <div style={{ width: 1, height: 14, background: "rgba(255,255,255,0.15)" }} />}
-                <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", padding: "0 24px" }}>{s}</div>
+                <div style={{ fontSize: 13, color: "#cccccc", padding: "0 24px" }}>{s}</div>
               </div>
             ))}
           </div>
@@ -252,7 +252,7 @@ export default function Landing() {
 
       {/* CATEGORIES */}
       <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
-        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#666", marginBottom: 24 }}>
+        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 24 }}>
           What do you need done?
         </div>
         <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
@@ -262,14 +262,14 @@ export default function Landing() {
               to={`/category/${c.slug}`}
               className="kx-cat-card"
               style={{
-                background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16,
+                background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16,
                 padding: 28, display: "block", textDecoration: "none",
               }}
             >
-              <div style={{ fontSize: 15, fontWeight: 500, color: "#fff", marginBottom: 8 }}>{c.label}</div>
-              <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
-              <div style={{ fontSize: 12, color: "#888" }}>Browse experts</div>
-              <div style={{ fontSize: 14, color: "#fff", marginTop: 16 }}>→</div>
+              <div style={{ fontSize: 15, fontWeight: 600, color: "#ffffff", marginBottom: 8 }}>{c.label}</div>
+              <div style={{ fontSize: 13, color: "#cccccc", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
+              <div style={{ fontSize: 12, color: "#888888" }}>Browse experts</div>
+              <div style={{ fontSize: 14, color: "#ffffff", marginTop: 16 }}>→</div>
             </Link>
           ))}
         </div>
@@ -284,13 +284,13 @@ export default function Landing() {
         <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
           {sellers.length === 0
             ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 24, height: 240 }} />
+                <div key={i} style={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16, padding: 24, height: 240 }} />
               ))
             : sellers.map((s) => {
                 const displayName = s.full_name || s.username || "Expert";
                 const initial = displayName.charAt(0).toUpperCase();
                 return (
-                  <div key={s.id} className="kx-seller-card" style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 24 }}>
+                  <div key={s.id} className="kx-seller-card" style={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16, padding: 24 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
                       {s.avatar_url ? (
                         <img src={s.avatar_url} alt={displayName} style={{ width: 48, height: 48, borderRadius: "50%", objectFit: "cover" }} />
@@ -313,7 +313,7 @@ export default function Landing() {
                         })()}
                       </div>
                     </div>
-                    <div style={{ fontSize: 13, color: "#888", lineHeight: 1.5, marginBottom: 12, minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                    <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.5, marginBottom: 12, minHeight: 42, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                       {s.bio || "AI specialist on Katexs."}
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 16 }}>
@@ -349,7 +349,7 @@ export default function Landing() {
             <div key={s.n}>
               <div style={{ fontSize: 72, fontWeight: 500, color: "#f0f0f0", lineHeight: 1 }}>{s.n}</div>
               <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
-              <div style={{ fontSize: 14, color: "#888", lineHeight: 1.6 }}>{s.d}</div>
+              <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6 }}>{s.d}</div>
             </div>
           ))}
         </div>
@@ -366,7 +366,7 @@ export default function Landing() {
           ].map((s, i) => (
             <div key={s.l} style={{ padding: "0 32px", borderLeft: i === 0 ? "none" : "1px solid #1a1a1a" }}>
               <div style={{ fontSize: 48, fontWeight: 500, color: "#fff", lineHeight: 1.1 }}>{s.v}</div>
-              <div style={{ fontSize: 14, color: "#888", marginTop: 8 }}>{s.l}</div>
+              <div style={{ fontSize: 14, color: "#cccccc", marginTop: 8 }}>{s.l}</div>
             </div>
           ))}
         </div>
@@ -378,7 +378,7 @@ export default function Landing() {
         <h2 style={{ fontSize: 52, fontWeight: 500, color: "#fff", maxWidth: 600, margin: "0 auto 20px", lineHeight: 1.1 }}>
           Stop searching. Tell River.
         </h2>
-        <p style={{ fontSize: 18, color: "#888", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 18, color: "#cccccc", maxWidth: 480, margin: "0 auto 40px", lineHeight: 1.6 }}>
           The best AI experts are waiting. Describe your project and get matched in seconds.
         </p>
         <Link
@@ -397,7 +397,7 @@ export default function Landing() {
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 32 }}>
           <div>
             <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, letterSpacing: "0.1em", marginBottom: 12 }}>KATEXS</div>
-            <div style={{ fontSize: 14, color: "#888", maxWidth: 320 }}>
+            <div style={{ fontSize: 14, color: "#cccccc", maxWidth: 320 }}>
               The world's first AI-native freelance marketplace
             </div>
           </div>
@@ -409,10 +409,10 @@ export default function Landing() {
           </div>
         </div>
         <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ fontSize: 12, color: "#888" }}>© 2026 Katexs. All rights reserved.</div>
+          <div style={{ fontSize: 12, color: "#aaaaaa" }}>© 2026 Katexs. All rights reserved.</div>
           <div style={{ display: "flex", gap: 24 }}>
-            <Link to="/privacy" style={{ fontSize: 12, color: "#888", textDecoration: "none" }}>Privacy Policy</Link>
-            <Link to="/terms" style={{ fontSize: 12, color: "#888", textDecoration: "none" }}>Terms of Service</Link>
+            <Link to="/privacy" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>Privacy Policy</Link>
+            <Link to="/terms" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>Terms of Service</Link>
           </div>
         </div>
       </footer>
