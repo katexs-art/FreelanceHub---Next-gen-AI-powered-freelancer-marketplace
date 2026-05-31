@@ -1,26 +1,36 @@
 ## Goal
-Restyle only the signup and login auth pages per spec. Keep all auth/routing logic untouched.
+Retire `/river-results` and surface River Top 15 + "More experts" sections directly inside `/browse` when a `q` URL param is present. Keep current `/browse` UI untouched when there is no `q`.
 
-## Files to change
-- `src/components/auth/AuthLayout.tsx` — rebuild shell: `#f8f8f8` page bg, branded katexs logo (18px / 600 / letter-spacing 0.08em / `#000` with `#22c55e` 20px dot after the "s"), two-column desktop layout (form left, decorative dark preview right), white form card 480px max-width, `border-radius: 20px`, `padding: 48px`, `box-shadow: 0 4px 32px rgba(0,0,0,0.08)`, heading 28px/600 `#000`, subtitle 14px `#888`, footer link styling (`#888` with `#000` 500 underline-on-hover for "Sign in").
-- `src/pages/auth/Signup.tsx` — restyle inline using spec tokens:
-  - Buyer/Seller toggle: pill container `border: 1px solid #e5e5e5`, `border-radius: 999px`, `padding: 4px`; selected = black bg / white text; unselected = white bg / `#333` / `border: 1px solid #e5e5e5`.
-  - Google button: 48px height, `border: 1px solid #e5e5e5`, radius 12px, 14px/500 `#333`, white bg, hover `#f8f8f8`, 0.2s, with Google `<svg>` logo on left (reuse Login's svg).
-  - OR divider: `#e5e5e5` lines, "OR" text `#bbb` 12px.
-  - Inputs (Full name, Email, Password, Username): replace shadcn `Input` with native `<input>` styled — white bg, `1px solid #e5e5e5`, radius 12px, 52px height, padding `0 16px`, 15px `#000`, placeholder `#bbb`, focus → border `#000` + `box-shadow: 0 0 0 3px rgba(0,0,0,0.06)`. Labels 13px/500 `#333`, mb 6px.
-  - Password field: wrapper with eye toggle button on right, `#bbb` icon (lucide `Eye`/`EyeOff`), toggles input type.
-  - Submit button: full-width 52px, `#000`/`#fff`, radius 12px, 15px/600, hover `#111`, transition 0.2s, "Create account →" with arrow.
-  - Trust line under submit: lucide `Lock` 12px + "Your data is secure and encrypted", 12px `#bbb`, centered, mt 12px.
-- `src/pages/auth/Login.tsx` — same Google button, OR divider, input, password-eye, submit-with-arrow, trust line, footer styling.
-- `src/App.tsx` — add `/sign-in` and `/sign-up` route aliases pointing to `Login` / `Signup` (spec mentions both `/login` and `/sign-in`, plus `/sign-up` link in earlier work).
+## Changes
 
-## Decorative right panel (desktop only, in AuthLayout)
-Hidden below `lg`. Card: `#0a0a0a`, radius 20, padding 32, white text.
-- White "katexs." wordmark (Syne 800).
-- White pill on black ring: "River Score 98.9".
-- Three mock expert rows: 32px circle initial + name (white 14/500) + small skill tag (`#1f1f1f` bg, `#aaa` text, 11px).
-- Tagline: "The AI freelance marketplace. Built for what's next." 16px/500 white.
-- Small line: "Join 2,400+ experts and partners" 12px `#888`.
+### 1. Delete RiverResults
+- Delete `src/pages/RiverResults.tsx`.
+- `src/App.tsx`: remove the `RiverResults` lazy import and the `<Route path="/river-results" ...>`.
 
-## Out of scope
-No changes to auth logic, validation, RPC calls, redirects, role handling, terms/privacy copy, or any other page.
+### 2. Re-target every search entrypoint to `/browse?q=...`
+- `src/pages/Landing.tsx` line 174 — River search form: navigate to `/browse?q=...` instead of `/river-results?q=...`.
+- `src/pages/Services.tsx` line 206 — same swap to `/browse?q=...`.
+- `src/components/layout/SiteHeader.tsx` lines 70 and 143 — both nav search forms currently go to `/search?q=...`; change both to `/browse?q=...`.
+
+### 3. `src/pages/Browse.tsx` — render River sections when `q` is present
+Add a parallel data-flow that activates only when `searchParams.get("q")` is non-empty. The existing filter UI, sellers state, and default grid stay unchanged when `q` is empty.
+
+Implementation outline:
+- Read `q` from `useSearchParams`; on mount/change, seed `pendingQuery` and `query` from it so the existing filter pipeline already narrows `filtered`.
+- New component-local `RiverSections` block rendered above the current results bar **only when `q` is non-empty**:
+  - Reuse the existing `sellers` fetch (already includes `bio`, `seller_skills`, primary/secondary category, gig tags, river_score, average_rating, total_reviews).
+  - Token-match against `seller_skills + gigTags + primary/secondary_category + bio + full_name` (case-insensitive, `tokenize` ≥3 chars; if no tokens fall back to substring of full q).
+  - `top15` = matched, sorted by `river_score desc, average_rating desc`, take 15.
+  - `others` = matched minus top15 ids, sorted by `average_rating desc, total_reviews desc`.
+  - Render dark Section 1 (`#0a0a0a`, `48px 80px`), purple-dot header strip, 3-col `repeat(auto-fit, minmax(280px, 1fr))` grid of dark cards.
+  - Render divider strip ("River's picks are above · All matching experts are below", 13px `#999`).
+  - Render Section 2 (white, `48px 80px`) with header row ("More experts for this search" 13px uppercase `#999` left, "Sorted by rating — highest first" 11px `#bbb` right) and white cards.
+  - When `q` is present, hide the existing default "Showing X experts" results bar, category-aware seller grid, and load-more (they're replaced by the two sections). Keep search bar, category pills, quick filters, sort dropdown visible so users can refine.
+- Card components: port `TopCard` and `OtherCard` (and `Stars`, `fmtPrice`, helpers) from RiverResults into Browse.tsx as local components before deleting RiverResults. Use the same dark/white styling already shipped.
+- Reuse existing `openMessage` in Browse for "Get a Pitch" and "Message" buttons (links to `/inbox/{id}`).
+- "View Profile" links to `/u/{username || id}`.
+
+### Out of scope
+- No changes to colors, fonts, images, layout, or behavior of the default `/browse` page when `q` is absent.
+- No changes to other pages or RPCs.
+- Skip the `notify_river_match` RPC call (it was tied to the old page; not in this spec).
