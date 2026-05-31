@@ -60,14 +60,14 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 ml-4">
-            <Link to="/browse" className={linkCls}>Find Experts</Link>
+            <Link to="/services" className={linkCls}>Find Experts</Link>
             <Link to="/post-job" className={linkCls}>Post a Project</Link>
             <Link to="/how-it-works" className={linkCls}>How It Works</Link>
             <Link to="/pricing" className={linkCls}>Pricing</Link>
           </nav>
 
           <form
-            onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/browse?q=${encodeURIComponent(q)}`); }}
+            onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/services?q=${encodeURIComponent(q)}`); }}
             className="flex-1 max-w-md relative hidden lg:block"
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/50" />
@@ -121,8 +121,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1 text-sm">
-          <Link to="/explore" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Browse</Link>
-          <Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Services</Link>
+          <Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Find Experts</Link>
           <Link to="/how-it-works" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">How It Works</Link>
           {profile?.role !== "seller" && (
             <Link to="/become-a-seller" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Sell</Link>
@@ -140,7 +139,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         </nav>
 
         <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/browse?q=${encodeURIComponent(q)}`); }}
+          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/services?q=${encodeURIComponent(q)}`); }}
           className="flex-1 max-w-md relative hidden lg:block"
         >
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground-subtle" />
