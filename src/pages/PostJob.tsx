@@ -267,40 +267,8 @@ export default function PostJob() {
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>Required Skills</label>
-              <input
-                className="pj-input"
-                style={inputStyle}
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={addSkill}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                placeholder="Type a skill and press Enter — example: Voice AI, GoHighLevel, Chatbot"
-              />
-              {skills.length > 0 && (
-                <div className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
-                  {skills.map((s) => (
-                    <button
-                      type="button"
-                      key={s}
-                      onClick={() => setSkills(skills.filter((x) => x !== s))}
-                      style={{
-                        background: "#F7F7F7",
-                        border: "1px solid #EBEBEB",
-                        borderRadius: 12,
-                        padding: "6px 12px",
-                        fontSize: 13,
-                        color: "#0A0A0A",
-                      }}
-                    >
-                      {s} ×
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <SkillsTagInput value={skills} onChange={setSkills} />
+
 
             <div>
               <label style={labelStyle}>Your Budget</label>
