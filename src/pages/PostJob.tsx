@@ -64,7 +64,6 @@ export default function PostJob() {
   const [categoryHover, setCategoryHover] = useState<string | null>(null);
   const categoryWrapRef = useRef<HTMLDivElement>(null);
   const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
   const [min, setMin] = useState("");
   const [max, setMax] = useState("");
   const [deadline, setDeadline] = useState("");
