@@ -243,7 +243,7 @@ export default function LeaveReviewPage() {
           <div className="flex-1 min-w-0">
             <div className="font-semibold">{sellerName}</div>
             <div className="text-xs text-foreground-muted">
-              River Score: {seller?.river_score != null ? Number(seller.river_score).toFixed(1) : "—"}
+              River Score: {(() => { const v = Number(seller?.river_score ?? 0); return v > 0 ? v.toFixed(1) : "New"; })()}
             </div>
           </div>
         </div>
