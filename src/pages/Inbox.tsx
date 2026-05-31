@@ -153,10 +153,17 @@ export default function Inbox() {
     const recipient = active.participant_one === user.id ? active.participant_two : active.participant_one;
     const text = draft;
     setDraft("");
-    const { error } = await supabase.from("messages").insert({
-      conversation_id: active.id, sender_id: user.id, recipient_id: recipient, content: text,
-    });
-    if (error) { toast.error(error.message); setDraft(text); }
+    try {
+      const { data: sess } = await supabase.auth.getUser();
+      if (!sess?.user) throw new Error("Please sign in to send messages");
+      const { error } = await supabase.from("messages").insert({
+        conversation_id: active.id, sender_id: sess.user.id, recipient_id: recipient, content: text,
+      });
+      if (error) throw error;
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send message");
+      setDraft(text);
+    }
   };
 
   const filteredConvs = useMemo(() => {

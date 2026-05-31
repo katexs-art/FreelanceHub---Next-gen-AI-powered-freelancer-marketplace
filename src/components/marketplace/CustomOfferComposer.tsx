@@ -21,19 +21,31 @@ export function CustomOfferComposer({
     const p = Math.round(Number(price) * 100);
     if (!p || p < 500) return toast.error("Minimum offer is $5");
     setBusy(true);
-    const { data: offer, error } = await supabase.from("custom_offers").insert({
-      conversation_id: conversationId, seller_id: sellerId, buyer_id: buyerId,
-      description: desc, price: p, delivery_days: Number(days) || 1, revisions: Number(revs) || 0,
-    }).select("id").single();
-    if (error) { setBusy(false); return toast.error(error.message); }
-    await supabase.from("messages").insert({
-      conversation_id: conversationId, sender_id: sellerId, recipient_id: buyerId,
-      content: `📩 Custom offer: $${(p/100).toFixed(2)} · ${days}d delivery`,
-      custom_offer_id: offer.id,
-    });
-    setBusy(false); setOpen(false); setDesc(""); setPrice("");
-    toast.success("Offer sent");
-    onSent?.();
+    try {
+      const { data: sess } = await supabase.auth.getUser();
+      if (!sess?.user) throw new Error("Please sign in to send an offer");
+
+      const { data: offer, error } = await supabase.from("custom_offers").insert({
+        conversation_id: conversationId, seller_id: sellerId, buyer_id: buyerId,
+        description: desc, price: p, delivery_days: Number(days) || 1, revisions: Number(revs) || 0,
+      }).select("id").single();
+      if (error) throw error;
+
+      const { error: msgErr } = await supabase.from("messages").insert({
+        conversation_id: conversationId, sender_id: sellerId, recipient_id: buyerId,
+        content: `📩 Custom offer: $${(p/100).toFixed(2)} · ${days}d delivery`,
+        custom_offer_id: offer.id,
+      });
+      if (msgErr) throw msgErr;
+
+      setOpen(false); setDesc(""); setPrice("");
+      toast.success("Offer sent");
+      onSent?.();
+    } catch (e: any) {
+      toast.error(e?.message ?? "Could not send offer. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (

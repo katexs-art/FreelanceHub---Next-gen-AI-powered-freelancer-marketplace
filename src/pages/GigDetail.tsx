@@ -298,16 +298,27 @@ export default function GigDetail() {
 
                   <Button className="w-full" size="lg" disabled={!selected}
                     onClick={async () => {
-                      if (!user) return nav("/login");
                       if (!selected) return;
+                      // Always re-verify auth from the live session before creating an order
+                      const { data: sess } = await supabase.auth.getUser();
+                      if (!sess?.user) {
+                        toast.error("Please sign in to continue");
+                        return nav(`/login?redirect=/gig/${gig.id}`);
+                      }
                       toast.loading("Preparing your project…", { id: "co" });
-                      const { data, error } = await supabase.rpc("create_gig_order", {
-                        _package_id: selected.id,
-                        _extra_ids: [],
-                      });
-                      toast.dismiss("co");
-                      if (error || !data) return toast.error(error?.message ?? "Could not create project");
-                      nav(`/checkout/${data}`);
+                      try {
+                        const { data, error } = await supabase.rpc("create_gig_order", {
+                          _package_id: selected.id,
+                          _extra_ids: [],
+                        });
+                        toast.dismiss("co");
+                        if (error) throw error;
+                        if (!data) throw new Error("Could not create project");
+                        nav(`/checkout/${data}`);
+                      } catch (e: any) {
+                        toast.dismiss("co");
+                        toast.error(e?.message ?? "Could not create project. Please try again.");
+                      }
                     }}>
                     Continue (${selected.price})
                   </Button>
