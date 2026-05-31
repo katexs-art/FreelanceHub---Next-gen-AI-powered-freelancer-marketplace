@@ -1,40 +1,93 @@
-## /pricing page + dual-fee model (partner 5% on top, expert 10% deducted)
+# Apply katexs_design.html as the global design system
 
-### 1. New page `src/pages/Pricing.tsx`
-Sections built top-to-bottom, all inline-styled to the exact spec in the brief (no design-token detours, since spec hard-codes hex values):
-- **Hero** — white, 80px pad, label "Transparent pricing", H1 "Simple. Fair. No surprises." (52/500), subtext.
-- **Two cards** — flex row, 24px gap, 900px max. Partner card (black top border, 5% in #000) + Expert card (green top border, 10% in #22c55e). Each: label, heading, subtext, big % display, ✓ feature list (#22c55e check + #333 text), `#f8f8f8` example box, full-width CTA (black → `/sign-up` / green → `/sign-up`).
-- **Comparison table** — single `<table>` inside `border-radius:16px; overflow:hidden` wrapper. Black header row, alternating white / `#fafafa` rows, exact 12 rows from spec.
-- **FAQ** — Radix `Accordion` (single, collapsible) wired with the 6 Q/A pairs verbatim, restyled inline to match (16/500 question, 14/#666 answer).
-- **Bottom CTA** — black bg, 100px pad, H "Start for free today.", two pill buttons → `/services` and `/sign-up`.
-- `<SEO title="Pricing · KATEXS" description="…" />` at top. Wrapped in existing `SiteHeader` + `SiteFooter` so nav stays untouched.
+Goal: make the live site visually match the uploaded design system file exactly, without changing routing, data, or functionality. All changes are in tokens, base styles, and a small number of shared visual components.
 
-### 2. Route wiring (`src/App.tsx`)
-Add `const Pricing = lazy(() => import("./pages/Pricing"))` and `<Route path="/pricing" element={<Pricing />} />`. Header link already points to `/pricing`.
+## What changes
 
-### 3. Fee model update — partner pays +5%, expert keeps 90%
+### 1. Design tokens (`src/index.css`)
+Rewrite `:root` to mirror the design file's exact colors:
 
-**`platform_settings` (supabase--insert):**
-Upsert two rows: `partner_fee = "5"`, `expert_fee = "10"`.
+- `--background` → `#FFFFFF` (light sections)
+- `--background-subtle` → `#F7F7F7` (page canvas / browse sections)
+- `--background-elevated` → `#FFFFFF` (cards on subtle bg)
+- `--background-dark` → `#0A0A0A` (new — for dark sections like River AI)
+- `--foreground` → `#0A0A0A`
+- `--foreground-muted` → `#666`
+- `--foreground-subtle` → `#888` / `#AAA` (two-stop)
+- `--primary` → `#16A34A` green (unchanged in spirit, exact hex pinned)
+- `--border` → `#EBEBEB`
+- `--border-strong` → `#D0D0D0`
+- `--ring` → `#0A0A0A`
+- Status palette pinned to spec: success `#DCFCE7/#16A34A`, warning `#FEF3C7/#D97706`, info `#DBEAFE/#2563EB`, destructive `#FEE2E2/#DC2626`, river `#EDE9FE/#7C3AED`, elite `#0A0A0A/#FFF`.
+- `--radius` → `16px` (cards). Pills stay `999px`.
 
-**`src/pages/Checkout.tsx`** (lines ~180-268):
-- `partnerFee = round(price * 0.05)`
-- `platformFee = round(price * 0.10)` (informational only)
-- `total = price + partnerFee` — this is what the buyer pays.
-- Update Row labels: "Service Fee (5%)" → `$partnerFee`; remove/relabel "Katexs Service Fee (10%)" line so checkout summary shows: Project price, Service fee (5%), Total. (Expert-side fee not shown on partner checkout.)
+### 2. Typography
+Switch global font stack to the design's system stack:
 
-**`supabase/functions/stripe-payment-intent/index.ts`** (line 56) and **`stripe-checkout/index.ts`** (lines 55, 73):
-Charge amount = `(price + round(price*0.05)) * 100` instead of `price * 100`. Apply same +5% to extras line items (or add a single "Service fee" line item — cleaner). Plan: add a dedicated `Service fee (5%)` line item equal to 5% of subtotal so Stripe receipt is itemized.
+```
+-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif
+```
 
-**`supabase/functions/stripe-webhook/index.ts`** (FEE_PCT, lines 13/62/109):
-- Keep `FEE_PCT = 0.10` for the expert-side split (seller earnings = price × 0.90, platform_fee = price × 0.10). `price` recorded on `orders.price` stays the agreed Project price (not the +5% total), so the existing 10% deduction math continues to mean "10% of Project price deducted from expert".
-- No schema change needed — the +5% partner fee is a buyer-side surcharge captured by Stripe and never enters `orders.price`.
+- `font-body`, `font-heading`, `font-sans` all → system stack
+- `font-mono` stays as monospace fallback (still used for `.eyebrow`, keycaps, tabular numbers)
+- Remove `font-feature-settings: "ss01", "cv11"` (JetBrains-specific)
+- Headings: weight 500, tight letter-spacing (already matches)
+- Drop the Google Fonts `<link>` for JetBrains Mono / Work Sans from `index.html`
 
-### 4. Out of scope
-No other page, component, color, layout, or route changes. Nav untouched. Existing `/pricing` (none today) is created fresh — no replacement needed.
+Memory `mem://style/typography` and the Core line in `mem://index.md` will be updated to record the new system-font rule.
 
-### 5. Verification
-- Visit `/pricing` at 1112px — hero, two cards side-by-side, table, accordion expands smoothly, bottom CTA.
-- Create a test order: checkout shows `Service fee (5%)` line; Stripe total = price × 1.05.
-- After webhook completion: `orders.platform_fee = price × 0.10`, `orders.seller_earnings = price × 0.90`.
-- `platform_settings` query returns `partner_fee=5`, `expert_fee=10`.
+### 3. Shared visual components (presentation only — no behavior changes)
+
+Updated to match the design file's exact CSS:
+
+- **`SiteHeader`** — 64px tall, white bg, `#EBEBEB` bottom border, 40px horizontal padding, search bar pill `#F7F7F7` bg, "Join Free" green pill, "Sign In" plain link, nav-link hover bolds.
+- **`CategoryBar` / `CategoryMegaNav`** — 46px row, white bg, items with bottom-border underline on hover/active, chevron `#AAA`.
+- **`GigCard`** (play card) — 16px radius, white bg, `#EBEBEB` border, hover translateY(-2px) + soft shadow, 160px image header, bookmark pill top-right, expert row with uppercase name `#0A0A0A`, two-line title clamp, bottom row with star rating (`#F59E0B`) and "FROM $X" price block.
+- **Expert card (light)** — 16px radius, 52px round avatar with online dot, badge row (River / Elite / New / Pro variants), tag chips `#F5F5F5`, bottom row with "From $X / Delivers in N days" and two pill buttons (outline + black).
+- **Expert card (dark)** — used in River AI sections (`.section-dark`, `#0A0A0A` bg): `#111` card bg, `#2A2A2A` border, big River score number, match badge (Perfect/Strong/Good), dark tag chips, outline + white pill buttons.
+- **Empty state** (`EmptyCategoryState`) — already exists; re-skin to match (white or `#0A0A0A` bg, pill buttons, 12px `#bbb` trust line).
+- **Status badges** — small pill, 11px weight 600: active, pending, in-progress, disputed, late, completed, river, elite, suspended, locked. Replace ad-hoc badge classes in CRM/Admin with these.
+- **Buttons** (`components/ui/button.tsx` variants) — pill (999px), 12×28 padding, weight 600. Variants: `primary` (black `#0A0A0A`), `secondary` (white + 1.5px black border), `green` (`#16A34A`), `destructive` (`#DC2626`), `ghost` (transparent + `#EBEBEB` border).
+
+### 4. Section helpers (`src/index.css` `@layer components`)
+Add reusable classes mirroring the design file so pages can opt in without per-component rewrites:
+
+- `.section-light` (white, 48×40 padding) and `.section-dark` (`#0A0A0A`)
+- `.section-label` / `.section-label-dark` (eyebrow)
+- `.section-heading` / `.section-heading-dark` (28px / weight 500)
+- `.section-sub` / `.section-sub-dark` (14px muted)
+- `.grid-cards-3` / `.grid-cards-4` (responsive grid: 1 col mobile, 2 col tablet, 3/4 col desktop)
+
+### 5. Pages touched (visual reskin only — no logic changes)
+Apply the new tokens/components by replacing class names where needed. No data flow changes, no new routes.
+
+- `Landing`, `Services`, `Browse`, `Explore`, `Search`, `CategoryPage` — section wrappers + grids switch to the new helpers; cards already render through `GigCard`/expert card components.
+- River AI sections on Landing/Browse switch to `.section-dark` + dark expert card.
+- Admin pages adopt the unified status-badge classes (already present in `index.css`, will be aligned to spec).
+
+### 6. Out of scope (explicit)
+- No routing changes
+- No copy/content changes (except where the design file dictates label like "FROM")
+- No backend, RLS, or edge function changes
+- No new pages
+- Functionality, data, images all preserved
+
+## Technical notes
+- All colors stay HSL in `:root` (Lovable design-system rule); the hexes above are converted on write.
+- Existing semantic token names are kept so shadcn components continue to work.
+- The `dark` class is unused in this app (it forces `color-scheme: light`), so the dark sections are scoped via `.section-dark` and the `.expert-card-dark` component — not a global theme toggle.
+- Files expected to change:
+  - `src/index.css` (tokens + section helpers)
+  - `tailwind.config.ts` (font stack, radius scale tweak — `2xl: 16px`)
+  - `index.html` (remove unused Google Fonts link)
+  - `src/components/layout/SiteHeader.tsx`
+  - `src/components/layout/CategoryBar.tsx`, `CategoryMegaNav.tsx`
+  - `src/components/marketplace/GigCard.tsx`
+  - `src/components/marketplace/EmptyCategoryState.tsx`
+  - `src/components/ui/button.tsx` (variant tweaks)
+  - A new `src/components/marketplace/ExpertCard.tsx` (light) and `ExpertCardDark.tsx` if not already split, OR reskin existing usage in `Browse`/`Search`/`SellerProfile` lists.
+  - `mem://index.md` + `mem://style/visual-identity` + `mem://style/typography` updated.
+
+## Acceptance check after build
+- Header, category bar, gig card, expert card, dark River section all render pixel-close to the design file at 1112px viewport.
+- No console errors. No layout regressions on `/`, `/services`, `/browse`, `/explore`, a category page, a gig detail page, and the admin dashboard.
