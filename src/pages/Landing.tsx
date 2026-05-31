@@ -178,7 +178,34 @@ export default function Landing() {
               boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
             }}
           >
-            <Search size={18} color="#999" style={{ marginLeft: 24, flexShrink: 0 }} />
+            <style>{`@keyframes kxMicPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.25); } }`}</style>
+            {voiceSupported && (
+              <button
+                type="button"
+                onClick={startVoice}
+                onMouseEnter={() => setMicHover(true)}
+                onMouseLeave={() => setMicHover(false)}
+                aria-label={listening ? "Listening" : "Voice search"}
+                style={{
+                  marginLeft: 18, marginRight: 2, background: "transparent", border: "none",
+                  cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {listening ? (
+                  <span style={{
+                    display: "inline-block", width: 12, height: 12, borderRadius: 999,
+                    background: "#e11d48", animation: "kxMicPulse 1s ease-in-out infinite",
+                  }} />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={micHover ? "#000" : "#999"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+                    <line x1="12" y1="18" x2="12" y2="22" />
+                  </svg>
+                )}
+              </button>
+            )}
+            <Search size={18} color="#999" style={{ marginLeft: voiceSupported ? 8 : 24, flexShrink: 0 }} />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -199,6 +226,12 @@ export default function Landing() {
               Find My Expert
             </button>
           </form>
+          {listening && (
+            <div style={{ marginTop: 8, fontSize: 12, color: "#999", textAlign: "left", maxWidth: 580, width: "100%" }}>
+              Listening...
+            </div>
+          )}
+
 
           <div
             style={{
