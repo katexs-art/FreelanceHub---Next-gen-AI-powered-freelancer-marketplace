@@ -27,7 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const buyerLinks = [
     { to: "/buyer/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { to: "/buyer/orders", icon: ShoppingCart, label: "My orders" },
-    { to: "/saved", icon: Heart, label: "Saved" },
+    { to: "/saved", icon: Bookmark, label: "Saved" },
     { to: "/explore", icon: Search, label: "Explore" },
   ];
   const links = isSeller ? sellerLinks : buyerLinks;
