@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent, useRef } from "react";
+import { useState, KeyboardEvent, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -57,7 +57,11 @@ export default function PostJob() {
   const { data: categories } = useCategories();
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
-  const [category, setCategory] = useState("");
+  const [categoryText, setCategoryText] = useState("");
+  const [categorySlug, setCategorySlug] = useState("");
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [categoryHover, setCategoryHover] = useState<string | null>(null);
+  const categoryWrapRef = useRef<HTMLDivElement>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [skillInput, setSkillInput] = useState("");
   const [min, setMin] = useState("");
@@ -67,6 +71,28 @@ export default function PostJob() {
   const [visibility, setVisibility] = useState<"open" | "river">("open");
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const categoriesById = useMemo(() => {
+    const m = new Map<string, typeof categories[number]>();
+    categories.forEach((c) => m.set(c.id, c));
+    return m;
+  }, [categories]);
+
+  const categorySuggestions = useMemo(() => {
+    const q = categoryText.trim().toLowerCase();
+    if (!q) return [];
+    return categories.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [categories, categoryText]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (categoryWrapRef.current && !categoryWrapRef.current.contains(e.target as Node)) {
+        setCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   const addSkill = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && skillInput.trim()) {
@@ -103,7 +129,7 @@ export default function PostJob() {
       buyer_id: user.id,
       title: title.trim(),
       description: desc.trim(),
-      category: category || null,
+      category: categorySlug || categoryText.trim() || null,
       skills,
       budget_min: min ? parseInt(min, 10) : null,
       budget_max: max ? parseInt(max, 10) : null,
@@ -171,21 +197,74 @@ export default function PostJob() {
               />
             </div>
 
-            <div>
+            <div ref={categoryWrapRef} style={{ position: "relative" }}>
               <label style={labelStyle}>Service Category</label>
-              <select
+              <input
                 className="pj-input"
-                style={selectStyle}
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                onFocus={onFocus}
+                style={inputStyle}
+                value={categoryText}
+                onChange={(e) => {
+                  setCategoryText(e.target.value);
+                  setCategorySlug("");
+                  setCategoryOpen(true);
+                }}
+                onFocus={(e) => { onFocus(e); setCategoryOpen(true); }}
                 onBlur={onBlur}
-              >
-                <option value="">Select a category</option>
-                {categories.filter((c) => !c.parent_id).map((c) => (
-                  <option key={c.id} value={c.slug}>{c.name}</option>
-                ))}
-              </select>
+                placeholder="Type to search — example: Voice AI, GHL, Chatbot, Marketing..."
+                autoComplete="off"
+              />
+              <input type="hidden" name="category_slug" value={categorySlug} />
+              {categoryOpen && categoryText.trim().length > 0 && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: "calc(100% + 6px)",
+                    left: 0,
+                    right: 0,
+                    background: "#FFFFFF",
+                    border: "1px solid #EBEBEB",
+                    borderRadius: 12,
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
+                    maxHeight: 280,
+                    overflowY: "auto",
+                    zIndex: 50,
+                  }}
+                >
+                  {categorySuggestions.length === 0 ? (
+                    <div style={{ padding: "12px 16px", fontSize: 13, color: "#AAAAAA" }}>
+                      No category found — your project will be reviewed by our team
+                    </div>
+                  ) : (
+                    categorySuggestions.map((c) => {
+                      const parent = c.parent_id ? categoriesById.get(c.parent_id) : null;
+                      const isHover = categoryHover === c.id;
+                      return (
+                        <div
+                          key={c.id}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setCategoryText(c.name);
+                            setCategorySlug(c.slug);
+                            setCategoryOpen(false);
+                          }}
+                          onMouseEnter={() => setCategoryHover(c.id)}
+                          onMouseLeave={() => setCategoryHover((h) => (h === c.id ? null : h))}
+                          style={{
+                            padding: "12px 16px",
+                            cursor: "pointer",
+                            background: isHover ? "#F7F7F7" : "transparent",
+                          }}
+                        >
+                          <div style={{ fontSize: 14, fontWeight: 500, color: "#0A0A0A" }}>{c.name}</div>
+                          {parent && (
+                            <div style={{ fontSize: 11, color: "#AAAAAA", marginTop: 2 }}>{parent.name}</div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
             </div>
 
             <div>
