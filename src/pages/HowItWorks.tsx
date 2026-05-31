@@ -239,7 +239,7 @@ export default function HowItWorks() {
           <h2 style={{ fontSize: 48, fontWeight: 500, color: "#fff", margin: 0, marginBottom: 16 }}>Ready? It takes 2 minutes to start.</h2>
           <p style={{ fontSize: 18, color: "#666", marginBottom: 40 }}>Join free as a Partner to hire — or apply as an Expert to earn.</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
-            <Link to="/browse" style={{ display: "inline-block", border: "1px solid #fff", color: "#fff", borderRadius: 999, padding: "14px 32px", fontSize: 15, textDecoration: "none" }}>Hire an Expert</Link>
+            <Link to="/services" style={{ display: "inline-block", border: "1px solid #fff", color: "#fff", borderRadius: 999, padding: "14px 32px", fontSize: 15, textDecoration: "none" }}>Hire an Expert</Link>
             <Link to="/sign-up" style={{ display: "inline-block", background: "#22c55e", color: "#fff", borderRadius: 999, padding: "14px 32px", fontSize: 15, textDecoration: "none" }}>Become an Expert</Link>
           </div>
         </section>
