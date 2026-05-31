@@ -1,77 +1,38 @@
-## Plan — Database connection hardening pass
+# Smart Category Search on Post a Project
 
-### Important note on the schema
-In this project `profiles.id` is already equal to `auth.uid()` (set in `handle_new_user`). There is no separate `auth_id` column, so a literal "look up profile id from auth id" step is a no-op. I will still defensively call `supabase.auth.getUser()` before any write that depends on the current user, so we surface an unauthenticated state with a friendly toast instead of a database error.
+Replace the `<select>` Service Category dropdown in `src/pages/PostJob.tsx` with a typeahead input. Only that one form field changes — everything else on the page (title, description, skills, budget, deadline, attachments, visibility, submit, header/footer, styles) stays exactly as it is.
 
-### 1. Order creation flow (Play page → Checkout)
-- `src/pages/GigDetail.tsx` Continue handler: before calling `create_gig_order`, call `supabase.auth.getUser()`. If no user → redirect to `/login?redirect=/gig/:id`. Wrap the RPC in try/catch, toast a friendly message on failure, then navigate to `/checkout/:order_id`.
-- `src/pages/Checkout.tsx`: keep existing logic; add try/catch around the `stripe-payment-intent` invoke with a toast on failure.
+## Behavior
 
-### 2. Wrap every insert/RPC write in try/catch + toast
-Audit and harden every client-side write to: `orders`, `bids`, `messages`, `conversations`, `reviews`, `notifications`, `custom_offers`, `project_posts`, `saved_gigs`, `seller_follows`, `disputes`, `cancellation_requests`. For each:
-- pre-check `supabase.auth.getUser()` where the row depends on the current user
-- `try { ... } catch (e) { toast({ title: "Friendly message", description: e.message, variant: "destructive" }) }`
-- never swallow errors silently
+- Single text input matching the brief's exact specs:
+  - Label "Service Category" (13px / 600 / #333333 / 8px mb)
+  - Input: white, 1.5px #CCCCCC, radius 12px, 52px tall, padding 0 16px, 15px / #0A0A0A, 100% width
+  - Placeholder: `Type to search — example: Voice AI, GHL, Chatbot, Marketing...`
+  - Focus border `#0A0A0A` (uses existing `onFocus` / `onBlur` helpers in the file)
+- As user types, render a suggestion dropdown positioned absolutely under the input:
+  - White, 1px #EBEBEB, radius 12px, shadow `0 4px 16px rgba(0,0,0,0.08)`, max-height 280px, scroll-y, z-50
+  - Up to 8 case-insensitive matches against `categories.name` (substring)
+  - Each row: padding 12px 16px, cursor pointer, hover #F7F7F7
+    - Line 1: category name — 14px / 500 / #0A0A0A
+    - Line 2 (only if it has a parent): parent category name — 11px / #AAAAAA
+  - Empty state row: `No category found — your project will be reviewed by our team` (13px / #AAAAAA / padding 12px 16px)
+- Click a suggestion: input value = category name, dropdown closes, the category **slug** is stored in a hidden state field (`categorySlug`).
+- Free typing without selecting is allowed — on submit, if no slug was chosen, the typed text becomes the category value.
+- Dropdown closes on outside click (mousedown listener on `document`) and on blur with a small delay so clicks register.
 
-Files to touch (insert/RPC sites):
-- `src/pages/GigDetail.tsx` (order RPC, save, follow, custom offer accept)
-- `src/pages/PlaceBid.tsx` (`submit_bid` RPC)
-- `src/pages/Pitch.tsx` (`submit_river_pitch` RPC)
-- `src/pages/Inbox.tsx` (messages insert, conversation create via `get_or_create_conversation`)
-- `src/pages/orders/OrderWorkspace.tsx` (deliveries, dispute, approve, cancel, requirements answers)
-- `src/pages/orders/LeaveReviewPage.tsx` (`submit_full_review`)
-- `src/components/marketplace/CustomOfferComposer.tsx` (custom_offers insert + message insert)
-- `src/components/marketplace/SaveGigButton.tsx`, `FollowSellerButton.tsx`, `ReportDialog.tsx`, `LeaveReview.tsx`
-- `src/pages/PostJob.tsx` (project_posts insert)
-- `src/pages/buyer/BuyerDashboard.tsx` and `src/pages/seller/SellerDashboard.tsx` if they perform writes
+## Submit wiring
 
-No visual / layout / copy changes — only error handling.
+In the existing `submit` handler, change the inserted `category` field from `category || null` to `categorySlug || categoryText.trim() || null`. No other DB or routing changes.
 
-### 3. Foreign key audit (single migration)
-Run a migration that adds missing FK constraints so bad inserts fail loudly at the DB layer instead of silently corrupting state. Constraints to ensure exist (all `ON DELETE` chosen to match current behavior — `CASCADE` for child rows, `SET NULL` for optional links):
+## State changes inside `PostJob.tsx`
 
-```
-orders.buyer_id            → profiles(id)  ON DELETE CASCADE
-orders.seller_id           → profiles(id)  ON DELETE CASCADE
-orders.gig_id              → gigs(id)      ON DELETE SET NULL
-orders.package_id          → gig_packages(id) ON DELETE SET NULL
-bids.seller_id             → profiles(id)  ON DELETE CASCADE
-bids.project_id            → project_posts(id) ON DELETE CASCADE
-notifications.user_id      → profiles(id)  ON DELETE CASCADE
-reviews.buyer_id           → profiles(id)  ON DELETE CASCADE
-reviews.seller_id          → profiles(id)  ON DELETE CASCADE
-reviews.order_id           → orders(id)    ON DELETE CASCADE
-messages.sender_id         → profiles(id)  ON DELETE CASCADE
-messages.recipient_id      → profiles(id)  ON DELETE CASCADE   (note: column is `recipient_id`, not `receiver_id`)
-messages.conversation_id   → conversations(id) ON DELETE CASCADE
-conversations.participant_one → profiles(id) ON DELETE CASCADE  (note: schema uses participant_one/two, not buyer_id/seller_id)
-conversations.participant_two → profiles(id) ON DELETE CASCADE
-```
+- Replace `const [category, setCategory] = useState("")` with:
+  - `categoryText` (visible input value)
+  - `categorySlug` (resolved slug from a clicked suggestion; cleared when the user edits the text after selecting)
+  - `categoryOpen` (dropdown visibility)
+- Remove the `<select>` JSX and `selectStyle` usage for this field (keep `selectStyle` const — harmless, but will remove since it has no other consumer).
+- Keep `useCategories()` import — it already returns parent + child rows with `parent_id`, which is exactly what's needed to render the parent label.
 
-Each constraint is added with `IF NOT EXISTS`-style guard (drop-if-exists then add) so the migration is idempotent. Before adding I'll run a pre-check `SELECT` for orphan rows; if any exist the migration will surface them so we can clean before constraining (otherwise the ALTER fails).
+## Out of scope
 
-The brief asked for `conversations.buyer_id/seller_id` and `messages.receiver_id`, but those columns do not exist in this schema — using the real column names above.
-
-### 4. Edge function audit
-Read each function under `supabase/functions/*` that performs DB writes and confirm:
-- uses `SUPABASE_SERVICE_ROLE_KEY` for privileged writes, anon+user JWT for user-scoped reads
-- inserts user-scoped rows with `auth.uid()` (which equals `profiles.id` here)
-- has try/catch returning proper JSON errors with CORS headers
-
-Only patch functions that fail those checks. No deploys are forced beyond what's edited.
-
-### 5. End-to-end manual verification
-After applying, verify:
-1. Logged-in buyer clicks Continue on a `/gig/:id` package → order row inserted, redirected to `/checkout/:order_id` with correct price.
-2. Payment intent mints, Stripe test card succeeds → order transitions to `in_progress`.
-3. Order appears in `/buyer/dashboard` and seller's `/seller/dashboard`.
-4. Force a failure (e.g. log out then click Continue) → friendly toast, no raw error.
-
-### Order of execution
-1. Submit the FK migration (requires user approval) — runs first so step 2's try/catch surfaces real constraint violations cleanly.
-2. After approval, edit all the client files in parallel batches.
-3. Edge function tweaks.
-4. Walk through the e2e flow in preview.
-
-### Out of scope (explicitly not changed)
-Colors, fonts, layout, copy, routes, RLS policies, business logic. Only error handling + missing FK constraints.
+No changes to other fields, routes, DB schema, RLS, `useCategories`, header, footer, or any other page.
