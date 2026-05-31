@@ -93,7 +93,7 @@ export default function Inbox() {
     const otherIds = Array.from(new Set(list.map((c) => (c.participant_one === user.id ? c.participant_two : c.participant_one))));
     if (otherIds.length) {
       const { data: profs } = await supabase
-        .from("profiles").select("id, full_name, username, avatar_url, is_online, last_seen_at").in("id", otherIds);
+        .from("profiles").select("id, full_name, username, avatar_url, is_online").in("id", otherIds);
       const byId = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p]));
       list.forEach((c) => {
         const oid = c.participant_one === user.id ? c.participant_two : c.participant_one;
