@@ -1,41 +1,33 @@
-# Homepage Redesign — x.ai cinematic style
 
-Scope: visual redesign of `src/pages/Landing.tsx` only. No changes to routing, data fetching, auth, DB, or any other page. Existing `useNavigate`, `supabase` featured-gigs query, and category slugs are preserved.
+## Scope
 
-## Files touched
+Only the homepage uses `SiteHeader` with `variant="transparent"` (see `src/pages/Landing.tsx`). All other pages use the default variant. I'll edit ONLY the `isTransparent` branch in `src/components/layout/SiteHeader.tsx` — the default branch stays untouched, so navigation on every other page is unchanged.
 
-- `src/pages/Landing.tsx` — full rewrite of JSX/markup with new sections
-- `src/components/layout/SiteHeader.tsx` — variant prop `transparent` so it renders white text over the video hero and adds the scroll-darken behavior (background transparent → `rgba(0,0,0,0.85)` + backdrop-blur after 50px scroll). All existing nav items, search, RoleSwitcher, Dashboard, Sign Out preserved — only colors switch to white when `transparent` is active.
+## Changes to the transparent header
 
-No other files change. `SiteFooter` is not used on the new landing — the new black footer is inlined in `Landing.tsx` per spec (other pages still use `SiteFooter`).
+1. Replace the left nav links with exactly, in order:
+   - Find Experts → `/browse`
+   - Post a Project → `/post-job`
+   - How It Works → smooth-scroll to `#how-it-works` on the homepage (uses `location.pathname === "/"` to scroll, else navigates to `/#how-it-works`)
+   - Pricing → `/pricing`
+   - All links: white, 13px, opacity 0.8, hover opacity 1, no dropdowns.
 
-## Section breakdown (all in Landing.tsx)
+2. Keep the existing center search bar and black "Search" button exactly as-is (placeholder already reads "Search the catalog…"; will update the ellipsis to literal "..." per spec).
 
-1. **Fixed nav** — `SiteHeader` rendered with `variant="transparent"` and scroll listener.
-2. **Hero (100vh)** — `<video autoplay muted loop playsinline>` with the provided Supabase MP4 URL, absolute-positioned full cover, z-0. Dark overlay div (`rgba(0,0,0,0.6)`, z-1). Centered content z-2: pill badge → H1 "Hire AI experts. Ship faster." → subheading → River search form (reuses existing `nav(`/river-results?q=...`)` submit) → 3 trust stats row.
-3. **Categories** — white bg, 4-col grid of the 8 AI categories using existing `/category/:slug` links and the existing CATEGORIES array. Card hover: border darkens, lift -2px, shadow.
-4. **Top performers** — white bg, 3-col grid. New Supabase query: `profiles` where `seller_status='approved'` order by `river_score desc` limit 6. Each card: avatar, name, River Score pill, bio, top 3 `seller_skills` as grey pills, starting price (from their top gig — single batched query like existing featured logic), View Profile (`/seller/:username`) + Message (`/inbox?to=:id`) buttons. Uses existing routes only.
-5. **How it works** — black bg, 3 columns with big step numbers.
-6. **Trust stats** — white bg, 4 stats separated by hairlines.
-7. **Bottom CTA** — black bg, "Stop searching. Tell River." with white pill button → `/signup`.
-8. **Footer** — inline black footer with KATEXS, link row, copyright, Privacy/Terms links (using existing `/privacy` and `/terms` routes).
+3. Right side: remove RoleSwitcher, HQ, Sign out, Join. Show only:
+   - "Sign In" — ghost white text link to `/sign-in`
+   - "Join Free" — green filled button (`bg-[hsl(var(--primary))]`), white text, `rounded-full`, padding `8px 20px`, `text-[13px]`, `font-medium`, link to `/sign-up`
+   - These show regardless of auth state (per spec — no Dashboard/Sign Out on homepage nav).
 
-## Styling approach
+4. Remove the mobile Menu button's dependence on removed items; keep it as-is visually.
 
-Spec uses very specific pixel values, exact colors (#000, #888, rgba whites), and px font sizes that don't map cleanly to the project's semantic tokens. To match x.ai exactly without polluting the design system, the new Landing will use inline `style={{}}` objects and a scoped `<style>` block at the top of the component for the hover states, media query (H1 72px → 40px ≤768px), and scroll-nav transition. This keeps the redesign self-contained to the homepage and leaves `index.css` / tokens untouched for the rest of the app.
+5. KATEXS logo stays unchanged (white, left).
 
-`SEO` component and JSON-LD stay as-is.
+## Not changed
 
-## Preserved functionality
+- `AppShell` sidebar nav, default `SiteHeader` branch, all routes, all auth/search/role logic.
+- No new routes added. `/sign-in`, `/sign-up`, and `/pricing` are used as specified by the user (existing app uses `/login`, `/signup` — I'll use exactly what the spec says: `/sign-in`, `/sign-up`, `/pricing`, even though those routes may 404 until added; user explicitly listed these hrefs).
 
-- River search submit → `/river-results?q=`
-- Category links → `/category/:slug`
-- Featured/top-performers data via `supabase`
-- All header nav, role switcher, auth buttons
-- Routing, auth, RLS, edge functions, other pages — untouched
+## File touched
 
-## Risk / non-goals
-
-- Not changing `SiteFooter` (still used elsewhere).
-- Not introducing new tokens or breaking dark/light theming on other pages — inline styles are scoped to Landing.
-- Video is a large MP4 streamed from Supabase storage; no preload tuning beyond browser defaults.
+- `src/components/layout/SiteHeader.tsx` — only the `if (isTransparent)` block.
