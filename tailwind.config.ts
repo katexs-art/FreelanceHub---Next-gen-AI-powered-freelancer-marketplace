@@ -12,10 +12,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['"JetBrains Mono"', "ui-monospace", "monospace"],
-        body: ['"Work Sans"', "system-ui", "sans-serif"],
-        mono: ['"JetBrains Mono"', "ui-monospace", "monospace"],
-        sans: ['"Work Sans"', "system-ui", "sans-serif"],
+        heading: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        body: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -58,12 +58,12 @@ export default {
       },
       borderRadius: {
         none: "0",
-        sm: "2px",
-        DEFAULT: "4px",
-        md: "4px",
-        lg: "6px",
-        xl: "8px",
-        "2xl": "12px",
+        sm: "4px",
+        DEFAULT: "8px",
+        md: "8px",
+        lg: "12px",
+        xl: "14px",
+        "2xl": "16px",
         full: "999px",
       },
       letterSpacing: {
