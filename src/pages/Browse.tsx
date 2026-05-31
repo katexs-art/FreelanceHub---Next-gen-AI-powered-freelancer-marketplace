@@ -1,11 +1,19 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Star, X } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+
+function tokenizeQ(s: string): string[] {
+  return s.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 2);
+}
+function fmtCents(cents: number | null | undefined): string {
+  if (cents == null || cents <= 0) return "—";
+  return `$${Math.round(cents / 100)}`;
+}
 
 const CATEGORIES = [
   "All",
