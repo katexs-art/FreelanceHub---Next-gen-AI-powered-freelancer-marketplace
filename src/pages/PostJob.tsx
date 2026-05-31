@@ -72,6 +72,28 @@ export default function PostJob() {
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const categoriesById = useMemo(() => {
+    const m = new Map<string, typeof categories[number]>();
+    categories.forEach((c) => m.set(c.id, c));
+    return m;
+  }, [categories]);
+
+  const categorySuggestions = useMemo(() => {
+    const q = categoryText.trim().toLowerCase();
+    if (!q) return [];
+    return categories.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 8);
+  }, [categories, categoryText]);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (categoryWrapRef.current && !categoryWrapRef.current.contains(e.target as Node)) {
+        setCategoryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const addSkill = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && skillInput.trim()) {
       e.preventDefault();
