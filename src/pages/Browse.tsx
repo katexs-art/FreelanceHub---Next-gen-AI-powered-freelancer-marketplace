@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
+import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 
 function tokenizeQ(s: string): string[] {
   return s.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 2);
@@ -606,13 +607,7 @@ export default function Browse() {
               onMessage={openMessage}
             />
           ) : filtered.length === 0 ? (
-            <div className="mt-16 text-center">
-              <div style={{ fontSize: 18, fontWeight: 600, color: "#111" }}>
-                No experts found for this search
-              </div>
-              <div style={{ fontSize: 14, color: "#666", marginTop: 8 }}>
-                Try a different keyword or browse all categories
-              </div>
+            <EmptyCategoryState surface="light" />
               <button
                 onClick={clearAll}
                 style={{

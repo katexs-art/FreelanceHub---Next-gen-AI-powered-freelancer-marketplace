@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { supabase } from "@/integrations/supabase/client";
 
 type Cat = { id: string; name: string; slug: string; parent_id: string | null };

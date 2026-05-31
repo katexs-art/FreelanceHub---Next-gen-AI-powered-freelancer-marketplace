@@ -6,6 +6,7 @@ import { CategoryMegaNav } from "@/components/layout/CategoryMegaNav";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
+import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 const CATEGORIES = [

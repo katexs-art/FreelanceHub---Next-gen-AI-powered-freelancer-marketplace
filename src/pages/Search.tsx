@@ -4,6 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -173,16 +174,18 @@ export default function Search() {
               </select>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {loading
-                ? Array.from({ length: 6 }).map((_, i) => <GigCardSkeleton key={i} />)
-                : (promoted.length === 0 && gigs.length === 0)
-                  ? <p className="col-span-full text-foreground-muted">No plays match those filters.</p>
-                  : <>
-                      {promoted.map((g) => <GigCard key={`p-${g.id}`} gig={g} promoted />)}
-                      {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
-                    </>}
-            </div>
+            {loading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {Array.from({ length: 6 }).map((_, i) => <GigCardSkeleton key={i} />)}
+              </div>
+            ) : (promoted.length === 0 && gigs.length === 0) ? (
+              <EmptyCategoryState surface="light" />
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {promoted.map((g) => <GigCard key={`p-${g.id}`} gig={g} promoted />)}
+                {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
+              </div>
+            )}
           </div>
         </div>
       </main>
