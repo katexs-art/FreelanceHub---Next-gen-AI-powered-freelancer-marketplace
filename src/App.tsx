@@ -47,6 +47,7 @@ const CheckoutSuccess = lazy(() => import("./pages/orders/CheckoutSuccess"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 const OrdersList = lazy(() => import("./pages/orders/OrdersList"));
 const OrderWorkspace = lazy(() => import("./pages/orders/OrderWorkspace"));
+const OrderConfirmed = lazy(() => import("./pages/orders/OrderConfirmed"));
 const LeaveReviewPage = lazy(() => import("./pages/orders/LeaveReviewPage"));
 const Inbox = lazy(() => import("./pages/Inbox"));
 const Earnings = lazy(() => import("./pages/seller/Earnings"));
