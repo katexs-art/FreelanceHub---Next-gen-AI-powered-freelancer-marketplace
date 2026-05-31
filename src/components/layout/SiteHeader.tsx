@@ -62,7 +62,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
           <nav className="hidden md:flex items-center gap-8 ml-4">
             <Link to="/browse" className={linkCls}>Find Experts</Link>
             <Link to="/post-job" className={linkCls}>Post a Project</Link>
-            <a href="#how-it-works" onClick={handleHowItWorks} className={linkCls}>How It Works</a>
+            <Link to="/how-it-works" className={linkCls}>How It Works</Link>
             <Link to="/pricing" className={linkCls}>Pricing</Link>
           </nav>
 
@@ -123,6 +123,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         <nav className="hidden md:flex items-center gap-1 text-sm">
           <Link to="/explore" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Browse</Link>
           <Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Services</Link>
+          <Link to="/how-it-works" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">How It Works</Link>
           {profile?.role !== "seller" && (
             <Link to="/become-a-seller" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Sell</Link>
           )}
