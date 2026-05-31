@@ -10,10 +10,9 @@ import {
   KxGoogleButton,
   KxDivider,
   KxSubmit,
-  KxTrustLine,
+  KxTrustBadges,
   KxAuthStyles,
 } from "@/components/auth/KxAuthControls";
-import { cn } from "@/lib/utils";
 
 type Role = "client" | "seller";
 
@@ -79,99 +78,105 @@ export default function Signup() {
     if (result.error) return toast.error("Google sign-in failed");
   };
 
+  const submitTone = role === "seller" ? "green" : "black";
+
   return (
     <AuthLayout
       title="Create your account"
-      subtitle="Buy services or start selling on katexs"
+      subtitle="Join 2,400+ experts and partners on Katexs"
       footer={<>Already have an account? <Link to="/login">Sign in</Link></>}
     >
       <KxAuthStyles />
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <div className="kx-toggle">
-          {(["client", "seller"] as Role[]).map((r) => (
-            <button
-              key={r}
-              type="button"
-              onClick={() => setRole(r)}
-              className={cn(role === r ? "on" : "off")}
-            >
-              {r === "client" ? "I'm buying" : "I'm selling"}
-            </button>
-          ))}
-        </div>
 
-        <KxGoogleButton onClick={handleGoogle} />
-
-        <KxDivider />
-
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <KxField
-            label="Full name"
-            required
-            value={form.full_name}
-            onChange={(e) => setForm({ ...form, full_name: e.target.value })}
-          />
-
-          {role === "seller" && (
-            <div>
-              <KxField
-                label="Username"
-                required
-                value={form.username}
-                placeholder="3-20 chars, a-z 0-9 _"
-                onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
-              />
-              {form.username && (
-                <p
-                  style={{
-                    fontSize: 12,
-                    marginTop: 6,
-                    color:
-                      usernameStatus === "ok"
-                        ? "#16a34a"
-                        : usernameStatus === "checking"
-                        ? "#888"
-                        : "#dc2626",
-                  }}
-                >
-                  {usernameStatus === "checking" && "Checking…"}
-                  {usernameStatus === "ok" && "✓ Available"}
-                  {usernameStatus === "taken" && "Username is taken"}
-                  {usernameStatus === "invalid" && "3-20 chars, lowercase, numbers, underscores only"}
-                </p>
-              )}
-            </div>
-          )}
-
-          <KxField
-            label="Email"
-            type="email"
-            required
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-
-          <KxPassword
-            value={form.password}
-            onChange={(v) => setForm({ ...form, password: v })}
-            required
-            minLength={8}
-          />
-          <p style={{ fontSize: 12, color: "#bbb", marginTop: -8 }}>At least 8 characters</p>
-
-          <div style={{ marginTop: 4 }}>
-            <KxSubmit loading={loading}>{loading ? "Creating account…" : "Create account"}</KxSubmit>
-            <KxTrustLine />
-          </div>
-
-          <p style={{ fontSize: 12, color: "#bbb", textAlign: "center", marginTop: 4 }}>
-            By joining you agree to our{" "}
-            <Link to="/terms" style={{ color: "#888", textDecoration: "underline" }}>Terms</Link>{" "}
-            and{" "}
-            <Link to="/privacy" style={{ color: "#888", textDecoration: "underline" }}>Privacy Policy</Link>.
-          </p>
-        </form>
+      <div className="kx-toggle">
+        <button
+          type="button"
+          onClick={() => setRole("client")}
+          className={role === "client" ? "on-black" : ""}
+        >
+          I'm buying
+        </button>
+        <button
+          type="button"
+          onClick={() => setRole("seller")}
+          className={role === "seller" ? "on-green" : ""}
+        >
+          I'm selling
+        </button>
       </div>
+
+      <KxGoogleButton onClick={handleGoogle} />
+
+      <KxDivider />
+
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <KxField
+          label="Full name"
+          required
+          value={form.full_name}
+          onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+        />
+
+        {role === "seller" && (
+          <div>
+            <KxField
+              label="Username"
+              required
+              value={form.username}
+              placeholder="3-20 chars, a-z 0-9 _"
+              onChange={(e) => setForm({ ...form, username: e.target.value.toLowerCase() })}
+            />
+            {form.username && (
+              <p
+                style={{
+                  fontSize: 12,
+                  marginTop: 6,
+                  color:
+                    usernameStatus === "ok"
+                      ? "#16a34a"
+                      : usernameStatus === "checking"
+                      ? "#888"
+                      : "#dc2626",
+                }}
+              >
+                {usernameStatus === "checking" && "Checking…"}
+                {usernameStatus === "ok" && "✓ Available"}
+                {usernameStatus === "taken" && "Username is taken"}
+                {usernameStatus === "invalid" && "3-20 chars, lowercase, numbers, underscores only"}
+              </p>
+            )}
+          </div>
+        )}
+
+        <KxField
+          label="Email"
+          type="email"
+          required
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+
+        <KxPassword
+          value={form.password}
+          onChange={(v) => setForm({ ...form, password: v })}
+          required
+          minLength={8}
+        />
+        <p style={{ fontSize: 12, color: "#bbb", marginTop: -8 }}>At least 8 characters</p>
+
+        <KxSubmit loading={loading} tone={submitTone}>
+          {loading ? "Creating account…" : "Create account"}
+        </KxSubmit>
+
+        <KxTrustBadges />
+
+        <p style={{ fontSize: 12, color: "#bbb", textAlign: "center", marginTop: 4 }}>
+          By joining you agree to our{" "}
+          <Link to="/terms" style={{ color: "#888", textDecoration: "underline" }}>Terms</Link>{" "}
+          and{" "}
+          <Link to="/privacy" style={{ color: "#888", textDecoration: "underline" }}>Privacy Policy</Link>.
+        </p>
+      </form>
     </AuthLayout>
   );
 }

@@ -10,7 +10,7 @@ import {
   KxGoogleButton,
   KxDivider,
   KxSubmit,
-  KxTrustLine,
+  KxTrustBadges,
   KxAuthStyles,
 } from "@/components/auth/KxAuthControls";
 
@@ -51,37 +51,40 @@ export default function Login() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Sign in to your katexs account"
+      subtitle="Sign in to your Katexs account"
       footer={<>New here? <Link to="/signup">Join now</Link></>}
     >
       <KxAuthStyles />
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <KxGoogleButton onClick={handleGoogle} />
-        <KxDivider />
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <KxField
-            label="Email"
-            type="email"
+
+      <KxGoogleButton onClick={handleGoogle} />
+
+      <KxDivider />
+
+      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <KxField
+          label="Email"
+          type="email"
+          required
+          value={form.email}
+          onChange={(e) => setForm({ ...form, email: e.target.value })}
+        />
+        <div>
+          <KxPassword
+            value={form.password}
+            onChange={(v) => setForm({ ...form, password: v })}
             required
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
           />
-          <div>
-            <KxPassword
-              value={form.password}
-              onChange={(v) => setForm({ ...form, password: v })}
-              required
-            />
-            <div style={{ textAlign: "right", marginTop: 6 }}>
-              <Link to="/forgot-password" style={{ fontSize: 12, color: "#888" }}>Forgot password?</Link>
-            </div>
+          <div style={{ textAlign: "right", marginTop: 6 }}>
+            <Link to="/forgot-password" style={{ fontSize: 12, color: "#888" }}>Forgot password?</Link>
           </div>
-          <div style={{ marginTop: 4 }}>
-            <KxSubmit loading={loading}>{loading ? "Signing in…" : "Sign in"}</KxSubmit>
-            <KxTrustLine />
-          </div>
-        </form>
-      </div>
+        </div>
+
+        <KxSubmit loading={loading} tone="black">
+          {loading ? "Signing in…" : "Sign in"}
+        </KxSubmit>
+
+        <KxTrustBadges />
+      </form>
     </AuthLayout>
   );
 }
