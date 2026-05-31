@@ -3,58 +3,57 @@
 @tailwind utilities;
 
 /* ============================================================
-   KATEXS — MASTER DARK DESIGN SYSTEM
-   Pure black canvas · #caff00 accent · DM Sans + Space Mono
-   No gradients, no shadows beyond hairline + depth-on-hover.
+   KATEXS — Master design system (light Fiverr canvas)
+   System-font typography · #16A34A green · 16px card radius
    ============================================================ */
 
 @layer base {
   :root {
-    /* Canvas — light, Fiverr-style */
-    --background: 0 0% 100%;
-    --background-subtle: 0 0% 98%;
-    --background-elevated: 0 0% 96%;
+    --background: 0 0% 100%;            /* #FFFFFF */
+    --background-subtle: 0 0% 97%;      /* #F7F7F7 */
+    --background-elevated: 0 0% 100%;
+    --background-dark: 0 0% 4%;         /* #0A0A0A */
 
-    --foreground: 0 0% 10%;
-    --foreground-muted: 220 9% 46%;
-    --foreground-subtle: 220 9% 60%;
+    --foreground: 0 0% 4%;              /* #0A0A0A */
+    --foreground-muted: 0 0% 40%;       /* #666 */
+    --foreground-subtle: 0 0% 53%;      /* #888 */
 
-    --primary: 156 74% 43%;
+    --primary: 142 71% 36%;             /* #16A34A */
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 156 74% 38%;
+    --primary-hover: 142 71% 32%;
 
-    --accent: 156 74% 43%;
+    --accent: 142 71% 36%;
     --accent-foreground: 0 0% 100%;
 
-    --border: 220 13% 91%;
-    --border-strong: 220 13% 82%;
-    --input: 220 13% 91%;
-    --ring: 156 74% 43%;
+    --border: 0 0% 92%;                 /* #EBEBEB */
+    --border-strong: 0 0% 82%;          /* #D0D0D0 */
+    --input: 0 0% 92%;
+    --ring: 0 0% 4%;
 
-    --success: 142 71% 45%;
+    --success: 142 71% 36%;
     --warning: 38 92% 50%;
-    --destructive: 0 72% 51%;
+    --destructive: 0 72% 51%;           /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
     --secondary: 0 0% 96%;
-    --secondary-foreground: 0 0% 10%;
+    --secondary-foreground: 0 0% 4%;
     --muted: 0 0% 96%;
-    --muted-foreground: 220 9% 46%;
+    --muted-foreground: 0 0% 40%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 4%;
 
-    --radius: 4px;
+    --radius: 16px;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 156 74% 43%;
+    --sidebar-foreground: 0 0% 4%;
+    --sidebar-primary: 142 71% 36%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 96%;
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 156 74% 43%;
+    --sidebar-accent-foreground: 0 0% 4%;
+    --sidebar-border: 0 0% 92%;
+    --sidebar-ring: 142 71% 36%;
   }
 
   .dark { color-scheme: light; }
@@ -65,7 +64,6 @@
   html { color-scheme: light; }
   html, body {
     @apply bg-background text-foreground font-body antialiased;
-    font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
   }
   body { min-height: 100vh; }
@@ -73,7 +71,7 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-heading;
     letter-spacing: -0.01em;
-    line-height: 1.05;
+    line-height: 1.1;
     font-weight: 500;
   }
 
@@ -112,49 +110,25 @@
   .container-narrow { width: 100%; max-width: 720px; margin-inline: auto; padding-inline: 1.25rem; }
   .container-wide { width: 100%; max-width: 1440px; margin-inline: auto; padding-inline: 1.25rem; }
 
-  .display-xl {
-    @apply font-heading;
-    font-size: clamp(2.75rem, 7vw, 6.5rem);
-    line-height: 0.98;
-    letter-spacing: -0.035em;
-    font-weight: 600;
-  }
-  .display-lg {
-    @apply font-heading;
-    font-size: clamp(2.25rem, 5vw, 4.25rem);
-    line-height: 1.02;
-    letter-spacing: -0.03em;
-    font-weight: 600;
-  }
-  .display-md {
-    @apply font-heading;
-    font-size: clamp(1.75rem, 3.2vw, 2.75rem);
-    line-height: 1.05;
-    letter-spacing: -0.02em;
-    font-weight: 600;
-  }
+  .display-xl { @apply font-heading; font-size: clamp(2.75rem, 7vw, 6.5rem); line-height: 0.98; letter-spacing: -0.035em; font-weight: 600; }
+  .display-lg { @apply font-heading; font-size: clamp(2.25rem, 5vw, 4.25rem); line-height: 1.02; letter-spacing: -0.03em; font-weight: 600; }
+  .display-md { @apply font-heading; font-size: clamp(1.75rem, 3.2vw, 2.75rem); line-height: 1.05; letter-spacing: -0.02em; font-weight: 600; }
 
   .keycap {
     @apply font-mono inline-flex items-center justify-center;
-    min-width: 22px;
-    height: 22px;
-    padding: 0 6px;
-    font-size: 11px;
-    color: hsl(var(--foreground-muted));
-    background: #111;
+    min-width: 22px; height: 22px; padding: 0 6px;
+    font-size: 11px; color: hsl(var(--foreground-muted));
+    background: hsl(var(--background-subtle));
     border: 1px solid hsl(var(--border-strong));
     border-radius: 4px;
   }
 
   .mono-tag {
     @apply font-mono uppercase inline-flex items-center;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    padding: 4px 10px;
-    border: 1px solid hsl(var(--border));
-    border-radius: 999px;
+    font-size: 10px; letter-spacing: 0.14em; padding: 4px 10px;
+    border: 1px solid hsl(var(--border)); border-radius: 999px;
     color: hsl(var(--foreground-muted));
-    background: #0a0a0a;
+    background: hsl(var(--background-subtle));
   }
 
   .skeleton {
@@ -162,6 +136,44 @@
     border-radius: 6px;
     animation: pulse-opacity 1.4s ease-in-out infinite;
   }
+
+  /* ===== KATEXS section helpers (mirror katexs_design.html) ===== */
+  .section-light  { background: #ffffff; padding: 48px 40px; }
+  .section-dark   { background: #0a0a0a; padding: 48px 40px; }
+  .section-canvas { background: #f7f7f7; padding: 48px 40px; }
+
+  .section-label      { font-size: 11px; color: #aaa; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .section-label-dark { font-size: 11px; color: #555; letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 8px; }
+  .section-heading      { font-size: 28px; font-weight: 500; color: #0a0a0a; margin-bottom: 6px; letter-spacing: -0.01em; }
+  .section-heading-dark { font-size: 28px; font-weight: 500; color: #fff;     margin-bottom: 6px; letter-spacing: -0.01em; }
+  .section-sub      { font-size: 14px; color: #666; margin-bottom: 32px; }
+  .section-sub-dark { font-size: 14px; color: #777; margin-bottom: 32px; }
+
+  .grid-cards-4 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  .grid-cards-3 { display: grid; grid-template-columns: 1fr; gap: 16px; }
+  @media (min-width: 640px) {
+    .grid-cards-4 { grid-template-columns: repeat(2, 1fr); }
+    .grid-cards-3 { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (min-width: 1024px) {
+    .grid-cards-4 { grid-template-columns: repeat(4, 1fr); }
+    .grid-cards-3 { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ===== Pill status badges (per design spec) ===== */
+  .pill { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; font-size: 11px; font-weight: 600; padding: 4px 12px; white-space: nowrap; }
+  .pill-active     { background: #DCFCE7; color: #16A34A; }
+  .pill-completed  { background: #DCFCE7; color: #16A34A; }
+  .pill-pending    { background: #FEF3C7; color: #D97706; }
+  .pill-progress   { background: #DBEAFE; color: #2563EB; }
+  .pill-disputed   { background: #FEE2E2; color: #DC2626; }
+  .pill-late       { background: #FEE2E2; color: #DC2626; }
+  .pill-river      { background: #EDE9FE; color: #7C3AED; }
+  .pill-elite      { background: #0A0A0A; color: #ffffff; }
+  .pill-new        { background: #DCFCE7; color: #16A34A; }
+  .pill-pro        { background: #F7F7F7; color: #444; border: 1px solid #DDD; }
+  .pill-suspended  { background: #FEF3C7; color: #D97706; }
+  .pill-locked     { background: #FEE2E2; color: #DC2626; }
 }
 
 @layer utilities {
@@ -202,7 +214,6 @@
   .admin-dot-green  { background:#10B981; }
   .admin-dot-blue   { background:#2563EB; }
 }
-
 
 @keyframes pulse-opacity {
   0%, 100% { opacity: 1; }

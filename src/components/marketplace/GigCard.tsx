@@ -31,21 +31,15 @@ export function GigCard({ gig, promoted }: { gig: GigCardData; promoted?: boolea
     if (promoted && gig.promotion_id) trackPromotionEvent(gig.promotion_id, "click");
   };
   const sellerName = gig.seller?.full_name ?? gig.seller?.username ?? "Expert";
+  const initial = (sellerName[0] ?? "?").toUpperCase();
+
   return (
     <Link
       to={`/gig/${gig.id}`}
       onClick={handleClick}
-      className="group block"
-      style={{
-        background: "#1a1a1a",
-        border: "1px solid #333333",
-        borderRadius: 16,
-        overflow: "hidden",
-        textDecoration: "none",
-        color: "#ffffff",
-      }}
+      className="group block bg-background border border-border rounded-2xl overflow-hidden no-underline text-foreground transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:border-border-strong"
     >
-      <div className="relative aspect-[4/3] overflow-hidden" style={{ background: "#0a0a0a" }}>
+      <div className="relative h-40 overflow-hidden bg-background-subtle">
         {gig.thumbnail_url ? (
           <img
             src={gig.thumbnail_url}
@@ -54,122 +48,76 @@ export function GigCard({ gig, promoted }: { gig: GigCardData; promoted?: boolea
           />
         ) : (
           <div
-            className="w-full h-full flex items-center justify-center font-mono text-xs uppercase"
-            style={{ color: "#888888", letterSpacing: "0.18em" }}
+            className="w-full h-full flex items-center justify-center text-xs uppercase text-foreground-subtle"
+            style={{ letterSpacing: "0.18em" }}
           >
             No image
           </div>
         )}
         {Number(gig.average_rating) >= 4.8 && gig.total_reviews >= 10 && (
           <span
-            className="absolute top-2 left-2"
-            style={{
-              background: "rgba(0,0,0,0.7)",
-              color: "#ffffff",
-              border: "1px solid rgba(255,255,255,0.2)",
-              fontSize: 10,
-              fontWeight: 600,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              padding: "4px 8px",
-              borderRadius: 6,
-            }}
+            className="absolute top-2 left-2 text-[10px] font-semibold uppercase px-2 py-1 rounded-full"
+            style={{ background: "#0a0a0a", color: "#fff", letterSpacing: "0.08em" }}
           >
             Top Rated
           </span>
         )}
         {promoted && (
           <span
-            className="absolute bottom-2 left-2"
-            style={{
-              background: "#ffffff",
-              color: "#000000",
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.08em",
-              textTransform: "uppercase",
-              padding: "4px 8px",
-              borderRadius: 6,
-            }}
+            className="absolute bottom-2 left-2 text-[10px] font-bold uppercase px-2 py-1 rounded-full"
+            style={{ background: "#fff", color: "#0a0a0a", letterSpacing: "0.08em" }}
           >
             Promoted
           </span>
         )}
-        <SaveGigButton gigId={gig.id} className="absolute top-2 right-2" />
+        <SaveGigButton gigId={gig.id} className="absolute top-2.5 right-2.5" />
       </div>
-      <div style={{ background: "#1a1a1a", padding: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: "50%",
-              overflow: "hidden",
-              background: "#252525",
-              flexShrink: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#ffffff",
-              fontSize: 12,
-              fontWeight: 500,
-            }}
-          >
+
+      <div className="p-3.5">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-[26px] h-[26px] rounded-full overflow-hidden bg-background-subtle flex items-center justify-center text-[10px] font-semibold text-foreground-muted flex-shrink-0">
             {gig.seller?.avatar_url ? (
-              <img src={gig.seller.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              sellerName[0]?.toUpperCase()
-            )}
+              <img src={gig.seller.avatar_url} alt="" className="w-full h-full object-cover" />
+            ) : initial}
           </div>
           <span
-            style={{
-              color: "#ffffff",
-              fontSize: 13,
-              fontWeight: 500,
-              letterSpacing: "0.04em",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
+            className="text-[11px] font-semibold uppercase text-foreground truncate"
+            style={{ letterSpacing: "0.04em" }}
           >
             {sellerName}
           </span>
         </div>
         <p
+          className="text-[13px] leading-[1.5] text-foreground/80 mb-2.5"
           style={{
-            color: "#dddddd",
-            fontSize: 14,
-            lineHeight: 1.5,
-            fontWeight: 400,
-            margin: "0 0 12px",
             display: "-webkit-box",
             WebkitLineClamp: 2,
             WebkitBoxOrient: "vertical",
             overflow: "hidden",
-            minHeight: 42,
+            minHeight: 40,
           }}
         >
           {gig.title}
         </p>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 10, borderTop: "1px solid #2a2a2a" }}>
+        <div className="flex items-center justify-between pt-2.5 border-t border-[#f0f0f0]">
           {gig.total_reviews > 0 ? (
-            <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <Star size={13} fill="#f59e0b" color="#f59e0b" />
-              <span style={{ color: "#f59e0b", fontSize: 13, fontWeight: 600 }}>
+            <div className="flex items-center gap-1">
+              <Star size={12} fill="#F59E0B" color="#F59E0B" />
+              <span className="text-xs font-semibold" style={{ color: "#F59E0B" }}>
                 {Number(gig.average_rating).toFixed(1)}
               </span>
-              <span style={{ color: "#888888", fontSize: 12 }}>({gig.total_reviews})</span>
+              <span className="text-[11px] text-foreground-subtle">({gig.total_reviews})</span>
             </div>
           ) : (
-            <span style={{ color: "#888888", fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 600 }}>
+            <span className="text-[10px] font-semibold uppercase text-foreground-subtle" style={{ letterSpacing: "0.08em" }}>
               New
             </span>
           )}
-          <div style={{ textAlign: "right" }}>
-            <div style={{ color: "#777777", fontSize: 10, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>
+          <div className="text-right">
+            <div className="text-[10px] font-semibold uppercase text-foreground-subtle" style={{ letterSpacing: "0.08em" }}>
               From
             </div>
-            <div style={{ color: "#ffffff", fontSize: 18, fontWeight: 700 }}>${gig.starting_price}</div>
+            <div className="text-base font-bold text-foreground">${gig.starting_price}</div>
           </div>
         </div>
       </div>
@@ -179,12 +127,12 @@ export function GigCard({ gig, promoted }: { gig: GigCardData; promoted?: boolea
 
 export function GigCardSkeleton() {
   return (
-    <div style={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16, overflow: "hidden" }}>
-      <div className="aspect-[4/3]" style={{ background: "#0a0a0a" }} />
-      <div style={{ padding: 14 }}>
-        <div style={{ height: 12, width: "33%", background: "#252525", borderRadius: 4 }} />
-        <div style={{ marginTop: 10, height: 16, width: "75%", background: "#252525", borderRadius: 4 }} />
-        <div style={{ marginTop: 10, height: 14, width: "25%", background: "#252525", borderRadius: 4 }} />
+    <div className="bg-background border border-border rounded-2xl overflow-hidden">
+      <div className="h-40 bg-background-subtle" />
+      <div className="p-3.5">
+        <div className="h-3 w-1/3 bg-background-subtle rounded" />
+        <div className="mt-2.5 h-4 w-3/4 bg-background-subtle rounded" />
+        <div className="mt-2.5 h-3.5 w-1/4 bg-background-subtle rounded" />
       </div>
     </div>
   );
