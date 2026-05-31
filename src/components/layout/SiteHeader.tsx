@@ -123,9 +123,6 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         <nav className="hidden md:flex items-center gap-1 text-sm">
           <Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Find Experts</Link>
           <Link to="/how-it-works" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">How It Works</Link>
-          {profile?.role !== "seller" && (
-            <Link to="/become-a-seller" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Sell</Link>
-          )}
           <Link to="/projects" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Projects</Link>
           {user && profile?.role === "client" && (
             <Link to="/post-job" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Post a Project</Link>
