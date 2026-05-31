@@ -7,6 +7,7 @@ import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight } f
 import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
 import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
+import { ConversationDetailsPanel } from "@/components/inbox/ConversationDetailsPanel";
 
 interface Conv {
   id: string;
@@ -215,7 +216,7 @@ export default function Inbox() {
           margin: "-2.5rem",
           height: "calc(100vh - 3.5rem)",
           display: "grid",
-          gridTemplateColumns: "320px 1fr",
+          gridTemplateColumns: active ? "320px 1fr 260px" : "320px 1fr",
           background: "#fff",
         }}
       >
@@ -287,6 +288,8 @@ export default function Inbox() {
               const isActive = conversationId === c.id;
               const isHover = hoverRow === c.id;
               const online = !!c.other?.is_online;
+              const unread = (c.unread_count ?? 0) > 0;
+              const leftBorderColor = isActive ? "#0A0A0A" : unread ? "#16A34A" : "transparent";
               return (
                 <button
                   key={c.id}
@@ -297,9 +300,9 @@ export default function Inbox() {
                     width: "100%",
                     textAlign: "left",
                     border: "none",
-                    background: isActive ? "#F0F0F0" : isHover ? "#F7F7F7" : "#FFFFFF",
+                    background: isActive ? "#F5F5F5" : isHover ? "#F7F7F7" : "#FFFFFF",
                     borderBottom: "1px solid #F5F5F5",
-                    borderLeft: isActive ? "3px solid #0A0A0A" : "3px solid transparent",
+                    borderLeft: `3px solid ${leftBorderColor}`,
                     padding: "14px 16px",
                     cursor: "pointer",
                     display: "flex",
@@ -349,7 +352,7 @@ export default function Inbox() {
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: "#0A0A0A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div style={{ fontSize: 14, fontWeight: unread ? 700 : 600, color: "#0A0A0A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {c.other?.full_name ?? c.other?.username ?? "User"}
                     </div>
                     <div style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
@@ -522,10 +525,9 @@ export default function Inbox() {
                         style={{
                           display: "inline-block",
                           fontSize: 11,
-                          color: "#AAAAAA",
-                          background: "#FFFFFF",
-                          border: "1px solid #EBEBEB",
-                          padding: "4px 12px",
+                          color: "#888888",
+                          background: "#F0F0F0",
+                          padding: "3px 12px",
                           borderRadius: 999,
                         }}
                       >
@@ -641,9 +643,9 @@ export default function Inbox() {
                           <div style={{ maxWidth: "65%" }}>
                             <div
                               style={{
-                                background: mine ? "#0A0A0A" : "#FFFFFF",
+                                background: mine ? "#0A0A0A" : "#FAFAFA",
                                 color: mine ? "#FFFFFF" : "#333333",
-                                border: mine ? "none" : "1px solid #EBEBEB",
+                                border: mine ? "none" : "1px solid #E5E5E5",
                                 borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                                 padding: "12px 16px",
                                 fontSize: 14,
@@ -747,6 +749,13 @@ export default function Inbox() {
             </>
           )}
         </section>
+        {active && active.other && user && (
+          <ConversationDetailsPanel
+            otherUser={active.other}
+            conversationId={active.id}
+            currentUserId={user.id}
+          />
+        )}
       </div>
     </AppShell>
   );
