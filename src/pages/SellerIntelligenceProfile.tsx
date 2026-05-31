@@ -7,6 +7,7 @@ import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { Star, Check, X } from "lucide-react";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
+import { toast } from "sonner";
 
 interface Profile {
   id: string;
@@ -237,7 +238,19 @@ export default function SellerIntelligenceProfile() {
   }
 
   const onMessage = async () => {
-    const { data } = await supabase.rpc("get_or_create_conversation", { _other: seller.id });
+    const { data: sess } = await supabase.auth.getUser();
+    if (!sess?.user) {
+      toast.error("Please sign in to message this expert");
+      return navigate(`/login?redirect=/seller/${seller.username ?? seller.id}`);
+    }
+    if (sess.user.id === seller.id) {
+      toast.error("You can't message yourself");
+      return;
+    }
+    const { data, error } = await supabase.rpc("get_or_create_conversation", {
+      _other: seller.id, _gig_id: topGig?.id ?? null, _order_id: null,
+    });
+    if (error) { toast.error(error.message); return; }
     if (data) navigate(`/inbox/${data}`);
   };
   const onViewPackages = () => {
