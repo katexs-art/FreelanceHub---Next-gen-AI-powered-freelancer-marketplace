@@ -1,54 +1,52 @@
 ## Scope
 
-Visual + copy fixes for `/post-job` (`src/pages/PostJob.tsx`) and removal of one duplicate nav link in `src/components/layout/SiteHeader.tsx`. No functionality, routing, schema, or submission logic changes.
+Visual redesign of `src/pages/buyer/BuyerDashboard.tsx` only. All existing data fetching, state, routing, and Supabase queries remain identical — only JSX, layout, and inline styles change. No changes to `AppShell`, sidebar, or any other file.
 
-## 1. SiteHeader — remove duplicate "Projects"
+## Approach
 
-The default header currently renders two "Projects" links: `/projects` (line 129) and `/buyer/orders` (line 136). Keep only `/projects`. Remove the `/buyer/orders` "Projects" link from the authed block; leave the `/inbox` "Messages" link intact.
+Rewrite the `<AppShell>` children block in `BuyerDashboard.tsx` using the exact spec the user provided. Use inline styles with literal hex values (per spec) rather than semantic tokens, since the user explicitly dictated colors. Keep all existing data hooks (`orders`, `saved`, `recs`, `stats`, `personalized`) wired to the new markup.
 
-Final nav order (authed): Find Experts · How It Works · Sell (non-sellers) · Projects · Post a Project (clients) · Messages · search · HQ · Sign out.
+### Layout
 
-## 2. PostJob page rewrite
+- Outer wrapper: `max-width: 1200px`, `padding: 32px` (AppShell already wraps with sidebar).
+- Welcome header card (#111 bg, #1E1E1E border, radius 16, 28×32 padding) with left label/heading/date and right action buttons ("Post a Project" → `/post-job`, "Find an Expert" → `/explore`).
+- Stats row: 4 cards, grid `repeat(4, 1fr)` gap 14:
+  - Active (#1E3A5F border, blue dot/label, "In progress" pill) → `stats.active`
+  - Completed (#052E16 border, green) → `stats.completed`
+  - Open Proposals (#2E1065 border, purple) → new count from existing `orders` filtered by `status === 'pending_acceptance'` if present, else 0 (no new query — derive from already-fetched `orders`/`all` arrays; fallback to 0 if not derivable without new fetch)
+  - Lifetime Spend (#1A1A1A border, white) → `$${stats.spent}`
+- Two-column flex below: left 63%, right 37%, gap 20.
 
-Rewrite `src/pages/PostJob.tsx` keeping all state, handlers, supabase calls, validation, and navigation identical. Only markup, copy, and styles change.
+### Left column
 
-### Container
-- White page (`bg-white`), max-width 720px, centered, padding `48px 24px`.
+- **Recent Projects card** (#111 / #1E1E1E / radius 16 / pad 24):
+  - Header "Recent Projects" + "View all →" → `/buyer/orders`.
+  - If `orders.length === 0` → empty state with icon circle, copy, white pill button "Post a Project" → `/post-job`.
+  - Else map `orders` to rows: title (`o.gigs?.title`), status badge with status-based color, expert name (currently not loaded — show `o.order_number` as secondary line to avoid new queries), deadline color logic skipped (no deadline field on order row currently — omit gracefully).
+- **Recommended Plays card**: header "Recommended Plays" + "Browse all →" → `/explore`. Show first 2 of existing `recs` as side-by-side cards (image 110px, expert name uppercase, title clamped 2 lines, stars + price row).
 
-### Header
-- Single H1 "Post a Project" — 32px / 600 / `#0A0A0A`, `margin-bottom: 8px`.
-- Subtext: "Describe what you need — top Experts will submit Proposals within hours" — 15px / `#666`, `margin-bottom: 40px`.
-- Remove the second "Post a Project" heading.
+### Right column
 
-### Shared field styles (inline)
-- Label: `13px / 600 / #333`, `display:block`, `margin-bottom:8px`.
-- Input/select/date base: `width:100%`, `bg:#fff`, `border:1.5px solid #CCC`, `radius:12px`, `font:15px`, `color:#0A0A0A`, placeholder `#AAA`.
-- Text/date/select height: 52px, padding `0 16px`.
-- Textarea: padding `14px 16px`, `min-height:140px`, `resize:vertical`.
-- Select: `appearance:none`, chevron SVG as background, `right 16px center`.
-- Focus (via onFocus/onBlur inline style swap, or a tiny `<style>` block scoped by className `pj-field` to set `:focus { border-color:#0A0A0A; box-shadow:0 0 0 3px rgba(0,0,0,0.06); }`).
+- **River AI card** (gradient bg, #2E1065 border): label "RIVER AI", heading, subtext, textarea (controlled local state), "Find My Expert →" button. On submit, navigate to `/explore?q=${encodeURIComponent(text)}` (matches existing explore route; no new backend).
+- **Quick Actions card**: 4 stacked rows with colored circles → `/post-job`, `/services`, `/projects`, `/inbox` (note: user spec says `/messages` but actual route is `/inbox` per AppShell; use `/inbox` to preserve routing).
+- **Activity card**: derive feed from existing `orders` array (recent status changes). If empty → "No activity yet". Colored dots: green = completed, blue = messages (skip if no data), purple = pending proposals, orange = active. Time-ago computed inline from `created_at`.
 
-### Fields (in order, all native `<input>/<textarea>/<select>` to avoid touching shared UI components)
-1. **Project Title** — placeholder "Example: Build me a Voice AI caller for my real estate business".
-2. **Describe your project** — textarea, placeholder "Tell Experts exactly what you need. Include your goals, tools you use, what you want delivered, and any specific requirements. The more detail you give the better Proposals you will receive."
-3. **Service Category** — styled select, options from `useCategories()` (unchanged).
-4. **Required Skills** — tag input, placeholder "Type a skill and press Enter — example: Voice AI, GoHighLevel, Chatbot". Chips below unchanged behavior, restyled to match (`#F7F7F7` pill, 12px radius border `#EBEBEB`).
-5. **Your Budget** — two side-by-side inputs (`grid-cols-2 gap-3`), placeholders "Min $" / "Max $", styled per spec.
-6. **Delivery Deadline** — date input, 52px.
-7. **Attachments (optional)** — dashed dropzone: `border:2px dashed #CCC`, radius 12, padding 32, centered, text `#888` 14px: "Drag files here or click to upload. Accepts PDF, images, and documents." Clicking the area triggers the hidden `<input type="file" multiple>`. Keep existing `handleFiles` logic and `attachments.length` indicator.
-8. **Who can submit a Proposal?** — two pill cards side by side (`grid-cols-2 gap-3`):
-   - "Open to all Experts" / "Any approved Expert can submit a Proposal" → sets `visibility="open"`.
-   - "River matched only" / "Only River's top matches get notified" → sets `visibility="river"`.
-   - Card: `border:1.5px solid #CCC`, radius 12, padding 16, cursor pointer. Selected: `border-color:#0A0A0A`, `bg:#F7F7F7`. Hidden radio inputs maintain accessibility.
+### Styling rules
 
-### Submit
-- Button "Post My Project" — full width, `bg:#0A0A0A`, `color:#fff`, radius 12, height 56, `font:16/600`, hover `#333`, `margin-top:32px`. Disabled state keeps current opacity behavior, label "Posting…" preserved.
-- Trust line below: 12px `#AAA` centered, `margin-top:12px`: "Free to post · Experts will be notified immediately · You only pay when you accept a Proposal".
+- All colors per spec as literal hex inline styles (`style={{ background: '#111111', ... }}`).
+- Hover states implemented via `onMouseEnter`/`onMouseLeave` toggling inline style state, or via a small scoped `<style>` block with classnames like `pj-quick-row:hover`.
+- Buttons use `<Link>` from react-router-dom styled inline (not the shared `Button` component, to avoid token conflicts).
+- Page background: wrap the whole content in a div with `background: #0A0A0A` covering the main area.
 
-### Copy rules applied
-Throughout the page: "sellers" → "Experts", "bid/bids" → "Proposal/Proposals", "job" → "Project". Validation toast messages, page meta, and any helper text updated accordingly. No changes to error strings returned by Supabase.
+### Preservation
+
+- All `useEffect` data loading stays untouched.
+- All existing state variables continue to drive the UI.
+- No edits to `AppShell`, `SiteHeader`, routes, schema, RLS, or shared UI primitives.
 
 ## Out of scope
-- No DB / RLS / edge function / route changes.
-- No edits to shared UI primitives (`Input`, `Textarea`, `Button`) — styles applied inline on this page only.
-- No other pages touched.
+
+- No new Supabase queries, RPC, or schema changes.
+- No new routes or nav changes.
+- No edits to other pages or shared components.
+- "Open Proposals" count is derived from already-loaded data; if not present, displays 0 (no extra fetch).
