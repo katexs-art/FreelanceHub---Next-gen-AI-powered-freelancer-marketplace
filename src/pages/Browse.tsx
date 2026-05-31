@@ -92,13 +92,21 @@ export default function Browse() {
   const [loading, setLoading] = useState(true);
   const [totalApproved, setTotalApproved] = useState(0);
 
-  const [query, setQuery] = useState("");
-  const [pendingQuery, setPendingQuery] = useState("");
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
+  const [pendingQuery, setPendingQuery] = useState(searchParams.get("q") ?? "");
   const [searchParams] = useSearchParams();
+  const urlQ = (searchParams.get("q") ?? "").trim();
   const [category, setCategory] = useState(searchParams.get("category") ?? "All");
   const [quick, setQuick] = useState<Set<Quick>>(new Set());
   const [sort, setSort] = useState<Sort>("River Recommended");
   const [page, setPage] = useState(1);
+  const [riverOtherVisible, setRiverOtherVisible] = useState(24);
+
+  // Keep search state in sync with URL ?q=
+  useEffect(() => {
+    setQuery(urlQ);
+    setPendingQuery(urlQ);
+  }, [urlQ]);
 
   // Initial load
   useEffect(() => {
