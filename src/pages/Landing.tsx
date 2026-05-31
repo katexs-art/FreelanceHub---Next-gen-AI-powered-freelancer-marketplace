@@ -35,6 +35,34 @@ export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [sellers, setSellers] = useState<TopSeller[]>([]);
+  const SR: any = typeof window !== "undefined" ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
+  const [voiceSupported] = useState<boolean>(!!SR);
+  const [listening, setListening] = useState(false);
+  const [micHover, setMicHover] = useState(false);
+  const recogRef = useRef<any>(null);
+
+  const startVoice = () => {
+    if (!SR || listening) return;
+    try {
+      const r = new SR();
+      r.continuous = false;
+      r.interimResults = true;
+      r.lang = "en-US";
+      r.onresult = (e: any) => {
+        let t = "";
+        for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+        setQ(t);
+      };
+      r.onend = () => setListening(false);
+      r.onerror = () => setListening(false);
+      recogRef.current = r;
+      setListening(true);
+      r.start();
+    } catch {
+      setListening(false);
+    }
+  };
+
 
   useEffect(() => {
     (async () => {
