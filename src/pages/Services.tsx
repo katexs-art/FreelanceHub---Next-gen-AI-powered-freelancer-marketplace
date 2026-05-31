@@ -270,7 +270,7 @@ export default function Services() {
                   return (
                     <Link
                       key={s.id}
-                      to={`/seller/${s.username ?? s.id}`}
+                      to={`/u/${s.username ?? s.id}`}
                       className="svc-pick"
                       style={{
                         background: "#0a0a0a", borderTop: `3px solid ${meta.color}`,
@@ -311,7 +311,7 @@ export default function Services() {
               Featured this week
             </h2>
             {featured ? (
-              <Link to={`/seller/${featured.username ?? featured.id}`} style={{ display: "block", textDecoration: "none", color: "#fff" }}>
+              <Link to={`/u/${featured.username ?? featured.id}`} style={{ display: "block", textDecoration: "none", color: "#fff" }}>
                 <div style={{ background: "#0a0a0a", borderRadius: 16, overflow: "hidden", display: "flex", flexDirection: "row", minHeight: 320 }}>
                   <div style={{ width: "42%", background: "#111", position: "relative", flexShrink: 0 }}>
                     {featured.avatar_url ? (
@@ -436,7 +436,7 @@ export default function Services() {
                   ))}
                 </div>
                 <Link
-                  to={s ? `/seller/${s.username ?? s.id}` : "#"}
+                  to={s ? `/u/${s.username ?? s.id}` : "#"}
                   className="svc-pitch"
                   style={{
                     marginTop: "auto", textAlign: "center", background: "#fff",
