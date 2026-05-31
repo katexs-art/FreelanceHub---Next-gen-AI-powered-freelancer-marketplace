@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 function tokenizeQ(s: string): string[] {
   return s.toLowerCase().split(/[^a-z0-9]+/).filter((t) => t.length > 2);
@@ -386,7 +387,7 @@ export default function Browse() {
 
   const openMessage = async (sellerId: string) => {
     if (!user) {
-      navigate("/login?next=/browse");
+      navigate("/login?next=/services");
       return;
     }
     if (user.id === sellerId) return;
@@ -763,24 +764,31 @@ function SellerCard({
             {seller.full_name ?? seller.username ?? "Unknown"}
           </div>
           <div style={{ display: "flex", gap: 6, marginTop: 6, flexWrap: "wrap" }}>
-            <span
-              style={{
-                background: "#000",
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: 600,
-                padding: "3px 8px",
-                borderRadius: 999,
-              }}
-            >
-              River Score {(seller.river_score ?? 0).toFixed(1)}
-            </span>
+            {(() => {
+              const txt = riverScoreText(seller.river_score, { reviews: seller.total_reviews, orders: seller.totalOrders, digits: 1 });
+              return txt ? (
+                <span
+                  style={{
+                    background: "#000",
+                    color: "#fff",
+                    fontSize: 11,
+                    fontWeight: 500,
+                    padding: "3px 10px",
+                    borderRadius: 999,
+                  }}
+                >
+                  River Score {txt}
+                </span>
+              ) : (
+                <RiverNewPill surface="light" />
+              );
+            })()}
             <span
               style={{
                 ...levelStyle,
-                fontSize: 10,
-                fontWeight: 600,
-                padding: "3px 8px",
+                fontSize: 11,
+                fontWeight: 500,
+                padding: "3px 10px",
                 borderRadius: 999,
               }}
             >
@@ -862,12 +870,12 @@ function SellerCard({
           style={{
             flex: 1,
             height: 38,
-            background: "#000",
-            color: "#fff",
-            border: "none",
+            background: "#fff",
+            color: "#000",
+            border: "1.5px solid #000",
             borderRadius: 999,
-            fontSize: 13,
-            fontWeight: 600,
+            fontSize: 12,
+            fontWeight: 500,
             cursor: "pointer",
           }}
         >
@@ -881,11 +889,11 @@ function SellerCard({
           style={{
             flex: 1,
             height: 38,
-            background: "#fff",
-            color: "#111",
-            border: "1px solid #111",
+            background: "#000",
+            color: "#fff",
+            border: "none",
             borderRadius: 999,
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: 600,
             cursor: "pointer",
           }}
@@ -1075,12 +1083,21 @@ function RiverTopCard({ item, onPitch }: { item: RiverItem; onPitch: () => void 
     >
       <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
         <div>
-          <div style={{ fontSize: 40, fontWeight: 600, color: "#fff", lineHeight: 1 }}>
-            {Math.round(riverScore)}
-          </div>
-          <div style={{ fontSize: 10, color: "#666", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 6 }}>
-            River Score
-          </div>
+          {(() => {
+            const txt = riverScoreText(riverScore, { reviews: s.total_reviews, orders: s.totalOrders, digits: 0 });
+            return txt ? (
+              <>
+                <div style={{ fontSize: 36, fontWeight: 600, color: "#fff", lineHeight: 1 }}>
+                  {txt}
+                </div>
+                <div style={{ fontSize: 10, color: "#888", letterSpacing: "0.1em", textTransform: "uppercase", marginTop: 6 }}>
+                  River Score
+                </div>
+              </>
+            ) : (
+              <RiverNewPill surface="dark" />
+            );
+          })()}
         </div>
         <span
           style={{
@@ -1137,13 +1154,13 @@ function RiverTopCard({ item, onPitch }: { item: RiverItem; onPitch: () => void 
               strokeWidth={1.5}
             />
           ))}
-          <span style={{ fontSize: 12, color: "#666", marginLeft: 2 }}>({s.total_reviews || 0})</span>
+          <span style={{ fontSize: 12, color: "#888", marginLeft: 2 }}>({s.total_reviews || 0})</span>
         </span>
-        <span style={{ color: "#333" }}>·</span>
-        <span style={{ fontSize: 12, color: "#777" }}>
+        <span style={{ color: "#555" }}>·</span>
+        <span style={{ fontSize: 12, color: "#888" }}>
           {s.minDelivery ? `${s.minDelivery}d delivery` : "—"}
         </span>
-        <span style={{ color: "#333" }}>·</span>
+        <span style={{ color: "#555" }}>·</span>
         <span style={{ fontSize: 15, color: "#fff", fontWeight: 600 }}>
           {s.startingPrice ? `From ${fmtCents(s.startingPrice)}` : "—"}
         </span>
