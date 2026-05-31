@@ -20,7 +20,7 @@ interface Props {
 
 export function OrderTimeline({ order }: Props) {
   const events: Event[] = [
-    { label: "Order placed", at: order.created_at, icon: CircleDot, done: true },
+    { label: "Project placed", at: order.created_at, icon: CircleDot, done: true },
     { label: "Requirements submitted", at: order.requirements_submitted_at, icon: Package, done: !!order.requirements_submitted_at },
     { label: order.revision_count > 0 ? `Delivered (revisions: ${order.revision_count})` : "Delivered", at: order.delivered_at, icon: Upload, done: !!order.delivered_at },
     { label: "Completed", at: order.completed_at, icon: Check, done: !!order.completed_at },

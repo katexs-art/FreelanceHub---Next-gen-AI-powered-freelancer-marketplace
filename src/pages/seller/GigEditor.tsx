@@ -161,13 +161,13 @@ export default function GigEditor() {
     setSaving(true);
     const id = await upsertGig("active"); // auto-approve for now
     setSaving(false);
-    if (id) { toast.success("Gig published"); nav("/seller/gigs"); }
+    if (id) { toast.success("Play published"); nav("/seller/gigs"); }
   };
 
   return (
     <AppShell>
       <div className="max-w-4xl">
-        <h1 className="text-3xl font-bold">{id ? "Edit gig" : "Create a new gig"}</h1>
+        <h1 className="text-3xl font-bold">{id ? "Edit play" : "Create a new play"}</h1>
 
         {/* Stepper */}
         <div className="mt-8 mb-10 flex items-center gap-2">
@@ -190,7 +190,7 @@ export default function GigEditor() {
         <div className="bg-background border border-border rounded-xl p-8 space-y-6">
           {step === 0 && (
             <>
-              <Field label="Gig title" hint="A catchy title gets more clicks.">
+              <Field label="Play title" hint="A catchy title gets more clicks.">
                 <Input value={overview.title} maxLength={80}
                   onChange={(e) => setOverview({ ...overview, title: e.target.value })}
                   placeholder="I will design a modern logo for your brand" />
@@ -243,7 +243,7 @@ export default function GigEditor() {
           )}
 
           {step === 2 && (
-            <Field label="Gig description" hint="Describe your service in detail. Markdown supported soon.">
+            <Field label="Play description" hint="Describe your service in detail. Markdown supported soon.">
               <Textarea rows={10} value={description} onChange={(e) => setDescription(e.target.value)}
                 placeholder="What you offer, your process, what's included, what's not..." />
             </Field>
@@ -251,7 +251,7 @@ export default function GigEditor() {
 
           {step === 3 && (
             <div className="space-y-6">
-              <Field label="Thumbnail" hint="The main image buyers see in search results.">
+              <Field label="Thumbnail" hint="The main image partners see in search results.">
                 <div className="flex items-center gap-4">
                   {thumbnail ? (
                     <div className="relative w-40 h-28 rounded-lg overflow-hidden border border-border">
@@ -318,7 +318,7 @@ export default function GigEditor() {
               <Button onClick={() => setStep(step + 1)}>Next</Button>
             ) : (
               <Button onClick={submitForReview} disabled={saving}>
-                {saving ? "Publishing…" : "Publish gig"}
+                {saving ? "Publishing…" : "Publish play"}
               </Button>
             )}
           </div>

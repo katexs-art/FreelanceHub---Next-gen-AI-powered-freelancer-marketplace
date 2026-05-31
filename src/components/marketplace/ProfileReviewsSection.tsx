@@ -78,7 +78,7 @@ export function ProfileReviewsSection({ sellerId }: { sellerId: string }) {
     const { data } = await supabase
       .from("reviews")
       .select(
-        "id, rating, overall_rating, review_text, standout_moment, reply, created_at, seller_id, helpful_count, rating_communication, rating_quality, rating_delivery, rating_value, rating_rehire, buyer:buyer_id (full_name, username)"
+        "id, rating, overall_rating, review_text, standout_moment, reply, created_at, seller_id, helpful_count, rating_communication, rating_quality, rating_delivery, rating_value, rating_rehire, partner:buyer_id (full_name, username)"
       )
       .eq("seller_id", sellerId)
       .eq("reviewer_role", "buyer")

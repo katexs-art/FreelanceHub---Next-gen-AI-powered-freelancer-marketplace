@@ -40,7 +40,7 @@ export function SellerApprovalsQueue() {
   const approve = async (id: string) => {
     const { error } = await supabase.rpc("approve_seller", { _seller: id });
     if (error) return toast.error(error.message);
-    toast.success("Seller approved");
+    toast.success("Expert approved");
     load();
   };
 

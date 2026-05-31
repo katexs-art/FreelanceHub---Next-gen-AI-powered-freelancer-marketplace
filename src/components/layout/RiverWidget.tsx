@@ -64,7 +64,7 @@ export function RiverWidget() {
           <div className="flex items-center gap-2 px-4 h-12 border-b-hairline shrink-0">
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="font-mono text-xs uppercase tracking-[0.16em]">River AI</span>
-            <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.14em] text-foreground-muted">Gig matcher</span>
+            <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.14em] text-foreground-muted">Play matcher</span>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3">

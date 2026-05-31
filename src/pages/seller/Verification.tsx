@@ -58,7 +58,7 @@ export default function Verification() {
     <AppShell>
       <div className="max-w-2xl">
         <h1 className="text-2xl font-bold">Verification</h1>
-        <p className="text-sm text-foreground-muted mt-1">Get a Verified badge so buyers trust you faster.</p>
+        <p className="text-sm text-foreground-muted mt-1">Get a Verified badge so partners trust you faster.</p>
 
         <div className="mt-6 bg-background border border-border rounded-xl p-6 space-y-5">
           <StatusBanner status={status} reason={verif?.rejection_reason ?? null} />

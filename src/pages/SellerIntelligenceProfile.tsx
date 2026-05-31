@@ -149,7 +149,7 @@ export default function SellerIntelligenceProfile() {
     })();
   }, [username]);
 
-  const name = seller?.full_name ?? seller?.username ?? "Seller";
+  const name = seller?.full_name ?? seller?.username ?? "Expert";
   const firstName = name.split(" ")[0];
 
   // Aggregate tags from gigs → verified skills
@@ -227,8 +227,8 @@ export default function SellerIntelligenceProfile() {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 container py-20 text-center">
-          <h1 className="text-2xl font-bold">Seller not found</h1>
-          <Link to="/explore" className="text-primary mt-2 inline-block">Browse sellers</Link>
+          <h1 className="text-2xl font-bold">Expert not found</h1>
+          <Link to="/explore" className="text-primary mt-2 inline-block">Browse experts</Link>
         </main>
         <SiteFooter />
       </div>
@@ -421,7 +421,7 @@ export default function SellerIntelligenceProfile() {
               </div>
               <div className="p-5 text-center md:border-r" style={{ borderColor: "#e5e5e5" }}>
                 <div style={{ fontSize: 28, fontWeight: 700 }}>{stats.completionRate}%</div>
-                <div className="text-xs mt-1" style={{ color: "#999" }}>Order completion</div>
+                <div className="text-xs mt-1" style={{ color: "#999" }}>Project completion</div>
               </div>
               <div className="p-5 text-center md:border-r" style={{ borderColor: "#e5e5e5" }}>
                 <div style={{ fontSize: 28, fontWeight: 700 }}>{stats.avgDeliveryDays || "—"}</div>
@@ -429,7 +429,7 @@ export default function SellerIntelligenceProfile() {
               </div>
               <div className="p-5 text-center">
                 <div style={{ fontSize: 28, fontWeight: 700 }}>{stats.repeatBuyerRate}%</div>
-                <div className="text-xs mt-1" style={{ color: "#999" }}>Repeat buyers</div>
+                <div className="text-xs mt-1" style={{ color: "#999" }}>Repeat partners</div>
               </div>
             </section>
 

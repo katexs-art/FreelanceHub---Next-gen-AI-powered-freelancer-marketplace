@@ -56,7 +56,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
             <Link to="/services" className={linkCls}>Services</Link>
             <Link to="/projects" className={linkCls}>Projects</Link>
             {user && <Link to="/inbox" className={linkCls}>Messages</Link>}
-            {user && <Link to="/buyer/orders" className={linkCls}>Orders</Link>}
+            {user && <Link to="/buyer/orders" className={linkCls}>Projects</Link>}
           </nav>
 
           <form
@@ -84,7 +84,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
             {user ? (
               <>
                 <Link to={dashHref}>
-                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white">Dashboard</Button>
+                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white">HQ</Button>
                 </Link>
                 <Button
                   variant="outline"
@@ -124,12 +124,12 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
           )}
           <Link to="/projects" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Projects</Link>
           {user && profile?.role === "client" && (
-            <Link to="/post-job" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Post a Job</Link>
+            <Link to="/post-job" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Post a Project</Link>
           )}
           {user && (
             <>
               <Link to="/inbox" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Messages</Link>
-              <Link to="/buyer/orders" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Orders</Link>
+              <Link to="/buyer/orders" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Projects</Link>
             </>
           )}
         </nav>
@@ -161,7 +161,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
         <div className="hidden md:flex items-center gap-2">
           {user ? (
             <>
-              <Link to={dashHref}><Button variant="ghost" size="sm">Dashboard</Button></Link>
+              <Link to={dashHref}><Button variant="ghost" size="sm">HQ</Button></Link>
               <Button variant="outline" size="sm" onClick={() => signOut()}>Sign out</Button>
             </>
           ) : (

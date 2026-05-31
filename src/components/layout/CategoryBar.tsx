@@ -134,7 +134,7 @@ const CATS: Cat[] = [
       "GHL White Label Setup & Branding", "GHL SaaS Mode Configuration",
       "GHL Snapshot Creation & Deployment", "GHL CRM Build & Configuration",
       "GHL Pipeline Setup & Management", "GHL Custom Fields & Tags Setup",
-      "GHL Dashboard Customization", "GHL API Integrations & Connections",
+      "GHL HQ Customization", "GHL API Integrations & Connections",
       "GHL Migration from Any Platform", "GHL Agency Account Setup",
     ],
   },
@@ -154,7 +154,7 @@ const CATS: Cat[] = [
     items: [
       "Sales Funnel Design & Build", "Landing Page Design & Build",
       "Website Build in GHL", "Membership Site Setup",
-      "Course & Community Platform Setup", "Order Bump & Upsell Setup",
+      "Course & Community Platform Setup", "Project Bump & Upsell Setup",
       "Checkout Page Configuration", "GHL Funnel Cloning & Templates",
       "GHL AI Funnel Builder Setup", "Affiliate Program Setup in GHL",
     ],
@@ -204,8 +204,8 @@ const CATS: Cat[] = [
       "CRM Setup & Contact Management", "Smart List & Segmentation Setup",
       "Lead Scoring Configuration", "Contact Import & Data Cleanup",
       "Pipeline Reporting & Analytics Setup", "Opportunity Tracking Setup",
-      "GHL Reporting Dashboard Setup", "ROI Reporting Setup",
-      "Custom Dashboard Build", "Multi-Location Management Setup",
+      "GHL Reporting HQ Setup", "ROI Reporting Setup",
+      "Custom HQ Build", "Multi-Location Management Setup",
     ],
   },
   {

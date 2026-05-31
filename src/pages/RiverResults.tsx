@@ -172,7 +172,7 @@ export default function RiverResults() {
                 <div className="flex items-start gap-4">
                   <div className="h-14 w-14 rounded-full overflow-hidden bg-background-subtle shrink-0">
                     {s.avatar_url ? (
-                      <img src={s.avatar_url} alt={s.full_name || "Seller"} className="h-full w-full object-cover" />
+                      <img src={s.avatar_url} alt={s.full_name || "Expert"} className="h-full w-full object-cover" />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-foreground-muted text-sm">
                         {(s.full_name || "?").slice(0, 1)}

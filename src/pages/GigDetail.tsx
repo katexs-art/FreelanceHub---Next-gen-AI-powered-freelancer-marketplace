@@ -138,8 +138,8 @@ export default function GigDetail() {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 container py-20 text-center">
-          <h1 className="text-2xl font-bold">Gig not found</h1>
-          <Link to="/explore" className="text-primary mt-2 inline-block">Browse gigs</Link>
+          <h1 className="text-2xl font-bold">Play not found</h1>
+          <Link to="/explore" className="text-primary mt-2 inline-block">Browse plays</Link>
         </main>
         <SiteFooter />
       </div>
@@ -231,9 +231,9 @@ export default function GigDetail() {
             </div>
 
             <section className="mt-10">
-              <h2 className="text-xl font-bold mb-3">About this gig</h2>
+              <h2 className="text-xl font-bold mb-3">About this play</h2>
               <p className="text-foreground-muted whitespace-pre-line leading-relaxed">
-                {gig.description || "The seller hasn't added a description yet."}
+                {gig.description || "The expert hasn't added a description yet."}
               </p>
               {gig.tags.length > 0 && (
                 <div className="mt-6 flex flex-wrap gap-2">
@@ -249,7 +249,7 @@ export default function GigDetail() {
             <section className="mt-10">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold">Reviews {gig.total_reviews > 0 && <span className="text-foreground-muted font-normal">({gig.total_reviews})</span>}</h2>
-                <ReportDialog targetType="gig" targetId={gig.id} label="Report gig" />
+                <ReportDialog targetType="gig" targetId={gig.id} label="Report play" />
               </div>
               <div className="mb-5"><RatingBreakdown gigId={gig.id} /></div>
               <ReviewsList gigId={gig.id} />
@@ -300,13 +300,13 @@ export default function GigDetail() {
                     onClick={async () => {
                       if (!user) return nav("/login");
                       if (!selected) return;
-                      toast.loading("Preparing your order…", { id: "co" });
+                      toast.loading("Preparing your project…", { id: "co" });
                       const { data, error } = await supabase.rpc("create_gig_order", {
                         _package_id: selected.id,
                         _extra_ids: [],
                       });
                       toast.dismiss("co");
-                      if (error || !data) return toast.error(error?.message ?? "Could not create order");
+                      if (error || !data) return toast.error(error?.message ?? "Could not create project");
                       nav(`/checkout/${data}`);
                     }}>
                     Continue (${selected.price})

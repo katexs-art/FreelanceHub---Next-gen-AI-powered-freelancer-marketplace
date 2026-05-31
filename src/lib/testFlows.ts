@@ -43,38 +43,38 @@ async function getOrCreateTestOrder(): Promise<string> {
 
 export const TEST_CASES: TestCase[] = [
   // BUYER FLOWS
-  { id: "b1", group: "Buyer", title: "Browse loads active gigs", run: async () => {
+  { id: "b1", group: "Partner", title: "Browse loads active plays", run: async () => {
     const { data, error } = await supabase.from("gigs").select("id").eq("status", "active").limit(10);
     if (error) return fail(error.message);
-    return data && data.length > 0 ? ok(`${data.length} gigs`) : fail("no active gigs");
+    return data && data.length > 0 ? ok(`${data.length} gigs`) : fail("no active plays");
   }},
-  { id: "b2", group: "Buyer", title: "Search returns results", run: async () => {
+  { id: "b2", group: "Partner", title: "Search returns results", run: async () => {
     const { data, error } = await supabase.from("gigs").select("id").ilike("title", "%AI%").limit(5);
     if (error) return fail(error.message);
     return ok(`${data?.length ?? 0} matches`);
   }},
-  { id: "b3", group: "Buyer", title: "Categories list", run: async () => {
+  { id: "b3", group: "Partner", title: "Categories list", run: async () => {
     const { data } = await supabase.from("gigs").select("primary_category").limit(20);
     return data && data.length > 0 ? ok() : fail("empty");
   }},
-  { id: "b4", group: "Buyer", title: "Seller profile fetch", run: async () => {
+  { id: "b4", group: "Partner", title: "Expert profile fetch", run: async () => {
     const { data, error } = await supabase.from("profiles").select("id").eq("email", SELLER1).maybeSingle();
     if (error || !data) return fail("seller1 missing");
     return ok();
   }},
-  { id: "b5", group: "Buyer", title: "Buyer sign-in works", run: async () => {
+  { id: "b5", group: "Partner", title: "Partner sign-in works", run: async () => {
     const { error } = await supabase.auth.signInWithPassword({ email: BUYER1, password: TEST_PASSWORD });
     return error ? fail(error.message) : ok();
   }},
-  { id: "b6", group: "Buyer", title: "Send message to seller", run: async () => {
+  { id: "b6", group: "Partner", title: "Send message to expert", run: async () => {
     await supabase.auth.signInWithPassword({ email: BUYER1, password: TEST_PASSWORD });
     const { data: s } = await supabase.from("profiles").select("id").eq("email", SELLER1).maybeSingle();
-    if (!s) return fail("no seller");
+    if (!s) return fail("no expert");
     const { data: conv, error } = await supabase.rpc("get_or_create_conversation", { _other: s.id });
     if (error) return fail(error.message);
     return ok(String(conv).slice(0, 8));
   }},
-  { id: "b7", group: "Buyer", title: "Post a project", run: async () => {
+  { id: "b7", group: "Partner", title: "Post a project", run: async () => {
     await supabase.auth.signInWithPassword({ email: BUYER1, password: TEST_PASSWORD });
     const { data: u } = await supabase.auth.getUser();
     const { error } = await supabase.from("project_posts").insert({
@@ -83,18 +83,18 @@ export const TEST_CASES: TestCase[] = [
     });
     return error ? fail(error.message) : ok();
   }},
-  { id: "b8", group: "Buyer", title: "Create order from gig", run: async () => {
+  { id: "b8", group: "Partner", title: "Create project from play", run: async () => {
     try { const id = await getOrCreateTestOrder(); return ok(id.slice(0, 8)); }
     catch (e: any) { return fail(e.message); }
   }},
-  { id: "b9", group: "Buyer", title: "Order shows pending_payment", run: async () => {
+  { id: "b9", group: "Partner", title: "Project shows pending_payment", run: async () => {
     try {
       const id = await getOrCreateTestOrder();
       const { data } = await supabase.from("orders").select("status").eq("id", id).maybeSingle();
       return data?.status === "pending_payment" ? ok() : fail(`status=${data?.status}`);
     } catch (e: any) { return fail(e.message); }
   }},
-  { id: "b10", group: "Buyer", title: "Simulated payment marks order paid", run: async () => {
+  { id: "b10", group: "Partner", title: "Simulated payment marks project paid", run: async () => {
     try {
       const id = await getOrCreateTestOrder();
       await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
@@ -106,17 +106,17 @@ export const TEST_CASES: TestCase[] = [
   }},
 
   // ORDER FLOWS
-  { id: "o11", group: "Order", title: "Buyer orders list loads", run: async () => {
+  { id: "o11", group: "Project", title: "Partner projects list loads", run: async () => {
     await supabase.auth.signInWithPassword({ email: BUYER1, password: TEST_PASSWORD });
     const { error } = await supabase.from("orders").select("id").limit(5);
     return error ? fail(error.message) : ok();
   }},
-  { id: "o12", group: "Order", title: "Seller orders list loads", run: async () => {
+  { id: "o12", group: "Project", title: "Expert projects list loads", run: async () => {
     await supabase.auth.signInWithPassword({ email: SELLER1, password: TEST_PASSWORD });
     const { error } = await supabase.from("orders").select("id").limit(5);
     return error ? fail(error.message) : ok();
   }},
-  { id: "o13", group: "Order", title: "Halfway time advance works", run: async () => {
+  { id: "o13", group: "Project", title: "Halfway time advance works", run: async () => {
     try {
       const id = await getOrCreateTestOrder();
       await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
@@ -125,7 +125,7 @@ export const TEST_CASES: TestCase[] = [
       return error ? fail(error.message) : ok();
     } catch (e: any) { return fail(e.message); }
   }},
-  { id: "o14", group: "Order", title: "Past deadline time advance works", run: async () => {
+  { id: "o14", group: "Project", title: "Past deadline time advance works", run: async () => {
     try {
       const id = await getOrCreateTestOrder();
       await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
@@ -134,7 +134,7 @@ export const TEST_CASES: TestCase[] = [
       return error ? fail(error.message) : ok();
     } catch (e: any) { return fail(e.message); }
   }},
-  { id: "o15", group: "Order", title: "Seller can mark delivered", run: async () => {
+  { id: "o15", group: "Project", title: "Expert can mark delivered", run: async () => {
     try {
       const id = await getOrCreateTestOrder();
       await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
@@ -146,17 +146,17 @@ export const TEST_CASES: TestCase[] = [
       return error ? fail(error.message) : ok();
     } catch (e: any) { return fail(e.message); }
   }},
-  { id: "o16", group: "Order", title: "Auto-complete clears escrow", run: async () => {
+  { id: "o16", group: "Project", title: "Auto-complete clears escrow", run: async () => {
     await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
     const { error } = await supabase.rpc("auto_complete_orders");
     return error ? fail(error.message) : ok();
   }},
-  { id: "o17", group: "Order", title: "Seller credits clear", run: async () => {
+  { id: "o17", group: "Project", title: "Expert credits clear", run: async () => {
     await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
     const { error } = await supabase.rpc("clear_due_seller_credits");
     return error ? fail(error.message) : ok();
   }},
-  { id: "o18", group: "Order", title: "Seller balance recomputes", run: async () => {
+  { id: "o18", group: "Project", title: "Expert balance recomputes", run: async () => {
     await supabase.auth.signInWithPassword({ email: SELLER1, password: TEST_PASSWORD });
     const { data } = await supabase.from("seller_accounts").select("available_balance").maybeSingle();
     return data ? ok(`bal=${data.available_balance}`) : fail("no account");
@@ -174,13 +174,13 @@ export const TEST_CASES: TestCase[] = [
   { id: "r21", group: "Review", title: "River score recompute callable", run: async () => {
     await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
     const { data: s } = await supabase.from("profiles").select("id").eq("email", SELLER1).maybeSingle();
-    if (!s) return fail("no seller");
+    if (!s) return fail("no expert");
     const { error } = await supabase.rpc("recompute_seller_review_stats", { _seller: s.id });
     return error ? fail(error.message) : ok();
   }},
 
   // ADMIN FLOWS
-  { id: "a22", group: "Admin", title: "Admin can read all orders", run: async () => {
+  { id: "a22", group: "Admin", title: "Admin can read all projects", run: async () => {
     await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
     const { data, error } = await supabase.from("orders").select("id").limit(50);
     return error ? fail(error.message) : ok(`${data?.length ?? 0} rows`);
@@ -190,7 +190,7 @@ export const TEST_CASES: TestCase[] = [
     const { data, error } = await supabase.from("profiles").select("id").limit(50);
     return error ? fail(error.message) : ok(`${data?.length ?? 0} rows`);
   }},
-  { id: "a24", group: "Admin", title: "Seller approvals queue readable", run: async () => {
+  { id: "a24", group: "Admin", title: "Expert approvals queue readable", run: async () => {
     await supabase.auth.signInWithPassword({ email: ADMIN, password: TEST_PASSWORD });
     const { error } = await supabase.from("seller_applications").select("id").limit(5);
     return error ? fail(error.message) : ok();

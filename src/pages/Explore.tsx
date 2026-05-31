@@ -55,7 +55,7 @@ export default function Explore() {
       <SiteHeader />
       <main className="flex-1 container py-10">
         <h1 className="text-3xl font-bold">Explore services</h1>
-        <p className="text-foreground-muted mt-1">Browse all categories or discover trending gigs.</p>
+        <p className="text-foreground-muted mt-1">Browse all categories or discover trending plays.</p>
 
         <div className="mt-8 flex flex-wrap gap-2">
           {categories.filter((c) => !c.parent_id).map((c) => (
@@ -68,7 +68,7 @@ export default function Explore() {
 
         {followed.length > 0 && (
           <section className="mt-10">
-            <h2 className="text-xl font-bold mb-6">From sellers you follow</h2>
+            <h2 className="text-xl font-bold mb-6">From experts you follow</h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {followed.map((g) => <GigCard key={g.id} gig={g} />)}
             </div>
@@ -80,7 +80,7 @@ export default function Explore() {
           {loading
             ? Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)
             : gigs.length === 0
-              ? <p className="text-foreground-muted col-span-full">No gigs published yet.</p>
+              ? <p className="text-foreground-muted col-span-full">No plays published yet.</p>
               : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
         </div>
 

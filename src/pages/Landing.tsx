@@ -292,7 +292,7 @@ export default function Landing() {
         <div className="kx-grid-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
           {[
             { v: "2,400+", l: "Verified AI experts" },
-            { v: "$2.1M+", l: "Paid out to sellers" },
+            { v: "$2.1M+", l: "Paid out to experts" },
             { v: "3 days", l: "Average payment time" },
             { v: "98%", l: "Satisfaction rate" },
           ].map((s, i) => (

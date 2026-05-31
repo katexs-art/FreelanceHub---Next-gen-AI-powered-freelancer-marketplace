@@ -93,7 +93,7 @@ export default function SellerDashboard() {
         const key = `katexs:payouts-connected-toast:${user.id}`;
         if (!localStorage.getItem(key)) {
           localStorage.setItem(key, "1");
-          toast.success("Payout account connected — you will receive payments automatically after every completed order.");
+          toast.success("Payout account connected — you will receive payments automatically after every completed project.");
         }
       }
       navigate("/seller/dashboard", { replace: true });
@@ -123,8 +123,8 @@ export default function SellerDashboard() {
   const maxBucket = Math.max(1, ...trend);
 
   const cards = [
-    { icon: Package, label: "Active gigs", value: stats.active_gigs },
-    { icon: ShoppingBag, label: "Active orders", value: stats.active_orders },
+    { icon: Package, label: "Active plays", value: stats.active_gigs },
+    { icon: ShoppingBag, label: "Active projects", value: stats.active_orders },
     { icon: TrendingUp, label: "Lifetime earnings", value: `$${stats.total_earnings}` },
     { icon: Star, label: "Avg rating", value: stats.avg_rating ? stats.avg_rating.toFixed(1) : "—" },
   ];
@@ -174,7 +174,7 @@ export default function SellerDashboard() {
             <p className="text-foreground-muted mt-1 text-sm">Your level: <span className="text-foreground font-medium">{level.label}</span> · Next: {nextLevelHint(level.level)}</p>
           </div>
           {!pending && !rejected && (
-            <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a gig</Button></Link>
+            <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a play</Button></Link>
           )}
         </div>
 
@@ -206,7 +206,7 @@ export default function SellerDashboard() {
 
         <div className="p-5 rounded-xl border border-border bg-background mb-8">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold">Orders — last 30 days</h2>
+            <h2 className="text-sm font-semibold">Projects — last 30 days</h2>
             <span className="text-xs text-foreground-muted">{stats.orders_last_30d} total</span>
           </div>
           <div className="flex items-end gap-1 h-24">
@@ -221,9 +221,9 @@ export default function SellerDashboard() {
         {!loading && stats.active_gigs === 0 && (
           <div className="rounded-xl border border-dashed border-border bg-background p-10 text-center">
             <Package className="h-8 w-8 mx-auto text-foreground-subtle mb-3" />
-            <h3 className="font-semibold">No gigs yet</h3>
-            <p className="text-sm text-foreground-muted mt-1 mb-5">Create your first gig and start receiving orders.</p>
-            <Link to="/seller/gigs/new"><Button>Create your first gig</Button></Link>
+            <h3 className="font-semibold">No plays yet</h3>
+            <p className="text-sm text-foreground-muted mt-1 mb-5">Create your first play and start receiving projects.</p>
+            <Link to="/seller/gigs/new"><Button>Create your first play</Button></Link>
           </div>
         )}
       </div>
@@ -232,8 +232,8 @@ export default function SellerDashboard() {
 }
 
 function nextLevelHint(level: string): string {
-  if (level === "new") return "10 orders, 4.5★, 5 reviews → Level 1";
-  if (level === "level_1") return "50 orders, 4.7★, 25 reviews → Level 2";
-  if (level === "level_2") return "100 orders, 4.8★, 50 reviews → Top Rated";
+  if (level === "new") return "10 projects, 4.5★, 5 reviews → Level 1";
+  if (level === "level_1") return "50 projects, 4.7★, 25 reviews → Level 2";
+  if (level === "level_2") return "100 projects, 4.8★, 50 reviews → Top Rated";
   return "Maintain quality to stay Top Rated";
 }

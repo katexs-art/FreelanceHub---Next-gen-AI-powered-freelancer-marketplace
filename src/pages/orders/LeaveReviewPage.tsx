@@ -189,7 +189,7 @@ export default function LeaveReviewPage() {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 container py-20 text-center">
-          <h1 className="text-2xl font-bold">Order not found</h1>
+          <h1 className="text-2xl font-bold">Project not found</h1>
         </main>
         <SiteFooter />
       </div>
@@ -197,19 +197,19 @@ export default function LeaveReviewPage() {
   }
 
   const seller = order.seller;
-  const sellerName = seller?.full_name ?? seller?.username ?? "Seller";
+  const sellerName = seller?.full_name ?? seller?.username ?? "Expert";
   const projectTitle = order.project_title ?? order.gig?.title ?? "Project";
   const deliveryDate = order.completed_at ?? order.delivered_at;
 
   if (alreadyReviewed || expired) {
     return (
       <div className="min-h-screen flex flex-col">
-        <SEO title="Review" description="Order review" />
+        <SEO title="Review" description="Project review" />
         <SiteHeader />
         <main className="flex-1 container py-10 max-w-2xl mx-auto">
           <div className="border border-border rounded-xl p-8 text-center">
             <h1 className="text-xl font-bold mb-2">
-              {alreadyReviewed ? "You already reviewed this order" : "Review window closed"}
+              {alreadyReviewed ? "You already reviewed this project" : "Review window closed"}
             </h1>
             <p className="text-foreground-muted">
               {alreadyReviewed
@@ -289,7 +289,7 @@ export default function LeaveReviewPage() {
           <textarea
             value={reviewText}
             onChange={(e) => setReviewText(e.target.value)}
-            placeholder="Describe what was delivered, how the seller communicated, and whether you would recommend them. Minimum 50 characters required."
+            placeholder="Describe what was delivered, how the expert communicated, and whether you would recommend them. Minimum 50 characters required."
             className="w-full min-h-[140px] border border-border rounded-lg p-3 text-sm resize-y bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
             maxLength={2000}
           />
@@ -310,7 +310,7 @@ export default function LeaveReviewPage() {
           <textarea
             value={standout}
             onChange={(e) => setStandout(e.target.value)}
-            placeholder="Was there anything that really impressed you? Optional but sellers love this."
+            placeholder="Was there anything that really impressed you? Optional but experts love this."
             className="w-full min-h-[80px] border border-border rounded-lg p-3 text-sm resize-y bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
             maxLength={500}
           />

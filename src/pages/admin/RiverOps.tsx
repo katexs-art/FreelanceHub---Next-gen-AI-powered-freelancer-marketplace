@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 type Msg = { role: "user" | "assistant"; content: string; daily_briefing?: boolean };
 
 const BRIEFING_PROMPT =
-  "Give me this morning's briefing: revenue today, active orders, open disputes, new signups, and one recommendation.";
+  "Give me this morning's briefing: revenue today, active projects, open disputes, new signups, and one recommendation.";
 
 function todayStartISO() {
   const d = new Date(); d.setHours(0, 0, 0, 0); return d.toISOString();
@@ -151,7 +151,7 @@ export default function RiverOps() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about revenue, disputes, sellers, predictions…"
+              placeholder="Ask about revenue, disputes, experts, predictions…"
               disabled={loading}
               className="flex-1"
             />

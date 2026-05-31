@@ -57,29 +57,29 @@ export default function MyGigs() {
       <div className="max-w-5xl">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold">My gigs</h1>
+            <h1 className="text-3xl font-bold">My plays</h1>
             <p className="text-foreground-muted mt-1">Manage and publish the services you offer.</p>
           </div>
-          <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> New gig</Button></Link>
+          <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> New play</Button></Link>
         </div>
 
         {loading ? (
           <p className="text-foreground-muted text-sm">Loading…</p>
         ) : gigs.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-background p-10 text-center">
-            <h3 className="font-semibold">No gigs yet</h3>
+            <h3 className="font-semibold">No plays yet</h3>
             <p className="text-sm text-foreground-muted mt-1 mb-5">Create your first one to get discovered.</p>
-            <Link to="/seller/gigs/new"><Button>Create a gig</Button></Link>
+            <Link to="/seller/gigs/new"><Button>Create a play</Button></Link>
           </div>
         ) : (
           <div className="bg-background border border-border rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead className="bg-background-subtle text-foreground-muted text-left text-xs uppercase tracking-wider">
                 <tr>
-                  <th className="py-3 px-4 font-medium">Gig</th>
+                  <th className="py-3 px-4 font-medium">Play</th>
                   <th className="py-3 px-4 font-medium">Status</th>
                   <th className="py-3 px-4 font-medium text-right">Impressions</th>
-                  <th className="py-3 px-4 font-medium text-right">Orders</th>
+                  <th className="py-3 px-4 font-medium text-right">Projects</th>
                   <th className="py-3 px-4 font-medium text-right">From</th>
                   <th className="py-3 px-4 font-medium text-right">Action</th>
                 </tr>
@@ -92,7 +92,7 @@ export default function MyGigs() {
                         <div className="w-12 h-9 rounded bg-background-elevated overflow-hidden shrink-0">
                           {g.thumbnail_url && <img src={g.thumbnail_url} className="w-full h-full object-cover" alt="" />}
                         </div>
-                        <span className="font-medium line-clamp-1">{g.title || "Untitled gig"}</span>
+                        <span className="font-medium line-clamp-1">{g.title || "Untitled play"}</span>
                       </Link>
                     </td>
                     <td className="py-3 px-4">

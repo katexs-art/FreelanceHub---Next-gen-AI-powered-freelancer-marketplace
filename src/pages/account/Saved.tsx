@@ -32,8 +32,8 @@ export default function Saved() {
   return (
     <AppShell>
       <div className="max-w-6xl">
-        <h1 className="text-2xl font-bold">Saved gigs</h1>
-        <p className="text-sm text-foreground-muted mt-1">Gigs you've hearted for later.</p>
+        <h1 className="text-2xl font-bold">Saved plays</h1>
+        <p className="text-sm text-foreground-muted mt-1">Plays you've hearted for later.</p>
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => <GigCardSkeleton key={i} />)

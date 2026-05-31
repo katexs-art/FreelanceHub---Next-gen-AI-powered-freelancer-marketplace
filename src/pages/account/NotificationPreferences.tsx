@@ -15,7 +15,7 @@ export default function NotificationPreferences() {
   };
 
   const rows: { key: keyof EmailPrefs; title: string; desc: string }[] = [
-    { key: "orders", title: "Order updates", desc: "New orders, deliveries, completions, refunds." },
+    { key: "orders", title: "Project updates", desc: "New projects, deliveries, completions, refunds." },
     { key: "messages", title: "New messages", desc: "Email me when I receive a message in the inbox." },
     { key: "marketing", title: "Tips & promotions", desc: "Occasional product updates and recommendations." },
   ];

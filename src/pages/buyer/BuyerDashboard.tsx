@@ -23,7 +23,7 @@ export default function BuyerDashboard() {
     if (!user) return;
     (async () => {
       const { data: ord } = await supabase.from("orders")
-        .select("id, order_number, status, price, created_at, gigs:gig_id(title, thumbnail_url)")
+        .select("id, order_number, status, price, created_at, plays:gig_id(title, thumbnail_url)")
         .eq("buyer_id", user.id).order("created_at", { ascending: false }).limit(8);
       const rows = (ord ?? []) as any as OrderRow[];
       setOrders(rows);
@@ -51,7 +51,7 @@ export default function BuyerDashboard() {
       // --- Personalized recommendations ---
       // Signal 1: categories from gigs the buyer has ordered
       const { data: orderedGigs } = await supabase.from("orders")
-        .select("gig_id, gigs:gig_id(category)").eq("buyer_id", user.id);
+        .select("gig_id, plays:gig_id(category)").eq("buyer_id", user.id);
       const catSet = new Set<string>();
       ((orderedGigs ?? []) as any[]).forEach((o) => { if (o.gigs?.category) catSet.add(o.gigs.category); });
 
@@ -102,7 +102,7 @@ export default function BuyerDashboard() {
     <AppShell>
       <div className="max-w-6xl space-y-10">
         <div>
-          <Eyebrow>Buyer</Eyebrow>
+          <Eyebrow>Partner</Eyebrow>
           <h1 className="display-md mt-2">Welcome back</h1>
         </div>
 
@@ -123,11 +123,11 @@ export default function BuyerDashboard() {
 
         <section>
           <div className="flex items-end justify-between mb-4">
-            <Eyebrow>Recent orders</Eyebrow>
+            <Eyebrow>Recent projects</Eyebrow>
             <Link to="/buyer/orders" className="text-xs font-mono uppercase tracking-[0.14em] text-foreground-muted hover:text-foreground">View all</Link>
           </div>
           {orders.length === 0 ? (
-            <p className="text-sm text-foreground-muted">No orders yet. <Link to="/explore" className="underline">Find a gig</Link>.</p>
+            <p className="text-sm text-foreground-muted">No projects yet. <Link to="/explore" className="underline">Find a play</Link>.</p>
           ) : (
             <ul className="border-hairline divide-y divide-white/[0.08]">
               {orders.map((o) => (

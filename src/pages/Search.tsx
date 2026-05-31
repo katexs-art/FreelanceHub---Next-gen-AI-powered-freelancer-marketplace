@@ -80,7 +80,7 @@ export default function Search() {
 
       // Promoted: active promotions, exclude already-shown ids
       const { data: proms } = await supabase.from("gig_promotions")
-        .select("id, gig_id, gigs:gig_id(id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id)")
+        .select("id, gig_id, plays:gig_id(id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id)")
         .eq("status", "active").gt("ends_at", new Date().toISOString()).limit(3);
       const pRows = (proms ?? [])
         .filter((p: any) => p.gigs)
@@ -177,7 +177,7 @@ export default function Search() {
               {loading
                 ? Array.from({ length: 6 }).map((_, i) => <GigCardSkeleton key={i} />)
                 : (promoted.length === 0 && gigs.length === 0)
-                  ? <p className="col-span-full text-foreground-muted">No gigs match those filters.</p>
+                  ? <p className="col-span-full text-foreground-muted">No plays match those filters.</p>
                   : <>
                       {promoted.map((g) => <GigCard key={`p-${g.id}`} gig={g} promoted />)}
                       {gigs.map((g) => <GigCard key={g.id} gig={g} />)}

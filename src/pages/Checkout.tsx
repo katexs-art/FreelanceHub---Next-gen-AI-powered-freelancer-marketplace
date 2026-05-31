@@ -134,8 +134,8 @@ export default function Checkout() {
         .select("id, buyer_id, seller_id, price, status, project_title, delivery_deadline, stripe_payment_intent_id")
         .eq("id", order_id)
         .maybeSingle();
-      if (error || !o) { setErr("Order not found"); setLoading(false); return; }
-      if (o.buyer_id !== user.id) { setErr("This order belongs to another buyer."); setLoading(false); return; }
+      if (error || !o) { setErr("Project not found"); setLoading(false); return; }
+      if (o.buyer_id !== user.id) { setErr("This project belongs to another partner."); setLoading(false); return; }
       setOrder(o as OrderRow);
 
       // Seller profile + river score data
@@ -191,7 +191,7 @@ export default function Checkout() {
   if (err || !order) return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
-      <main className="flex-1 container-page py-10 text-sm">{err ?? "Order not found"}</main>
+      <main className="flex-1 container-page py-10 text-sm">{err ?? "Project not found"}</main>
       <SiteFooter />
     </div>
   );
@@ -211,12 +211,12 @@ export default function Checkout() {
           <div style={{ display: "flex", alignItems: "center", gap: 12, flex: 1, minWidth: 0 }}>
             <img
               src={seller?.avatar_url || "/placeholder.svg"}
-              alt={seller?.full_name || "Seller"}
+              alt={seller?.full_name || "Expert"}
               style={{ width: 56, height: 56, borderRadius: "50%", objectFit: "cover" }}
             />
             <div style={{ minWidth: 0 }}>
               <div style={{ fontSize: 15, fontWeight: 600, color: "#111" }}>
-                {seller?.full_name || seller?.username || "Seller"}
+                {seller?.full_name || seller?.username || "Expert"}
               </div>
               <div style={{
                 display: "inline-block", marginTop: 4,
