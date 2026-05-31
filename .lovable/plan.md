@@ -1,85 +1,88 @@
-## Part 1 — Merge Browse into Services
+# Sitewide Contrast & Readability Fix
 
-- `src/components/layout/SiteHeader.tsx`
-  - Desktop nav: change `Find Experts` link from `/browse` → `/services`. Remove any separate `Browse` link.
-  - Mobile drawer: change `Browse` (→ `/explore`) item to `Find Experts` → `/services`. Remove the duplicate.
-  - Keep both nav search forms but point them at `/services?q=...` instead of `/browse?q=...`.
-- `src/components/layout/SiteFooter.tsx`
-  - Catalog "Browse" link → `/services`.
-- `src/pages/Landing.tsx`
-  - Hero search form (line ~174) and any "Browse experts / Browse all experts / Browse" links → `/services` (and `/services?q=` for the search form).
-- `src/App.tsx`
-  - Replace the `/browse` route with a permanent redirect to `/services` using `<Navigate to={"/services" + location.search} replace />` so existing `?q=` / `?category=` query strings carry over.
-  - Drop the lazy `Browse` import (file can stay on disk untouched to avoid risk; route removal is enough). If preferred, delete `src/pages/Browse.tsx`.
-- Any other in-code links to `/browse` (Services page, etc.) → `/services`.
+Goal: enforce the contrast rules across every page and component. Colors only — no layout, spacing, sizing, image, routing, or logic changes.
 
-## Part 2 — River Score "New" state
+## Approach
 
-Create a tiny helper `src/lib/riverScore.ts`:
+Two layers of work:
 
-```ts
-export type RiverDisplay =
-  | { kind: "new" }                 // no data
-  | { kind: "score"; value: number }; // numeric
+1. **Token + global CSS layer** (`src/index.css`, `tailwind.config.ts`) — establish the canonical color values so anything using semantic tokens picks them up automatically.
+2. **Per-file sweep** — fix the many components/pages that use hardcoded hex values (the codebase has lots of inline styles like `color: "#666"`, `#999`, `#bbb`, `#444` on both dark and light surfaces).
 
-export function riverDisplay(opts: {
-  score: number | null | undefined;
-  reviews?: number | null;
-  orders?: number | null;
-}): RiverDisplay {
-  const s = Number(opts.score ?? 0);
-  const r = Number(opts.reviews ?? 0);
-  const o = Number(opts.orders ?? 0);
-  if (!s && !r && !o) return { kind: "new" };
-  return { kind: "score", value: s };
-}
-```
+## Color contract (applied everywhere)
 
-Rule applied everywhere the score renders:
-- "New" → render a green pill: bg `#dcfce7`, text `#166534`, 11px, radius 999px, padding `3px 10px`, label `New`. On dark surfaces use bg `#1a3a1a`, text `#4ade80`.
-- Otherwise render the actual number (even if < 60). Never render `0.00`, never render `0`.
+**On dark surfaces** (`#000`, `#0a0a0a`, `#111`, `#1a1a1a`, `#222`, `#2a2a2a`):
+- Primary text → `#ffffff`
+- Secondary text → `#aaaaaa` (never darker than `#888`)
+- Tertiary text → `#666666` minimum
+- Skill/tag pills → bg `#2a2a2a`, border `#3a3a3a`, text `#cccccc`
+- Primary button → bg `#ffffff`, text `#000000`
+- Secondary button → transparent bg, border `#555555`, text `#ffffff`
 
-Touch every site that currently calls `.toFixed(...)` / `Math.round(... ?? 0)` on `river_score`:
-- `src/pages/Browse.tsx` (River top section card line ~1079, seller card line ~776, etc.)
-- `src/pages/Services.tsx` (lines ~287, ~417)
-- `src/pages/Landing.tsx` (line ~305)
-- `src/pages/SellerIntelligenceProfile.tsx` (lines ~301, ~466)
+**On light surfaces** (`#fff`, `#fafafa`, `#f8f8f8`, `#f5f5f5`):
+- Primary text → `#000000`
+- Secondary text → `#444444`
+- Tertiary text → `#888888` (no lighter than this for readable text)
 
-## Part 3 — Unified Expert card styling
+## Files to update
 
-Add `src/components/marketplace/ExpertCard.tsx` with two variants: `surface: "light" | "dark"`. Renders the exact spec:
+### Tokens / global
+- `src/index.css` — bump `--foreground-muted` and `--foreground-subtle` to meet `#444`/`#888` on light; add `.text-on-dark-*` utilities for components rendered on dark surfaces (primary/secondary/tertiary).
+- `tailwind.config.ts` — no structural changes; verify token names.
 
-- Light: bg `#fff`, border `1px solid #e5e5e5`, radius 16, padding 20, hover shadow `0 2px 12px rgba(0,0,0,0.06)`.
-- Dark: bg `#1a1a1a`, border `1px solid #333`, radius 16, padding 20, hover border `#555`, hover shadow `0 4px 24px rgba(255,255,255,0.04)`.
-- Name 15/600, specialty 13 (#555 light, #888 dark), skill tag pill, River Score pill (light) or 36px number + label (dark), star rating amber `#f59e0b` with muted review count, starting price 15/700, delivery 12/#888, `View Profile` outline pill button, `Get a Pitch` / `Message` solid pill button — all per spec.
-- Uses `riverDisplay()` for the score block.
+### Auth
+- `src/components/auth/AuthLayout.tsx`, `KxAuthControls.tsx`
+- `src/pages/auth/Login.tsx`, `Signup.tsx`, `ForgotPassword.tsx`, `ResetPassword.tsx`
+  - Labels `#444`, placeholders `#bbb`, input text `#000`, headings `#000`, subtext `#888`.
 
-Replace the bespoke card markup in:
-- `src/pages/Browse.tsx` — both the regular seller card (`SellerCard`-ish around line 684–800) and the River top-15 card (around 1052–1100). River section keeps `surface="dark"`, listing grid uses `surface="light"`.
-- `src/pages/Services.tsx` — featured rail (~287) `surface="light"`, dark "Top Experts" panel (~414) `surface="dark"`.
-- `src/pages/Landing.tsx` — homepage River top-15 rail (~270–310) `surface="dark"`.
-- `src/pages/Search.tsx` — expert results `surface="light"`.
-- `src/pages/Explore.tsx`, `src/pages/CategoryPage.tsx`, `src/pages/SellerProfile.tsx` related-experts strip, `src/pages/buyer/BuyerDashboard.tsx`, `src/pages/account/Saved.tsx`, `src/components/marketplace/RecentlyViewed.tsx` — use `surface="light"` (these currently render `GigCard`, not expert cards, so they remain `GigCard`; only swap when the card represents a person, not a gig).
-- `src/components/marketplace/GigCard.tsx` is a gig card, not an expert card. It is out of scope.
+### Marketing / public
+- `src/pages/Landing.tsx` — Play cards, River top-15 dark cards, footer, hero subtext, "FROM" labels, review counts, category sections.
+- `src/pages/Services.tsx` — dark expert cards (name `#fff`, specialty `#aaa`, tags `#ccc/#2a2a2a/#3a3a3a`, price `#fff/700`, River score `#fff`), section headings/subheadings, category cards.
+- `src/pages/Browse.tsx` — light expert cards (`#000` primary, `#444` secondary, `#888` tertiary), dark River top section.
+- `src/pages/HowItWorks.tsx` — step numbers `#f0f0f0`, titles `#fff`, descriptions `#aaa`, example pills `#ccc on #252525`.
+- `src/pages/Explore.tsx`, `Search.tsx`, `CategoryPage.tsx`, `GigDetail.tsx`, `SellerProfile.tsx`, `SellerIntelligenceProfile.tsx`, `Pitch.tsx`, `Projects.tsx`, `PostJob.tsx`, `BecomeSeller.tsx`.
 
-No data, query, or routing changes.
+### Layout / nav
+- `src/components/layout/SiteHeader.tsx` — light variant links `#333`→hover `#000`, logo `#000`; transparent/dark variant links `#fff` at 0.8 opacity→1 on hover, logo `#fff`.
+- `src/components/layout/SiteFooter.tsx` — secondary text `#aaa` on dark, tertiary `#666`.
+- `src/components/layout/CategoryMegaNav.tsx`, `CategoryBar.tsx` — category names `#333`, hover `#000`, active `#000/500`.
+- `src/components/layout/AppShell.tsx`, `NotificationBell.tsx`, `RoleSwitcher.tsx`, `RiverWidget.tsx`, `TestModeBanner.tsx`.
 
-## Part 4 — Text readability sweep
+### Marketplace components
+- `GigCard.tsx`, `CustomOfferCard.tsx`, `CustomOfferComposer.tsx`, `SellerLevelBadge.tsx`, `VerifiedBadge.tsx`, `ReviewsList.tsx`, `RatingBreakdown.tsx`, `ProfileReviewsSection.tsx`, `LeaveReview.tsx`, `RecentlyViewed.tsx`, `SaveGigButton.tsx`, `FollowSellerButton.tsx`, `PromoteGigDialog.tsx`, `ReportDialog.tsx`, `OrderTimeline.tsx`, `OrderResolutionActions.tsx`, `PayoutMethodCard.tsx`, `StripeConnectCard.tsx`.
 
-Audit text colors on dark surfaces (`#0a0a0a`, `#111`, `#1a1a1a`) and light surfaces (`#fff`, `#fafafa`) in:
-- `src/pages/Landing.tsx`, `src/pages/Services.tsx`, `src/pages/Browse.tsx`, `src/pages/HowItWorks.tsx`, `src/pages/SellerIntelligenceProfile.tsx`, `src/components/layout/SiteHeader.tsx`, `src/components/layout/SiteFooter.tsx`, `src/components/layout/CategoryMegaNav.tsx`, `src/components/auth/AuthLayout.tsx`.
+### Dashboards
+- `src/pages/buyer/BuyerDashboard.tsx`
+- `src/pages/seller/SellerDashboard.tsx`, `MyGigs.tsx`, `Earnings.tsx`, `GigEditor.tsx`, `SellerAnalytics.tsx`, `Verification.tsx`, `SellerOnboarding.tsx`
+- `src/pages/orders/*` (OrdersList, OrderWorkspace, CheckoutSuccess, LeaveReviewPage)
+- `src/pages/account/*` (Settings, Saved, NotificationPreferences)
+- `src/pages/Inbox.tsx` — message text, timestamps, sender names.
+- `src/pages/Checkout.tsx`, `PlaceBid.tsx`, `ProjectBids.tsx`, `DashboardPlaceholder.tsx`, `Placeholder.tsx`, `NotFound.tsx`.
 
-For each inline `color: "#..."` (and the few Tailwind classes that produce dark-on-dark / light-on-light), normalize to:
-- Dark bg → primary `#ffffff`, secondary minimum `#888`. Bump anything dimmer (`#333`, `#444`, `#555`, `#666`, `#777`, `rgba(255,255,255,<0.5)`) up to `#888` for secondary text. Headings/values stay `#fff`.
-- Light bg → primary `#000`, secondary minimum `#555`. Bump anything lighter (`#aaa`, `#bbb`, `#ccc`, `#888`, `#999`) down to `#555` for secondary text. Headings stay `#000`.
+### Admin
+- `src/pages/admin/Admin.tsx`, `AdminLogin.tsx`, `RiverOps.tsx`, `TestMode.tsx`
+- `src/pages/admin/sections/*` (ReportsQueue, SellerApprovalsQueue, VerificationsQueue)
+- Verify every `.admin-status-*` badge in `index.css` passes contrast (current values already meet WCAG AA — keep as-is, just confirm).
 
-Pure decorative items (dividers, tag borders, icon strokes) are not "text" and are left alone. River Score `New` pill keeps its green tokens.
+### UI primitives (component library)
+- `src/components/ui/badge.tsx` — variants currently rely on `text-foreground`/`text-foreground-muted`; ensure they read correctly on both light card surfaces and dark panel surfaces. Add an explicit `on-dark` style where needed, otherwise rely on parent color override.
+- `src/components/ui/alert.tsx`, `tooltip.tsx`, `toast.tsx`, `sonner.tsx`, `dialog.tsx`, `dropdown-menu.tsx`, `select.tsx`, `tabs.tsx`, `popover.tsx`, `command.tsx`, `sheet.tsx`, `drawer.tsx`, `modal.tsx`, `input.tsx`, `textarea.tsx`, `label.tsx`, `table.tsx`, `pagination.tsx`, `breadcrumb.tsx`, `hover-card.tsx`, `menubar.tsx`, `context-menu.tsx`, `navigation-menu.tsx` — sweep for any hardcoded muted greys lighter than `#888` on light or darker than `#aaa` on dark.
 
-## Out of scope
+## Mechanics
 
-No changes to routes besides `/browse → /services` redirect, no auth/DB/edge-function changes, no `GigCard` redesign, no admin pages.
+For each file:
+1. Read it.
+2. Find every hardcoded color literal (`#xxx`, `rgba(255,255,255,0.x)` text usage) and every `text-foreground-muted/subtle` usage that sits on a known dark/light surface.
+3. Replace with the contract value above.
+4. Skip purely decorative borders, dividers, shadows, and icon strokes that aren't text.
 
-## Files touched
+No changes to:
+- JSX structure, classNames affecting layout, spacing, sizing
+- Images, icons (only color of icon when it's a text-companion meta icon)
+- Routing, data fetching, state, handlers
+- Token *names*, only token *values*
+- `GigCard.tsx` structure (only color values inside it)
 
-- create: `src/lib/riverScore.ts`, `src/components/marketplace/ExpertCard.tsx`
-- edit: `src/App.tsx`, `src/components/layout/SiteHeader.tsx`, `src/components/layout/SiteFooter.tsx`, `src/pages/Landing.tsx`, `src/pages/Services.tsx`, `src/pages/Browse.tsx`, `src/pages/Search.tsx`, `src/pages/SellerIntelligenceProfile.tsx`, `src/pages/HowItWorks.tsx`, `src/components/auth/AuthLayout.tsx`, `src/components/layout/CategoryMegaNav.tsx`
+## Verification
+
+After edits, spot-check in the preview at: `/`, `/services`, `/services?category=mobile-app-development`, `/browse`, `/explore`, `/how-it-works`, `/login`, `/signup`, `/buyer/dashboard`, `/seller/dashboard`, `/inbox`, `/orders`, `/admin`. Confirm no remaining `#666`/`#999`/`#bbb` body text on white, and no `#444`/`#555` body text on dark.

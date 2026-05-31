@@ -79,7 +79,7 @@ export function KxDivider() {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "20px 0" }}>
       <div style={{ flex: 1, height: 1, background: "#e5e5e5" }} />
-      <span style={{ color: "#bbb", fontSize: 12, padding: "0 12px" }}>OR</span>
+      <span style={{ color: "#888", fontSize: 12, padding: "0 12px" }}>OR</span>
       <div style={{ flex: 1, height: 1, background: "#e5e5e5" }} />
     </div>
   );
@@ -124,7 +124,7 @@ export function KxTrustBadges() {
       }}
     >
       {badges.map(({ Icon, label }) => (
-        <div key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#bbb" }}>
+        <div key={label} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#888" }}>
           <Icon size={12} />
           <span>{label}</span>
         </div>

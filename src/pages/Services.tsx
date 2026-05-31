@@ -202,7 +202,7 @@ export default function Services() {
         <h1 className="svc-h1" style={{ fontSize: 64, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: 880, margin: "0 auto 20px" }}>
           The freelance market,<br />rebuilt from first principles
         </h1>
-        <p style={{ fontSize: 18, color: "rgba(255,255,255,0.55)", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
+        <p style={{ fontSize: 18, color: "#aaaaaa", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
         <form
@@ -240,7 +240,7 @@ export default function Services() {
               className="svc-cat"
               style={{
                 padding: "9px 18px", borderRadius: 999, border: "1px solid #1f1f1f",
-                background: "rgba(255,255,255,0.02)", color: "rgba(255,255,255,0.75)",
+                background: "rgba(255,255,255,0.02)", color: "#cccccc",
                 fontSize: 13, fontWeight: 500, textDecoration: "none", transition: "all 0.2s ease",
               }}
             >
@@ -280,16 +280,16 @@ export default function Services() {
                       <h3 style={{ fontSize: 20, fontWeight: 600, margin: "0 0 8px" }}>
                         {s.full_name || s.username || "Expert"}
                       </h3>
-                      <p style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", lineHeight: 1.5, margin: "0 0 24px", minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
+                      <p style={{ fontSize: 13, color: "#aaaaaa", lineHeight: 1.5, margin: "0 0 24px", minHeight: 38, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
                         {s.bio || "Specialist on Katexs."}
                       </p>
                       <div style={{ marginTop: "auto", display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 16, borderTop: "1px solid #181818" }}>
-                        <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#888" }}>
+                        <span style={{ fontSize: 13, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#aaaaaa" }}>
                           {i === 0 ? (riverScoreText(s.river_score, { digits: 1 }) ? `River ${riverScoreText(s.river_score, { digits: 1 })}` : "New") :
                            i === 1 ? (s.startingPrice != null ? `From $${s.startingPrice}` : "Best rate") :
                            (s.minDelivery ? `${s.minDelivery}d avg` : "Rapid")}
                         </span>
-                        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", borderBottom: "1px solid #333", paddingBottom: 2 }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: "#fff", borderBottom: "1px solid #555", paddingBottom: 2 }}>
                           View Profile →
                         </span>
                       </div>
@@ -304,7 +304,7 @@ export default function Services() {
       <section className="svc-section" style={{ padding: "80px" }}>
         <div className="svc-activity-split" style={{ maxWidth: 1200, margin: "0 auto", display: "flex", gap: 32, alignItems: "stretch" }}>
           <div style={{ flex: "1 1 65%" }}>
-            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", margin: "0 0 24px" }}>
+            <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#aaaaaa", margin: "0 0 24px" }}>
               Featured this week
             </h2>
             {featured ? (
@@ -326,7 +326,7 @@ export default function Services() {
                     <h3 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 10px" }}>
                       {featured.full_name || featured.username || "Top Expert"}
                     </h3>
-                    <p style={{ fontSize: 14, color: "rgba(255,255,255,0.6)", lineHeight: 1.6, margin: "0 0 24px" }}>
+                    <p style={{ fontSize: 14, color: "#aaaaaa", lineHeight: 1.6, margin: "0 0 24px" }}>
                       {featured.bio || "A top-ranked AI specialist on Katexs."}
                     </p>
                     <div style={{ display: "inline-block", alignSelf: "flex-start", background: "#fff", color: "#000", padding: "12px 24px", fontSize: 13, fontWeight: 700 }}>
@@ -342,24 +342,24 @@ export default function Services() {
 
           <div style={{ flex: "1 1 35%", minWidth: 280 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
-              <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", margin: 0 }}>
+              <h2 style={{ fontSize: 12, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", color: "#aaaaaa", margin: 0 }}>
                 Live activity feed
               </h2>
               <span className="svc-pulse" style={{ width: 8, height: 8, borderRadius: 999, background: "#10b981" }} />
             </div>
             <div style={{ background: "#0a0a0a", border: "1px solid #111", borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 18, maxHeight: 380, overflowY: "auto" }}>
               {activity.length === 0 ? (
-                <div style={{ fontSize: 12, color: "#444" }}>Listening for activity…</div>
+                <div style={{ fontSize: 12, color: "#888" }}>Listening for activity…</div>
               ) : activity.map((a) => {
                 const c = a.accent === "green" ? "#10b981" : a.accent === "blue" ? "#3b82f6" : "#fbbf24";
                 return (
                   <div key={a.id + a.type} style={{ display: "flex", gap: 12 }}>
                     <div style={{ width: 2, background: c, borderRadius: 2, flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>
+                      <div style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#888", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: 4 }}>
                         {a.when}
                       </div>
-                      <div style={{ fontSize: 13, color: "rgba(255,255,255,0.75)", lineHeight: 1.4 }}>
+                      <div style={{ fontSize: 13, color: "#cccccc", lineHeight: 1.4 }}>
                         <span style={{ color: "#fff", fontWeight: 600 }}>{a.who}</span> {a.text}
                       </div>
                     </div>
@@ -377,7 +377,7 @@ export default function Services() {
           <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: 40, flexWrap: "wrap", gap: 16 }}>
             <div>
               <h2 style={{ fontSize: 28, fontWeight: 600, margin: "0 0 6px", letterSpacing: "-0.01em" }}>Intelligence Verified</h2>
-              <p style={{ fontSize: 14, color: "rgba(255,255,255,0.5)", margin: 0 }}>Top-ranked experts by River Score.</p>
+              <p style={{ fontSize: 14, color: "#aaaaaa", margin: 0 }}>Top-ranked experts by River Score.</p>
             </div>
             <Link to="/services" style={{ fontSize: 12, color: "#888", textDecoration: "none", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
               Browse all experts →
@@ -401,7 +401,7 @@ export default function Services() {
                       <div style={{ fontSize: 15, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {s?.full_name || s?.username || "Expert"}
                       </div>
-                      <div style={{ fontSize: 13, color: "#888", marginTop: 2 }}>
+                      <div style={{ fontSize: 13, color: "#aaaaaa", marginTop: 2 }}>
                         {(s?.seller_skills ?? [])[0] || "AI Specialist"}
                       </div>
                     </div>
@@ -411,7 +411,7 @@ export default function Services() {
                   </button>
                 </div>
                 <div style={{ background: "#0a0a0a", border: "1px solid #333", borderRadius: 8, padding: "12px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#888", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                  <span style={{ fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", color: "#aaaaaa", letterSpacing: "0.1em", textTransform: "uppercase" }}>
                     River Score
                   </span>
                   {(() => {
@@ -456,7 +456,7 @@ export default function Services() {
           <div style={{ display: "flex", alignItems: "center", marginBottom: 32, gap: 20 }}>
             <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Plays</h2>
             <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
-            <Link to="/explore" style={{ fontSize: 12, color: "rgba(255,255,255,0.55)", textDecoration: "none" }}>View all →</Link>
+            <Link to="/explore" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>View all →</Link>
           </div>
           <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
             {gigs.length === 0

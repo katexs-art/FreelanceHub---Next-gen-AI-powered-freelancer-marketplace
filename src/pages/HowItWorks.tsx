@@ -56,7 +56,7 @@ function StepRow({ n, h, d, e, dark, last }: { n: number; h: string; d: string; 
         <p style={{ fontSize: 14, color: dark ? "#888" : "#555", lineHeight: 1.7, margin: 0, maxWidth: 720 }}>{d}</p>
       </div>
       <div style={{ alignSelf: "start" }}>
-        <span style={{ display: "inline-block", padding: "6px 14px", borderRadius: 999, fontSize: 12, background: dark ? "#252525" : "#f5f5f5", color: dark ? "#888" : "#555", whiteSpace: "nowrap" }}>{e}</span>
+        <span style={{ display: "inline-block", padding: "6px 14px", borderRadius: 999, fontSize: 12, background: dark ? "#252525" : "#f5f5f5", color: dark ? "#cccccc" : "#444", whiteSpace: "nowrap" }}>{e}</span>
       </div>
     </div>
   );
@@ -195,9 +195,9 @@ export default function HowItWorks() {
               </div>
             </div>
             <div style={{ background: "#0a0a0a", borderRadius: 20, padding: 32 }}>
-              <div style={{ fontSize: 11, textTransform: "uppercase", color: "#444", marginBottom: 16, letterSpacing: "0.12em" }}>River AI — Live search</div>
+              <div style={{ fontSize: 11, textTransform: "uppercase", color: "#888", marginBottom: 16, letterSpacing: "0.12em" }}>River AI — Live search</div>
               <div style={{ background: "#111", border: "0.5px solid #222", borderRadius: 999, padding: "12px 20px", color: "#fff", fontSize: 14 }}>I need a voice AI caller for my real estate agency</div>
-              <div style={{ fontSize: 12, color: "#444", margin: "16px 0 12px" }}>River found 15 matches</div>
+              <div style={{ fontSize: 12, color: "#aaaaaa", margin: "16px 0 12px" }}>River found 15 matches</div>
               {mockExperts.map((m) => (
                 <div key={m.name} style={{ display: "flex", alignItems: "center", gap: 12, background: "#111", border: "0.5px solid #1e1e1e", borderRadius: 12, padding: 12, marginBottom: 8 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 999, background: "#22c55e", color: "#000", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 600 }}>{m.initials}</div>
@@ -205,7 +205,7 @@ export default function HowItWorks() {
                     <div style={{ color: "#fff", fontSize: 13, marginBottom: 4 }}>{m.name}</div>
                     <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                       <span style={{ background: "#000", color: "#fff", fontSize: 10, padding: "2px 8px", borderRadius: 999 }}>River {m.score}</span>
-                      <span style={{ background: "#1a1a1a", color: "#888", fontSize: 10, padding: "2px 8px", borderRadius: 999 }}>{m.skill}</span>
+                      <span style={{ background: "#2a2a2a", border: "1px solid #3a3a3a", color: "#cccccc", fontSize: 10, padding: "2px 8px", borderRadius: 999 }}>{m.skill}</span>
                     </div>
                   </div>
                   <div style={{ color: "#fff", fontSize: 12 }}>{m.price}</div>
@@ -237,7 +237,7 @@ export default function HowItWorks() {
         {/* BOTTOM CTA */}
         <section style={{ background: "#000", padding: "100px 40px", textAlign: "center" }}>
           <h2 style={{ fontSize: 48, fontWeight: 500, color: "#fff", margin: 0, marginBottom: 16 }}>Ready? It takes 2 minutes to start.</h2>
-          <p style={{ fontSize: 18, color: "#666", marginBottom: 40 }}>Join free as a Partner to hire — or apply as an Expert to earn.</p>
+          <p style={{ fontSize: 18, color: "#aaaaaa", marginBottom: 40 }}>Join free as a Partner to hire — or apply as an Expert to earn.</p>
           <div style={{ display: "flex", justifyContent: "center", gap: 16, flexWrap: "wrap" }}>
             <Link to="/services" style={{ display: "inline-block", border: "1px solid #fff", color: "#fff", borderRadius: 999, padding: "14px 32px", fontSize: 15, textDecoration: "none" }}>Hire an Expert</Link>
             <Link to="/sign-up" style={{ display: "inline-block", background: "#22c55e", color: "#fff", borderRadius: 999, padding: "14px 32px", fontSize: 15, textDecoration: "none" }}>Become an Expert</Link>
