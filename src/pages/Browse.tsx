@@ -275,6 +275,65 @@ export default function Browse() {
 
   const visible = filtered.slice(0, page * PAGE);
 
+  // River-style search results when ?q= is present in URL
+  const riverResults = useMemo(() => {
+    if (!urlQ) return null;
+    const tokens = tokenizeQ(urlQ);
+    const qLower = urlQ.toLowerCase();
+    const scored = sellers.map((s) => {
+      const allTags = Array.from(
+        new Set([...(s.seller_skills ?? []), ...s.gigTags])
+      );
+      const matchedTags = new Set<string>();
+      allTags.forEach((t) => {
+        const tl = t.toLowerCase();
+        if (tokens.length ? tokens.some((tok) => tl.includes(tok)) : tl.includes(qLower)) {
+          matchedTags.add(t);
+        }
+      });
+      const hay = [
+        s.full_name ?? "",
+        s.username ?? "",
+        s.bio ?? "",
+        s.primary_category ?? "",
+        s.secondary_category ?? "",
+        ...allTags,
+        ...s.gigTitles,
+      ].join(" ").toLowerCase();
+      const hayMatch = tokens.length
+        ? tokens.some((tok) => hay.includes(tok))
+        : hay.includes(qLower);
+      const match = hayMatch || matchedTags.size > 0;
+      const riverScore =
+        s.river_score != null
+          ? Number(s.river_score)
+          : Math.round(((Number(s.average_rating) || 0) / 5) * 100);
+      return { s, match, matchedTags, allTags, riverScore };
+    });
+    const matched = scored.filter((x) => x.match);
+    const top = [...matched]
+      .sort(
+        (a, b) =>
+          b.matchedTags.size - a.matchedTags.size ||
+          b.riverScore - a.riverScore ||
+          (Number(b.s.average_rating) || 0) - (Number(a.s.average_rating) || 0)
+      )
+      .slice(0, 15);
+    const topIds = new Set(top.map((x) => x.s.id));
+    const others = matched
+      .filter((x) => !topIds.has(x.s.id))
+      .sort(
+        (a, b) =>
+          (Number(b.s.average_rating) || 0) - (Number(a.s.average_rating) || 0) ||
+          (b.s.total_reviews || 0) - (a.s.total_reviews || 0)
+      );
+    return { top, others };
+  }, [urlQ, sellers]);
+
+  useEffect(() => {
+    setRiverOtherVisible(24);
+  }, [urlQ]);
+
   const runSearch = () => setQuery(pendingQuery);
   const clearAll = () => {
     setQuery("");
