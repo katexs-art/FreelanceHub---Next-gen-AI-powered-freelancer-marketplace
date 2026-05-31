@@ -1,66 +1,80 @@
 ## Scope
 
-Two changes, no other site behavior affected:
-1. Redesign `/checkout/:order_id` (`src/pages/Checkout.tsx`) with the new 2-column layout, order summary card, styled Stripe element, promo-code row, and sticky right-side order details card.
-2. Add a new `/orders/:order_id/confirmed` page (`src/pages/orders/OrderConfirmed.tsx`) and route it in `src/App.tsx`. Redirect from Checkout to this page after successful payment instead of `/orders/:id`.
+Add a third 260px right panel to `src/pages/Inbox.tsx` (only visible when a conversation is active) and apply the small color accents to message bubbles, conversation rows, date separators, and pitch cards. No changes to existing routing, RPCs, schema, or messaging logic.
 
-No DB, RPC, edge-function, or other route changes. Existing `/orders/:id` workspace untouched.
+## Layout change
 
-## Checkout page (`src/pages/Checkout.tsx`)
+In `Inbox.tsx`, change the outer grid:
+- Currently: `gridTemplateColumns: "320px 1fr"`.
+- New: if `active` exists → `"320px 1fr 260px"`, else `"320px 1fr"` (unchanged).
 
-Keep all current data loading (order fetch, seller aggregate, PaymentIntent mint, auth/redirect, status guard) exactly as is. Only the JSX/styling and post-payment redirect target change.
+## New component `src/components/inbox/ConversationDetailsPanel.tsx`
 
-Layout:
-- Outer `<main>` bg `#F7F7F7`, max-width 960, centered, padding `48px 24px`.
-- Grid `grid-template-columns: 65% 35%`, gap 32. Single column under 900px.
+Props: `{ otherUser, conversationId, currentUserId }`.
 
-Left column:
-- **Order summary card** (white, 1px #EBEBEB, radius 16, padding 24, mb 20): 80px thumbnail (use gig image if available via existing `gig_id` join — fetch `gigs.title, package_name, images[0]` alongside seller; fall back to `/placeholder.svg` and project_title), title 16/600 #0A0A0A, package/project type 13 #888, expert row (24px avatar + name 13 #555), delivery time 13 #888.
-- **Payment method card** (same wrapper styling): heading "Payment method" 15/600 mb 16. Inner Stripe `<PaymentElement />` wrapped in a div bg `#F7F7F7`, 1px #EBEBEB, radius 12, padding 16. Pass appearance variables to `Elements` so the Stripe iframe matches.
-- **Promo code row**: collapsed link "+ Apply promo code" 14 #888. On click expand `<input>` + Apply button. Visual only — button is a no-op stub (request says "do not change functionality"); shows a toast "Promo codes coming soon" so it's not silently broken.
+Sections (white bg, `border-left: 1px solid #EBEBEB`, vertical scroll if overflow):
 
-Right column (sticky `position: sticky; top: 24px`):
-- **Order details card** (white, 1px #EBEBEB, radius 16, padding 24): heading "Order details" 16/600 mb 20. Rows: "Selected package" / "Project amount" (depends on whether order is gig-based or project-based — use existing `order.gig_id` vs `project_title` distinction), Katexs service fee 5%, divider, Total 16/700.
-- Green Pay button full-width, label `Pay Now — $X`. This button triggers the same `stripe.confirmPayment` flow currently inside `PayForm` — refactor so the green button is the submit trigger and `PayForm` exposes a ref/handler, or move the form so the Pay button lives in the right column but the `<Elements>` provider still wraps both columns. Implementation: wrap entire two-column grid inside the `<Elements>` provider once `clientSecret` is ready; the green button calls `useStripe().confirmPayment` directly from a child component rendered in the right column.
-- Trust line: shield icon (lucide `ShieldCheck`) + "Safe and secure payment" 12 #888 centered, mt 10.
-- Terms line: 11 #AAA centered.
+**Top — person info** (padding 20, border-bottom 1px #F0F0F0):
+- 48px circle avatar, 2px #EBEBEB border.
+- Name 15/600 #0A0A0A, mt 10.
+- `@username` 12 #AAAAAA.
+- Last seen 12 #AAAAAA mb 12 (online → "Active now", else "Last seen …" from `profiles.last_seen`).
+- 4 info rows (label 11 uppercase #AAA tracking 0.08em, value 13/500 #333):
+  - **From** → `profiles.location` || `profiles.country` || "—"
+  - **Member Since** → `profiles.member_since` formatted as `Month YYYY`
+  - **Language** → `profiles.languages[0]` || "—"
+  - **Rating** → `★ {average_rating} ({total_reviews})` if `total_reviews > 0` else "No reviews yet"
 
-Post-payment redirect:
-- On success, `nav(\`/orders/${order.id}/confirmed\`, { replace: true })` instead of `/orders/${orderId}`.
-- Keep the existing "already paid" guard pointing to `/orders/:id` workspace (since past-tense confirmation only makes sense right after pay).
+Fetched via one `supabase.from("profiles").select("location, country, member_since, languages, average_rating, total_reviews, primary_category").eq("id", otherUser.id).maybeSingle()` triggered by `useEffect` on `otherUser.id`.
 
-## New page `src/pages/orders/OrderConfirmed.tsx` at `/orders/:order_id/confirmed`
+**Middle — Related Plays** (padding 20, border-bottom 1px #F0F0F0):
+- Header row: "Related Plays" 13/600 #0A0A0A + Link "See more →" 12 #AAA → `/services` (hover #0A0A0A).
+- Up to 4 Play cards stacked, gap 10.
+- Fetch order:
+  1. `gigs` where `seller_id = otherUser.id` and `status = 'active'`, order by `average_rating desc, total_orders desc`, limit 4.
+  2. If <4 and `otherUser.primary_category` exists: top-up by category `eq("category", otherUser.primary_category)`, exclude already-included ids, limit remaining. (The "last search query category" rule is dropped — we don't persist a per-user last search; the seller's primary category is the closest practical match and matches the third fallback. This is the explicit deviation.)
+- Card: 64px tall, flex row, white bg, 1px #EBEBEB, radius 10, overflow hidden, cursor pointer; hover border #CCC + shadow `0 2px 8px rgba(0,0,0,0.06)`; click → `window.open('/gig/' + id, '_blank')`.
+  - Left: 64×64 thumbnail (`thumbnail_url` or `#F5F5F5` fallback).
+  - Right: padding 8px 10px. Title 12/500 #333, clamped to 2 lines (`-webkit-line-clamp:2`). Below: `★` #F59E0B 11 + " {rating}" + small spacer + label "FROM" 9 #AAA + price 12/700 #0A0A0A (`$${starting_price}`).
 
-Protected route, mirrors Checkout's data loading pattern:
-- Fetch order by `:order_id`, verify `buyer_id === auth.uid`, redirect to `/orders/:id` if not the buyer.
-- Fetch seller profile (`profiles`: full_name, username, avatar_url, last_seen_at if column exists, otherwise omit).
-- Fetch gig title if `order.gig_id` set.
+**Bottom — Quick actions** (padding 20):
+- Heading "Quick actions" 13/600 #0A0A0A mb 12.
+- Two buttons (full width, flex gap 8, padding 10px 14px, 1px #EBEBEB, radius 10, mb 8, hover bg #F7F7F7 / border #CCC):
+  - **View their profile** — `Briefcase` lucide icon #888, text 13 #555. `onClick` → `nav('/u/' + otherUser.username)` if username present, else `/seller/${otherUser.id}`.
+  - **Leave a review** — `Star` lucide icon #888, text 13 #555. Only render if a completed order exists between the two users. Click → `nav('/orders/${orderId}/review')`.
+    - Check: `supabase.from("orders").select("id").or(\`and(buyer_id.eq.${currentUserId},seller_id.eq.${otherUser.id}),and(buyer_id.eq.${otherUser.id},seller_id.eq.${currentUserId})\`).eq("status","completed").order("completed_at",{ascending:false}).limit(1).maybeSingle()`. Use the existing `/orders/:order_id/review` route.
 
-Layout: bg #F7F7F7, max-width 960, padding 48 24, 65/35 grid, gap 32.
+Panel renders only when `active` is non-null (Inbox already gates this naturally because the column itself is conditional in the grid).
 
-Left column:
-- **Success banner**: white, border-left 4px #16A34A, radius `0 12px 12px 0`, padding 24, mb 24. H1 "Your project is now in the works" 22/600. Subtext with seller name + delivery date (`order.delivery_deadline` formatted as `Month Day Year, h:mm A`).
-- **Activity timeline card**: white, 1px #EBEBEB, radius 16, padding 24. Section label "Today" 12 #AAA uppercase tracking 0.08em mb 16. Three timeline rows (📋 placed @ `order.created_at`, ✅ payment confirmed @ now, 🔔 expert notified @ now). Row: flex gap 14, py 12, border-bottom 1px #F5F5F5 (last row no border). Icon circle 36px bg #F0F0F0. Title 14/500 #0A0A0A, timestamp 12 #AAA mt 2.
+## Color accents (`src/pages/Inbox.tsx` only)
 
-Right column (sticky top 24):
-- **Expert card** (white, 1px #EBEBEB, radius 16, padding 24, mb 16): 56px avatar 2px #EBEBEB border, name 16/600 mt 12, `@username` 13 #AAA, last active 12 #AAA mb 16, black full-width button "Message {firstName}" — links to `/inbox` (uses existing `get_or_create_conversation` RPC pattern the project already has on the seller profile; reuses same handler — on click, call RPC then `nav(\`/inbox/${conversationId}\`)`. Falls back to plain `/inbox` if RPC fails).
-- **Order details card** (white, 1px #EBEBEB, radius 16, padding 24): rows for Ordered from (name 500), Delivery date (500 #0A0A0A), Total price (700 #0A0A0A), Order number (mono #0A0A0A, prefer `order.order_number` else short order id).
-- **Track Project collapsible**: heading "Track Project" + chevron. Uses `useState` for open/close. When open, vertical timeline with 5 dots; dot 1 filled green with `order.created_at`, dots 2–5 grey empty placeholder labels.
-- **Escrow info**: bg #F7F7F7, radius 8, padding 12, mt 16. ShieldCheck icon + "Your payment of $X is held securely in escrow. Released after you approve delivery." 12 #666 line-height 1.5.
+All small targeted edits — no structural changes.
 
-No buttons besides Message and the (visual) Track Project toggle. Page is read-only confirmation; the workspace at `/orders/:id` remains the place users go for delivery/approval actions.
+- **Received message bubble** (line ~644): background `#FAFAFA`, border `1px solid #E5E5E5` (currently `#FFFFFF` / `#EBEBEB`). Sent bubble untouched.
+- **Conversation row** (lines ~291–382):
+  - Active row already has `borderLeft: 3px solid #0A0A0A` and `#F0F0F0` bg → change active bg to `#F5F5F5` to match spec.
+  - Unread row: if `(c.unread_count ?? 0) > 0 && !isActive` → `borderLeft: 3px solid #16A34A` and name color stays `#0A0A0A` already 600; bump name to 700 when unread.
+  - Unread badge already `#16A34A` / `#FFFFFF` ✓.
+- **Online indicator** already `#16A34A` ✓.
+- **Date separator** (lines ~520–533): change to `background:#F0F0F0`, `color:#888888`, no border, padding `3px 12px`, radius 999, fontSize 11.
+- **Pitch card** (lines ~550–610): already uses `#FAFAFA` bg, `borderLeft 3px #7C3AED`, Proposal label `#7C3AED`, price `#16A34A 700`, Accept button `#16A34A`, Reply outlined black ✓ — no changes needed; verify and leave as-is.
 
-## Route wiring (`src/App.tsx`)
+## Wiring
 
-Add:
+In `Inbox.tsx` add `import { ConversationDetailsPanel } from "@/components/inbox/ConversationDetailsPanel";` and after the `<section>` (around line 749) render:
 ```tsx
-const OrderConfirmed = lazy(() => import("./pages/orders/OrderConfirmed"));
-...
-<Route path="/orders/:order_id/confirmed" element={<ProtectedRoute><OrderConfirmed /></ProtectedRoute>} />
+{active && active.other && user && (
+  <ConversationDetailsPanel
+    otherUser={active.other}
+    conversationId={active.id}
+    currentUserId={user.id}
+  />
+)}
 ```
-Place above the existing `/orders/:id` route so it matches first.
 
 ## Out of scope
-- No changes to schema, edge functions, `stripe-payment-intent`, `OrderWorkspace`, `CheckoutSuccess`, or any other page/route.
-- No promo-code backend.
-- No real-time wiring on the confirmation page — it's a snapshot.
+
+- No DB changes, no new RPCs.
+- No changes to message send/receive/realtime/unread/RLS.
+- No new routes (uses existing `/u/:username`, `/seller/:username`, `/gig/:slug`, `/orders/:order_id/review`, `/services`).
+- "Last search query" tracking is not built — the second fallback uses the expert's primary category, which is the existing data model's closest equivalent.
