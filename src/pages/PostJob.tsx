@@ -107,7 +107,7 @@ export default function PostJob() {
       buyer_id: user.id,
       title: title.trim(),
       description: desc.trim(),
-      category: category || null,
+      category: categorySlug || categoryText.trim() || null,
       skills,
       budget_min: min ? parseInt(min, 10) : null,
       budget_max: max ? parseInt(max, 10) : null,
