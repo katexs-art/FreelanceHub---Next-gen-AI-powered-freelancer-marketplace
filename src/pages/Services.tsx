@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Bookmark } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { CategoryMegaNav } from "@/components/layout/CategoryMegaNav";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
@@ -174,6 +175,7 @@ export default function Services() {
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
       <SEO title="Services — Discover AI Experts | KATEXS" description="A precision marketplace where talent and intent meet through intelligence." />
       <SiteHeader variant="transparent" />
+      <CategoryMegaNav />
 
       <style>{`
         .svc-cat:hover { border-color: #fff !important; color: #fff !important; }

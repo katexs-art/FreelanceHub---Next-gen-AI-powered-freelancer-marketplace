@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { CategoryMegaNav } from "@/components/layout/CategoryMegaNav";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { RecentlyViewed } from "@/components/marketplace/RecentlyViewed";
@@ -53,6 +54,7 @@ export default function Explore() {
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
+      <CategoryMegaNav />
       <main className="flex-1 container py-10">
         <h1 className="text-3xl font-bold">Explore services</h1>
         <p className="text-foreground-muted mt-1">Browse all categories or discover trending plays.</p>
