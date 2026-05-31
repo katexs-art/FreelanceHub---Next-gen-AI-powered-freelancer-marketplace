@@ -270,7 +270,7 @@ export default function Services() {
                   return (
                     <Link
                       key={s.id}
-                      to={`/seller/${s.username ?? s.id}`}
+                      to={`/u/${s.username ?? s.id}`}
                       className="svc-pick"
                       style={{
                         background: "#0a0a0a", borderTop: `3px solid ${meta.color}`,
