@@ -210,7 +210,7 @@ export default function Checkout() {
       if (o.gig_id) {
         const { data: g } = await supabase
           .from("gigs")
-          .select("title, images")
+          .select("title, thumbnail_url")
           .eq("id", o.gig_id)
           .maybeSingle();
         if (g) setGig(g as GigInfo);
@@ -262,7 +262,7 @@ export default function Checkout() {
   const deadline = order.delivery_deadline ? new Date(order.delivery_deadline) : null;
   const itemTitle = gig?.title || order.project_title || "Project";
   const itemSubtitle = order.gig_id ? "Standard package" : "Custom project";
-  const thumb = gig?.images?.[0] || "/placeholder.svg";
+  const thumb = gig?.thumbnail_url || "/placeholder.svg";
   const sellerName = seller?.full_name || seller?.username || "Expert";
   const sellerAvatar = seller?.avatar_url || "/placeholder.svg";
   const amountLabel = order.gig_id ? "Selected package" : "Project amount";
