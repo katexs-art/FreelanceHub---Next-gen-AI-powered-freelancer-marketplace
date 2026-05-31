@@ -1,9 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SEO } from "@/components/SEO";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+
 
 const VIDEO_URL =
   "https://lquoahkuzqwtiihshdaf.supabase.co/storage/v1/object/public/katexs-assets/7438233-uhd_4096_2160_25fps%20(1)%20(1)%20(1).mp4";
@@ -34,6 +35,34 @@ export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [sellers, setSellers] = useState<TopSeller[]>([]);
+  const SR: any = typeof window !== "undefined" ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
+  const [voiceSupported] = useState<boolean>(!!SR);
+  const [listening, setListening] = useState(false);
+  const [micHover, setMicHover] = useState(false);
+  const recogRef = useRef<any>(null);
+
+  const startVoice = () => {
+    if (!SR || listening) return;
+    try {
+      const r = new SR();
+      r.continuous = false;
+      r.interimResults = true;
+      r.lang = "en-US";
+      r.onresult = (e: any) => {
+        let t = "";
+        for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript;
+        setQ(t);
+      };
+      r.onend = () => setListening(false);
+      r.onerror = () => setListening(false);
+      recogRef.current = r;
+      setListening(true);
+      r.start();
+    } catch {
+      setListening(false);
+    }
+  };
+
 
   useEffect(() => {
     (async () => {
@@ -149,7 +178,34 @@ export default function Landing() {
               boxShadow: "0 0 0 1px rgba(255,255,255,0.1)",
             }}
           >
-            <Search size={18} color="#999" style={{ marginLeft: 24, flexShrink: 0 }} />
+            <style>{`@keyframes kxMicPulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.25); } }`}</style>
+            {voiceSupported && (
+              <button
+                type="button"
+                onClick={startVoice}
+                onMouseEnter={() => setMicHover(true)}
+                onMouseLeave={() => setMicHover(false)}
+                aria-label={listening ? "Listening" : "Voice search"}
+                style={{
+                  marginLeft: 18, marginRight: 2, background: "transparent", border: "none",
+                  cursor: "pointer", padding: 4, display: "inline-flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {listening ? (
+                  <span style={{
+                    display: "inline-block", width: 12, height: 12, borderRadius: 999,
+                    background: "#e11d48", animation: "kxMicPulse 1s ease-in-out infinite",
+                  }} />
+                ) : (
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={micHover ? "#000" : "#999"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 10v1a7 7 0 0 0 14 0v-1" />
+                    <line x1="12" y1="18" x2="12" y2="22" />
+                  </svg>
+                )}
+              </button>
+            )}
+            <Search size={18} color="#999" style={{ marginLeft: voiceSupported ? 8 : 24, flexShrink: 0 }} />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -170,6 +226,12 @@ export default function Landing() {
               Find My Expert
             </button>
           </form>
+          {listening && (
+            <div style={{ marginTop: 8, fontSize: 12, color: "#999", textAlign: "left", maxWidth: 580, width: "100%" }}>
+              Listening...
+            </div>
+          )}
+
 
           <div
             style={{
