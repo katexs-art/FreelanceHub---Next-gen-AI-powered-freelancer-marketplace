@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { toast } from "@/hooks/use-toast";
+import { SkillsTagInput } from "@/components/postjob/SkillsTagInput";
 
 const labelStyle: React.CSSProperties = {
   display: "block",
