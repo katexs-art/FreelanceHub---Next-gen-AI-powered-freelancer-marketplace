@@ -564,6 +564,15 @@ export default function Browse() {
           {/* Grid / empty / loading */}
           {loading ? (
             <div className="mt-6 text-sm" style={{ color: "#666" }}>Loading experts…</div>
+          ) : urlQ && riverResults ? (
+            <RiverSections
+              query={urlQ}
+              top={riverResults.top}
+              others={riverResults.others}
+              visibleOther={riverOtherVisible}
+              onLoadMore={() => setRiverOtherVisible((v) => v + 24)}
+              onMessage={openMessage}
+            />
           ) : filtered.length === 0 ? (
             <div className="mt-16 text-center">
               <div style={{ fontSize: 18, fontWeight: 600, color: "#111" }}>
