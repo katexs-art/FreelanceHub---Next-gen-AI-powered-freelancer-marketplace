@@ -1,38 +1,43 @@
-# Smart Category Search on Post a Project
+# Smart Required Skills tag input
 
-Replace the `<select>` Service Category dropdown in `src/pages/PostJob.tsx` with a typeahead input. Only that one form field changes — everything else on the page (title, description, skills, budget, deadline, attachments, visibility, submit, header/footer, styles) stays exactly as it is.
+Replace only the Required Skills field on `src/pages/PostJob.tsx` (lines ~270–303). Nothing else on the site changes.
 
-## Behavior
+## New component
 
-- Single text input matching the brief's exact specs:
-  - Label "Service Category" (13px / 600 / #333333 / 8px mb)
-  - Input: white, 1.5px #CCCCCC, radius 12px, 52px tall, padding 0 16px, 15px / #0A0A0A, 100% width
-  - Placeholder: `Type to search — example: Voice AI, GHL, Chatbot, Marketing...`
-  - Focus border `#0A0A0A` (uses existing `onFocus` / `onBlur` helpers in the file)
-- As user types, render a suggestion dropdown positioned absolutely under the input:
-  - White, 1px #EBEBEB, radius 12px, shadow `0 4px 16px rgba(0,0,0,0.08)`, max-height 280px, scroll-y, z-50
-  - Up to 8 case-insensitive matches against `categories.name` (substring)
-  - Each row: padding 12px 16px, cursor pointer, hover #F7F7F7
-    - Line 1: category name — 14px / 500 / #0A0A0A
-    - Line 2 (only if it has a parent): parent category name — 11px / #AAAAAA
-  - Empty state row: `No category found — your project will be reviewed by our team` (13px / #AAAAAA / padding 12px 16px)
-- Click a suggestion: input value = category name, dropdown closes, the category **slug** is stored in a hidden state field (`categorySlug`).
-- Free typing without selecting is allowed — on submit, if no slug was chosen, the typed text becomes the category value.
-- Dropdown closes on outside click (mousedown listener on `document`) and on blur with a small delay so clicks register.
+Create `src/components/postjob/SkillsTagInput.tsx` (scoped to Post a Project) that owns the visual tag-input + suggestions dropdown. Submission still uses the existing `skills` array state in `PostJob.tsx`, which already flows to `skills_required` in `project_posts`.
 
-## Submit wiring
+Props: `value: string[]`, `onChange: (v: string[]) => void`, `max = 6`.
 
-In the existing `submit` handler, change the inserted `category` field from `category || null` to `categorySlug || categoryText.trim() || null`. No other DB or routing changes.
+### Catalog
+Hard-coded constant `SKILL_CATALOG` with the 51 skills from the spec (Voice AI … DevOps).
 
-## State changes inside `PostJob.tsx`
+### Behavior
+- Internal `query` state for the typed text.
+- Matching: case-insensitive `includes` against catalog, excluding already-selected skills, take first 6.
+- Add tag on: suggestion click, custom-row click, or Enter on non-empty trimmed query. De-dupe case-insensitively, keep original casing of catalog match when possible.
+- Remove tag via the X on each pill.
+- When `value.length >= 6`: hide input + dropdown, show helper "Maximum 6 skills reached".
+- Dropdown only renders when input is focused and query is non-empty. Hide on blur with a small timeout so suggestion clicks register (use `onMouseDown` on rows to fire before blur).
+- Keyboard: Enter adds custom/typed; Escape clears query; Backspace on empty query removes last tag.
 
-- Replace `const [category, setCategory] = useState("")` with:
-  - `categoryText` (visible input value)
-  - `categorySlug` (resolved slug from a clicked suggestion; cleared when the user edits the text after selecting)
-  - `categoryOpen` (dropdown visibility)
-- Remove the `<select>` JSX and `selectStyle` usage for this field (keep `selectStyle` const — harmless, but will remove since it has no other consumer).
-- Keep `useCategories()` import — it already returns parent + child rows with `parent_id`, which is exactly what's needed to render the parent label.
+### Styling (inline styles, matches spec exactly)
+- Label: 13px / 600 / #333, mb 8.
+- Helper above container: 12px / #AAA, mb 10, text "Add up to 6 skills. Type to search or enter your own."
+- Container: white bg, 1.5px solid #CCC, radius 12, padding 10px 14px, min-height 52, flex wrap, gap 8, items center. Focus state swaps border to #0A0A0A (track via `focusedWithin` state, since :focus-within can't be inlined — alternative: a tiny `<style>` block scoped via a unique className).
+- Pill: bg #0A0A0A, color #fff, 12px / 500, padding 4px 12px, radius 999, inline-flex, gap 6. X button color #888 hover #fff.
+- Inner input: borderless, transparent bg, outline none, flex 1, min-width 120, placeholder "Type a skill..." in #AAA.
+- Dropdown: absolute, white, 1px solid #EBEBEB, radius 12, shadow `0 4px 16px rgba(0,0,0,0.08)`, max-height 220, overflow-y auto, z-index 50, mt 6. Wrap container in `position: relative`.
+- Suggestion row: padding 10px 16px, cursor pointer, hover bg #F7F7F7, text 14px #0A0A0A.
+- Empty-match row: "Add \"[typed text]\" as a custom skill", 13px #666, padding 10px 16px, cursor pointer.
+
+For the focus border + hover backgrounds (which need pseudo-classes), inject a small scoped `<style>` block inside the component using a unique class prefix `kx-skills-…`.
+
+## PostJob.tsx changes
+- Import `SkillsTagInput`.
+- Remove `skillInput` state, `addSkill` handler, and the existing input+pill JSX block (lines ~270–303).
+- Render `<SkillsTagInput value={skills} onChange={setSkills} />` in its place.
+- Leave the existing `skills` state, validation, and submit payload (`skills_required: skills`) untouched.
 
 ## Out of scope
-
-No changes to other fields, routes, DB schema, RLS, `useCategories`, header, footer, or any other page.
+- No DB migration; the column already accepts an array/CSV.
+- No changes to any other field, page, route, style token, or component.

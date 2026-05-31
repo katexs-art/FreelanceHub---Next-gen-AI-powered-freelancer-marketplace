@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { toast } from "@/hooks/use-toast";
+import { SkillsTagInput } from "@/components/postjob/SkillsTagInput";
 
 const labelStyle: React.CSSProperties = {
   display: "block",
@@ -63,7 +64,6 @@ export default function PostJob() {
   const [categoryHover, setCategoryHover] = useState<string | null>(null);
   const categoryWrapRef = useRef<HTMLDivElement>(null);
   const [skills, setSkills] = useState<string[]>([]);
-  const [skillInput, setSkillInput] = useState("");
   const [min, setMin] = useState("");
   const [max, setMax] = useState("");
   const [deadline, setDeadline] = useState("");
@@ -94,14 +94,7 @@ export default function PostJob() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const addSkill = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && skillInput.trim()) {
-      e.preventDefault();
-      const t = skillInput.trim();
-      if (!skills.includes(t)) setSkills([...skills, t]);
-      setSkillInput("");
-    }
-  };
+
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user) return;
@@ -267,40 +260,8 @@ export default function PostJob() {
               )}
             </div>
 
-            <div>
-              <label style={labelStyle}>Required Skills</label>
-              <input
-                className="pj-input"
-                style={inputStyle}
-                value={skillInput}
-                onChange={(e) => setSkillInput(e.target.value)}
-                onKeyDown={addSkill}
-                onFocus={onFocus}
-                onBlur={onBlur}
-                placeholder="Type a skill and press Enter — example: Voice AI, GoHighLevel, Chatbot"
-              />
-              {skills.length > 0 && (
-                <div className="flex flex-wrap gap-2" style={{ marginTop: 10 }}>
-                  {skills.map((s) => (
-                    <button
-                      type="button"
-                      key={s}
-                      onClick={() => setSkills(skills.filter((x) => x !== s))}
-                      style={{
-                        background: "#F7F7F7",
-                        border: "1px solid #EBEBEB",
-                        borderRadius: 12,
-                        padding: "6px 12px",
-                        fontSize: 13,
-                        color: "#0A0A0A",
-                      }}
-                    >
-                      {s} ×
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <SkillsTagInput value={skills} onChange={setSkills} />
+
 
             <div>
               <label style={labelStyle}>Your Budget</label>
