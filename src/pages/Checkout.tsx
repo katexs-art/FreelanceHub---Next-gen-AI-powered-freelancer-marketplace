@@ -35,8 +35,7 @@ interface SellerProfile {
 
 interface GigInfo {
   title: string | null;
-  images: string[] | null;
-  package_name?: string | null;
+  thumbnail_url: string | null;
 }
 
 function PayBlock({
