@@ -7,6 +7,7 @@ import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight } f
 import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
 import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
+import { ConversationDetailsPanel } from "@/components/inbox/ConversationDetailsPanel";
 
 interface Conv {
   id: string;
