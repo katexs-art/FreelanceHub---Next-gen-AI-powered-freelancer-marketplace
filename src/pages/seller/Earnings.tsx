@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PayoutMethodCard } from "@/components/marketplace/PayoutMethodCard";
 import { StripeConnectCard } from "@/components/marketplace/StripeConnectCard";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Acct {
   available_balance: number; pending_balance: number; lifetime_earnings: number;
@@ -82,11 +83,20 @@ export default function Earnings() {
           <p className="text-sm text-foreground-muted mt-1">Track your balance, ledger, and withdrawals.</p>
         </header>
 
-        <div className="grid sm:grid-cols-3 gap-4">
-          <Card icon={Wallet} label="Available" value={dollars(acct?.available_balance ?? 0)} />
-          <Card icon={Clock} label="Pending" value={dollars(acct?.pending_balance ?? 0)} />
-          <Card icon={TrendingUp} label="Lifetime" value={dollars(acct?.lifetime_earnings ?? 0)} />
-        </div>
+        {(acct?.lifetime_earnings ?? 0) === 0 && txs.length === 0 && wds.length === 0 ? (
+          <EmptyState
+            icon={Wallet}
+            title="No earnings yet"
+            message="Complete your profile and start receiving orders."
+            action={{ label: "Complete Profile", to: "/seller-onboarding" }}
+          />
+        ) : (
+          <div className="grid sm:grid-cols-3 gap-4">
+            <Card icon={Wallet} label="Available" value={dollars(acct?.available_balance ?? 0)} />
+            <Card icon={Clock} label="Pending" value={dollars(acct?.pending_balance ?? 0)} />
+            <Card icon={TrendingUp} label="Lifetime" value={dollars(acct?.lifetime_earnings ?? 0)} />
+          </div>
+        )}
 
         <StripeConnectCard />
 

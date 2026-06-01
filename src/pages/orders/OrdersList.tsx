@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { EmptyState } from "@/components/EmptyState";
+import { ShoppingBag } from "lucide-react";
 
 interface OrderRow {
   id: string;
@@ -60,9 +62,12 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
       {loading ? (
         <div className="text-foreground-muted text-sm">Loading…</div>
       ) : orders.length === 0 ? (
-        <div className="border border-dashed border-border rounded-xl p-12 text-center text-foreground-muted">
-          No orders yet.
-        </div>
+        <EmptyState
+          icon={ShoppingBag}
+          title="No orders yet"
+          message="Browse our catalog of AI experts and place your first order."
+          action={{ label: "Browse Experts", to: "/services" }}
+        />
       ) : (
         <div className="bg-background border border-border rounded-xl overflow-hidden">
           <table className="w-full text-sm">

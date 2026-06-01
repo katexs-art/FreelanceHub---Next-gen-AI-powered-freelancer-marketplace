@@ -4,7 +4,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Plus, Package, ShoppingBag, Star, TrendingUp, Eye } from "lucide-react";
+import { Plus, Package, ShoppingBag, Star, TrendingUp, Eye, Wallet } from "lucide-react";
+import { EmptyState } from "@/components/EmptyState";
 import { SellerLevelBadge } from "@/components/marketplace/SellerLevelBadge";
 import { computeSellerLevel } from "@/lib/sellerLevel";
 import { toast } from "sonner";
@@ -218,13 +219,22 @@ export default function SellerDashboard() {
           </div>
         </div>
 
-        {!loading && stats.active_gigs === 0 && (
-          <div className="rounded-xl border border-dashed border-border bg-background p-10 text-center">
-            <Package className="h-8 w-8 mx-auto text-foreground-subtle mb-3" />
-            <h3 className="font-semibold">No services yet</h3>
-            <p className="text-sm text-foreground-muted mt-1 mb-5">Create your first service and start receiving projects.</p>
-            <Link to="/seller/gigs/new"><Button>Create your first service</Button></Link>
-          </div>
+        {!loading && stats.active_gigs === 0 && stats.total_earnings === 0 && (
+          <EmptyState
+            icon={Wallet}
+            title="No earnings yet"
+            message="Complete your profile and start receiving orders."
+            action={{ label: "Complete Profile", to: "/seller-onboarding" }}
+            secondaryAction={{ label: "Create your first service", to: "/seller/gigs/new", variant: "outline" }}
+          />
+        )}
+        {!loading && stats.active_gigs === 0 && stats.total_earnings > 0 && (
+          <EmptyState
+            icon={Package}
+            title="No services yet"
+            message="Create your first service and start receiving projects."
+            action={{ label: "Create a service", to: "/seller/gigs/new" }}
+          />
         )}
       </div>
     </AppShell>

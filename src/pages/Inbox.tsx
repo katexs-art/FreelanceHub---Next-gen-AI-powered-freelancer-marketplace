@@ -292,9 +292,33 @@ export default function Inbox() {
               <div style={{ padding: 16, fontSize: 12, color: "#888" }}>Loading…</div>
             )}
             {!loading && filteredConvs.length === 0 && (
-              <div style={{ padding: 24, textAlign: "center", fontSize: 12, color: "#888" }}>
-                <MessageSquare size={20} style={{ opacity: 0.4, margin: "0 auto 8px" }} />
-                <div>No conversations yet.</div>
+              <div style={{ padding: "32px 16px", textAlign: "center" }}>
+                <div
+                  style={{
+                    width: 64, height: 64, borderRadius: "50%",
+                    background: "#F7F7F7", color: "#666",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    margin: "0 auto 16px",
+                  }}
+                >
+                  <MessageSquare size={28} strokeWidth={1.75} />
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>
+                  No conversations yet
+                </div>
+                <div style={{ fontSize: 13, color: "#666", marginBottom: 16, lineHeight: 1.5 }}>
+                  Post a project or browse experts to get started.
+                </div>
+                <Link
+                  to="/services"
+                  style={{
+                    display: "inline-block", background: "#0a0a0a", color: "#fff",
+                    borderRadius: 999, padding: "8px 20px", fontSize: 13,
+                    fontWeight: 500, textDecoration: "none",
+                  }}
+                >
+                  Find an Expert
+                </Link>
               </div>
             )}
             {filteredConvs.map((c) => {

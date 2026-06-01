@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
-import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
+import { EmptyState } from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -179,7 +179,17 @@ export default function Search() {
                 {Array.from({ length: 6 }).map((_, i) => <GigCardSkeleton key={i} />)}
               </div>
             ) : (promoted.length === 0 && gigs.length === 0) ? (
-              <EmptyCategoryState surface="light" />
+              <EmptyState
+                icon={SearchIcon}
+                title="No experts found"
+                message="Try adjusting your filters or search terms."
+                action={{
+                  label: "Clear filters",
+                  onClick: () => setParams(new URLSearchParams()),
+                  variant: "outline",
+                }}
+                secondaryAction={{ label: "Browse all experts", to: "/services" }}
+              />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {promoted.map((g) => <GigCard key={`p-${g.id}`} gig={g} promoted />)}
