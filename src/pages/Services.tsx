@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Search, Bookmark } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { CategoryMegaNav } from "@/components/layout/CategoryMegaNav";
@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
 import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
+import { RiverCommandBar } from "@/components/services/RiverCommandBar";
+
 
 const CATEGORIES = [
   { label: "Voice AI", match: ["voice"] },
