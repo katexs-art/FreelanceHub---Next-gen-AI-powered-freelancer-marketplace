@@ -42,6 +42,25 @@ Deno.serve(async (req) => {
     if (order.buyer_id !== user.id) throw new Error("Forbidden");
     if (order.status !== "pending_payment") throw new Error("Order is not awaiting payment");
 
+    // If this order originated from a custom offer, verify the order price matches it.
+    // custom_offers.price is stored in cents; orders.price is in dollars.
+    const { data: offer } = await admin
+      .from("custom_offers")
+      .select("id, price")
+      .eq("order_id", order.id)
+      .maybeSingle();
+    if (offer) {
+      const offerDollars = Math.round((offer.price as number) / 100);
+      if (offerDollars !== order.price) {
+        throw new Error(
+          `Order price ($${order.price}) does not match the custom offer ($${offerDollars}). Refusing to charge.`,
+        );
+      }
+    }
+
+    const partnerFee = Math.round(order.price * 0.05);
+    const expectedChargeCents = (order.price + partnerFee) * 100;
+
     const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-04-30.basil",
       httpClient: Stripe.createFetchHttpClient(),
@@ -52,19 +71,23 @@ Deno.serve(async (req) => {
       try {
         pi = await stripe.paymentIntents.retrieve(order.stripe_payment_intent_id);
         if (pi.status === "succeeded" || pi.status === "canceled") pi = null;
+        // If a stale PI exists with the wrong amount, discard it and create a new one.
+        if (pi && pi.amount !== expectedChargeCents) {
+          try { await stripe.paymentIntents.cancel(pi.id); } catch { /* ignore */ }
+          pi = null;
+        }
       } catch { pi = null; }
     }
     if (!pi) {
-      const partnerFee = Math.round(order.price * 0.05);
-      const chargeAmount = (order.price + partnerFee) * 100;
       pi = await stripe.paymentIntents.create({
-        amount: chargeAmount,
+        amount: expectedChargeCents,
         currency: "usd",
         automatic_payment_methods: { enabled: true },
         metadata: {
           order_id: order.id,
           buyer_id: order.buyer_id,
           seller_id: order.seller_id,
+          custom_offer_id: offer?.id ?? "",
         },
       });
       await admin.from("orders").update({ stripe_payment_intent_id: pi.id }).eq("id", order.id);
@@ -73,7 +96,12 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({
       client_secret: pi.client_secret,
       publishable_key: publishable,
+      amount: pi.amount,
+      expected_amount: expectedChargeCents,
+      order_price: order.price,
+      custom_offer_price_cents: offer?.price ?? null,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
   } catch (e) {
     console.error("stripe-payment-intent error", e);
     return new Response(JSON.stringify({ error: (e as Error).message }), {
