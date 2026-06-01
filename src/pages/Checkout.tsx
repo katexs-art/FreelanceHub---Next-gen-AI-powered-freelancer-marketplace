@@ -272,6 +272,8 @@ export default function Checkout() {
   const [promo, setPromo] = useState("");
   const [payMethod, setPayMethod] = useState<"card" | "paypal">("card");
   const [payState, setPayState] = useState<PayState | null>(null);
+  const [amountMismatch, setAmountMismatch] = useState<string | null>(null);
+
 
   const loadOrderAndInit = async () => {
     if (!order_id || !user) return;
