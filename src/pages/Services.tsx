@@ -352,7 +352,7 @@ export default function Services() {
 
       {/* RESULTS GRID + FILTERS */}
       <section className="svc-section svc-results" style={{ padding: "20px 80px 80px" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "260px 1fr", gap: 32 }}>
+        <div className="svc-results-grid" style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "260px 1fr", gap: 32 }}>
           <aside style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 22, alignSelf: "start", position: "sticky", top: 120 }}>
             <h3 style={{ fontSize: 11, fontWeight: 700, color: "#aaa", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Filters</h3>
 
