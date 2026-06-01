@@ -270,6 +270,12 @@ export default function Services() {
           .svc-grid-3 { grid-template-columns: 1fr !important; }
           .svc-grid-2 { grid-template-columns: 1fr !important; }
           .svc-grid-4 { grid-template-columns: 1fr 1fr !important; }
+          .svc-results-grid { grid-template-columns: 1fr !important; }
+          .svc-results-grid > aside { position: static !important; }
+          .svc-activity-split { flex-direction: column !important; }
+          .svc-h1 { font-size: 40px !important; }
+          .svc-section { padding: 56px 20px !important; }
+        }
           .svc-activity-split { flex-direction: column !important; }
           .svc-h1 { font-size: 40px !important; }
           .svc-section { padding: 56px 20px !important; }
