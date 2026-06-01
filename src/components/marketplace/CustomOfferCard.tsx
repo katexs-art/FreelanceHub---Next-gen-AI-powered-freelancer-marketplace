@@ -10,6 +10,7 @@ interface Offer {
   id: string; description: string | null; price: number;
   delivery_days: number; revisions: number; status: string;
   buyer_id: string; seller_id: string; gig_id: string | null;
+  order_id: string | null;
 }
 
 export function CustomOfferCard({ offerId }: { offerId: string }) {
