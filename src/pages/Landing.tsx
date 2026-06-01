@@ -89,53 +89,67 @@ export default function Landing() {
 
   useEffect(() => {
     (async () => {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id,username,full_name,avatar_url,bio,river_score,seller_skills")
-        .eq("seller_status", "approved")
-        .order("river_score", { ascending: false, nullsFirst: false })
-        .limit(6);
-      const ids = (profs ?? []).map((p: any) => p.id);
-      let priceById = new Map<string, number>();
-      if (ids.length) {
-        const { data: gigs } = await supabase
-          .from("gigs")
-          .select("seller_id,starting_price")
-          .in("seller_id", ids)
-          .eq("status", "active")
-          .order("starting_price", { ascending: true });
-        (gigs ?? []).forEach((g: any) => {
-          if (!priceById.has(g.seller_id)) priceById.set(g.seller_id, g.starting_price);
-        });
+      try {
+        const { data: profs, error: profErr } = await supabase
+          .from("profiles")
+          .select("id,username,full_name,avatar_url,bio,river_score,seller_skills")
+          .eq("seller_status", "approved")
+          .order("river_score", { ascending: false, nullsFirst: false })
+          .limit(6);
+        if (profErr) console.error("[Landing] top sellers query error:", profErr);
+        const ids = (profs ?? []).map((p: any) => p.id);
+        let priceById = new Map<string, number>();
+        if (ids.length) {
+          const { data: gigs, error: gigErr } = await supabase
+            .from("gigs")
+            .select("seller_id,starting_price")
+            .in("seller_id", ids)
+            .eq("status", "active")
+            .order("starting_price", { ascending: true });
+          if (gigErr) console.error("[Landing] seller-pricing query error:", gigErr);
+          (gigs ?? []).forEach((g: any) => {
+            if (!priceById.has(g.seller_id)) priceById.set(g.seller_id, g.starting_price);
+          });
+        }
+        const mapped = (profs ?? []).map((p: any) => ({ ...p, startingPrice: priceById.get(p.id) ?? null }));
+        setSellers(mapped.length ? mapped : FALLBACK_SELLERS);
+      } catch (e) {
+        console.error("[Landing] top sellers fetch failed:", e);
+        setSellers(FALLBACK_SELLERS);
+      } finally {
+        setSellersLoading(false);
       }
-      setSellers(
-        (profs ?? []).map((p: any) => ({ ...p, startingPrice: priceById.get(p.id) ?? null })),
-      );
     })();
   }, []);
 
   useEffect(() => {
     (async () => {
-      setGigsLoading(true);
-      const { data: gigs } = await supabase
-        .from("gigs")
-        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
-        .eq("status", "active")
-        .order("total_orders", { ascending: false, nullsFirst: false })
-        .limit(8);
-      const sellerIds = [...new Set((gigs ?? []).map((g: any) => g.seller_id))];
-      let sellerMap = new Map<string, any>();
-      if (sellerIds.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id,username,full_name,avatar_url")
-          .in("id", sellerIds);
-        (profs ?? []).forEach((p: any) => sellerMap.set(p.id, p));
+      try {
+        const { data: gigs, error } = await supabase
+          .from("gigs")
+          .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+          .eq("status", "active")
+          .order("total_orders", { ascending: false, nullsFirst: false })
+          .limit(8);
+        if (error) console.error("[Landing] featured gigs query error:", error);
+        const sellerIds = [...new Set((gigs ?? []).map((g: any) => g.seller_id))];
+        let sellerMap = new Map<string, any>();
+        if (sellerIds.length) {
+          const { data: profs, error: pErr } = await supabase
+            .from("profiles")
+            .select("id,username,full_name,avatar_url")
+            .in("id", sellerIds);
+          if (pErr) console.error("[Landing] featured gig sellers query error:", pErr);
+          (profs ?? []).forEach((p: any) => sellerMap.set(p.id, p));
+        }
+        const mapped = (gigs ?? []).map((g: any) => ({ ...g, seller: sellerMap.get(g.seller_id) }));
+        setFeaturedGigs(mapped.length ? mapped : FALLBACK_GIGS);
+      } catch (e) {
+        console.error("[Landing] featured gigs fetch failed:", e);
+        setFeaturedGigs(FALLBACK_GIGS);
+      } finally {
+        setGigsLoading(false);
       }
-      setFeaturedGigs(
-        (gigs ?? []).map((g: any) => ({ ...g, seller: sellerMap.get(g.seller_id) })),
-      );
-      setGigsLoading(false);
     })();
   }, []);
 
