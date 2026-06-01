@@ -584,7 +584,7 @@ export default function Checkout() {
               {/* Payment method card */}
               <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 <h2 className="text-[15px] font-semibold text-foreground mb-4">
-                  How would you like to pay?
+                  Pay with
                 </h2>
 
                 <div className="flex gap-2 mb-5">
@@ -602,9 +602,12 @@ export default function Checkout() {
                         onClick={() => setPayMethod(opt.id)}
                         className="h-9 px-4 text-[13px] font-medium rounded-full transition-colors"
                         style={{
-                          background: active ? "#0A0A0A" : "#FFFFFF",
-                          color: active ? "#FFFFFF" : "#0A0A0A",
-                          border: `1px solid ${active ? "#0A0A0A" : "#EBEBEB"}`,
+                          background: "#FFFFFF",
+                          color: "#0A0A0A",
+                          border: active
+                            ? "2px solid #0A0A0A"
+                            : "1px solid #EBEBEB",
+                          padding: active ? "0 15px" : "0 16px",
                         }}
                       >
                         {opt.label}
@@ -612,6 +615,7 @@ export default function Checkout() {
                     );
                   })}
                 </div>
+
 
                 {clientSecret && stripePromise ? (
                   <Elements
