@@ -21,6 +21,26 @@ const CATEGORIES = [
   { label: "Learn AI", slug: "learn-ai", desc: "Tutoring, courses, AI training", Icon: GraduationCap },
 ];
 
+const FALLBACK_GIGS = [
+  { id: "fb-1", title: "I will build a custom GPT-powered AI agent for your business", thumbnail_url: null, starting_price: 250, average_rating: 4.9, total_reviews: 42, seller: { full_name: "Alex Rivera", avatar_url: null } },
+  { id: "fb-2", title: "I will create a realistic AI voice clone for your brand", thumbnail_url: null, starting_price: 120, average_rating: 5.0, total_reviews: 28, seller: { full_name: "Maya Chen", avatar_url: null } },
+  { id: "fb-3", title: "I will design AI-generated product photography that converts", thumbnail_url: null, starting_price: 85, average_rating: 4.8, total_reviews: 67, seller: { full_name: "Diego Alvarez", avatar_url: null } },
+  { id: "fb-4", title: "I will automate your marketing workflows with AI in 48 hours", thumbnail_url: null, starting_price: 300, average_rating: 4.9, total_reviews: 51, seller: { full_name: "Sarah Okonkwo", avatar_url: null } },
+  { id: "fb-5", title: "I will write SEO-optimized AI content that ranks on Google", thumbnail_url: null, starting_price: 65, average_rating: 4.7, total_reviews: 89, seller: { full_name: "Kevin Herring", avatar_url: null } },
+  { id: "fb-6", title: "I will set up an AI customer support chatbot for your site", thumbnail_url: null, starting_price: 180, average_rating: 4.9, total_reviews: 34, seller: { full_name: "Priya Patel", avatar_url: null } },
+  { id: "fb-7", title: "I will train a custom AI model on your business data", thumbnail_url: null, starting_price: 450, average_rating: 5.0, total_reviews: 19, seller: { full_name: "Marcus Cole", avatar_url: null } },
+  { id: "fb-8", title: "I will create AI-powered video edits and short-form content", thumbnail_url: null, starting_price: 140, average_rating: 4.8, total_reviews: 56, seller: { full_name: "Lena Wu", avatar_url: null } },
+];
+
+const FALLBACK_SELLERS = [
+  { id: "fb-s1", username: "alexrivera", full_name: "Alex Rivera", avatar_url: null, bio: "AI agent specialist — building GPT-powered automations for startups.", river_score: 9.4, seller_skills: ["AI Agents", "GPT", "Automation"], startingPrice: 250 },
+  { id: "fb-s2", username: "mayachen", full_name: "Maya Chen", avatar_url: null, bio: "Brand & voice AI designer with 7+ years crafting identities.", river_score: 9.2, seller_skills: ["Voice AI", "Branding"], startingPrice: 120 },
+  { id: "fb-s3", username: "diegoalvarez", full_name: "Diego Alvarez", avatar_url: null, bio: "Full-stack developer — React, Node, Supabase. Ship MVPs in days.", river_score: 9.1, seller_skills: ["React", "Node.js", "Supabase"], startingPrice: 85 },
+  { id: "fb-s4", username: "sarahokonkwo", full_name: "Sarah Okonkwo", avatar_url: null, bio: "Copywriter for SaaS and DTC. Words that sell, not just sit there.", river_score: 9.0, seller_skills: ["Copywriting", "SEO"], startingPrice: 65 },
+  { id: "fb-s5", username: "kevinherring", full_name: "Kevin Herring", avatar_url: null, bio: "AI marketing automation expert — Klaviyo, HubSpot, custom flows.", river_score: 8.9, seller_skills: ["Marketing", "Automation"], startingPrice: 180 },
+  { id: "fb-s6", username: "priyapatel", full_name: "Priya Patel", avatar_url: null, bio: "Chatbot & support AI specialist. Deflect tickets, delight users.", river_score: 8.8, seller_skills: ["Chatbots", "Support AI"], startingPrice: 150 },
+];
+
 type TopSeller = {
   id: string;
   username: string | null;
