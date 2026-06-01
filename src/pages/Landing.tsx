@@ -421,9 +421,9 @@ export default function Landing() {
           <Link to="/services" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all experts →</Link>
         </div>
         <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-          {sellers.length === 0
+          {sellersLoading
             ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16, padding: 24, height: 240 }} />
+                <div key={i} className="kx-shimmer" style={{ border: "1px solid #2a2a2a", borderRadius: 16, height: 240 }} />
               ))
             : sellers.map((s) => {
                 const displayName = s.full_name || s.username || "Expert";
