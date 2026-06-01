@@ -43,11 +43,13 @@ function PayBlock({
   total,
   payMethod,
   onReadyChange,
+  onRetryInit,
 }: {
   orderId: string;
   total: number;
   payMethod: "card" | "paypal";
   onReadyChange?: (ready: boolean) => void;
+  onRetryInit?: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -193,7 +195,52 @@ function PayBlock({
             fontSize: 13,
           }}
         >
-          {errorMsg}
+          <div style={{ marginBottom: 8 }}>{errorMsg}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMsg(null);
+                onPay();
+              }}
+              disabled={busy || !stripe || !elements}
+              style={{
+                height: 32,
+                padding: "0 12px",
+                background: "#0A0A0A",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: busy ? "wait" : "pointer",
+              }}
+            >
+              Retry payment
+            </button>
+            {onRetryInit && (
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMsg(null);
+                  onRetryInit();
+                }}
+                style={{
+                  height: 32,
+                  padding: "0 12px",
+                  background: "#FFFFFF",
+                  color: "#0A0A0A",
+                  border: "1px solid #EBEBEB",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Start a new payment session
+              </button>
+            )}
+          </div>
         </div>
       )}
       <div
@@ -239,80 +286,85 @@ export default function Checkout() {
   const [promo, setPromo] = useState("");
   const [payMethod, setPayMethod] = useState<"card" | "paypal">("card");
 
+  const loadOrderAndInit = async () => {
+    if (!order_id || !user) return;
+    setErr(null);
+    setLoading(true);
+    setClientSecret(null);
+    const { data: o, error } = await supabase
+      .from("orders")
+      .select(
+        "id, buyer_id, seller_id, price, status, project_title, delivery_deadline, stripe_payment_intent_id, gig_id",
+      )
+      .eq("id", order_id)
+      .maybeSingle();
+    if (error || !o) {
+      setErr("Project not found");
+      setLoading(false);
+      return;
+    }
+    if (o.buyer_id !== user.id) {
+      setErr("This project belongs to another partner.");
+      setLoading(false);
+      return;
+    }
+    setOrder(o as OrderRow);
+
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, avatar_url")
+      .eq("id", o.seller_id)
+      .maybeSingle();
+    setSeller(p as SellerProfile | null);
+
+    if (o.gig_id) {
+      const { data: g } = await supabase
+        .from("gigs")
+        .select("title, thumbnail_url")
+        .eq("id", o.gig_id)
+        .maybeSingle();
+      if (g) setGig(g as GigInfo);
+    }
+
+    if (o.status !== "pending_payment") {
+      nav(`/orders/${o.id}`, { replace: true });
+      return;
+    }
+
+    try {
+      const invokePromise = supabase.functions.invoke("stripe-payment-intent", {
+        body: { order_id: o.id },
+      });
+      const { data: pi, error: piErr } = (await Promise.race([
+        invokePromise,
+        new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
+        ),
+      ])) as Awaited<typeof invokePromise>;
+      if (piErr || !pi?.client_secret) {
+        setErr(piErr?.message || pi?.error || "Could not initialize payment");
+        setLoading(false);
+        return;
+      }
+      setClientSecret(pi.client_secret);
+      setStripePromise(loadStripe(pi.publishable_key));
+    } catch (e) {
+      setErr((e as Error).message || "Could not initialize payment");
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
       nav(`/login?redirect=/checkout/${order_id}`);
       return;
     }
-    if (!order_id) return;
-    (async () => {
-      setLoading(true);
-      const { data: o, error } = await supabase
-        .from("orders")
-        .select(
-          "id, buyer_id, seller_id, price, status, project_title, delivery_deadline, stripe_payment_intent_id, gig_id",
-        )
-        .eq("id", order_id)
-        .maybeSingle();
-      if (error || !o) {
-        setErr("Project not found");
-        setLoading(false);
-        return;
-      }
-      if (o.buyer_id !== user.id) {
-        setErr("This project belongs to another partner.");
-        setLoading(false);
-        return;
-      }
-      setOrder(o as OrderRow);
-
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("id, full_name, username, avatar_url")
-        .eq("id", o.seller_id)
-        .maybeSingle();
-      setSeller(p as SellerProfile | null);
-
-      if (o.gig_id) {
-        const { data: g } = await supabase
-          .from("gigs")
-          .select("title, thumbnail_url")
-          .eq("id", o.gig_id)
-          .maybeSingle();
-        if (g) setGig(g as GigInfo);
-      }
-
-      if (o.status !== "pending_payment") {
-        nav(`/orders/${o.id}`, { replace: true });
-        return;
-      }
-
-      try {
-        const invokePromise = supabase.functions.invoke("stripe-payment-intent", {
-          body: { order_id: o.id },
-        });
-        const { data: pi, error: piErr } = (await Promise.race([
-          invokePromise,
-          new Promise((_, rej) =>
-            setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
-          ),
-        ])) as Awaited<typeof invokePromise>;
-        if (piErr || !pi?.client_secret) {
-          setErr(piErr?.message || pi?.error || "Could not initialize payment");
-          setLoading(false);
-          return;
-        }
-        setClientSecret(pi.client_secret);
-        setStripePromise(loadStripe(pi.publishable_key));
-      } catch (e) {
-        setErr((e as Error).message || "Could not initialize payment");
-        setLoading(false);
-        return;
-      }
-      setLoading(false);
-    })();
-  }, [authLoading, user, order_id, nav]);
+    loadOrderAndInit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, order_id]);
 
   const partnerFee = useMemo(() => (order ? Math.round(order.price * 0.05) : 0), [order]);
   const total = useMemo(() => (order ? order.price + partnerFee : 0), [order, partnerFee]);
@@ -332,7 +384,26 @@ export default function Checkout() {
     return (
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
-        <main className="flex-1 container-page py-10 text-sm">{err ?? "Project not found"}</main>
+        <main className="flex-1 container-page py-10 text-sm">
+          <div style={{ marginBottom: 12 }}>{err ?? "Project not found"}</div>
+          <button
+            type="button"
+            onClick={loadOrderAndInit}
+            style={{
+              height: 40,
+              padding: "0 16px",
+              background: "#16A34A",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Try again
+          </button>
+        </main>
         <SiteFooter />
       </div>
     );
@@ -600,7 +671,12 @@ export default function Checkout() {
                     <span>${total}</span>
                   </div>
 
-                  <PayBlock orderId={order.id} total={total} payMethod={payMethod} />
+                  <PayBlock
+                    orderId={order.id}
+                    total={total}
+                    payMethod={payMethod}
+                    onRetryInit={loadOrderAndInit}
+                  />
                 </div>
               </aside>
             </div>
