@@ -543,20 +543,29 @@ export default function Checkout() {
                     >
                       {itemTitle}
                     </div>
-                    <div className="text-[13px] text-foreground-subtle mt-1">
+                    <span className="inline-flex items-center mt-2 px-2.5 py-1 rounded-full bg-[#F7F7F7] border border-border text-[12px] font-medium text-foreground-muted">
                       {itemSubtitle}
-                    </div>
+                    </span>
                   </div>
                 </div>
 
                 <div className="h-px bg-border my-5" />
 
                 <div className="flex items-center gap-3">
-                  <img
-                    src={sellerAvatar}
-                    alt={sellerName}
-                    className="w-10 h-10 rounded-full object-cover bg-[#F7F7F7]"
-                  />
+                  {seller?.avatar_url ? (
+                    <img
+                      src={sellerAvatar}
+                      alt={sellerName}
+                      className="w-10 h-10 rounded-full object-cover bg-[#F7F7F7]"
+                    />
+                  ) : (
+                    <div
+                      aria-hidden
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F7F7F7] border border-border text-[14px] font-semibold text-foreground"
+                    >
+                      {sellerName.trim().charAt(0).toUpperCase() || "K"}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <div className="text-[14px] font-medium text-foreground">
                       {sellerName}
@@ -570,6 +579,7 @@ export default function Checkout() {
                   </div>
                 </div>
               </div>
+
 
               {/* Payment method card */}
               <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
