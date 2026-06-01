@@ -37,9 +37,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 
 // Configuration
 const SITE_NAME = "Katexs"
-const SENDER_DOMAIN = "notify.katexs.com"
 const ROOT_DOMAIN = "katexs.com"
-const FROM_DOMAIN = "katexs.com" // Domain shown in From address (may be root or sender subdomain)
 const RESEND_GATEWAY_URL = 'https://connector-gateway.lovable.dev/resend'
 
 function formatFromAddress(email: string): string {
