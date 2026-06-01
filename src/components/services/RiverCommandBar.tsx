@@ -76,7 +76,11 @@ export function RiverCommandBar() {
   const toggleMic = useCallback(() => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
+      setMicError("unsupported");
       setError("Voice input isn't supported in this browser. Try Chrome, Edge, or Safari.");
+      toast.error("Voice input unavailable", {
+        description: "Your browser doesn't support speech recognition. Try Chrome, Edge, or Safari.",
+      });
       return;
     }
     if (listening) {
@@ -85,6 +89,7 @@ export function RiverCommandBar() {
     }
 
     setError(null);
+    setMicError(null);
     let finalText = "";
 
     const r = new SR();
@@ -107,11 +112,18 @@ export function RiverCommandBar() {
       setListening(false);
       const code = e?.error;
       if (code === "not-allowed" || code === "service-not-allowed") {
-        setError("Microphone permission denied. Enable it in your browser settings.");
+        setMicError("denied");
+        setError("Microphone access is blocked. Enable it in your browser settings to use voice search.");
+        toast.error("Microphone blocked", {
+          description: "Permission denied. Enable microphone access in your browser settings.",
+        });
       } else if (code === "no-speech") {
-        setError("I didn't catch that. Try speaking again.");
+        setMicError("no-speech");
+        setError("Didn't catch that. Try speaking closer to the microphone, or type your request below.");
+        toast.info("No speech detected", { description: "Try again or type your request." });
       } else if (code && code !== "aborted") {
         setError("Voice input failed. Please try again.");
+        toast.error("Voice input failed", { description: "Something went wrong. Please try again." });
       }
     };
     r.onend = () => {
