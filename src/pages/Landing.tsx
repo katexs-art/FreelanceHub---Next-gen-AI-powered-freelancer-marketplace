@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
 import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -545,30 +546,7 @@ export default function Landing() {
         </Link>
       </section>
 
-      {/* FOOTER */}
-      <footer style={{ background: "#000", padding: "60px 80px" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 32 }}>
-          <div>
-            <div style={{ color: "#fff", fontSize: 15, fontWeight: 500, letterSpacing: "0.1em", marginBottom: 12 }}>KATEXS</div>
-            <div style={{ fontSize: 14, color: "#cccccc", maxWidth: 320 }}>
-              The world's first AI-native freelance marketplace
-            </div>
-          </div>
-          <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
-            <Link to="/services" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Find Experts</Link>
-            <Link to="/projects" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Projects</Link>
-            <Link to="/about" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>About</Link>
-            <Link to="/trust" style={{ color: "#fff", fontSize: 13, textDecoration: "none" }}>Contact</Link>
-          </div>
-        </div>
-        <div style={{ marginTop: 48, paddingTop: 24, borderTop: "1px solid #1a1a1a", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
-          <div style={{ fontSize: 12, color: "#aaaaaa" }}>© 2026 Katexs. All rights reserved.</div>
-          <div style={{ display: "flex", gap: 24 }}>
-            <Link to="/privacy" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>Privacy Policy</Link>
-            <Link to="/terms" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>Terms of Service</Link>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }
