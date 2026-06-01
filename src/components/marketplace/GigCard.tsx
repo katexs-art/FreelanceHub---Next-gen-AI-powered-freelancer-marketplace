@@ -12,6 +12,7 @@ export interface GigCardData {
   average_rating: number;
   total_reviews: number;
   promotion_id?: string | null;
+  delivery_days?: number | null;
   seller?: {
     username: string | null;
     full_name: string | null;
@@ -120,6 +121,11 @@ export function GigCard({ gig, promoted }: { gig: GigCardData; promoted?: boolea
             <div className="text-base font-bold text-foreground">${gig.starting_price}</div>
           </div>
         </div>
+        {gig.delivery_days != null && (
+          <div className="mt-2 text-[11px] text-foreground-subtle">
+            Delivery in {gig.delivery_days} day{gig.delivery_days === 1 ? "" : "s"}
+          </div>
+        )}
       </div>
     </Link>
   );
