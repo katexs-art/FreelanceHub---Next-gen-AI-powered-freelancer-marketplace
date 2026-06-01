@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import howitworksHero from "@/assets/howitworks-hero.mp4.asset.json";
 
-const VIDEO_URL =
-  "https://lquoahkuzqwtiihshdaf.supabase.co/storage/v1/object/public/katexs-assets/8835828-hd_1920_1080_25fps.mp4";
+const VIDEO_URL = howitworksHero.url;
 
 const scrollTo = (id: string) => (e: React.MouseEvent) => {
   e.preventDefault();
