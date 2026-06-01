@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Mic, MicOff, Loader2, Star, AlertCircle, Keyboard, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface ExpertCard {
   id: string;
