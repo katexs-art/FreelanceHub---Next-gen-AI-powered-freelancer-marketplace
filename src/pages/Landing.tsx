@@ -94,6 +94,31 @@ export default function Landing() {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      setGigsLoading(true);
+      const { data: gigs } = await supabase
+        .from("gigs")
+        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+        .eq("status", "active")
+        .order("total_orders", { ascending: false, nullsFirst: false })
+        .limit(8);
+      const sellerIds = [...new Set((gigs ?? []).map((g: any) => g.seller_id))];
+      let sellerMap = new Map<string, any>();
+      if (sellerIds.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id,username,full_name,avatar_url")
+          .in("id", sellerIds);
+        (profs ?? []).forEach((p: any) => sellerMap.set(p.id, p));
+      }
+      setFeaturedGigs(
+        (gigs ?? []).map((g: any) => ({ ...g, seller: sellerMap.get(g.seller_id) })),
+      );
+      setGigsLoading(false);
+    })();
+  }, []);
+
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
       <SEO
