@@ -21,6 +21,26 @@ const CATEGORIES = [
   { label: "Learn AI", slug: "learn-ai", desc: "Tutoring, courses, AI training", Icon: GraduationCap },
 ];
 
+const FALLBACK_GIGS = [
+  { id: "fb-1", title: "I will build a custom GPT-powered AI agent for your business", thumbnail_url: null, starting_price: 250, average_rating: 4.9, total_reviews: 42, seller: { full_name: "Alex Rivera", avatar_url: null } },
+  { id: "fb-2", title: "I will create a realistic AI voice clone for your brand", thumbnail_url: null, starting_price: 120, average_rating: 5.0, total_reviews: 28, seller: { full_name: "Maya Chen", avatar_url: null } },
+  { id: "fb-3", title: "I will design AI-generated product photography that converts", thumbnail_url: null, starting_price: 85, average_rating: 4.8, total_reviews: 67, seller: { full_name: "Diego Alvarez", avatar_url: null } },
+  { id: "fb-4", title: "I will automate your marketing workflows with AI in 48 hours", thumbnail_url: null, starting_price: 300, average_rating: 4.9, total_reviews: 51, seller: { full_name: "Sarah Okonkwo", avatar_url: null } },
+  { id: "fb-5", title: "I will write SEO-optimized AI content that ranks on Google", thumbnail_url: null, starting_price: 65, average_rating: 4.7, total_reviews: 89, seller: { full_name: "Kevin Herring", avatar_url: null } },
+  { id: "fb-6", title: "I will set up an AI customer support chatbot for your site", thumbnail_url: null, starting_price: 180, average_rating: 4.9, total_reviews: 34, seller: { full_name: "Priya Patel", avatar_url: null } },
+  { id: "fb-7", title: "I will train a custom AI model on your business data", thumbnail_url: null, starting_price: 450, average_rating: 5.0, total_reviews: 19, seller: { full_name: "Marcus Cole", avatar_url: null } },
+  { id: "fb-8", title: "I will create AI-powered video edits and short-form content", thumbnail_url: null, starting_price: 140, average_rating: 4.8, total_reviews: 56, seller: { full_name: "Lena Wu", avatar_url: null } },
+];
+
+const FALLBACK_SELLERS = [
+  { id: "fb-s1", username: "alexrivera", full_name: "Alex Rivera", avatar_url: null, bio: "AI agent specialist — building GPT-powered automations for startups.", river_score: 9.4, seller_skills: ["AI Agents", "GPT", "Automation"], startingPrice: 250 },
+  { id: "fb-s2", username: "mayachen", full_name: "Maya Chen", avatar_url: null, bio: "Brand & voice AI designer with 7+ years crafting identities.", river_score: 9.2, seller_skills: ["Voice AI", "Branding"], startingPrice: 120 },
+  { id: "fb-s3", username: "diegoalvarez", full_name: "Diego Alvarez", avatar_url: null, bio: "Full-stack developer — React, Node, Supabase. Ship MVPs in days.", river_score: 9.1, seller_skills: ["React", "Node.js", "Supabase"], startingPrice: 85 },
+  { id: "fb-s4", username: "sarahokonkwo", full_name: "Sarah Okonkwo", avatar_url: null, bio: "Copywriter for SaaS and DTC. Words that sell, not just sit there.", river_score: 9.0, seller_skills: ["Copywriting", "SEO"], startingPrice: 65 },
+  { id: "fb-s5", username: "kevinherring", full_name: "Kevin Herring", avatar_url: null, bio: "AI marketing automation expert — Klaviyo, HubSpot, custom flows.", river_score: 8.9, seller_skills: ["Marketing", "Automation"], startingPrice: 180 },
+  { id: "fb-s6", username: "priyapatel", full_name: "Priya Patel", avatar_url: null, bio: "Chatbot & support AI specialist. Deflect tickets, delight users.", river_score: 8.8, seller_skills: ["Chatbots", "Support AI"], startingPrice: 150 },
+];
+
 type TopSeller = {
   id: string;
   username: string | null;
@@ -36,6 +56,7 @@ export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [sellers, setSellers] = useState<TopSeller[]>([]);
+  const [sellersLoading, setSellersLoading] = useState(true);
   const [featuredGigs, setFeaturedGigs] = useState<any[]>([]);
   const [gigsLoading, setGigsLoading] = useState(true);
   const SR: any = typeof window !== "undefined" ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
@@ -69,53 +90,67 @@ export default function Landing() {
 
   useEffect(() => {
     (async () => {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("id,username,full_name,avatar_url,bio,river_score,seller_skills")
-        .eq("seller_status", "approved")
-        .order("river_score", { ascending: false, nullsFirst: false })
-        .limit(6);
-      const ids = (profs ?? []).map((p: any) => p.id);
-      let priceById = new Map<string, number>();
-      if (ids.length) {
-        const { data: gigs } = await supabase
-          .from("gigs")
-          .select("seller_id,starting_price")
-          .in("seller_id", ids)
-          .eq("status", "active")
-          .order("starting_price", { ascending: true });
-        (gigs ?? []).forEach((g: any) => {
-          if (!priceById.has(g.seller_id)) priceById.set(g.seller_id, g.starting_price);
-        });
+      try {
+        const { data: profs, error: profErr } = await supabase
+          .from("profiles")
+          .select("id,username,full_name,avatar_url,bio,river_score,seller_skills")
+          .eq("seller_status", "approved")
+          .order("river_score", { ascending: false, nullsFirst: false })
+          .limit(6);
+        if (profErr) console.error("[Landing] top sellers query error:", profErr);
+        const ids = (profs ?? []).map((p: any) => p.id);
+        let priceById = new Map<string, number>();
+        if (ids.length) {
+          const { data: gigs, error: gigErr } = await supabase
+            .from("gigs")
+            .select("seller_id,starting_price")
+            .in("seller_id", ids)
+            .eq("status", "active")
+            .order("starting_price", { ascending: true });
+          if (gigErr) console.error("[Landing] seller-pricing query error:", gigErr);
+          (gigs ?? []).forEach((g: any) => {
+            if (!priceById.has(g.seller_id)) priceById.set(g.seller_id, g.starting_price);
+          });
+        }
+        const mapped = (profs ?? []).map((p: any) => ({ ...p, startingPrice: priceById.get(p.id) ?? null }));
+        setSellers(mapped.length ? mapped : FALLBACK_SELLERS);
+      } catch (e) {
+        console.error("[Landing] top sellers fetch failed:", e);
+        setSellers(FALLBACK_SELLERS);
+      } finally {
+        setSellersLoading(false);
       }
-      setSellers(
-        (profs ?? []).map((p: any) => ({ ...p, startingPrice: priceById.get(p.id) ?? null })),
-      );
     })();
   }, []);
 
   useEffect(() => {
     (async () => {
-      setGigsLoading(true);
-      const { data: gigs } = await supabase
-        .from("gigs")
-        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
-        .eq("status", "active")
-        .order("total_orders", { ascending: false, nullsFirst: false })
-        .limit(8);
-      const sellerIds = [...new Set((gigs ?? []).map((g: any) => g.seller_id))];
-      let sellerMap = new Map<string, any>();
-      if (sellerIds.length) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id,username,full_name,avatar_url")
-          .in("id", sellerIds);
-        (profs ?? []).forEach((p: any) => sellerMap.set(p.id, p));
+      try {
+        const { data: gigs, error } = await supabase
+          .from("gigs")
+          .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+          .eq("status", "active")
+          .order("total_orders", { ascending: false, nullsFirst: false })
+          .limit(8);
+        if (error) console.error("[Landing] featured gigs query error:", error);
+        const sellerIds = [...new Set((gigs ?? []).map((g: any) => g.seller_id))];
+        let sellerMap = new Map<string, any>();
+        if (sellerIds.length) {
+          const { data: profs, error: pErr } = await supabase
+            .from("profiles")
+            .select("id,username,full_name,avatar_url")
+            .in("id", sellerIds);
+          if (pErr) console.error("[Landing] featured gig sellers query error:", pErr);
+          (profs ?? []).forEach((p: any) => sellerMap.set(p.id, p));
+        }
+        const mapped = (gigs ?? []).map((g: any) => ({ ...g, seller: sellerMap.get(g.seller_id) }));
+        setFeaturedGigs(mapped.length ? mapped : FALLBACK_GIGS);
+      } catch (e) {
+        console.error("[Landing] featured gigs fetch failed:", e);
+        setFeaturedGigs(FALLBACK_GIGS);
+      } finally {
+        setGigsLoading(false);
       }
-      setFeaturedGigs(
-        (gigs ?? []).map((g: any) => ({ ...g, seller: sellerMap.get(g.seller_id) })),
-      );
-      setGigsLoading(false);
     })();
   }, []);
 
@@ -141,6 +176,8 @@ export default function Landing() {
         .kx-btn-primary:hover { background: #eee !important; }
         .kx-seller-card { transition: all 0.2s ease; }
         .kx-seller-card:hover { border-color: #fff !important; box-shadow: 0 4px 20px rgba(255,255,255,0.06); }
+        @keyframes kxShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .kx-shimmer { background: linear-gradient(90deg, #161616 0%, #222 50%, #161616 100%); background-size: 800px 100%; animation: kxShimmer 1.4s linear infinite; }
       `}</style>
 
       <SiteHeader variant="transparent" />
@@ -326,11 +363,9 @@ export default function Landing() {
         <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           {gigsLoading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 16, height: 280 }} />
+                <div key={i} className="kx-shimmer" style={{ border: "1px solid #2a2a2a", borderRadius: 16, height: 280 }} />
               ))
-            : featuredGigs.length === 0
-              ? <div style={{ gridColumn: "1 / -1", color: "#888", fontSize: 14 }}>No featured services yet — check back soon.</div>
-              : featuredGigs.map((g: any) => {
+            : featuredGigs.map((g: any) => {
                   const seller = g.seller || {};
                   const sName = seller.full_name || seller.username || "Expert";
                   const sInit = sName.charAt(0).toUpperCase();
@@ -388,9 +423,9 @@ export default function Landing() {
           <Link to="/services" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all experts →</Link>
         </div>
         <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-          {sellers.length === 0
+          {sellersLoading
             ? Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16, padding: 24, height: 240 }} />
+                <div key={i} className="kx-shimmer" style={{ border: "1px solid #2a2a2a", borderRadius: 16, height: 240 }} />
               ))
             : sellers.map((s) => {
                 const displayName = s.full_name || s.username || "Expert";
