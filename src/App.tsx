@@ -33,6 +33,7 @@ const Services = lazy(() => import("./pages/Services"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const Pricing = lazy(() => import("./pages/Pricing"));
 const Search = lazy(() => import("./pages/Search"));
+const FindExperts = lazy(() => import("./pages/FindExperts"));
 
 const Pitch = lazy(() => import("./pages/Pitch"));
 const PostJob = lazy(() => import("./pages/PostJob"));
