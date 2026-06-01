@@ -605,31 +605,37 @@ export default function Services() {
           </div>
         </div>
       </section>
-
-      {/* TRENDING GIGS */}
-      <section className="svc-section" style={{ padding: "100px 80px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 32, gap: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Services</h2>
-            <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
-            <Link to="/explore" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>View all →</Link>
-          </div>
-          {!gigsLoaded ? (
-            <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ background: "#0a0a0a", aspectRatio: "4/3", borderRadius: 8 }} />
-              ))}
-            </div>
-          ) : gigs.length === 0 ? (
-            <EmptyCategoryState surface="dark" />
-          ) : (
-            <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-              {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
-            </div>
-          )}
-        </div>
-      </section>
       <SiteFooter />
     </div>
   );
 }
+
+function FilterGroup({ title, last, children }: { title: string; last?: boolean; children: React.ReactNode }) {
+  return (
+    <div style={{ paddingBottom: last ? 0 : 16, marginBottom: last ? 0 : 16, borderBottom: last ? "none" : "1px solid #161616" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>{title}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>{children}</div>
+    </div>
+  );
+}
+
+function FilterRow({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        textAlign: "left", background: "transparent", border: "none", padding: "4px 0",
+        color: active ? "#fff" : "#aaa", fontSize: 13, fontWeight: active ? 600 : 400,
+        cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+      }}
+    >
+      <span style={{
+        width: 14, height: 14, borderRadius: 4, border: "1px solid #2a2a2a",
+        background: active ? "#fff" : "transparent", flexShrink: 0,
+      }} />
+      {label}
+    </button>
+  );
+}
+
