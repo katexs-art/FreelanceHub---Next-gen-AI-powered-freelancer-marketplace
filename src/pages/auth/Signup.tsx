@@ -201,9 +201,27 @@ export default function Signup() {
         />
         <p style={{ fontSize: 12, color: "#bbb", marginTop: -8 }}>At least 8 characters</p>
 
+        {errorMsg && (
+          <div
+            role="alert"
+            style={{
+              background: "#FEF2F2",
+              border: "1px solid #DC2626",
+              color: "#B91C1C",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 13,
+              lineHeight: 1.4,
+            }}
+          >
+            {errorMsg}
+          </div>
+        )}
+
         <KxSubmit loading={loading} tone={submitTone}>
           {loading ? "Creating account…" : "Create account"}
         </KxSubmit>
+
 
         <KxTrustBadges />
 
