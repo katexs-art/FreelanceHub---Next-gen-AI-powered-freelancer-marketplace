@@ -272,6 +272,8 @@ export default function Checkout() {
   const [promo, setPromo] = useState("");
   const [payMethod, setPayMethod] = useState<"card" | "paypal">("card");
   const [payState, setPayState] = useState<PayState | null>(null);
+  const [amountMismatch, setAmountMismatch] = useState<string | null>(null);
+
 
   const loadOrderAndInit = async () => {
     if (!order_id || !user) return;
@@ -375,12 +377,53 @@ export default function Checkout() {
         setLoading(false);
         return;
       }
+      // Amount-integrity guard: cross-check displayed total, PaymentIntent amount,
+      // and the linked custom offer (if any). Block checkout on any mismatch.
+      const expectedFee = Math.round(o.price * 0.05);
+      const expectedTotalCents = (o.price + expectedFee) * 100;
+      const piAmount = (pi as any).amount as number | undefined;
+      const offerCentsFromServer = (pi as any).custom_offer_price_cents as number | null | undefined;
+
+      const { data: offerRow } = await supabase
+        .from("custom_offers")
+        .select("price")
+        .eq("order_id", o.id)
+        .maybeSingle();
+      const offerCents = (offerRow?.price as number | undefined) ?? offerCentsFromServer ?? null;
+
+      const mismatches: string[] = [];
+      if (typeof piAmount === "number" && piAmount !== expectedTotalCents) {
+        mismatches.push(
+          `PaymentIntent amount $${(piAmount / 100).toFixed(2)} does not match displayed total $${(expectedTotalCents / 100).toFixed(2)}.`,
+        );
+      }
+      if (offerCents != null) {
+        const offerDollars = offerCents / 100;
+        if (Math.round(offerDollars) !== o.price) {
+          mismatches.push(
+            `Custom offer amount $${offerDollars.toFixed(2)} does not match order price $${o.price}.`,
+          );
+        }
+      }
+      if (mismatches.length > 0) {
+        logCheckout("amount-mismatch", { piAmount, expectedTotalCents, offerCents, orderPrice: o.price });
+        setAmountMismatch(mismatches.join(" "));
+        setErr(
+          "Checkout blocked: the amounts don't match. Please contact support before paying. " +
+            mismatches.join(" "),
+        );
+        setLoading(false);
+        return;
+      }
+      setAmountMismatch(null);
+
       logCheckout("loadStripe-start");
       setClientSecret(pi.client_secret);
       const sp = loadStripe(pi.publishable_key);
       sp.then((s) => logCheckout("loadStripe-resolved", { ok: !!s }))
         .catch((e) => logCheckout("loadStripe-failed", { message: (e as Error).message }));
       setStripePromise(sp);
+
     } catch (e) {
       logCheckout("invoke-stripe-payment-intent-threw", { message: (e as Error).message, error: e });
       setErr((e as Error).message || "Could not initialize payment");
@@ -660,21 +703,22 @@ export default function Checkout() {
 
                     <button
                       type="button"
-                      onClick={() => payState?.onPay()}
-                      disabled={!payState || payState.disabled}
+                      onClick={() => !amountMismatch && payState?.onPay()}
+                      disabled={!payState || payState.disabled || !!amountMismatch}
                       className="w-full text-white font-semibold text-[15px] rounded-[12px] h-[52px] transition-colors"
                       style={{
-                        background: sidebarBtnBg,
+                        background: amountMismatch ? "#9CA3AF" : sidebarBtnBg,
                         cursor: payState?.busy
                           ? "wait"
-                          : !payState || payState.disabled
+                          : !payState || payState.disabled || amountMismatch
                           ? "not-allowed"
                           : "pointer",
                         opacity: payState?.busy ? 0.85 : 1,
                       }}
                     >
-                      {sidebarBtnLabel}
+                      {amountMismatch ? "Payment blocked" : sidebarBtnLabel}
                     </button>
+
 
                     <div className="flex items-center justify-center gap-1.5 mt-3 text-[12px] text-foreground-subtle">
                       <ShieldCheck size={13} /> Secure 256-bit SSL encryption
