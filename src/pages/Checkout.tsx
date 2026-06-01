@@ -14,6 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+const logCheckout = (step: string, payload?: unknown) => {
+  // eslint-disable-next-line no-console
+  console.log(`[checkout] ${step}`, payload ?? "");
+};
+
 interface OrderRow {
   id: string;
   buyer_id: string;
