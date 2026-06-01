@@ -278,29 +278,108 @@ export default function Landing() {
       </section>
 
       {/* CATEGORIES */}
-      <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
-        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 24 }}>
-          What do you need done?
+      <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
+          Browse by category
         </div>
+        <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 32px" }}>What do you need done?</h2>
         <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.slug}
-              to={`/category/${c.slug}`}
-              className="kx-cat-card"
-              style={{
-                background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16,
-                padding: 28, display: "block", textDecoration: "none",
-              }}
-            >
-              <div style={{ fontSize: 15, fontWeight: 600, color: "#ffffff", marginBottom: 8 }}>{c.label}</div>
-              <div style={{ fontSize: 13, color: "#cccccc", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
-              <div style={{ fontSize: 12, color: "#888888" }}>Browse experts</div>
-              <div style={{ fontSize: 14, color: "#ffffff", marginTop: 16 }}>→</div>
-            </Link>
-          ))}
+          {CATEGORIES.map((c) => {
+            const Icon = c.Icon;
+            return (
+              <Link
+                key={c.slug}
+                to={`/category/${c.slug}`}
+                className="kx-cat-card"
+                style={{
+                  background: "#1a1a1a", border: "1px solid #333333", borderRadius: 16,
+                  padding: 28, display: "block", textDecoration: "none",
+                }}
+              >
+                <div style={{
+                  width: 44, height: 44, borderRadius: 12, background: "rgba(255,255,255,0.06)",
+                  border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center",
+                  justifyContent: "center", marginBottom: 20,
+                }}>
+                  <Icon size={20} color="#fff" strokeWidth={1.75} />
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#ffffff", marginBottom: 8 }}>{c.label}</div>
+                <div style={{ fontSize: 13, color: "#cccccc", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
+                <div style={{ fontSize: 12, color: "#888888" }}>Browse experts →</div>
+              </Link>
+            );
+          })}
         </div>
       </section>
+
+      {/* FEATURED GIGS */}
+      <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
+          <div>
+            <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 8 }}>
+              Featured services
+            </div>
+            <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: 0 }}>Hand-picked gigs</h2>
+          </div>
+          <Link to="/services" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all →</Link>
+        </div>
+        <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+          {gigsLoading
+            ? Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 16, height: 280 }} />
+              ))
+            : featuredGigs.length === 0
+              ? <div style={{ gridColumn: "1 / -1", color: "#888", fontSize: 14 }}>No featured services yet — check back soon.</div>
+              : featuredGigs.map((g: any) => {
+                  const seller = g.seller || {};
+                  const sName = seller.full_name || seller.username || "Expert";
+                  const sInit = sName.charAt(0).toUpperCase();
+                  return (
+                    <Link
+                      key={g.id}
+                      to={`/gig/${g.id}`}
+                      className="kx-cat-card"
+                      style={{
+                        background: "#1a1a1a", border: "1px solid #333", borderRadius: 16,
+                        overflow: "hidden", textDecoration: "none", display: "flex", flexDirection: "column",
+                      }}
+                    >
+                      <div style={{
+                        width: "100%", aspectRatio: "16 / 10",
+                        background: g.thumbnail_url
+                          ? `url(${g.thumbnail_url}) center/cover`
+                          : "linear-gradient(135deg, #2a2a2a, #1a1a1a)",
+                      }} />
+                      <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                          {seller.avatar_url ? (
+                            <img src={seller.avatar_url} alt={sName} style={{ width: 24, height: 24, borderRadius: "50%", objectFit: "cover" }} />
+                          ) : (
+                            <div style={{ width: 24, height: 24, borderRadius: "50%", background: "#333", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#ccc" }}>{sInit}</div>
+                          )}
+                          <span style={{ fontSize: 12, color: "#cccccc" }}>{sName}</span>
+                        </div>
+                        <div style={{
+                          fontSize: 14, color: "#fff", lineHeight: 1.4, display: "-webkit-box",
+                          WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden", flex: 1,
+                        }}>
+                          {g.title}
+                        </div>
+                        {g.average_rating ? (
+                          <div style={{ fontSize: 12, color: "#cccccc" }}>
+                            ★ {Number(g.average_rating).toFixed(1)} <span style={{ color: "#888" }}>({g.total_reviews ?? 0})</span>
+                          </div>
+                        ) : null}
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "#fff", borderTop: "1px solid #2a2a2a", paddingTop: 10 }}>
+                          From ${g.starting_price}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+        </div>
+      </section>
+
 
       {/* TOP PERFORMERS */}
       <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
