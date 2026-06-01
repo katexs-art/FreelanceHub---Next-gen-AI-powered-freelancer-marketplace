@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SEO } from "@/components/SEO";
-import { Search } from "lucide-react";
+import { Search, Code2, Mic, Sparkles, TrendingUp, Settings as SettingsIcon, BarChart3, PenTool, GraduationCap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 import landingHero from "@/assets/landing-hero.mp4.asset.json";
@@ -11,14 +11,14 @@ import landingHero from "@/assets/landing-hero.mp4.asset.json";
 const VIDEO_URL = landingHero.url;
 
 const CATEGORIES = [
-  { label: "Build with AI", slug: "build-with-ai", desc: "Custom AI apps, agents, automations" },
-  { label: "Sound & Speak with AI", slug: "sound-and-speak-with-ai", desc: "Voice AI, podcasts, audio cloning" },
-  { label: "Create with AI", slug: "create-with-ai", desc: "Images, video, design with AI" },
-  { label: "Grow with AI", slug: "grow-with-ai", desc: "Marketing, SEO, growth automation" },
-  { label: "Run with AI", slug: "run-with-ai", desc: "Ops, support, internal AI tools" },
-  { label: "Understand AI", slug: "understand-ai", desc: "Data, analytics, AI insight" },
-  { label: "Write with AI", slug: "write-with-ai", desc: "Copy, content, scripts with AI" },
-  { label: "Learn AI", slug: "learn-ai", desc: "Tutoring, courses, AI training" },
+  { label: "Build with AI", slug: "build-with-ai", desc: "Custom AI apps, agents, automations", Icon: Code2 },
+  { label: "Sound & Speak with AI", slug: "sound-and-speak-with-ai", desc: "Voice AI, podcasts, audio cloning", Icon: Mic },
+  { label: "Create with AI", slug: "create-with-ai", desc: "Images, video, design with AI", Icon: Sparkles },
+  { label: "Grow with AI", slug: "grow-with-ai", desc: "Marketing, SEO, growth automation", Icon: TrendingUp },
+  { label: "Run with AI", slug: "run-with-ai", desc: "Ops, support, internal AI tools", Icon: SettingsIcon },
+  { label: "Understand AI", slug: "understand-ai", desc: "Data, analytics, AI insight", Icon: BarChart3 },
+  { label: "Write with AI", slug: "write-with-ai", desc: "Copy, content, scripts with AI", Icon: PenTool },
+  { label: "Learn AI", slug: "learn-ai", desc: "Tutoring, courses, AI training", Icon: GraduationCap },
 ];
 
 type TopSeller = {
