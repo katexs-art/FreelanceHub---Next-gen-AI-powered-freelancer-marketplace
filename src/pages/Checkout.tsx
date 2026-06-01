@@ -167,10 +167,14 @@ function PayBlock({
         <PaymentElement
           key={payMethod}
           onReady={() => {
+            logCheckout("payment-element-ready", { payMethod });
             setReady(true);
             onReadyChange?.(true);
           }}
-          onChange={(e) => setComplete(e.complete)}
+          onChange={(e) => {
+            logCheckout("payment-element-change", { complete: e.complete, type: e.value?.type });
+            setComplete(e.complete);
+          }}
           options={{
             layout: "tabs",
             paymentMethodOrder:
