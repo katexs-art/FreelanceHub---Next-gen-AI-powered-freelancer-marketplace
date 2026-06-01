@@ -85,7 +85,7 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
                           {o.gigs?.thumbnail_url && <img src={o.gigs.thumbnail_url} alt="" className="w-full h-full object-cover" />}
                         </div>
                         <div>
-                          <div className="font-medium line-clamp-1">{o.gigs?.title ?? "Play"}</div>
+                          <div className="font-medium line-clamp-1">{o.gigs?.title ?? "Service"}</div>
                           <div className="text-xs text-foreground-muted">{o.order_number}</div>
                         </div>
                       </Link>

@@ -177,10 +177,10 @@ export function ConversationDetailsPanel({
         <InfoRow label="Rating" value={ratingDisplay} />
       </div>
 
-      {/* Middle — Related Plays */}
+      {/* Middle — Related Services */}
       <div style={{ padding: 20, borderBottom: "1px solid #F0F0F0" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#0A0A0A" }}>Related Plays</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: "#0A0A0A" }}>Related Services</div>
           <Link
             to="/services"
             onMouseEnter={() => setHoverSeeMore(true)}
@@ -197,7 +197,7 @@ export function ConversationDetailsPanel({
         </div>
 
         {gigs.length === 0 ? (
-          <div style={{ fontSize: 12, color: "#AAAAAA" }}>No related Plays yet.</div>
+          <div style={{ fontSize: 12, color: "#AAAAAA" }}>No related Services yet.</div>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {gigs.map((g) => {

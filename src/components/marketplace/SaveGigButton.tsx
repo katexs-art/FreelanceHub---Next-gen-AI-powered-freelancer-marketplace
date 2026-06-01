@@ -29,7 +29,7 @@ export function SaveGigButton({ gigId, className }: { gigId: string; className?:
   };
 
   return (
-    <button onClick={toggle} aria-label={saved ? "Unsave play" : "Save play"}
+    <button onClick={toggle} aria-label={saved ? "Unsave service" : "Save service"}
       className={cn("w-8 h-8 rounded-full bg-background/90 border border-border flex items-center justify-center hover:bg-background group", className)}>
       <Bookmark className={cn("h-4 w-4 transition-colors", saved ? "fill-current" : "group-hover:fill-current")} />
     </button>

@@ -58,7 +58,7 @@ export default function Explore() {
       <CategoryMegaNav />
       <main className="flex-1 container py-10">
         <h1 className="text-3xl font-bold">Explore services</h1>
-        <p className="text-foreground-muted mt-1">Browse all categories or discover trending plays.</p>
+        <p className="text-foreground-muted mt-1">Browse all categories or discover trending services.</p>
 
         <div className="mt-8 flex flex-wrap gap-2">
           {categories.filter((c) => !c.parent_id).map((c) => (
