@@ -72,7 +72,11 @@ function PayBlock({
   }, [payMethod, onReadyChange]);
 
   const onPay = async () => {
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      logCheckout("pay-click-aborted", { hasStripe: !!stripe, hasElements: !!elements });
+      return;
+    }
+    logCheckout("pay-click", { orderId, total, payMethod, ts: new Date().toISOString() });
     setErrorMsg(null);
     setBusy(true);
     try {
@@ -89,6 +93,14 @@ function PayBlock({
         ),
       ]);
       const { error, paymentIntent } = result as { error?: any; paymentIntent?: any };
+      logCheckout("confirmPayment-result", {
+        errorType: error?.type,
+        errorCode: error?.code,
+        declineCode: error?.decline_code,
+        errorMessage: error?.message,
+        paymentIntentStatus: paymentIntent?.status,
+        paymentIntentId: paymentIntent?.id,
+      });
       if (error) {
         setErrorMsg(error.message ?? "Payment failed");
         toast.error(error.message ?? "Payment failed");
@@ -108,6 +120,7 @@ function PayBlock({
       setBusy(false);
     } catch (e) {
       const msg = (e as Error).message || "Payment failed - please try again";
+      logCheckout("confirmPayment-threw", { message: msg, error: e });
       setErrorMsg(msg);
       toast.error(msg);
       setBusy(false);
