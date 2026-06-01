@@ -671,7 +671,12 @@ export default function Checkout() {
                     <span>${total}</span>
                   </div>
 
-                  <PayBlock orderId={order.id} total={total} payMethod={payMethod} />
+                  <PayBlock
+                    orderId={order.id}
+                    total={total}
+                    payMethod={payMethod}
+                    onRetryInit={loadOrderAndInit}
+                  />
                 </div>
               </aside>
             </div>
