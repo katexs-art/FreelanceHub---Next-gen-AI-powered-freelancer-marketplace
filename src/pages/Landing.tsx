@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SEO } from "@/components/SEO";
-import { Search, Code2, Mic, Sparkles, TrendingUp, Settings as SettingsIcon, BarChart3, PenTool, GraduationCap } from "lucide-react";
+import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 import landingHero from "@/assets/landing-hero.mp4.asset.json";
