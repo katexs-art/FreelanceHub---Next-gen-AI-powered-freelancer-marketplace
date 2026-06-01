@@ -292,65 +292,11 @@ export default function Services() {
         <p style={{ fontSize: 18, color: "#cccccc", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
-        <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`); }}
-          style={{ maxWidth: 720, margin: "0 auto", position: "relative" }}
-        >
-          <div style={{ position: "absolute", top: -22, left: 4, display: "flex", alignItems: "center", gap: 6 }}>
-            <span className="svc-pulse" style={{ width: 6, height: 6, borderRadius: 999, background: "#10b981" }} />
-            <span style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.45)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>
-              Powered by River AI
-            </span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", background: "#0a0a0a", border: "1px solid #1f1f1f", borderRadius: 999, padding: 6, paddingLeft: 24 }}>
-            <Search size={16} color="#666" style={{ marginRight: 12, flexShrink: 0 }} />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="What AI service do you need? (e.g. voice AI, chatbot, automation...)"
-              style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: 15, padding: "12px 0" }}
-            />
-            <button type="submit" style={{ background: "#fff", color: "#000", border: "none", borderRadius: 999, padding: "12px 26px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
-              Find My Expert
-            </button>
-          </div>
-        </form>
-      </section>
-
-      {/* CATEGORY PILLS */}
-      <section style={{ padding: "0 80px 40px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", maxWidth: 1100, margin: "0 auto" }}>
-          {CATEGORIES.map((c) => {
-            const isActive = activeCat === c.label;
-            return (
-              <button
-                key={c.label}
-                type="button"
-                onClick={() => setActiveCat(isActive ? null : c.label)}
-                className="svc-cat"
-                style={{
-                  padding: "9px 18px", borderRadius: 999,
-                  border: `1px solid ${isActive ? "#fff" : "#1f1f1f"}`,
-                  background: isActive ? "#fff" : "rgba(255,255,255,0.02)",
-                  color: isActive ? "#000" : "#cccccc",
-                  fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.2s ease",
-                }}
-              >
-                {c.label}
-              </button>
-            );
-          })}
-          {(activeCat || priceIdx !== null || deliveryIdx !== null || ratingIdx !== null || levelIdx !== null) && (
-            <button
-              type="button"
-              onClick={() => { setActiveCat(null); setPriceIdx(null); setDeliveryIdx(null); setRatingIdx(null); setLevelIdx(null); }}
-              style={{ padding: "9px 18px", borderRadius: 999, border: "1px solid transparent", background: "transparent", color: "#888", fontSize: 12, cursor: "pointer" }}
-            >
-              Clear all
-            </button>
-          )}
+        <div style={{ maxWidth: 820, margin: "0 auto", position: "relative" }}>
+          <RiverCommandBar />
         </div>
       </section>
+
 
       {/* RESULTS GRID + FILTERS */}
       <section className="svc-section svc-results" style={{ padding: "20px 80px 80px" }}>
