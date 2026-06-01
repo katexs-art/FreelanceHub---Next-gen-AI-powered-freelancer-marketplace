@@ -43,11 +43,13 @@ function PayBlock({
   total,
   payMethod,
   onReadyChange,
+  onRetryInit,
 }: {
   orderId: string;
   total: number;
   payMethod: "card" | "paypal";
   onReadyChange?: (ready: boolean) => void;
+  onRetryInit?: () => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
