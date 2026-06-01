@@ -130,18 +130,37 @@ export default function Services() {
     (async () => {
       const { data } = await supabase
         .from("gigs")
-        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id,category")
         .eq("status", "active")
         .order("total_orders", { ascending: false })
-        .limit(12);
-      const ids = [...new Set((data ?? []).map((g: any) => g.seller_id))];
-      const { data: ss } = ids.length
-        ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
-        : { data: [] as any };
+        .limit(48);
+      const gigList = (data ?? []) as any[];
+      const ids = [...new Set(gigList.map((g) => g.seller_id))];
+      const gigIds = gigList.map((g) => g.id);
+      const [{ data: ss }, { data: pkgs }] = await Promise.all([
+        ids.length
+          ? supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
+          : Promise.resolve({ data: [] as any }),
+        gigIds.length
+          ? supabase.from("gig_packages").select("gig_id,delivery_days").in("gig_id", gigIds)
+          : Promise.resolve({ data: [] as any }),
+      ]);
       const byId = new Map((ss ?? []).map((s: any) => [s.id, s]));
-      setGigs((data ?? []).map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
+      const minDelivery = new Map<string, number>();
+      (pkgs ?? []).forEach((p: any) => {
+        const cur = minDelivery.get(p.gig_id);
+        if (cur === undefined || p.delivery_days < cur) minDelivery.set(p.gig_id, p.delivery_days);
+      });
+      setGigs(
+        gigList.map((g) => ({
+          ...g,
+          seller: byId.get(g.seller_id) ?? null,
+          delivery_days: minDelivery.get(g.id) ?? null,
+        })) as GigCardData[],
+      );
       setGigsLoaded(true);
     })();
+
 
     (async () => {
       const items: Activity[] = [];
