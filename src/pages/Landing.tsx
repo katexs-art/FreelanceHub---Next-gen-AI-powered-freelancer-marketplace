@@ -11,14 +11,14 @@ import landingHero from "@/assets/landing-hero.mp4.asset.json";
 const VIDEO_URL = landingHero.url;
 
 const CATEGORIES = [
-  { label: "Build with AI", slug: "build-with-ai", desc: "Custom AI apps, agents, automations", Icon: Code2 },
-  { label: "Sound & Speak with AI", slug: "sound-and-speak-with-ai", desc: "Voice AI, podcasts, audio cloning", Icon: Mic },
-  { label: "Create with AI", slug: "create-with-ai", desc: "Images, video, design with AI", Icon: Sparkles },
-  { label: "Grow with AI", slug: "grow-with-ai", desc: "Marketing, SEO, growth automation", Icon: TrendingUp },
-  { label: "Run with AI", slug: "run-with-ai", desc: "Ops, support, internal AI tools", Icon: SettingsIcon },
-  { label: "Understand AI", slug: "understand-ai", desc: "Data, analytics, AI insight", Icon: BarChart3 },
-  { label: "Write with AI", slug: "write-with-ai", desc: "Copy, content, scripts with AI", Icon: PenTool },
-  { label: "Learn AI", slug: "learn-ai", desc: "Tutoring, courses, AI training", Icon: GraduationCap },
+  { label: "Voice AI", slug: "voice-ai", desc: "Voice agents, cloning, IVR & calling", Icon: Mic, color: "#7F77DD" },
+  { label: "Chatbot Development", slug: "chatbot-development", desc: "Custom chatbots for sales & support", Icon: MessageSquare, color: "#16A34A" },
+  { label: "AI Automation", slug: "ai-automation", desc: "Workflows that run your business", Icon: Zap, color: "#F59E0B" },
+  { label: "Prompt Engineering", slug: "prompt-engineering", desc: "Optimized prompts for any model", Icon: Terminal, color: "#06B6D4" },
+  { label: "AI Consulting", slug: "ai-consulting", desc: "Strategy, audits & implementation", Icon: Briefcase, color: "#EC4899" },
+  { label: "Custom AI Models", slug: "custom-ai-models", desc: "Fine-tuning & bespoke models", Icon: Cpu, color: "#8B5CF6" },
+  { label: "AI Content", slug: "ai-content", desc: "Copy, scripts & creative with AI", Icon: PenTool, color: "#EF4444" },
+  { label: "AI Integration", slug: "ai-integration", desc: "Connect AI to your existing stack", Icon: Plug, color: "#3B82F6" },
 ];
 
 const FALLBACK_GIGS = [
