@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
 import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
