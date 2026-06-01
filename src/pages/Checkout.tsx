@@ -538,15 +538,7 @@ export default function Checkout() {
                     className="w-20 h-20 rounded-lg object-cover flex-shrink-0 bg-[#F7F7F7]"
                   />
                   <div className="min-w-0 flex-1">
-                    <div
-                      className="text-[16px] font-semibold text-foreground leading-snug"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
+                    <div className="text-[16px] font-semibold text-foreground leading-snug break-words">
                       {itemTitle}
                     </div>
                     <span className="inline-flex items-center mt-2 px-2.5 py-1 rounded-full bg-[#F7F7F7] border border-border text-[12px] font-medium text-foreground-muted">
