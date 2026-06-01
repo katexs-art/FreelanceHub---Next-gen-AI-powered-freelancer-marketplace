@@ -336,14 +336,14 @@ export function RiverCommandBar() {
           {(stream || (loading && !error)) && (
             <div style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 18, color: "#e5e5e5", fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{ height: 22, width: 22, borderRadius: 999, background: "#7F77DD", color: "#fff", display: "grid", placeItems: "center", fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 11 }}>R</span>
+                <span style={{ height: 22, width: 22, borderRadius: 999, background: "#16A34A", color: "#fff", display: "grid", placeItems: "center", fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 11 }}>R</span>
                 <span style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "#888", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>River</span>
               </div>
               {stream || (
                 <span style={{ display: "inline-flex", gap: 4 }}>
-                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#7F77DD", animation: "riverPulse 1s ease-in-out infinite" }} />
-                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#7F77DD", animation: "riverPulse 1s ease-in-out infinite .15s" }} />
-                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#7F77DD", animation: "riverPulse 1s ease-in-out infinite .3s" }} />
+                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 1s ease-in-out infinite" }} />
+                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 1s ease-in-out infinite .15s" }} />
+                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 1s ease-in-out infinite .3s" }} />
                 </span>
               )}
             </div>
@@ -351,16 +351,18 @@ export function RiverCommandBar() {
 
           {cards.length > 0 && (
             <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
-              {cards.map((c) => (
+              {cards.map((c, i) => (
                 <Link
                   key={c.id}
                   to={`/gig/${c.slug || c.id}`}
+                  className="river-card-in"
                   style={{
                     display: "block", textDecoration: "none",
                     background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 14, padding: 16,
                     color: "#fff", transition: "border-color .2s ease, transform .2s ease",
+                    animationDelay: `${i * 90}ms`,
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(127,119,221,0.5)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(22,163,74,0.5)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a1a"; e.currentTarget.style.transform = "translateY(0)"; }}
                 >
                   <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
@@ -381,6 +383,7 @@ export function RiverCommandBar() {
               ))}
             </div>
           )}
+
         </div>
       )}
     </div>
