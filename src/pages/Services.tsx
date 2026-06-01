@@ -250,16 +250,16 @@ export default function Services() {
       `}</style>
 
       {/* HERO */}
-      <section className="svc-section" style={{ padding: "140px 80px 80px", textAlign: "center" }}>
+      <section className="svc-section" style={{ padding: "140px 80px 60px", textAlign: "center" }}>
         <h1 className="svc-h1" style={{ fontSize: 64, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: 880, margin: "0 auto 20px" }}>
-          The freelance market,<br />rebuilt from first principles
+          Find the perfect AI expert.<br />Hire in minutes.
         </h1>
         <p style={{ fontSize: 18, color: "#cccccc", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
         <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/services?q=${encodeURIComponent(q.trim())}`); }}
-          style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}
+          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`); }}
+          style={{ maxWidth: 720, margin: "0 auto", position: "relative" }}
         >
           <div style={{ position: "absolute", top: -22, left: 4, display: "flex", alignItems: "center", gap: 6 }}>
             <span className="svc-pulse" style={{ width: 6, height: 6, borderRadius: 999, background: "#10b981" }} />
@@ -272,7 +272,7 @@ export default function Services() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Describe the expert you need…"
+              placeholder="What AI service do you need? (e.g. voice AI, chatbot, automation...)"
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: 15, padding: "12px 0" }}
             />
             <button type="submit" style={{ background: "#fff", color: "#000", border: "none", borderRadius: 999, padding: "12px 26px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -283,24 +283,101 @@ export default function Services() {
       </section>
 
       {/* CATEGORY PILLS */}
-      <section style={{ padding: "0 80px 80px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", maxWidth: 1000, margin: "0 auto" }}>
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.slug}
-              to={`/category/${c.slug}`}
-              className="svc-cat"
-              style={{
-                padding: "9px 18px", borderRadius: 999, border: "1px solid #1f1f1f",
-                background: "rgba(255,255,255,0.02)", color: "#cccccc",
-                fontSize: 13, fontWeight: 500, textDecoration: "none", transition: "all 0.2s ease",
-              }}
+      <section style={{ padding: "0 80px 40px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", maxWidth: 1100, margin: "0 auto" }}>
+          {CATEGORIES.map((c) => {
+            const isActive = activeCat === c.label;
+            return (
+              <button
+                key={c.label}
+                type="button"
+                onClick={() => setActiveCat(isActive ? null : c.label)}
+                className="svc-cat"
+                style={{
+                  padding: "9px 18px", borderRadius: 999,
+                  border: `1px solid ${isActive ? "#fff" : "#1f1f1f"}`,
+                  background: isActive ? "#fff" : "rgba(255,255,255,0.02)",
+                  color: isActive ? "#000" : "#cccccc",
+                  fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.2s ease",
+                }}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+          {(activeCat || priceIdx !== null || deliveryIdx !== null || ratingIdx !== null || levelIdx !== null) && (
+            <button
+              type="button"
+              onClick={() => { setActiveCat(null); setPriceIdx(null); setDeliveryIdx(null); setRatingIdx(null); setLevelIdx(null); }}
+              style={{ padding: "9px 18px", borderRadius: 999, border: "1px solid transparent", background: "transparent", color: "#888", fontSize: 12, cursor: "pointer" }}
             >
-              {c.label}
-            </Link>
-          ))}
+              Clear all
+            </button>
+          )}
         </div>
       </section>
+
+      {/* RESULTS GRID + FILTERS */}
+      <section className="svc-section svc-results" style={{ padding: "20px 80px 80px" }}>
+        <div style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "260px 1fr", gap: 32 }}>
+          <aside style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 22, alignSelf: "start", position: "sticky", top: 120 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 700, color: "#aaa", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Filters</h3>
+
+            <FilterGroup title="Category">
+              {CATEGORIES.map((c) => (
+                <FilterRow key={c.label} active={activeCat === c.label} onClick={() => setActiveCat(activeCat === c.label ? null : c.label)} label={c.label} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Price range">
+              {PRICE_RANGES.map((p, i) => (
+                <FilterRow key={p.label} active={priceIdx === i} onClick={() => setPriceIdx(priceIdx === i ? null : i)} label={p.label} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Delivery time">
+              {DELIVERY_OPTS.map((d, i) => (
+                <FilterRow key={d.label} active={deliveryIdx === i} onClick={() => setDeliveryIdx(deliveryIdx === i ? null : i)} label={`Up to ${d.label}`} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Rating">
+              {RATING_OPTS.map((r, i) => (
+                <FilterRow key={r.label} active={ratingIdx === i} onClick={() => setRatingIdx(ratingIdx === i ? null : i)} label={`${r.label} stars`} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Expert level" last>
+              {LEVEL_OPTS.map((l, i) => (
+                <FilterRow key={l.label} active={levelIdx === i} onClick={() => setLevelIdx(levelIdx === i ? null : i)} label={l.label} />
+              ))}
+            </FilterGroup>
+          </aside>
+
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: "#fff" }}>
+                {gigsLoaded ? `${filteredGigs.length} expert${filteredGigs.length === 1 ? "" : "s"}` : "Loading…"}
+                {activeCat && <span style={{ color: "#888", fontWeight: 400 }}> in {activeCat}</span>}
+              </h2>
+            </div>
+            {!gigsLoaded ? (
+              <div className="svc-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} style={{ background: "#0a0a0a", aspectRatio: "4/3", borderRadius: 12 }} />
+                ))}
+              </div>
+            ) : filteredGigs.length === 0 ? (
+              <EmptyCategoryState surface="dark" />
+            ) : (
+              <div className="svc-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+                {filteredGigs.map((g) => <GigCard key={g.id} gig={g} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
 
       {/* RIVER'S PICKS */}
       <section className="svc-section" style={{ padding: "80px", borderTop: "1px solid #111", borderBottom: "1px solid #111" }}>
