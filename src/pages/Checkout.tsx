@@ -58,6 +58,9 @@ function PayBlock({
     setBusy(true);
     const { error, paymentIntent } = await stripe.confirmPayment({
       elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/orders/${orderId}/confirmed`,
+      },
       redirect: "if_required",
     });
     if (error) {
