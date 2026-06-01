@@ -310,8 +310,6 @@ export default function Checkout() {
         setLoading(false);
         return;
       }
-      setClientSecret(pi.client_secret);
-      setStripePromise(loadStripe(pi.publishable_key));
       setLoading(false);
     })();
   }, [authLoading, user, order_id, nav]);
