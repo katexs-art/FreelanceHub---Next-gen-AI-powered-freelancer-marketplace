@@ -20,6 +20,7 @@ export default function Signup() {
   const nav = useNavigate();
   const [role, setRole] = useState<Role>("client");
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -90,6 +91,24 @@ export default function Signup() {
     toast.success("Check your email to confirm your account");
   };
 
+  const handleResendVerification = async () => {
+    if (!successEmail) return;
+    setResendLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: successEmail,
+      options: { emailRedirectTo: "https://katexs.com/services" },
+    });
+    setResendLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Verification email sent again");
+  };
+
 
   const handleGoogle = async () => {
     sessionStorage.setItem("pending_role", role);
@@ -120,6 +139,15 @@ export default function Signup() {
         >
           Check your email at <strong>{successEmail}</strong> — click the link to verify your account.
         </div>
+        <button
+          type="button"
+          onClick={handleResendVerification}
+          disabled={resendLoading}
+          className="kx-submit-btn kx-submit-black"
+          style={{ marginTop: 18 }}
+        >
+          {resendLoading ? "Sending…" : "Resend verification email"}
+        </button>
       </AuthLayout>
     );
   }
