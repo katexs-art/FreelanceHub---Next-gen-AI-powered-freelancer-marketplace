@@ -50,6 +50,23 @@ export default function RiverWidget() {
   const lastSendAt = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Load persisted chat history on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      }
+    } catch { /* ignore invalid json */ }
+  }, []);
+
+  // Persist chat history to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch { /* ignore quota errors */ }
+  }, [messages]);
+
   // Mobile breakpoint
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 480px)");
