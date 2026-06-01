@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Mic, MicOff, Loader2, Star } from "lucide-react";
+import { Mic, MicOff, Loader2, Star, AlertCircle, Keyboard, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 interface ExpertCard {
   id: string;
@@ -50,6 +51,7 @@ export function RiverCommandBar() {
   const [stream, setStream] = useState("");
   const [cards, setCards] = useState<ExpertCard[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [micError, setMicError] = useState<"denied" | "no-speech" | "unsupported" | null>(null);
   const [listening, setListening] = useState(false);
   const recogRef = useRef<any>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -74,7 +76,11 @@ export function RiverCommandBar() {
   const toggleMic = useCallback(() => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
+      setMicError("unsupported");
       setError("Voice input isn't supported in this browser. Try Chrome, Edge, or Safari.");
+      toast.error("Voice input unavailable", {
+        description: "Your browser doesn't support speech recognition. Try Chrome, Edge, or Safari.",
+      });
       return;
     }
     if (listening) {
@@ -83,6 +89,7 @@ export function RiverCommandBar() {
     }
 
     setError(null);
+    setMicError(null);
     let finalText = "";
 
     const r = new SR();
@@ -105,11 +112,18 @@ export function RiverCommandBar() {
       setListening(false);
       const code = e?.error;
       if (code === "not-allowed" || code === "service-not-allowed") {
-        setError("Microphone permission denied. Enable it in your browser settings.");
+        setMicError("denied");
+        setError("Microphone access is blocked. Enable it in your browser settings to use voice search.");
+        toast.error("Microphone blocked", {
+          description: "Permission denied. Enable microphone access in your browser settings.",
+        });
       } else if (code === "no-speech") {
-        setError("I didn't catch that. Try speaking again.");
+        setMicError("no-speech");
+        setError("Didn't catch that. Try speaking closer to the microphone, or type your request below.");
+        toast.info("No speech detected", { description: "Try again or type your request." });
       } else if (code && code !== "aborted") {
         setError("Voice input failed. Please try again.");
+        toast.error("Voice input failed", { description: "Something went wrong. Please try again." });
       }
     };
     r.onend = () => {
@@ -296,8 +310,8 @@ export function RiverCommandBar() {
 
           <input
             value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onFocus={() => setFocused(true)}
+            onChange={(e) => { setValue(e.target.value); if (micError) { setMicError(null); setError(null); } }}
+            onFocus={() => { setFocused(true); if (micError) { setMicError(null); setError(null); } }}
             onBlur={() => setFocused(false)}
             placeholder={placeholder}
             style={{
@@ -367,8 +381,35 @@ export function RiverCommandBar() {
       {(loading || stream || cards.length > 0 || error) && (
         <div style={{ marginTop: 28, textAlign: "left" }}>
           {error && (
-            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fca5a5", fontSize: 14 }}>
-              {error}
+            <div style={{ background: micError ? "rgba(234,179,8,0.06)" : "rgba(239,68,68,0.08)", border: `1px solid ${micError ? "rgba(234,179,8,0.35)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", color: micError ? "#fde047" : "#fca5a5", fontSize: 14 }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+                <AlertCircle size={18} style={{ marginTop: 2, flexShrink: 0, color: micError ? "#facc15" : "#fca5a5" }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 600, marginBottom: micError ? 8 : 0 }}>{error}</div>
+                  {micError === "denied" && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                      <button type="button" onClick={toggleMic} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999, padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        <RefreshCw size={12} /> Retry mic
+                      </button>
+                      <span style={{ color: "#a3a3a3", fontSize: 12 }}>or type your request above</span>
+                    </div>
+                  )}
+                  {micError === "no-speech" && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                      <button type="button" onClick={toggleMic} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999, padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                        <RefreshCw size={12} /> Try again
+                      </button>
+                      <span style={{ color: "#a3a3a3", fontSize: 12 }}>or type your request above</span>
+                    </div>
+                  )}
+                  {micError === "unsupported" && (
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
+                      <span style={{ color: "#a3a3a3", fontSize: 12 }}>Switch to Chrome, Edge, or Safari, or type your request above</span>
+                      <Keyboard size={14} style={{ color: "#a3a3a3" }} />
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
