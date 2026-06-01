@@ -4,7 +4,7 @@ import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
-import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
+import { EmptyState } from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
