@@ -286,80 +286,85 @@ export default function Checkout() {
   const [promo, setPromo] = useState("");
   const [payMethod, setPayMethod] = useState<"card" | "paypal">("card");
 
+  const loadOrderAndInit = async () => {
+    if (!order_id || !user) return;
+    setErr(null);
+    setLoading(true);
+    setClientSecret(null);
+    const { data: o, error } = await supabase
+      .from("orders")
+      .select(
+        "id, buyer_id, seller_id, price, status, project_title, delivery_deadline, stripe_payment_intent_id, gig_id",
+      )
+      .eq("id", order_id)
+      .maybeSingle();
+    if (error || !o) {
+      setErr("Project not found");
+      setLoading(false);
+      return;
+    }
+    if (o.buyer_id !== user.id) {
+      setErr("This project belongs to another partner.");
+      setLoading(false);
+      return;
+    }
+    setOrder(o as OrderRow);
+
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("id, full_name, username, avatar_url")
+      .eq("id", o.seller_id)
+      .maybeSingle();
+    setSeller(p as SellerProfile | null);
+
+    if (o.gig_id) {
+      const { data: g } = await supabase
+        .from("gigs")
+        .select("title, thumbnail_url")
+        .eq("id", o.gig_id)
+        .maybeSingle();
+      if (g) setGig(g as GigInfo);
+    }
+
+    if (o.status !== "pending_payment") {
+      nav(`/orders/${o.id}`, { replace: true });
+      return;
+    }
+
+    try {
+      const invokePromise = supabase.functions.invoke("stripe-payment-intent", {
+        body: { order_id: o.id },
+      });
+      const { data: pi, error: piErr } = (await Promise.race([
+        invokePromise,
+        new Promise((_, rej) =>
+          setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
+        ),
+      ])) as Awaited<typeof invokePromise>;
+      if (piErr || !pi?.client_secret) {
+        setErr(piErr?.message || pi?.error || "Could not initialize payment");
+        setLoading(false);
+        return;
+      }
+      setClientSecret(pi.client_secret);
+      setStripePromise(loadStripe(pi.publishable_key));
+    } catch (e) {
+      setErr((e as Error).message || "Could not initialize payment");
+      setLoading(false);
+      return;
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (authLoading) return;
     if (!user) {
       nav(`/login?redirect=/checkout/${order_id}`);
       return;
     }
-    if (!order_id) return;
-    (async () => {
-      setLoading(true);
-      const { data: o, error } = await supabase
-        .from("orders")
-        .select(
-          "id, buyer_id, seller_id, price, status, project_title, delivery_deadline, stripe_payment_intent_id, gig_id",
-        )
-        .eq("id", order_id)
-        .maybeSingle();
-      if (error || !o) {
-        setErr("Project not found");
-        setLoading(false);
-        return;
-      }
-      if (o.buyer_id !== user.id) {
-        setErr("This project belongs to another partner.");
-        setLoading(false);
-        return;
-      }
-      setOrder(o as OrderRow);
-
-      const { data: p } = await supabase
-        .from("profiles")
-        .select("id, full_name, username, avatar_url")
-        .eq("id", o.seller_id)
-        .maybeSingle();
-      setSeller(p as SellerProfile | null);
-
-      if (o.gig_id) {
-        const { data: g } = await supabase
-          .from("gigs")
-          .select("title, thumbnail_url")
-          .eq("id", o.gig_id)
-          .maybeSingle();
-        if (g) setGig(g as GigInfo);
-      }
-
-      if (o.status !== "pending_payment") {
-        nav(`/orders/${o.id}`, { replace: true });
-        return;
-      }
-
-      try {
-        const invokePromise = supabase.functions.invoke("stripe-payment-intent", {
-          body: { order_id: o.id },
-        });
-        const { data: pi, error: piErr } = (await Promise.race([
-          invokePromise,
-          new Promise((_, rej) =>
-            setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
-          ),
-        ])) as Awaited<typeof invokePromise>;
-        if (piErr || !pi?.client_secret) {
-          setErr(piErr?.message || pi?.error || "Could not initialize payment");
-          setLoading(false);
-          return;
-        }
-        setClientSecret(pi.client_secret);
-        setStripePromise(loadStripe(pi.publishable_key));
-      } catch (e) {
-        setErr((e as Error).message || "Could not initialize payment");
-        setLoading(false);
-        return;
-      }
-      setLoading(false);
-    })();
-  }, [authLoading, user, order_id, nav]);
+    loadOrderAndInit();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, user, order_id]);
 
   const partnerFee = useMemo(() => (order ? Math.round(order.price * 0.05) : 0), [order]);
   const total = useMemo(() => (order ? order.price + partnerFee : 0), [order, partnerFee]);
