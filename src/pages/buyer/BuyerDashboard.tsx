@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
 import { Eyebrow, HairlineDivider } from "@/components/ui/mono";
+import { EmptyState } from "@/components/EmptyState";
+import { ClipboardList } from "lucide-react";
 
 interface OrderRow {
   id: string; order_number: string; status: string; price: number; created_at: string;
