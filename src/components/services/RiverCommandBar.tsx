@@ -416,8 +416,20 @@ export function RiverCommandBar() {
                   <div style={{ fontWeight: 600, marginBottom: micError ? 8 : 0 }}>{error}</div>
                   {micError === "denied" && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                      <button type="button" onClick={toggleMic} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999, padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                        <RefreshCw size={12} /> Retry mic
+                      <button
+                        type="button"
+                        onClick={retryMic}
+                        disabled={retryingMic}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999,
+                          padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600,
+                          cursor: retryingMic ? "default" : "pointer",
+                          opacity: retryingMic ? 0.7 : 1,
+                        }}
+                      >
+                        {retryingMic ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                        {retryingMic ? "Retrying…" : "Retry mic"}
                       </button>
                       <span style={{ color: "#a3a3a3", fontSize: 12 }}>or type your request above</span>
                     </div>
