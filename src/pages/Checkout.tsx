@@ -14,6 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 
+const logCheckout = (step: string, payload?: unknown) => {
+  // eslint-disable-next-line no-console
+  console.log(`[checkout] ${step}`, payload ?? "");
+};
+
 interface OrderRow {
   id: string;
   buyer_id: string;
@@ -67,7 +72,11 @@ function PayBlock({
   }, [payMethod, onReadyChange]);
 
   const onPay = async () => {
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      logCheckout("pay-click-aborted", { hasStripe: !!stripe, hasElements: !!elements });
+      return;
+    }
+    logCheckout("pay-click", { orderId, total, payMethod, ts: new Date().toISOString() });
     setErrorMsg(null);
     setBusy(true);
     try {
@@ -84,6 +93,14 @@ function PayBlock({
         ),
       ]);
       const { error, paymentIntent } = result as { error?: any; paymentIntent?: any };
+      logCheckout("confirmPayment-result", {
+        errorType: error?.type,
+        errorCode: error?.code,
+        declineCode: error?.decline_code,
+        errorMessage: error?.message,
+        paymentIntentStatus: paymentIntent?.status,
+        paymentIntentId: paymentIntent?.id,
+      });
       if (error) {
         setErrorMsg(error.message ?? "Payment failed");
         toast.error(error.message ?? "Payment failed");
@@ -103,6 +120,7 @@ function PayBlock({
       setBusy(false);
     } catch (e) {
       const msg = (e as Error).message || "Payment failed - please try again";
+      logCheckout("confirmPayment-threw", { message: msg, error: e });
       setErrorMsg(msg);
       toast.error(msg);
       setBusy(false);
@@ -149,10 +167,14 @@ function PayBlock({
         <PaymentElement
           key={payMethod}
           onReady={() => {
+            logCheckout("payment-element-ready", { payMethod });
             setReady(true);
             onReadyChange?.(true);
           }}
-          onChange={(e) => setComplete(e.complete)}
+          onChange={(e) => {
+            logCheckout("payment-element-change", { complete: e.complete, type: e.value?.type });
+            setComplete(e.complete);
+          }}
           options={{
             layout: "tabs",
             paymentMethodOrder:
@@ -288,6 +310,7 @@ export default function Checkout() {
 
   const loadOrderAndInit = async () => {
     if (!order_id || !user) return;
+    logCheckout("load-start", { order_id, userId: user.id });
     setErr(null);
     setLoading(true);
     setClientSecret(null);
@@ -299,11 +322,14 @@ export default function Checkout() {
       .eq("id", order_id)
       .maybeSingle();
     if (error || !o) {
+      logCheckout("order-load-failed", { error, hasOrder: !!o });
       setErr("Project not found");
       setLoading(false);
       return;
     }
+    logCheckout("order-loaded", { id: o.id, status: o.status, price: o.price });
     if (o.buyer_id !== user.id) {
+      logCheckout("order-not-buyer", { buyer_id: o.buyer_id, userId: user.id });
       setErr("This project belongs to another partner.");
       setLoading(false);
       return;
@@ -327,11 +353,13 @@ export default function Checkout() {
     }
 
     if (o.status !== "pending_payment") {
+      logCheckout("order-status-skip", { status: o.status });
       nav(`/orders/${o.id}`, { replace: true });
       return;
     }
 
     try {
+      logCheckout("invoke-stripe-payment-intent", { order_id: o.id });
       const invokePromise = supabase.functions.invoke("stripe-payment-intent", {
         body: { order_id: o.id },
       });
@@ -341,14 +369,56 @@ export default function Checkout() {
           setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
         ),
       ])) as Awaited<typeof invokePromise>;
+      logCheckout("invoke-stripe-payment-intent-result", {
+        hasData: !!pi,
+        hasClientSecret: !!pi?.client_secret,
+        hasPublishableKey: !!pi?.publishable_key,
+        dataError: pi?.error,
+        invokeError: piErr ? { name: piErr.name, message: piErr.message } : null,
+      });
       if (piErr || !pi?.client_secret) {
-        setErr(piErr?.message || pi?.error || "Could not initialize payment");
+        // Bypass the SDK to capture the raw HTTP status + response body the SDK swallows.
+        let rawStatus: number | null = null;
+        let rawBody: string | null = null;
+        try {
+          const { data: sessionData } = await supabase.auth.getSession();
+          const token = sessionData.session?.access_token;
+          const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
+          const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+          const raw = await fetch(`${SUPABASE_URL}/functions/v1/stripe-payment-intent`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token ?? SUPABASE_ANON_KEY}`,
+              apikey: SUPABASE_ANON_KEY,
+            },
+            body: JSON.stringify({ order_id: o.id }),
+          });
+          rawStatus = raw.status;
+          rawBody = await raw.text();
+          logCheckout("raw-pi-status", rawStatus);
+          logCheckout("raw-pi-body", rawBody);
+        } catch (rawErr) {
+          logCheckout("raw-pi-fetch-threw", { message: (rawErr as Error).message });
+        }
+        const detail =
+          rawStatus != null
+            ? ` (HTTP ${rawStatus}${rawBody ? `: ${rawBody.slice(0, 300)}` : ""})`
+            : "";
+        setErr(
+          (piErr?.message || pi?.error || "Could not initialize payment") + detail,
+        );
         setLoading(false);
         return;
       }
+      logCheckout("loadStripe-start");
       setClientSecret(pi.client_secret);
-      setStripePromise(loadStripe(pi.publishable_key));
+      const sp = loadStripe(pi.publishable_key);
+      sp.then((s) => logCheckout("loadStripe-resolved", { ok: !!s }))
+        .catch((e) => logCheckout("loadStripe-failed", { message: (e as Error).message }));
+      setStripePromise(sp);
     } catch (e) {
+      logCheckout("invoke-stripe-payment-intent-threw", { message: (e as Error).message, error: e });
       setErr((e as Error).message || "Could not initialize payment");
       setLoading(false);
       return;

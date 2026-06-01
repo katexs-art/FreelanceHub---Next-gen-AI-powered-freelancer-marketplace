@@ -1,27 +1,59 @@
 ## Goal
-Move the two hero/explainer videos off the stale `lquoahkuzqwtiihshdaf` Supabase project onto Lovable's CDN, and update `Landing.tsx` and `HowItWorks.tsx` to use the resulting `.asset.json` pointers.
 
-## Steps
+Capture the exact failing function, HTTP status, and response body when checkout breaks, so we can pinpoint whether the failure is in `stripe-payment-intent` (init), `stripe.confirmPayment` (Pay Now click), or somewhere else.
 
-1. **Download both videos from the old Supabase project** into `/tmp`:
-   - `https://lquoahkuzqwtiihshdaf.supabase.co/storage/v1/object/public/katexs-assets/8835828-hd_1920_1080_25fps.mp4`
-   - `https://lquoahkuzqwtiihshdaf.supabase.co/storage/v1/object/public/katexs-assets/7438233-uhd_4096_2160_25fps%20(1)%20(1)%20(1).mp4` (rename locally to a clean `landing-hero.mp4`)
+## Where to add logging
 
-2. **Upload each via `lovable-assets create`** with explicit `--filename`, writing the JSON output to:
-   - `src/assets/howitworks-hero.mp4.asset.json`
-   - `src/assets/landing-hero.mp4.asset.json`
+`src/pages/Checkout.tsx` has two network-touching call sites:
 
-3. **Verify uploads** by checking each `.asset.json` is valid JSON containing a `url` field.
+1. **`loadOrderAndInit()` → `supabase.functions.invoke("stripe-payment-intent", ...)`** (around line 335). Runs on page load; failure here means the page shows "Could not initialize payment".
+2. **`PayBlock.onPay()` → `stripe.confirmPayment(...)`** (around line 75). Runs when user clicks **Pay Now**.
 
-4. **Update `src/pages/Landing.tsx`** — replace the hardcoded `lquoahkuzqwtiihshdaf` URL constant with an import of the new `.asset.json` and use `landingHero.url`.
+Plus the order/profile/gig Supabase queries (lines 294–326) — log any error there too.
 
-5. **Update `src/pages/HowItWorks.tsx`** — same pattern with the HowItWorks asset.
+## What to log
 
-6. **Verify** — confirm no remaining `lquoahkuzqwtiihshdaf` references in `src/` (only in `MIGRATION.md` / `scripts/migrate*` / `.lovable/plan.md`, which stay).
+For every step, log with a clear `[checkout]` prefix so they're greppable in the browser console:
 
-## Out of scope
-- `MIGRATION.md`, `scripts/migrate.sh`, `scripts/migrate-auth-users.mjs`, `.lovable/plan.md` — left alone per your instruction.
-- `.env`, `supabase/config.toml`, `src/integrations/supabase/client.ts` — already correctly pointing at `nswgubxabcjyfsgbiicz`.
+- **Order load**: `order_id`, returned status, any Supabase error (`code`, `message`, `details`, `hint`).
+- **`stripe-payment-intent` invoke**:
+  - Before call: order id + timestamp.
+  - After call: full `data`, full `error` object, and — critically — do a manual `fetch()` fallback on error to capture the raw HTTP status + response body text (the SDK swallows the body into the generic "non-2xx" message).
+  - Log `pi.publishable_key` presence (not the value) and `client_secret` presence.
+- **`loadStripe`**: log success/failure of Stripe.js initialization.
+- **PaymentElement**: log `onReady` and `onChange.complete` transitions.
+- **Pay Now click (`onPay`)**:
+  - Log start with `orderId`, `total`, `payMethod`.
+  - Log `stripe.confirmPayment` result: full `error` (type, code, decline_code, message, payment_intent.status) and `paymentIntent` status.
+  - Log the 10s timeout race if it fires.
 
-## Risk
-- The hero video is ~11 MB; the landing 4K video is likely larger. Upload should still complete via the CLI. If the CLI rejects a file for size, I'll stop and report back before changing the page imports.
+## Implementation details
+
+- Add a small helper `logCheckout(step: string, payload: unknown)` at the top of the file that does `console.log("[checkout]", step, payload)` so all entries share the prefix and can be filtered.
+- On `stripe-payment-intent` failure path, additionally do:
+  ```ts
+  const raw = await fetch(`${SUPABASE_URL}/functions/v1/stripe-payment-intent`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${session.access_token}`,
+      apikey: SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify({ order_id: o.id }),
+  });
+  logCheckout("raw-pi-status", raw.status);
+  logCheckout("raw-pi-body", await raw.text());
+  ```
+  This bypasses the SDK so the actual error body (e.g. `{"error":"STRIPE_SECRET_KEY not configured"}`) is visible.
+- Surface the raw body into the on-screen `err` string when present, so the user can copy it without opening DevTools.
+- All logs stay client-side; no changes to edge functions, no behavior changes beyond logging + a richer error message.
+
+## Files touched
+
+- `src/pages/Checkout.tsx` — only file modified.
+
+## How to use after deploy
+
+1. Open DevTools → Console, filter on `[checkout]`.
+2. Reproduce the failure.
+3. Copy the `raw-pi-status` + `raw-pi-body` (or the `confirmPayment` error block) and share it back. That tells us exactly which function and which error.
