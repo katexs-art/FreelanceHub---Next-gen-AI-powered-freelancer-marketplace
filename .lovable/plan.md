@@ -1,32 +1,58 @@
-## Root cause
+## Goal
+Add a `MIGRATION.md` at the project root with copy-paste `pg_dump` → `pg_restore` instructions for moving the Lovable Cloud database into the user's own Supabase project (`lquoahkuzqwtiihshdaf`). No code, no edge function, no third-party tool.
 
-The `stripe-payment-intent` edge function logs show:
+## What the doc will cover
 
-> `The payment method type "paypal" is invalid. Please ensure the provided type is activated in your dashboard...`
+1. **Where to get connection strings (both sides)**
+   - Source: Lovable Cloud → Backend → Database → Connection string (session pooler, port 5432, direct connection for `pg_dump`).
+   - Destination: supabase.com dashboard → your project → Project Settings → Database → Connection string.
+   - Note: use the **direct connection** (not the pooler) for dump/restore.
 
-The function hardcodes `payment_method_types: ["card", "paypal"]`, but PayPal is not activated on the connected Stripe account. Stripe rejects the entire PaymentIntent creation with a 400, which is why the client sees a non-2xx response on checkout.
+2. **Prerequisites**
+   - Install Postgres 15+ client tools locally (matching Supabase's PG version) so `pg_dump`/`pg_restore` versions line up. Commands for macOS (`brew install postgresql@15`), Ubuntu, Windows.
 
-CORS, the OPTIONS handler, env var reading, the Stripe import, and detailed error messages are all already correct in the current function — those are not the problem.
+3. **Step 1 — Dump from Lovable Cloud (schema + data, public schema only)**
+   ```bash
+   pg_dump \
+     --clean --if-exists --no-owner --no-privileges \
+     --schema=public \
+     --format=custom \
+     --file=katexs_backup.dump \
+     "postgresql://postgres:[PASSWORD]@db.nswgubxabcjyfsgbiicz.supabase.co:5432/postgres"
+   ```
+   - Explain each flag.
+   - Note that `auth.users` is **not** included (it lives in the `auth` schema and is managed by Supabase). Users will need to be re-created or migrated separately via Supabase's Auth admin API — call this out clearly.
 
-## Fix
+4. **Step 2 — Restore into the new Supabase project**
+   ```bash
+   pg_restore \
+     --clean --if-exists --no-owner --no-privileges \
+     --dbname="postgresql://postgres:[PASSWORD]@db.lquoahkuzqwtiihshdaf.supabase.co:5432/postgres" \
+     katexs_backup.dump
+   ```
 
-### `supabase/functions/stripe-payment-intent/index.ts`
-- Replace `payment_method_types: ["card", "paypal"]` with `automatic_payment_methods: { enabled: true }`. Stripe will then offer whichever methods are actually enabled in the dashboard (card always, PayPal only once the user activates it), and the PaymentIntent will succeed.
-- Keep everything else as-is (npm:stripe@17, fetch http client, CORS, OPTIONS, detailed `error.message` in the response body).
+5. **Step 3 — Re-deploy edge functions**
+   - Install Supabase CLI (`npm i -g supabase`).
+   - `supabase link --project-ref lquoahkuzqwtiihshdaf`
+   - `supabase functions deploy` (list of function names from `supabase/functions/`).
+   - Re-add all secrets via `supabase secrets set KEY=value` (list which ones based on what's currently configured — Stripe, Anthropic, SendGrid, etc.).
 
-### `src/pages/Checkout.tsx`
-- The PayPal tab currently assumes PayPal is always available. Until the merchant enables it in Stripe, the PayPal tab would render an empty PaymentElement. Two reasonable options:
-  - (A) Hide the PayPal tab and only show Card.
-  - (B) Keep the tab but let Stripe's PaymentElement decide what to show; if PayPal is not enabled it simply won't render, which is confusing.
-- Recommended: (A) — hide the PayPal tab for now, keep the toggle code so it's easy to re-enable later.
+6. **Step 4 — Point the frontend at the new project**
+   - Update `.env` (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`).
+   - Regenerate types: `supabase gen types typescript --project-id lquoahkuzqwtiihshdaf > src/integrations/supabase/types.ts`.
 
-### Redeploy
-- Deploy `stripe-payment-intent` after the edit.
-- Verify by re-opening checkout → PaymentIntent succeeds → card fields render → Pay Now works.
+7. **Auth users caveat (important)**
+   - Explain that user passwords cannot be migrated as plaintext. Two options:
+     - Have users reset passwords on the new project (recommended).
+     - Use Supabase's admin Auth API to bulk-import users with hashed passwords (link to Supabase docs).
 
-## Files touched
-- `supabase/functions/stripe-payment-intent/index.ts` — switch back to `automatic_payment_methods`
-- `src/pages/Checkout.tsx` — hide PayPal tab until enabled in Stripe
+8. **Verification checklist**
+   - Row counts match on both sides (sample SELECTs).
+   - RLS policies present.
+   - Storage buckets re-created manually if any exist.
 
-## Question for you
-Do you want me to (A) hide the PayPal tab for now, or (B) leave it visible and you'll enable PayPal in your Stripe dashboard yourself? If (B), nothing changes in Checkout.tsx — only the edge function gets fixed.
+## Out of scope
+- I will not write any code that auto-runs the migration, and I will not deploy any "helper" edge function. Everything is run by you locally against connection strings you control.
+
+## Deliverable
+One new file: `MIGRATION.md` at project root. Nothing else changes.
