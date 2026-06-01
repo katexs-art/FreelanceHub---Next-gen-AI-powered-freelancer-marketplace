@@ -18,22 +18,22 @@ interface ExpertCard {
 
 const PLACEHOLDERS = [
   "Find me a voice AI expert…",
-  "I need a chatbot built in 48hrs…",
-  "Who can automate my workflows?",
-  "Help me hire a prompt engineer…",
-  "Show me top GoHighLevel pros…",
+  "I need a chatbot built in 48 hours…",
+  "Who can automate my Go High Level?",
+  "Build me a custom AI agent…",
 ];
 
 const QUICK_CATEGORIES = [
   "Voice AI",
-  "Chatbot",
-  "Automation",
+  "Chatbot Dev",
+  "AI Automation",
   "Prompt Engineering",
-  "AI Consulting",
-  "Custom AI Models",
+  "GoHighLevel",
   "AI Content",
-  "AI Integration",
+  "AI Agents",
+  "Custom AI",
 ];
+
 
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/river-chat`;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
