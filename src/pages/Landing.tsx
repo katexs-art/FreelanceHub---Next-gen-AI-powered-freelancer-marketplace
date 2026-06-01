@@ -322,7 +322,7 @@ export default function Landing() {
           Browse by category
         </div>
         <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 32px" }}>What do you need done?</h2>
-        <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div className="kx-grid-cats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           {CATEGORIES.map((c) => {
             const Icon = c.Icon;
             return (
