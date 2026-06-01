@@ -129,7 +129,13 @@ export default function BuyerDashboard() {
             <Link to="/buyer/orders" className="text-xs font-mono uppercase tracking-[0.14em] text-foreground-muted hover:text-foreground">View all</Link>
           </div>
           {orders.length === 0 ? (
-            <p className="text-sm text-foreground-muted">No projects yet. <Link to="/explore" className="underline">Find a service</Link>.</p>
+            <EmptyState
+              icon={ClipboardList}
+              title="No active projects"
+              message="Post your first project and get proposals within hours."
+              action={{ label: "Post a Project", to: "/post-job" }}
+              secondaryAction={{ label: "Find an Expert", to: "/services", variant: "outline" }}
+            />
           ) : (
             <ul className="border-hairline divide-y divide-white/[0.08]">
               {orders.map((o) => (
