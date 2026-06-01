@@ -521,9 +521,12 @@ export default function Checkout() {
                 gap: 32px;
                 align-items: start;
               }
+              .checkout-left { min-width: 0; }
+              .checkout-right { min-width: 0; }
               @media (max-width: 900px) {
-                .checkout-grid { grid-template-columns: 1fr; }
-                .checkout-right { position: static !important; }
+                .checkout-grid { grid-template-columns: 1fr; gap: 16px; }
+                .checkout-right { position: static !important; order: -1; }
+                .checkout-left { order: 1; }
               }
             `}</style>
 
