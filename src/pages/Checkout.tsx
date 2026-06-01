@@ -288,12 +288,25 @@ export default function Checkout() {
         return;
       }
 
-      const { data: pi, error: piErr } = await supabase.functions.invoke(
-        "stripe-payment-intent",
-        { body: { order_id: o.id } },
-      );
-      if (piErr || !pi?.client_secret) {
-        setErr(piErr?.message || pi?.error || "Could not initialize payment");
+      try {
+        const invokePromise = supabase.functions.invoke("stripe-payment-intent", {
+          body: { order_id: o.id },
+        });
+        const { data: pi, error: piErr } = (await Promise.race([
+          invokePromise,
+          new Promise((_, rej) =>
+            setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
+          ),
+        ])) as Awaited<typeof invokePromise>;
+        if (piErr || !pi?.client_secret) {
+          setErr(piErr?.message || pi?.error || "Could not initialize payment");
+          setLoading(false);
+          return;
+        }
+        setClientSecret(pi.client_secret);
+        setStripePromise(loadStripe(pi.publishable_key));
+      } catch (e) {
+        setErr((e as Error).message || "Could not initialize payment");
         setLoading(false);
         return;
       }
