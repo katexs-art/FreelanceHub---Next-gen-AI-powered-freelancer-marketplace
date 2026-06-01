@@ -232,13 +232,15 @@ export default function Inbox() {
         }}
       >
         {/* COLUMN 2 — Conversation list */}
+        {(!isMobile || !active) && (
         <aside
           style={{
             background: "#FFFFFF",
-            borderRight: "1px solid #EBEBEB",
+            borderRight: isMobile ? "none" : "1px solid #EBEBEB",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
+            minWidth: 0,
           }}
         >
           <div
