@@ -90,6 +90,31 @@ export default function Signup() {
 
   const submitTone = role === "seller" ? "green" : "black";
 
+  if (successEmail) {
+    return (
+      <AuthLayout
+        title="Check your email"
+        subtitle="One quick step to activate your account"
+        footer={<>Already verified? <Link to="/login">Sign in</Link></>}
+      >
+        <KxAuthStyles />
+        <div
+          style={{
+            background: "#F0FDF4",
+            border: "1px solid #16A34A",
+            borderRadius: 12,
+            padding: 20,
+            color: "#0a0a0a",
+            fontSize: 14,
+            lineHeight: 1.55,
+          }}
+        >
+          Check your email at <strong>{successEmail}</strong> — click the link to verify your account.
+        </div>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout
       title="Create your account"
@@ -97,6 +122,8 @@ export default function Signup() {
       footer={<>Already have an account? <Link to="/login">Sign in</Link></>}
     >
       <KxAuthStyles />
+
+
 
       <div className="kx-toggle">
         <button
