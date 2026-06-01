@@ -66,33 +66,68 @@ export function RiverCommandBar() {
     return () => clearInterval(t);
   }, [focused, value]);
 
-  // Voice input setup
+  // Keep submit reachable from speech-recognition callbacks without stale closures
+  const submitRef = useRef<(text: string) => void>(() => {});
+
+  // Voice input — Web Speech API. Streams interim text into the input,
+  // then auto-submits the final transcript to River.
   const toggleMic = useCallback(() => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      setError("Voice input isn't supported in this browser.");
+      setError("Voice input isn't supported in this browser. Try Chrome, Edge, or Safari.");
       return;
     }
     if (listening) {
       recogRef.current?.stop();
       return;
     }
+
+    setError(null);
+    let finalText = "";
+
     const r = new SR();
     r.lang = "en-US";
     r.interimResults = true;
     r.continuous = false;
+    r.maxAlternatives = 1;
+
     r.onresult = (e: any) => {
-      const transcript = Array.from(e.results).map((res: any) => res[0].transcript).join("");
-      setValue(transcript);
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const res = e.results[i];
+        const txt = res[0]?.transcript ?? "";
+        if (res.isFinal) finalText += txt;
+        else interim += txt;
+      }
+      setValue((finalText + interim).trim());
     };
-    r.onerror = () => setListening(false);
-    r.onend = () => setListening(false);
+    r.onerror = (e: any) => {
+      setListening(false);
+      const code = e?.error;
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        setError("Microphone permission denied. Enable it in your browser settings.");
+      } else if (code === "no-speech") {
+        setError("I didn't catch that. Try speaking again.");
+      } else if (code && code !== "aborted") {
+        setError("Voice input failed. Please try again.");
+      }
+    };
+    r.onend = () => {
+      setListening(false);
+      const out = finalText.trim();
+      if (out.length >= 3) {
+        setValue(out);
+        submitRef.current(out);
+      }
+    };
+
     recogRef.current = r;
     setListening(true);
-    r.start();
+    try { r.start(); } catch { setListening(false); }
   }, [listening]);
 
   useEffect(() => () => { recogRef.current?.stop?.(); abortRef.current?.abort(); }, []);
+
 
   const submit = useCallback(async (text: string) => {
     const trimmed = text.trim();
