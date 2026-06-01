@@ -1,0 +1,352 @@
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { Mic, MicOff, Loader2, Star } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+
+interface ExpertCard {
+  id: string;
+  slug?: string;
+  title: string;
+  category: string;
+  price: number;
+  rating: number;
+  reviews: number;
+  seller_name: string;
+  seller_username: string | null;
+}
+
+const PLACEHOLDERS = [
+  "Find me a voice AI expert…",
+  "I need a chatbot built in 48hrs…",
+  "Who can automate my workflows?",
+  "Help me hire a prompt engineer…",
+  "Show me top GoHighLevel pros…",
+];
+
+const QUICK_CATEGORIES = [
+  "Voice AI",
+  "Chatbot",
+  "Automation",
+  "Prompt Engineering",
+  "AI Consulting",
+  "Custom AI Models",
+  "AI Content",
+  "AI Integration",
+];
+
+const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/river-chat`;
+const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+
+const stripTokens = (s: string) =>
+  s.replace(/\n?\[EXPERT_CARD:\s*[0-9a-f-]{8,}\s*\]\n?/gi, "\n").replace(/\n{3,}/g, "\n\n").trim();
+
+export function RiverCommandBar() {
+  const { user } = useAuth();
+  const [value, setValue] = useState("");
+  const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
+  const [focused, setFocused] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [stream, setStream] = useState("");
+  const [cards, setCards] = useState<ExpertCard[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [listening, setListening] = useState(false);
+  const recogRef = useRef<any>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const lastSendAt = useRef(0);
+
+  // Cycle placeholders when input empty + not focused
+  useEffect(() => {
+    if (focused || value) return;
+    let i = 0;
+    const t = setInterval(() => {
+      i = (i + 1) % PLACEHOLDERS.length;
+      setPlaceholder(PLACEHOLDERS[i]);
+    }, 2800);
+    return () => clearInterval(t);
+  }, [focused, value]);
+
+  // Voice input setup
+  const toggleMic = useCallback(() => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      setError("Voice input isn't supported in this browser.");
+      return;
+    }
+    if (listening) {
+      recogRef.current?.stop();
+      return;
+    }
+    const r = new SR();
+    r.lang = "en-US";
+    r.interimResults = true;
+    r.continuous = false;
+    r.onresult = (e: any) => {
+      const transcript = Array.from(e.results).map((res: any) => res[0].transcript).join("");
+      setValue(transcript);
+    };
+    r.onerror = () => setListening(false);
+    r.onend = () => setListening(false);
+    recogRef.current = r;
+    setListening(true);
+    r.start();
+  }, [listening]);
+
+  useEffect(() => () => { recogRef.current?.stop?.(); abortRef.current?.abort(); }, []);
+
+  const submit = useCallback(async (text: string) => {
+    const trimmed = text.trim();
+    if (trimmed.length < 3 || loading) return;
+    const now = Date.now();
+    if (now - lastSendAt.current < 500) return;
+    lastSendAt.current = now;
+
+    setError(null);
+    setStream("");
+    setCards([]);
+
+    if (!user) {
+      setError("Please sign in to ask River.");
+      return;
+    }
+
+    setLoading(true);
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+    const timeout = setTimeout(() => ctrl.abort("timeout"), 15_000);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+      if (!accessToken) { setError("Please sign in to ask River."); return; }
+
+      const resp = await fetch(FN_URL, {
+        method: "POST",
+        signal: ctrl.signal,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+          "apikey": ANON_KEY,
+        },
+        body: JSON.stringify({ message: trimmed, history: [] }),
+      });
+
+      if (resp.status === 401) { setError("Please sign in to ask River."); return; }
+      if (resp.status === 429) { setError("You're going too fast — please wait a moment."); return; }
+      if (!resp.ok || !resp.body) { setError("River is taking a quick break. Try again in a moment."); return; }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+      let acc = "";
+      let finalCards: ExpertCard[] = [];
+
+      while (true) {
+        const { done, value: chunk } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(chunk, { stream: true });
+        let nl: number;
+        while ((nl = buf.indexOf("\n")) !== -1) {
+          let line = buf.slice(0, nl);
+          buf = buf.slice(nl + 1);
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (!line.startsWith("data: ")) continue;
+          const json = line.slice(6).trim();
+          if (!json) continue;
+          try {
+            const evt = JSON.parse(json);
+            if (typeof evt.delta === "string") {
+              acc += evt.delta;
+              setStream(stripTokens(acc));
+            } else if (evt.done && Array.isArray(evt.cards)) {
+              finalCards = evt.cards;
+            }
+          } catch { /* ignore */ }
+        }
+      }
+      setStream(stripTokens(acc));
+      setCards(finalCards);
+    } catch (e: any) {
+      if (e?.name === "AbortError" || ctrl.signal.aborted) {
+        setError("River is taking too long. Please try again.");
+      } else {
+        setError("Connection lost. Check your internet and try again.");
+      }
+    } finally {
+      clearTimeout(timeout);
+      abortRef.current = null;
+      setLoading(false);
+    }
+  }, [loading, user]);
+
+  const onSubmit = (e: React.FormEvent) => { e.preventDefault(); submit(value); };
+
+  const onChipClick = (label: string) => {
+    const text = `Find me a top ${label} expert`;
+    setValue(text);
+    submit(text);
+  };
+
+  return (
+    <div style={{ maxWidth: 820, margin: "0 auto", width: "100%" }}>
+      <style>{`
+        @keyframes riverGlow {
+          0%, 100% { box-shadow: 0 0 0 1px rgba(127,119,221,0.6), 0 0 30px rgba(127,119,221,0.35), 0 0 60px rgba(127,119,221,0.15); }
+          50% { box-shadow: 0 0 0 1px rgba(127,119,221,0.9), 0 0 45px rgba(127,119,221,0.5), 0 0 80px rgba(127,119,221,0.2); }
+        }
+        @keyframes riverPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.08); opacity: 0.85; }
+        }
+        .river-bar { transition: border-color .25s ease, box-shadow .3s ease, background .25s ease; }
+        .river-bar--focused { animation: riverGlow 2.6s ease-in-out infinite; border-color: rgba(127,119,221,0.7) !important; }
+        .river-r-btn { transition: transform .2s ease, background .2s ease; }
+        .river-r-btn:hover { transform: scale(1.05); }
+        .river-chip { transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease; }
+        .river-chip:hover { background: rgba(127,119,221,0.1) !important; border-color: rgba(127,119,221,0.6) !important; color: #fff !important; transform: translateY(-1px); }
+        .river-mic--on { animation: riverPulse 1.2s ease-in-out infinite; color: #ef4444 !important; }
+      `}</style>
+
+      <div style={{ position: "absolute", marginTop: -28, display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ width: 6, height: 6, borderRadius: 999, background: "#10b981", animation: "riverPulse 2s ease-in-out infinite" }} />
+        <span style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>
+          Powered by River AI
+        </span>
+      </div>
+
+      <form onSubmit={onSubmit}>
+        <div
+          className={`river-bar ${focused ? "river-bar--focused" : ""}`}
+          style={{
+            display: "flex", alignItems: "center", gap: 10,
+            background: "#0a0a0a",
+            border: "1px solid #1f1f1f",
+            borderRadius: 999,
+            padding: "6px 6px 6px 16px",
+          }}
+        >
+          <button
+            type="button"
+            onClick={toggleMic}
+            aria-label={listening ? "Stop voice input" : "Start voice input"}
+            className={listening ? "river-mic--on" : ""}
+            style={{
+              background: "transparent", border: "none", cursor: "pointer",
+              color: "#888", padding: 8, display: "flex", alignItems: "center", justifyContent: "center",
+            }}
+          >
+            {listening ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
+
+          <input
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder={placeholder}
+            style={{
+              flex: 1, background: "transparent", border: "none", outline: "none",
+              color: "#fff", fontSize: 15, padding: "14px 4px",
+            }}
+          />
+
+          <button
+            type="submit"
+            disabled={loading || value.trim().length < 3}
+            aria-label="Ask River"
+            className="river-r-btn"
+            style={{
+              height: 44, width: 44, borderRadius: 999,
+              background: loading || value.trim().length < 3 ? "#1f1f1f" : "#7F77DD",
+              color: "#fff", border: "none", cursor: loading ? "default" : "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 16,
+              flexShrink: 0,
+            }}
+          >
+            {loading ? <Loader2 size={18} className="animate-spin" /> : <span>R</span>}
+          </button>
+        </div>
+      </form>
+
+      {/* Quick category chips */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 20 }}>
+        {QUICK_CATEGORIES.map((c) => (
+          <button
+            key={c}
+            type="button"
+            onClick={() => onChipClick(c)}
+            className="river-chip"
+            style={{
+              padding: "8px 14px", borderRadius: 999,
+              border: "1px solid #1f1f1f", background: "rgba(255,255,255,0.02)",
+              color: "#bbb", fontSize: 12, fontWeight: 500, cursor: "pointer",
+            }}
+          >
+            {c}
+          </button>
+        ))}
+      </div>
+
+      {/* Results */}
+      {(loading || stream || cards.length > 0 || error) && (
+        <div style={{ marginTop: 28, textAlign: "left" }}>
+          {error && (
+            <div style={{ background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 12, padding: "12px 16px", color: "#fca5a5", fontSize: 14 }}>
+              {error}
+            </div>
+          )}
+
+          {(stream || (loading && !error)) && (
+            <div style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 18, color: "#e5e5e5", fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
+                <span style={{ height: 22, width: 22, borderRadius: 999, background: "#7F77DD", color: "#fff", display: "grid", placeItems: "center", fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 11 }}>R</span>
+                <span style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "#888", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>River</span>
+              </div>
+              {stream || (
+                <span style={{ display: "inline-flex", gap: 4 }}>
+                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#7F77DD", animation: "riverPulse 1s ease-in-out infinite" }} />
+                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#7F77DD", animation: "riverPulse 1s ease-in-out infinite .15s" }} />
+                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#7F77DD", animation: "riverPulse 1s ease-in-out infinite .3s" }} />
+                </span>
+              )}
+            </div>
+          )}
+
+          {cards.length > 0 && (
+            <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
+              {cards.map((c) => (
+                <Link
+                  key={c.id}
+                  to={`/gig/${c.slug || c.id}`}
+                  style={{
+                    display: "block", textDecoration: "none",
+                    background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 14, padding: 16,
+                    color: "#fff", transition: "border-color .2s ease, transform .2s ease",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(127,119,221,0.5)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a1a"; e.currentTarget.style.transform = "translateY(0)"; }}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                    {c.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>by {c.seller_name}</div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    {c.reviews > 0 ? (
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#ccc" }}>
+                        <Star size={12} className="fill-current" style={{ color: "#fbbf24" }} />
+                        <span style={{ fontWeight: 600, color: "#fff" }}>{c.rating.toFixed(1)}</span>
+                        <span style={{ color: "#888" }}>({c.reviews})</span>
+                      </span>
+                    ) : <span style={{ fontSize: 11, color: "#888" }}>New</span>}
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>${c.price}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
