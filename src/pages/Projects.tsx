@@ -1,123 +1,100 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useCategories } from "@/hooks/useCategories";
-import { useAuth } from "@/hooks/useAuth";
+import { GigCard, GigCardData, GigCardSkeleton } from "@/components/marketplace/GigCard";
 
-type Project = {
+type Sort = "newest" | "top_rated" | "price_low" | "price_high";
+
+type GigRow = {
   id: string;
   title: string;
-  description: string;
+  thumbnail_url: string | null;
+  starting_price: number;
+  average_rating: number;
+  total_reviews: number;
   category: string | null;
-  budget_min: number | null;
-  budget_max: number | null;
-  deadline: string | null;
-  bid_count: number;
   created_at: string;
+  seller: { id: string; username: string | null; full_name: string | null; avatar_url: string | null } | null;
+  gig_packages: { delivery_days: number }[] | null;
 };
 
-type Sort = "newest" | "most_bids" | "ending_soon" | "budget_high";
-
 export default function Projects() {
-  const { profile } = useAuth();
   const { data: categories } = useCategories();
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [gigs, setGigs] = useState<GigRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("");
   const [sort, setSort] = useState<Sort>("newest");
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("project_posts")
-        .select("id,title,description,category,budget_min,budget_max,deadline,bid_count,created_at")
-        .eq("status", "open")
+      const { data, error } = await supabase
+        .from("gigs")
+        .select(
+          "id,title,thumbnail_url,starting_price,average_rating,total_reviews,category,created_at,seller:profiles!gigs_seller_id_fkey(id,username,full_name,avatar_url),gig_packages(delivery_days)"
+        )
+        .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(500);
-      setProjects((data ?? []) as Project[]);
+      if (error) console.error("Failed to load services", error);
+      setGigs((data ?? []) as unknown as GigRow[]);
       setLoading(false);
     })();
   }, []);
 
   const filtered = useMemo(() => {
-    let list = projects;
+    let list = gigs;
     if (q.trim()) {
       const needle = q.toLowerCase();
-      list = list.filter(
-        (p) => p.title.toLowerCase().includes(needle) || p.description.toLowerCase().includes(needle),
-      );
+      list = list.filter((g) => g.title.toLowerCase().includes(needle));
     }
-    if (cat) list = list.filter((p) => p.category === cat);
+    if (cat) list = list.filter((g) => g.category === cat);
     const sorted = [...list];
     if (sort === "newest") sorted.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
-    if (sort === "most_bids") sorted.sort((a, b) => b.bid_count - a.bid_count);
-    if (sort === "ending_soon")
-      sorted.sort((a, b) => {
-        const da = a.deadline ? +new Date(a.deadline) : Infinity;
-        const db = b.deadline ? +new Date(b.deadline) : Infinity;
-        return da - db;
-      });
-    if (sort === "budget_high") sorted.sort((a, b) => (b.budget_max ?? 0) - (a.budget_max ?? 0));
+    if (sort === "top_rated") sorted.sort((a, b) => Number(b.average_rating) - Number(a.average_rating));
+    if (sort === "price_low") sorted.sort((a, b) => a.starting_price - b.starting_price);
+    if (sort === "price_high") sorted.sort((a, b) => b.starting_price - a.starting_price);
     return sorted;
-  }, [projects, q, cat, sort]);
+  }, [gigs, q, cat, sort]);
+
+  const toCard = (g: GigRow): GigCardData => {
+    const minDelivery = g.gig_packages?.length
+      ? Math.min(...g.gig_packages.map((p) => p.delivery_days))
+      : null;
+    return {
+      id: g.id,
+      title: g.title,
+      thumbnail_url: g.thumbnail_url,
+      starting_price: g.starting_price,
+      average_rating: Number(g.average_rating ?? 0),
+      total_reviews: g.total_reviews,
+      delivery_days: Number.isFinite(minDelivery as number) ? (minDelivery as number) : null,
+      seller: g.seller
+        ? { username: g.seller.username, full_name: g.seller.full_name, avatar_url: g.seller.avatar_url }
+        : null,
+    };
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
       <SiteHeader />
       <main className="flex-1 container-page py-10">
-        <div
-          style={{
-            background: "#fff",
-            borderBottom: "2px solid #000",
-            padding: "20px 24px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 16,
-            borderRadius: 4,
-            marginBottom: 24,
-            flexWrap: "wrap",
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 24, fontWeight: 700, color: "#000", lineHeight: 1.2 }}>Open Projects</div>
-            <div style={{ fontSize: 14, color: "#666", marginTop: 6 }}>
-              Find a project that matches your skills and place your bid
-            </div>
-          </div>
-          {profile?.role === "client" && (
-            <Link to="/post-job">
-              <button
-                style={{
-                  background: "#000",
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  padding: "10px 18px",
-                  borderRadius: 8,
-                  border: "none",
-                  cursor: "pointer",
-                }}
-              >
-                Post a Project
-              </button>
-            </Link>
-          )}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold">Browse Services</h1>
+          <p className="text-foreground-muted mt-1 text-sm">
+            Discover services offered by approved Experts on Katexs.
+          </p>
         </div>
-        <h1 className="text-2xl font-semibold mb-6">Project Board</h1>
 
         <div className="mb-4">
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search projects by keyword…"
+            placeholder="Search services by keyword…"
           />
         </div>
 
@@ -125,7 +102,7 @@ export default function Projects() {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setCat("")}
-              className={`px-3 py-1.5 rounded-full text-xs border ${cat === "" ? "border-white/40 bg-white/[0.06]" : "border-white/15"}`}
+              className={`px-3 py-1.5 rounded-full text-xs border ${cat === "" ? "border-foreground bg-background-subtle" : "border-border"}`}
             >
               All
             </button>
@@ -133,7 +110,7 @@ export default function Projects() {
               <button
                 key={c.id}
                 onClick={() => setCat(c.slug)}
-                className={`px-3 py-1.5 rounded-full text-xs border ${cat === c.slug ? "border-white/40 bg-white/[0.06]" : "border-white/15"}`}
+                className={`px-3 py-1.5 rounded-full text-xs border ${cat === c.slug ? "border-foreground bg-background-subtle" : "border-border"}`}
               >
                 {c.name}
               </button>
@@ -142,65 +119,30 @@ export default function Projects() {
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as Sort)}
-            className="h-9 rounded-[4px] bg-white/[0.03] border border-white/10 px-3 text-sm"
+            className="h-9 rounded-[4px] bg-background border border-border px-3 text-sm"
           >
             <option value="newest">Newest</option>
-            <option value="most_bids">Most Proposals</option>
-            <option value="ending_soon">Ending Soon</option>
-            <option value="budget_high">Budget High to Low</option>
+            <option value="top_rated">Top Rated</option>
+            <option value="price_low">Price: Low to High</option>
+            <option value="price_high">Price: High to Low</option>
           </select>
         </div>
 
         {loading ? (
-          <div className="text-sm text-foreground-muted">Loading…</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array.from({ length: 8 }).map((_, i) => <GigCardSkeleton key={i} />)}
+          </div>
         ) : filtered.length === 0 ? (
-          <div className="text-sm text-foreground-muted">No open projects yet.</div>
+          <div className="rounded-xl border border-dashed border-border bg-background p-16 text-center">
+            <h3 className="font-semibold">No services available yet</h3>
+            <p className="text-sm text-foreground-muted mt-1">
+              Check back soon — new services are added every day.
+            </p>
+          </div>
         ) : (
-          <ul className="divide-y divide-white/10 border-y border-white/10">
-            {filtered.map((p) => {
-              const isOpen = expanded === p.id;
-              return (
-                <li key={p.id}>
-                  <div
-                    role="button"
-                    onClick={() => setExpanded(isOpen ? null : p.id)}
-                    className="flex items-center justify-between gap-4 py-4 cursor-pointer hover:bg-white/[0.02] px-2 -mx-2"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div style={{ fontSize: 15, fontWeight: 600 }} className="truncate">{p.title}</div>
-                      <div className="flex flex-wrap items-center gap-3 mt-1 text-xs text-foreground-muted">
-                        {p.category && <span className="px-2 py-0.5 rounded-full border border-white/15">{p.category}</span>}
-                        <span>
-                          ${p.budget_min ?? "?"} – ${p.budget_max ?? "?"}
-                        </span>
-                        {p.deadline && <span>Due {new Date(p.deadline).toLocaleDateString()}</span>}
-                        <span>{p.bid_count} bid{p.bid_count === 1 ? "" : "s"}</span>
-                      </div>
-                    </div>
-                    {profile?.role === "seller" || profile?.role === "admin" ? (
-                      <Link to={`/projects/${p.id}/bid`} onClick={(e) => e.stopPropagation()}>
-                        <Button variant="outline">Submit a Proposal</Button>
-                      </Link>
-                    ) : (
-                      <Link to={`/projects/${p.id}/bids`} onClick={(e) => e.stopPropagation()}>
-                        <Button variant="outline">View Proposals</Button>
-                      </Link>
-                    )}
-                  </div>
-                  <div
-                    className="grid transition-all duration-300 ease-out"
-                    style={{ gridTemplateRows: isOpen ? "1fr" : "0fr" }}
-                  >
-                    <div className="overflow-hidden">
-                      <div className="pb-5 pr-4 text-sm text-foreground-muted whitespace-pre-wrap">
-                        {p.description}
-                      </div>
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((g) => <GigCard key={g.id} gig={toCard(g)} />)}
+          </div>
         )}
       </main>
       <SiteFooter />
