@@ -31,6 +31,7 @@ const SUGGESTIONS = [
   "Automate my workflow",
 ];
 
+const STORAGE_KEY = "river_chat_history";
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/river-chat`;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
@@ -48,6 +49,23 @@ export default function RiverWidget() {
   const panelRef = useRef<HTMLDivElement>(null);
   const lastSendAt = useRef(0);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Load persisted chat history on mount
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      }
+    } catch { /* ignore invalid json */ }
+  }, []);
+
+  // Persist chat history to sessionStorage
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
+    } catch { /* ignore quota errors */ }
+  }, [messages]);
 
   // Mobile breakpoint
   useEffect(() => {
