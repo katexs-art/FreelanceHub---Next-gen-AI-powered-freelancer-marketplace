@@ -84,38 +84,43 @@ export default function Inbox() {
   const active = useMemo(() => convs.find((c) => c.id === conversationId) ?? null, [convs, conversationId]);
 
   const loadConvs = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("conversations")
-      .select("*")
-      .or(`participant_one.eq.${user.id},participant_two.eq.${user.id}`)
-      .order("last_message_at", { ascending: false });
-    const list = (data ?? []) as Conv[];
-    const otherIds = Array.from(new Set(list.map((c) => (c.participant_one === user.id ? c.participant_two : c.participant_one))));
-    if (otherIds.length) {
-      const { data: profs } = await supabase
-        .from("profiles").select("id, full_name, username, avatar_url, is_online").in("id", otherIds);
-      const byId = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p]));
-      list.forEach((c) => {
-        const oid = c.participant_one === user.id ? c.participant_two : c.participant_one;
-        c.other = byId[oid];
-      });
+    if (!user) { setLoading(false); return; }
+    try {
+      const { data } = await supabase
+        .from("conversations")
+        .select("*")
+        .or(`participant_one.eq.${user.id},participant_two.eq.${user.id}`)
+        .order("last_message_at", { ascending: false });
+      const list = (data ?? []) as Conv[];
+      const otherIds = Array.from(new Set(list.map((c) => (c.participant_one === user.id ? c.participant_two : c.participant_one))));
+      if (otherIds.length) {
+        const { data: profs } = await supabase
+          .from("profiles").select("id, full_name, username, avatar_url, is_online").in("id", otherIds);
+        const byId = Object.fromEntries((profs ?? []).map((p: any) => [p.id, p]));
+        list.forEach((c) => {
+          const oid = c.participant_one === user.id ? c.participant_two : c.participant_one;
+          c.other = byId[oid];
+        });
 
-      // Unread counts (per conversation, recipient = me, unread)
-      const { data: unread } = await supabase
-        .from("messages")
-        .select("conversation_id")
-        .eq("recipient_id", user.id)
-        .eq("is_read", false)
-        .in("conversation_id", list.map((c) => c.id));
-      const counts: Record<string, number> = {};
-      (unread ?? []).forEach((m: any) => {
-        counts[m.conversation_id] = (counts[m.conversation_id] ?? 0) + 1;
-      });
-      list.forEach((c) => { c.unread_count = counts[c.id] ?? 0; });
+        // Unread counts (per conversation, recipient = me, unread)
+        const { data: unread } = await supabase
+          .from("messages")
+          .select("conversation_id")
+          .eq("recipient_id", user.id)
+          .eq("is_read", false)
+          .in("conversation_id", list.map((c) => c.id));
+        const counts: Record<string, number> = {};
+        (unread ?? []).forEach((m: any) => {
+          counts[m.conversation_id] = (counts[m.conversation_id] ?? 0) + 1;
+        });
+        list.forEach((c) => { c.unread_count = counts[c.id] ?? 0; });
+      }
+      setConvs(list);
+    } catch (e) {
+      console.error("Inbox loadConvs failed", e);
+    } finally {
+      setLoading(false);
     }
-    setConvs(list);
-    setLoading(false);
   };
 
   const loadMessages = async (cid: string) => {
