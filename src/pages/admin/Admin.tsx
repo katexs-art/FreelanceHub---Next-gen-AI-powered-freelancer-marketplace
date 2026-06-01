@@ -201,7 +201,7 @@ function AdminSidebar({ active, indicators, health }: { active: NavKey; indicato
     { label: "Marketplace", items: [
       { key: "orders", label: "Projects", icon: ShoppingBag, dot: i.activeOrders > 0 ? "blue" : null, badge: i.lateOrders > 0 ? { value: i.lateOrders, tone: "red" } : null },
       { key: "projects", label: "Projects and Proposals", icon: Briefcase, badge: i.openProjects > 0 ? { value: i.openProjects, tone: "blue" } : null },
-      { key: "gigs", label: "Plays", icon: Folder, badge: { value: i.activeGigs, tone: "grey" } },
+      { key: "gigs", label: "Services", icon: Folder, badge: { value: i.activeGigs, tone: "grey" } },
       { key: "disputes", label: "Disputes", icon: AlertTriangle, badge: i.openDisputes > 0 ? { value: i.openDisputes, tone: "red" } : null },
       { key: "reviews", label: "Reviews", icon: Star, badge: i.reviewsToday > 0 ? { value: i.reviewsToday, tone: "blue" } : null },
     ]},
@@ -537,7 +537,7 @@ export default function Admin() {
             <div className="space-y-6">
               <div className="grid sm:grid-cols-4 gap-4">
                 <Stat icon={Users} label="Users" value={stats.users.toString()} />
-                <Stat icon={ShoppingBag} label="Plays" value={stats.gigs.toString()} />
+                <Stat icon={ShoppingBag} label="Services" value={stats.gigs.toString()} />
                 <Stat icon={Wallet} label="Projects" value={stats.orders.toString()} />
                 <Stat icon={Wallet} label="GMV" value={dollars(stats.gmv)} />
               </div>
@@ -840,7 +840,7 @@ function BuyerDetail({ buyerId }: { buyerId: string }) {
       <div className="grid grid-cols-3 gap-3 text-xs">
         <MiniStat label="Messages Sent" value={msgCount?.toString() ?? "…"} />
         <MiniStat label="Reviews Left" value={reviewCount?.toString() ?? "…"} />
-        <MiniStat label="Saved Plays" value={savedCount?.toString() ?? "…"} />
+        <MiniStat label="Saved Services" value={savedCount?.toString() ?? "…"} />
       </div>
       <div>
         <div className="text-xs font-semibold mb-2 text-foreground-muted">Project History</div>
@@ -914,7 +914,7 @@ function SellersTable({
                   <td className="p-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-1.5 flex-wrap">
                       <Button size="sm" variant="ghost" asChild><a href={viewProfileHref(u)} target="_blank" rel="noreferrer">View</a></Button>
-                      <Button size="sm" variant="ghost" asChild><a href={viewProfileHref(u)} target="_blank" rel="noreferrer">Plays</a></Button>
+                      <Button size="sm" variant="ghost" asChild><a href={viewProfileHref(u)} target="_blank" rel="noreferrer">Services</a></Button>
                       {sellerStatus !== "approved" && <Button size="sm" onClick={() => onApprove(u)}>Approve</Button>}
                       {sellerStatus !== "rejected" && <Button size="sm" variant="outline" onClick={() => onReject(u)}>Reject</Button>}
                       <Button size="sm" variant="ghost" onClick={() => onNotify(u)}>Notify</Button>
@@ -1023,9 +1023,9 @@ function SellerDetail({
         )}
       </Section>
 
-      <Section title="Plays">
+      <Section title="Services">
         <MiniTable headers={["Title", "Status", "Price", "Projects", "Rating"]}>
-          {(gigs ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{gigs === null ? "Loading…" : "No plays."}</td></tr>}
+          {(gigs ?? []).length === 0 && <tr><td colSpan={5} className="p-3 text-center text-foreground-muted">{gigs === null ? "Loading…" : "No services."}</td></tr>}
           {(gigs ?? []).map((g) => (
             <tr key={g.id} className="border-t border-border">
               <td className="p-2">{g.title}</td>
@@ -1167,7 +1167,7 @@ function RejectSellerDialog({
 function sectionTitle(k: NavKey) {
   const m: Record<string, string> = {
     overview: "Overview", buyers: "Partners", sellers: "Experts", verifications: "Verifications",
-    orders: "Projects", projects: "Projects and Proposals", gigs: "Plays", disputes: "Disputes", reviews: "Reviews",
+    orders: "Projects", projects: "Projects and Proposals", gigs: "Services", disputes: "Disputes", reviews: "Reviews",
     revenue: "Revenue", escrow: "Escrow", payouts: "Payouts", refunds: "Refunds", withdrawals: "Withdrawals",
     river: "River Controls", "river-analytics": "River Analytics",
     categories: "Categories", announcements: "Announcements", featured: "Featured Experts",
@@ -1487,7 +1487,7 @@ function GigsPanel() {
   const cats = Array.from(new Set(rows.map(r => r.category))).filter(Boolean);
   const filtered = rows.filter(r => !q.trim() || r.title?.toLowerCase().includes(q.toLowerCase()) || r.seller?.username?.toLowerCase().includes(q.toLowerCase()));
   const setGigStatus = async (id: string, s: string) => { await supabase.from("gigs").update({ status: s as any }).eq("id", id); load(); };
-  const remove = async (id: string) => { if (!confirm("Delete play?")) return; await supabase.from("gigs").delete().eq("id", id); load(); };
+  const remove = async (id: string) => { if (!confirm("Delete service?")) return; await supabase.from("gigs").delete().eq("id", id); load(); };
   return (
     <div className="space-y-3">
       <div className="flex gap-2 flex-wrap">

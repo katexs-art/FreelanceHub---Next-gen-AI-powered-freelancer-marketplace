@@ -18,7 +18,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const sellerLinks = [
     { to: "/seller/dashboard", icon: LayoutDashboard, label: "HQ" },
-    { to: "/seller/gigs", icon: Package, label: "My plays" },
+    { to: "/seller/gigs", icon: Package, label: "My services" },
     { to: "/seller/orders", icon: ShoppingBag, label: "Projects" },
     { to: "/seller/earnings", icon: Wallet, label: "Earnings" },
     { to: "/seller/analytics", icon: BarChart3, label: "Analytics" },

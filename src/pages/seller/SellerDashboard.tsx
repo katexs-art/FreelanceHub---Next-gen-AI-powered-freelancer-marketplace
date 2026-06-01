@@ -123,7 +123,7 @@ export default function SellerDashboard() {
   const maxBucket = Math.max(1, ...trend);
 
   const cards = [
-    { icon: Package, label: "Active plays", value: stats.active_gigs },
+    { icon: Package, label: "Active services", value: stats.active_gigs },
     { icon: ShoppingBag, label: "Active projects", value: stats.active_orders },
     { icon: TrendingUp, label: "Lifetime earnings", value: `$${stats.total_earnings}` },
     { icon: Star, label: "Avg rating", value: stats.avg_rating ? stats.avg_rating.toFixed(1) : "—" },
@@ -174,7 +174,7 @@ export default function SellerDashboard() {
             <p className="text-foreground-muted mt-1 text-sm">Your level: <span className="text-foreground font-medium">{level.label}</span> · Next: {nextLevelHint(level.level)}</p>
           </div>
           {!pending && !rejected && (
-            <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a play</Button></Link>
+            <Link to="/seller/gigs/new"><Button><Plus className="h-4 w-4" /> Create a service</Button></Link>
           )}
         </div>
 
@@ -221,9 +221,9 @@ export default function SellerDashboard() {
         {!loading && stats.active_gigs === 0 && (
           <div className="rounded-xl border border-dashed border-border bg-background p-10 text-center">
             <Package className="h-8 w-8 mx-auto text-foreground-subtle mb-3" />
-            <h3 className="font-semibold">No plays yet</h3>
-            <p className="text-sm text-foreground-muted mt-1 mb-5">Create your first play and start receiving projects.</p>
-            <Link to="/seller/gigs/new"><Button>Create your first play</Button></Link>
+            <h3 className="font-semibold">No services yet</h3>
+            <p className="text-sm text-foreground-muted mt-1 mb-5">Create your first service and start receiving projects.</p>
+            <Link to="/seller/gigs/new"><Button>Create your first service</Button></Link>
           </div>
         )}
       </div>

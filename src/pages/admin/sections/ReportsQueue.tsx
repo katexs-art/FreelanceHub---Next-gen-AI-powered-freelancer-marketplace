@@ -64,7 +64,7 @@ export function ReportsQueue() {
                 {r.status === "open" && (
                   <>
                     {r.target_type === "gig" && (
-                      <Button size="sm" onClick={() => hideGig(r.target_id, r.id)}>Hide play</Button>
+                      <Button size="sm" onClick={() => hideGig(r.target_id, r.id)}>Hide service</Button>
                     )}
                     {r.target_type === "user" && (
                       <Button size="sm" onClick={() => suspendUser(r.target_id, r.id)}>Suspend user</Button>

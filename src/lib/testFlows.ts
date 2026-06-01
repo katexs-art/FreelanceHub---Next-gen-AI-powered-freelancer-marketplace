@@ -43,10 +43,10 @@ async function getOrCreateTestOrder(): Promise<string> {
 
 export const TEST_CASES: TestCase[] = [
   // BUYER FLOWS
-  { id: "b1", group: "Partner", title: "Browse loads active plays", run: async () => {
+  { id: "b1", group: "Partner", title: "Browse loads active services", run: async () => {
     const { data, error } = await supabase.from("gigs").select("id").eq("status", "active").limit(10);
     if (error) return fail(error.message);
-    return data && data.length > 0 ? ok(`${data.length} gigs`) : fail("no active plays");
+    return data && data.length > 0 ? ok(`${data.length} gigs`) : fail("no active services");
   }},
   { id: "b2", group: "Partner", title: "Search returns results", run: async () => {
     const { data, error } = await supabase.from("gigs").select("id").ilike("title", "%AI%").limit(5);
@@ -83,7 +83,7 @@ export const TEST_CASES: TestCase[] = [
     });
     return error ? fail(error.message) : ok();
   }},
-  { id: "b8", group: "Partner", title: "Create project from play", run: async () => {
+  { id: "b8", group: "Partner", title: "Create project from service", run: async () => {
     try { const id = await getOrCreateTestOrder(); return ok(id.slice(0, 8)); }
     catch (e: any) { return fail(e.message); }
   }},

@@ -25,7 +25,7 @@ const partnerFeatures = [
 const expertFeatures = [
   "Free to apply",
   "Free to create your Expert profile",
-  "Free to list up to 10 Plays",
+  "Free to list up to 10 Services",
   "Free to submit Proposals on Briefs",
   "River AI matches you to Partners automatically",
   "10 percent platform fee deducted from earnings",
@@ -313,7 +313,7 @@ export default function Pricing() {
                 topBorder="#22c55e"
                 label="For Experts"
                 heading="Earn on Katexs"
-                subtext="List your Plays, win Projects, get paid fast. Keep 90 percent of everything you earn."
+                subtext="List your Services, win Projects, get paid fast. Keep 90 percent of everything you earn."
                 fee="10%"
                 feeColor="#22c55e"
                 feeLabel="platform fee per completed Project"

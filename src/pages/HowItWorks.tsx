@@ -11,8 +11,8 @@ const scrollTo = (id: string) => (e: React.MouseEvent) => {
 };
 
 const terms = [
-  { term: "Play", was: "formerly Gig", green: false, desc: "A Play is a service an Expert offers on Katexs. Need a voice AI built? There is a Play for that. Need a GHL setup? There is a Play for that." },
-  { term: "Expert", was: "formerly Seller", green: false, desc: "An Expert is a verified professional who offers their skills on Katexs. Every Expert is manually approved by our team before they can list their Plays." },
+  { term: "Service", was: "formerly Gig", green: false, desc: "A Service is something an Expert offers on Katexs. Need a voice AI built? There is a Service for that. Need a GHL setup? There is a Service for that." },
+  { term: "Expert", was: "formerly Seller", green: false, desc: "An Expert is a verified professional who offers their skills on Katexs. Every Expert is manually approved by our team before they can list their Services." },
   { term: "Partner", was: "formerly Buyer", green: false, desc: "A Partner is anyone who hires an Expert on Katexs. Whether you need one thing done or ten things built — you are a Partner." },
   { term: "Project", was: "formerly Order", green: false, desc: "When a Partner hires an Expert and pays — that becomes a Project. Your Project is tracked, monitored, and protected from start to finish." },
   { term: "Proposal", was: "formerly Bid", green: false, desc: "When an Expert wants to work on a Brief they submit a Proposal. It includes their price, delivery time, and why they are the best person for the job." },
@@ -32,8 +32,8 @@ const partnerSteps = [
 const expertSteps = [
   { h: "Sign up as an Expert", d: "Go to katexs.com and click Join Free. Enter your name, email, and password. Select Expert when asked who you are. Verify your email.", e: "Takes 2 minutes" },
   { h: "Submit your Expert application", d: "Tell us about yourself. What are your skills? What tools do you use? What have you built before? Upload samples of your work if you have them. The more detail you give the faster you get approved.", e: "Approval within 24 hours" },
-  { h: "Get approved and set up your profile", d: "Our team reviews your application within 24 hours. Once approved you can complete your Expert profile — add your photo, write your bio, set your River Score tags, and create your Plays.", e: "One time review" },
-  { h: "Create your Plays", d: "A Play is a service you offer. Give it a title, describe exactly what you will deliver, set your price, and choose your delivery time. You can create up to 10 Plays. Example Play — I will build a GoHighLevel voice AI caller for your agency in 3 days.", e: "Be specific to win more" },
+  { h: "Get approved and set up your profile", d: "Our team reviews your application within 24 hours. Once approved you can complete your Expert profile — add your photo, write your bio, set your River Score tags, and create your Services.", e: "One time review" },
+  { h: "Create your Services", d: "A Service is what you offer. Give it a title, describe exactly what you will deliver, set your price, and choose your delivery time. You can create up to 10 Services. Example Service — I will build a GoHighLevel voice AI caller for your agency in 3 days.", e: "Be specific to win more" },
   { h: "Receive Proposals and pitch Partners", d: "Two things will happen. Partners will find your profile and message you directly. And River will match you to Partners who need your exact skills and alert you instantly. When River matches you — go pitch. Be fast. Be specific. Tell them exactly what you will deliver and why you are the best.", e: "River alerts you instantly" },
   { h: "Deliver and get paid", d: "Complete the Project on time. Submit your delivery inside the platform. The Partner has 3 days to review. Once they approve — your money transfers to your bank account or debit card the same day. No waiting. No holds. Just instant payment.", e: "Same day payout" },
 ];

@@ -457,7 +457,7 @@ export default function Services() {
       <section className="svc-section" style={{ padding: "100px 80px" }}>
         <div style={{ maxWidth: 1200, margin: "0 auto" }}>
           <div style={{ display: "flex", alignItems: "center", marginBottom: 32, gap: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Plays</h2>
+            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Services</h2>
             <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
             <Link to="/explore" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>View all →</Link>
           </div>

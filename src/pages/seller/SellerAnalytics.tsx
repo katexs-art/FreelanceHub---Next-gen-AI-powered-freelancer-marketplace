@@ -53,7 +53,7 @@ export default function SellerAnalytics() {
 
   return (
     <AppShell>
-      <SEO title="Analytics" description="Track impressions, clicks, projects and earnings across your plays." />
+      <SEO title="Analytics" description="Track impressions, clicks, projects and earnings across your services." />
       <div className="max-w-5xl">
         <h1 className="text-3xl font-bold mb-2">Analytics</h1>
         <p className="text-sm text-foreground-muted mb-8">Last 30 days</p>
@@ -90,15 +90,15 @@ export default function SellerAnalytics() {
               </ResponsiveContainer>
             </Section>
 
-            <Section title="Top plays">
+            <Section title="Top services">
               <div className="border border-border rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead className="bg-background-elevated text-foreground-muted text-xs">
-                    <tr><th className="text-left p-3">Play</th><th className="text-right p-3">Projects</th><th className="text-right p-3">Rating</th><th className="text-right p-3">Impr.</th><th className="text-right p-3">Clicks</th></tr>
+                    <tr><th className="text-left p-3">Service</th><th className="text-right p-3">Projects</th><th className="text-right p-3">Rating</th><th className="text-right p-3">Impr.</th><th className="text-right p-3">Clicks</th></tr>
                   </thead>
                   <tbody>
                     {gigs.length === 0 ? (
-                      <tr><td colSpan={5} className="p-6 text-center text-foreground-muted">No plays yet</td></tr>
+                      <tr><td colSpan={5} className="p-6 text-center text-foreground-muted">No services yet</td></tr>
                     ) : gigs.map(g => (
                       <tr key={g.id} className="border-t border-border">
                         <td className="p-3 truncate max-w-xs">{g.title}</td>

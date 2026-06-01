@@ -148,7 +148,7 @@ export default function SellerProfile() {
               <h2 className="text-xl font-bold mb-6">{name}'s gigs</h2>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {gigs.length === 0
-                  ? <p className="text-foreground-muted col-span-full">No active plays yet.</p>
+                  ? <p className="text-foreground-muted col-span-full">No active services yet.</p>
                   : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
               </div>
             </div>

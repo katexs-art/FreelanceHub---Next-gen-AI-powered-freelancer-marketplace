@@ -127,7 +127,7 @@ export default function BuyerDashboard() {
             <Link to="/buyer/orders" className="text-xs font-mono uppercase tracking-[0.14em] text-foreground-muted hover:text-foreground">View all</Link>
           </div>
           {orders.length === 0 ? (
-            <p className="text-sm text-foreground-muted">No projects yet. <Link to="/explore" className="underline">Find a play</Link>.</p>
+            <p className="text-sm text-foreground-muted">No projects yet. <Link to="/explore" className="underline">Find a service</Link>.</p>
           ) : (
             <ul className="border-hairline divide-y divide-white/[0.08]">
               {orders.map((o) => (
