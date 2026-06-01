@@ -1,54 +1,32 @@
-## Root causes
+## Root cause
 
-1. **Edge function crashing** — `stripe-payment-intent` logs show repeated `Deno.core.runMicrotasks() is not supported` event-loop errors. This comes from the `stripe@14.21.0?target=deno` ESM build. The PaymentIntent likely is created, but the response promise rejects/aborts → client sees a hang ("Pay Now stuck on processing", and earlier "no client_secret"). This is the single biggest bug.
-2. **Card fields look empty** — `PaymentElement` is mounted inside a container with `background:#F7F7F7`, but Stripe Appearance API is set to `colorBackground:#F7F7F7` + `colorText:#0A0A0A`. Inputs render but with no visible border/contrast, and there is no loading skeleton while Elements boots, so it looks blank. Also `paymentMethodOrder` toggling between `["card"]` and `["paypal"]` after Elements is mounted does not re-filter — PaymentElement is created once with the initial order.
-3. **PayPal** — Stripe PaymentElement supports PayPal automatically when enabled on the Stripe account *and* PaymentIntent is created with `payment_method_types:["card","paypal"]` (or via `automatic_payment_methods` with PayPal enabled in Dashboard) and `currency:"usd"` PayPal needs `capture_method:"automatic"` (default ok). Currently we use `automatic_payment_methods:{enabled:true}` which is fine, but PayPal returns a redirect — `confirmPayment` must allow redirect (currently `redirect:"if_required"` is OK, PayPal will redirect anyway as long as `return_url` is set, which it is).
-4. **Pay Now disabled-until-valid** — no `PaymentElement` `onChange` wiring; button is enabled as soon as Stripe loads.
-5. **No timeout** on the `stripe-payment-intent` invoke or on `confirmPayment`.
+The `stripe-payment-intent` edge function logs show:
 
-## Plan
+> `The payment method type "paypal" is invalid. Please ensure the provided type is activated in your dashboard...`
 
-### A. Fix the edge function (`supabase/functions/stripe-payment-intent/index.ts`)
-- Replace `https://esm.sh/stripe@14.21.0?target=deno` with `npm:stripe@17` (Deno-native, no microtask shim issue). Use `Stripe(key, { httpClient: Stripe.createFetchHttpClient() })` so it uses `fetch` instead of node http.
-- Keep API surface identical: returns `{ client_secret, publishable_key }`.
-- Explicitly request `payment_method_types: ["card", "paypal"]` instead of `automatic_payment_methods` so both methods are guaranteed available regardless of Stripe Dashboard auto-config.
-- Ensure all responses (including errors) include CORS headers (already do).
-- Redeploy.
+The function hardcodes `payment_method_types: ["card", "paypal"]`, but PayPal is not activated on the connected Stripe account. Stripe rejects the entire PaymentIntent creation with a 400, which is why the client sees a non-2xx response on checkout.
 
-### B. Fix `src/pages/Checkout.tsx`
+CORS, the OPTIONS handler, env var reading, the Stripe import, and detailed error messages are all already correct in the current function — those are not the problem.
 
-1. **Mounting & loading state**
-   - Render a skeleton (animated gray block at 220px) inside the payment container until `PaymentElement` fires `onReady`.
-   - Track `elementReady` state; show skeleton while false.
+## Fix
 
-2. **Valid-before-pay**
-   - Track `elementComplete` via `PaymentElement onChange={(e)=>setComplete(e.complete)}`.
-   - Disable Pay Now unless `complete && stripe && elements && !busy`.
+### `supabase/functions/stripe-payment-intent/index.ts`
+- Replace `payment_method_types: ["card", "paypal"]` with `automatic_payment_methods: { enabled: true }`. Stripe will then offer whichever methods are actually enabled in the dashboard (card always, PayPal only once the user activates it), and the PaymentIntent will succeed.
+- Keep everything else as-is (npm:stripe@17, fetch http client, CORS, OPTIONS, detailed `error.message` in the response body).
 
-3. **Method toggle**
-   - Pass `paymentMethodOrder` so PayPal or Card appears first based on `payMethod`. Re-mount PaymentElement when `payMethod` changes by keying the element: `<PaymentElement key={payMethod} ... />`. That forces fresh layout and reorders the methods correctly.
-   - Both methods are always listed in the PaymentIntent (`card`, `paypal`), so the tabs control display order, not eligibility.
+### `src/pages/Checkout.tsx`
+- The PayPal tab currently assumes PayPal is always available. Until the merchant enables it in Stripe, the PayPal tab would render an empty PaymentElement. Two reasonable options:
+  - (A) Hide the PayPal tab and only show Card.
+  - (B) Keep the tab but let Stripe's PaymentElement decide what to show; if PayPal is not enabled it simply won't render, which is confusing.
+- Recommended: (A) — hide the PayPal tab for now, keep the toggle code so it's easy to re-enable later.
 
-4. **Visible card fields**
-   - Change appearance: `colorBackground:"#FFFFFF"`, container background to `#FFFFFF`, add `border:1px solid #EBEBEB` already present — keep, but inner Stripe inputs need a white background and visible separator. Set Appearance `rules: { '.Input': { backgroundColor:'#FFFFFF', border:'1px solid #EBEBEB' } }`.
-
-5. **Pay Now timeout & errors**
-   - Wrap `stripe.confirmPayment` in `Promise.race` with a 10s timeout that rejects with `"Payment failed - please try again"`.
-   - Wrap the initial `supabase.functions.invoke("stripe-payment-intent", ...)` in the same 10s race so loading does not hang.
-   - On success without redirect (card), navigate to `/orders/:id/confirmed`. PayPal will redirect to `return_url` automatically; on return, `OrderConfirmed` page already handles it.
-
-6. **Error display**
-   - Surface friendly errors via existing red `role=alert` block and also `toast.error`.
-
-### C. No backend schema or RLS changes. No new env vars (uses existing `STRIPE_SECRET_KEY`, `STRIPE_PUBLISHABLE_KEY`).
-
-### D. Verification
-- Deploy `stripe-payment-intent`.
-- Check `edge_function_logs` — confirm no more `Deno.core.runMicrotasks` errors after a real invoke.
-- Manually walk: open checkout → card fields render with three inputs → switch to PayPal tab → PayPal button appears → click Pay → success/redirect → confirmation page.
+### Redeploy
+- Deploy `stripe-payment-intent` after the edit.
+- Verify by re-opening checkout → PaymentIntent succeeds → card fields render → Pay Now works.
 
 ## Files touched
-- `supabase/functions/stripe-payment-intent/index.ts` — switch to `npm:stripe`, explicit payment_method_types
-- `src/pages/Checkout.tsx` — skeleton, onReady, onChange/complete gating, key remount on tab change, appearance rules, 10s timeouts on invoke and confirmPayment
+- `supabase/functions/stripe-payment-intent/index.ts` — switch back to `automatic_payment_methods`
+- `src/pages/Checkout.tsx` — hide PayPal tab until enabled in Stripe
 
-No other files affected.
+## Question for you
+Do you want me to (A) hide the PayPal tab for now, or (B) leave it visible and you'll enable PayPal in your Stripe dashboard yourself? If (B), nothing changes in Checkout.tsx — only the edge function gets fixed.
