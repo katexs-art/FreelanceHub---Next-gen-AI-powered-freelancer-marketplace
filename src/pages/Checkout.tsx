@@ -589,7 +589,7 @@ export default function Checkout() {
                     <span>${total}</span>
                   </div>
 
-                  <PayBlock orderId={order.id} total={total} />
+                  <PayBlock orderId={order.id} total={total} payMethod={payMethod} />
                 </div>
               </aside>
             </div>
