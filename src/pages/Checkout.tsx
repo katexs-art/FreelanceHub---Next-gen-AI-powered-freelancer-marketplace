@@ -486,13 +486,19 @@ export default function Checkout() {
   const thumb = gig?.thumbnail_url || "/placeholder.svg";
   const sellerName = seller?.full_name || seller?.username || "Expert";
   const sellerAvatar = seller?.avatar_url || "/placeholder.svg";
+  const sellerInitials = (() => {
+    const parts = sellerName.trim().split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? "K";
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+    return (first + last).toUpperCase();
+  })();
   const amountLabel = order.gig_id ? "Selected package" : "Project amount";
 
   const sidebarBtnBg = payState?.succeeded
     ? "#15803D"
     : payState?.disabled && !payState?.busy
-    ? "#9CA3AF"
-    : "#16A34A";
+    ? "#4B5563"
+    : "#0A0A0A";
   const sidebarBtnLabel = payState?.label ?? `Pay Now — $${total}`;
 
   return (
