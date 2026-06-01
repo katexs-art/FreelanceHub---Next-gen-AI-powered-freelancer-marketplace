@@ -7,12 +7,28 @@ import {
   useElements,
   useStripe,
 } from "@stripe/react-stripe-js";
-import { ShieldCheck } from "lucide-react";
+import {
+  ShieldCheck,
+  Check,
+  Info,
+  Clock,
+  ChevronDown,
+  ChevronRight,
+  RefreshCcw,
+  Headphones,
+  Tag,
+} from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const logCheckout = (step: string, payload?: unknown) => {
   // eslint-disable-next-line no-console
@@ -43,18 +59,28 @@ interface GigInfo {
   thumbnail_url: string | null;
 }
 
+interface PayState {
+  onPay: () => void;
+  disabled: boolean;
+  busy: boolean;
+  succeeded: boolean;
+  label: string;
+}
+
 function PayBlock({
   orderId,
   total,
   payMethod,
-  onReadyChange,
+  onPayStateChange,
   onRetryInit,
+  hideInternalButton,
 }: {
   orderId: string;
   total: number;
   payMethod: "card" | "paypal";
-  onReadyChange?: (ready: boolean) => void;
+  onPayStateChange?: (state: PayState) => void;
   onRetryInit?: () => void;
+  hideInternalButton?: boolean;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -68,8 +94,7 @@ function PayBlock({
   useEffect(() => {
     setReady(false);
     setComplete(false);
-    onReadyChange?.(false);
-  }, [payMethod, onReadyChange]);
+  }, [payMethod]);
 
   const onPay = async () => {
     if (!stripe || !elements) {
@@ -128,33 +153,27 @@ function PayBlock({
   };
 
   const disabled = !stripe || !elements || busy || succeeded || !ready || !complete;
-  const bg = succeeded ? "#15803D" : disabled && !busy ? "#9CA3AF" : "#16A34A";
   const label = succeeded
     ? "✓ Payment successful"
     : busy
     ? "Processing…"
     : `Pay Now — $${total}`;
 
+  useEffect(() => {
+    onPayStateChange?.({ onPay, disabled, busy, succeeded, label });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disabled, busy, succeeded, label, stripe, elements]);
+
+  const bg = succeeded ? "#15803D" : disabled && !busy ? "#9CA3AF" : "#16A34A";
+
   return (
     <>
-      <div
-        style={{
-          background: "#FFFFFF",
-          border: "1px solid #EBEBEB",
-          borderRadius: 12,
-          padding: 16,
-          minHeight: 220,
-          marginBottom: 16,
-          position: "relative",
-        }}
-      >
+      <div className="relative rounded-[12px] border border-border bg-white p-4 min-h-[220px]">
         {!ready && (
           <div
             aria-label="Loading payment form"
+            className="absolute inset-4 rounded-lg"
             style={{
-              position: "absolute",
-              inset: 16,
-              borderRadius: 8,
               background:
                 "linear-gradient(90deg,#f3f4f6 0%,#e5e7eb 50%,#f3f4f6 100%)",
               backgroundSize: "200% 100%",
@@ -169,7 +188,6 @@ function PayBlock({
           onReady={() => {
             logCheckout("payment-element-ready", { payMethod });
             setReady(true);
-            onReadyChange?.(true);
           }}
           onChange={(e) => {
             logCheckout("payment-element-change", { complete: e.complete, type: e.value?.type });
@@ -183,42 +201,31 @@ function PayBlock({
           }}
         />
       </div>
-      <button
-        type="button"
-        onClick={onPay}
-        disabled={disabled}
-        style={{
-          width: "100%",
-          marginTop: 4,
-          background: bg,
-          color: "#FFFFFF",
-          border: "none",
-          borderRadius: 12,
-          height: 52,
-          fontSize: 16,
-          fontWeight: 600,
-          cursor: busy ? "wait" : disabled ? "not-allowed" : "pointer",
-          transition: "background 0.2s",
-          opacity: busy ? 0.85 : 1,
-        }}
-      >
-        {label}
-      </button>
+
+      {!hideInternalButton && (
+        <button
+          type="button"
+          onClick={onPay}
+          disabled={disabled}
+          className="w-full mt-3 text-white font-semibold text-base rounded-[12px] h-[52px] transition-colors"
+          style={{
+            background: bg,
+            cursor: busy ? "wait" : disabled ? "not-allowed" : "pointer",
+            opacity: busy ? 0.85 : 1,
+          }}
+        >
+          {label}
+        </button>
+      )}
+
       {errorMsg && (
         <div
           role="alert"
-          style={{
-            marginTop: 12,
-            padding: "10px 12px",
-            borderRadius: 8,
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            color: "#b91c1c",
-            fontSize: 13,
-          }}
+          className="mt-3 px-3 py-2.5 rounded-lg border text-[13px]"
+          style={{ background: "#fef2f2", borderColor: "#fecaca", color: "#b91c1c" }}
         >
-          <div style={{ marginBottom: 8 }}>{errorMsg}</div>
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="mb-2">{errorMsg}</div>
+          <div className="flex gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => {
@@ -226,17 +233,8 @@ function PayBlock({
                 onPay();
               }}
               disabled={busy || !stripe || !elements}
-              style={{
-                height: 32,
-                padding: "0 12px",
-                background: "#0A0A0A",
-                color: "#FFFFFF",
-                border: "none",
-                borderRadius: 8,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: busy ? "wait" : "pointer",
-              }}
+              className="h-8 px-3 bg-foreground text-background rounded-lg text-xs font-semibold"
+              style={{ cursor: busy ? "wait" : "pointer" }}
             >
               Retry payment
             </button>
@@ -247,17 +245,7 @@ function PayBlock({
                   setErrorMsg(null);
                   onRetryInit();
                 }}
-                style={{
-                  height: 32,
-                  padding: "0 12px",
-                  background: "#FFFFFF",
-                  color: "#0A0A0A",
-                  border: "1px solid #EBEBEB",
-                  borderRadius: 8,
-                  fontSize: 12,
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
+                className="h-8 px-3 bg-white text-foreground border border-border rounded-lg text-xs font-semibold cursor-pointer"
               >
                 Start a new payment session
               </button>
@@ -265,30 +253,6 @@ function PayBlock({
           </div>
         </div>
       )}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          gap: 6,
-          marginTop: 10,
-          fontSize: 12,
-          color: "#888",
-        }}
-      >
-        <ShieldCheck size={14} /> Safe and secure payment
-      </div>
-      <div
-        style={{
-          marginTop: 8,
-          fontSize: 11,
-          color: "#AAAAAA",
-          textAlign: "center",
-          lineHeight: 1.5,
-        }}
-      >
-        By clicking Pay Now you agree to Katexs Terms of Service and Payment Terms
-      </div>
     </>
   );
 }
@@ -307,6 +271,7 @@ export default function Checkout() {
   const [showPromo, setShowPromo] = useState(false);
   const [promo, setPromo] = useState("");
   const [payMethod, setPayMethod] = useState<"card" | "paypal">("card");
+  const [payState, setPayState] = useState<PayState | null>(null);
 
   const loadOrderAndInit = async () => {
     if (!order_id || !user) return;
@@ -377,7 +342,6 @@ export default function Checkout() {
         invokeError: piErr ? { name: piErr.name, message: piErr.message } : null,
       });
       if (piErr || !pi?.client_secret) {
-        // Bypass the SDK to capture the raw HTTP status + response body the SDK swallows.
         let rawStatus: number | null = null;
         let rawBody: string | null = null;
         try {
@@ -455,21 +419,12 @@ export default function Checkout() {
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
         <main className="flex-1 container-page py-10 text-sm">
-          <div style={{ marginBottom: 12 }}>{err ?? "Project not found"}</div>
+          <div className="mb-3">{err ?? "Project not found"}</div>
           <button
             type="button"
             onClick={loadOrderAndInit}
-            style={{
-              height: 40,
-              padding: "0 16px",
-              background: "#16A34A",
-              color: "#FFFFFF",
-              border: "none",
-              borderRadius: 10,
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
+            className="h-10 px-4 rounded-[10px] text-white font-semibold text-sm"
+            style={{ background: "#16A34A" }}
           >
             Try again
           </button>
@@ -486,13 +441,24 @@ export default function Checkout() {
   const sellerAvatar = seller?.avatar_url || "/placeholder.svg";
   const amountLabel = order.gig_id ? "Selected package" : "Project amount";
 
+  const sidebarBtnBg = payState?.succeeded
+    ? "#15803D"
+    : payState?.disabled && !payState?.busy
+    ? "#9CA3AF"
+    : "#16A34A";
+  const sidebarBtnLabel = payState?.label ?? `Pay Now — $${total}`;
+
   return (
-    <div className="min-h-screen flex flex-col" style={{ background: "#F7F7F7" }}>
+    <div className="min-h-screen flex flex-col bg-[#F7F7F7]">
       <SiteHeader />
-      <main
-        className="flex-1"
-        style={{ maxWidth: 960, margin: "0 auto", width: "100%", padding: "48px 24px" }}
-      >
+      <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-10">
+        <div className="mb-6">
+          <div className="eyebrow mb-2">Checkout</div>
+          <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+            Confirm and pay
+          </h1>
+        </div>
+
         {clientSecret && stripePromise ? (
           <Elements
             stripe={stripePromise}
@@ -503,272 +469,261 @@ export default function Checkout() {
                 variables: {
                   colorPrimary: "#0A0A0A",
                   colorText: "#0A0A0A",
-                  colorBackground: "#F7F7F7",
+                  colorBackground: "#FFFFFF",
                   borderRadius: "8px",
                   fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
                 },
               },
             }}
           >
-            <div className="checkout-grid">
-              <style>{`
-                .checkout-grid {
-                  display: grid;
-                  grid-template-columns: 65% 35%;
-                  gap: 32px;
-                  align-items: start;
-                }
-                @media (max-width: 900px) {
-                  .checkout-grid { grid-template-columns: 1fr; }
-                  .checkout-right { position: static !important; }
-                }
-              `}</style>
+            <TooltipProvider delayDuration={150}>
+              <div className="checkout-grid">
+                <style>{`
+                  .checkout-grid {
+                    display: grid;
+                    grid-template-columns: 60% 40%;
+                    gap: 32px;
+                    align-items: start;
+                  }
+                  @media (max-width: 900px) {
+                    .checkout-grid { grid-template-columns: 1fr; }
+                    .checkout-right { position: static !important; }
+                  }
+                `}</style>
 
-              {/* LEFT COLUMN */}
-              <div>
-                {/* Order summary card */}
-                <div
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #EBEBEB",
-                    borderRadius: 16,
-                    padding: 24,
-                    marginBottom: 20,
-                    display: "flex",
-                    gap: 16,
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <img
-                    src={thumb}
-                    alt={itemTitle}
-                    style={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: 8,
-                      objectFit: "cover",
-                      flexShrink: 0,
-                      background: "#F7F7F7",
-                    }}
-                  />
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: "#0A0A0A", lineHeight: 1.3 }}>
-                      {itemTitle}
+                {/* LEFT COLUMN */}
+                <div className="space-y-5">
+                  {/* Project card */}
+                  <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                    <div className="flex gap-4 items-start">
+                      <img
+                        src={thumb}
+                        alt={itemTitle}
+                        className="w-20 h-20 rounded-lg object-cover flex-shrink-0 bg-[#F7F7F7]"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className="text-[16px] font-semibold text-foreground leading-snug"
+                          style={{
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {itemTitle}
+                        </div>
+                        <div className="text-[13px] text-foreground-subtle mt-1">
+                          {itemSubtitle}
+                        </div>
+                      </div>
                     </div>
-                    <div style={{ fontSize: 13, color: "#888", marginTop: 4 }}>{itemSubtitle}</div>
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 8,
-                        marginTop: 10,
-                        fontSize: 13,
-                        color: "#555",
-                      }}
-                    >
+
+                    <div className="h-px bg-border my-5" />
+
+                    <div className="flex items-center gap-3">
                       <img
                         src={sellerAvatar}
                         alt={sellerName}
-                        style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                        }}
+                        className="w-10 h-10 rounded-full object-cover bg-[#F7F7F7]"
                       />
-                      <span>{sellerName}</span>
+                      <div className="min-w-0">
+                        <div className="text-[14px] font-medium text-foreground">
+                          {sellerName}
+                        </div>
+                        {deadline && (
+                          <div className="flex items-center gap-1.5 text-[12px] text-foreground-subtle mt-0.5">
+                            <Clock size={12} />
+                            Delivery by {deadline.toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    {deadline && (
-                      <div style={{ fontSize: 13, color: "#888", marginTop: 6 }}>
-                        Delivery by {deadline.toLocaleDateString()}
+                  </div>
+
+                  {/* Payment method card */}
+                  <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                    <h2 className="text-[15px] font-semibold text-foreground mb-4">
+                      How would you like to pay?
+                    </h2>
+
+                    <div className="flex gap-2 mb-5">
+                      {(
+                        [
+                          { id: "card", label: "Credit / Debit card" },
+                          { id: "paypal", label: "PayPal" },
+                        ] as const
+                      ).map((opt) => {
+                        const active = payMethod === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => setPayMethod(opt.id)}
+                            className="h-9 px-4 text-[13px] font-medium rounded-full transition-colors"
+                            style={{
+                              background: active ? "#0A0A0A" : "#FFFFFF",
+                              color: active ? "#FFFFFF" : "#0A0A0A",
+                              border: `1px solid ${active ? "#0A0A0A" : "#EBEBEB"}`,
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <PayBlock
+                      orderId={order.id}
+                      total={total}
+                      payMethod={payMethod}
+                      onPayStateChange={setPayState}
+                      onRetryInit={loadOrderAndInit}
+                      hideInternalButton
+                    />
+                  </div>
+
+                  {/* Promo code collapsible */}
+                  <div className="bg-white border border-border rounded-2xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setShowPromo((v) => !v)}
+                      className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#FAFAFA] transition-colors"
+                    >
+                      <span className="flex items-center gap-2 text-[14px] font-medium text-foreground">
+                        <Tag size={14} className="text-foreground-subtle" />
+                        Apply promo code
+                      </span>
+                      {showPromo ? (
+                        <ChevronDown size={16} className="text-foreground-subtle" />
+                      ) : (
+                        <ChevronRight size={16} className="text-foreground-subtle" />
+                      )}
+                    </button>
+                    {showPromo && (
+                      <div className="px-5 pb-5 pt-1 flex gap-2">
+                        <input
+                          type="text"
+                          value={promo}
+                          onChange={(e) => setPromo(e.target.value)}
+                          placeholder="Enter promo code"
+                          className="flex-1 h-11 px-3.5 rounded-[10px] border border-border bg-white text-[14px] outline-none focus:border-foreground"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toast.message("Promo codes coming soon")}
+                          className="h-11 px-5 rounded-[10px] bg-foreground text-background text-[14px] font-medium"
+                        >
+                          Apply
+                        </button>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Payment method card */}
-                <div
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #EBEBEB",
-                    borderRadius: 16,
-                    padding: 24,
-                    marginBottom: 20,
-                  }}
-                >
-                  <h2
-                    style={{
-                      fontSize: 15,
-                      fontWeight: 600,
-                      color: "#0A0A0A",
-                      marginBottom: 16,
-                    }}
-                  >
-                    Payment method
-                  </h2>
-                  <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-                    {([
-                      { id: "card", label: "Credit / Debit card" },
-                    ] as const).map((opt) => {
-                      const active = payMethod === opt.id;
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          onClick={() => setPayMethod(opt.id)}
-                          style={{
-                            flex: 1,
-                            height: 44,
-                            borderRadius: 12,
-                            border: `1px solid ${active ? "#0A0A0A" : "#EBEBEB"}`,
-                            background: active ? "#0A0A0A" : "#FFFFFF",
-                            color: active ? "#FFFFFF" : "#0A0A0A",
-                            fontSize: 14,
-                            fontWeight: 500,
-                            cursor: "pointer",
-                            transition: "all 0.15s",
-                          }}
-                        >
-                          {opt.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  <div style={{ fontSize: 13, color: "#666" }}>
-                    Enter your card details on the right to complete payment securely.
-                  </div>
-                </div>
+                {/* RIGHT COLUMN */}
+                <aside className="checkout-right sticky top-24">
+                  <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                    <h2 className="text-[16px] font-semibold text-foreground mb-5">
+                      Order summary
+                    </h2>
 
-                {/* Promo code row */}
-                <div>
-                  {!showPromo ? (
+                    <div className="flex justify-between py-1.5 text-[14px]">
+                      <span className="text-foreground-muted">{amountLabel}</span>
+                      <span className="text-foreground tabular-nums">${order.price}</span>
+                    </div>
+                    <div className="flex justify-between py-1.5 text-[14px]">
+                      <span className="text-foreground-muted flex items-center gap-1.5">
+                        Katexs service fee (5%)
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button type="button" aria-label="About the service fee" className="inline-flex">
+                              <Info size={13} className="text-foreground-subtle" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[220px] text-xs">
+                            Covers secure escrow payments, dispute protection, and 24/7 support.
+                          </TooltipContent>
+                        </Tooltip>
+                      </span>
+                      <span className="text-foreground tabular-nums">${partnerFee}</span>
+                    </div>
+
+                    <div className="h-px bg-border my-4" />
+
+                    <div className="flex justify-between items-baseline mb-5">
+                      <span className="text-[14px] font-medium text-foreground">Total</span>
+                      <span className="text-[22px] font-bold text-foreground tabular-nums">
+                        ${total}
+                      </span>
+                    </div>
+
                     <button
                       type="button"
-                      onClick={() => setShowPromo(true)}
-                      onMouseOver={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#0A0A0A")}
-                      onMouseOut={(e) => ((e.currentTarget as HTMLButtonElement).style.color = "#888")}
+                      onClick={() => payState?.onPay()}
+                      disabled={!payState || payState.disabled}
+                      className="w-full text-white font-semibold text-[15px] rounded-[12px] h-[52px] transition-colors"
                       style={{
-                        background: "transparent",
-                        border: "none",
-                        padding: 0,
-                        fontSize: 14,
-                        color: "#888",
-                        cursor: "pointer",
+                        background: sidebarBtnBg,
+                        cursor: payState?.busy
+                          ? "wait"
+                          : !payState || payState.disabled
+                          ? "not-allowed"
+                          : "pointer",
+                        opacity: payState?.busy ? 0.85 : 1,
                       }}
                     >
-                      + Apply promo code
+                      {sidebarBtnLabel}
                     </button>
-                  ) : (
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <input
-                        type="text"
-                        value={promo}
-                        onChange={(e) => setPromo(e.target.value)}
-                        placeholder="Enter promo code"
-                        style={{
-                          flex: 1,
-                          height: 44,
-                          padding: "0 14px",
-                          border: "1px solid #EBEBEB",
-                          borderRadius: 12,
-                          fontSize: 14,
-                          background: "#FFFFFF",
-                          outline: "none",
-                        }}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => toast.message("Promo codes coming soon")}
-                        style={{
-                          height: 44,
-                          padding: "0 20px",
-                          background: "#0A0A0A",
-                          color: "#FFFFFF",
-                          border: "none",
-                          borderRadius: 12,
-                          fontSize: 14,
-                          fontWeight: 500,
-                          cursor: "pointer",
-                        }}
-                      >
-                        Apply
-                      </button>
+
+                    <div className="flex items-center justify-center gap-1.5 mt-3 text-[12px] text-foreground-subtle">
+                      <ShieldCheck size={13} /> Secure 256-bit SSL encryption
                     </div>
-                  )}
-                </div>
+
+                    <div className="h-px bg-border my-4" />
+
+                    <ul className="space-y-2.5">
+                      <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
+                        <Check size={14} className="text-[#16A34A]" />
+                        3-day delivery guarantee
+                      </li>
+                      <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
+                        <Check size={14} className="text-[#16A34A]" />
+                        Money-back guarantee
+                      </li>
+                    </ul>
+
+                    <div className="mt-4 text-[11px] text-foreground-subtle text-center leading-relaxed">
+                      By clicking Pay Now you agree to Katexs Terms of Service and Payment Terms.
+                    </div>
+                  </div>
+                </aside>
               </div>
 
-              {/* RIGHT COLUMN */}
-              <aside
-                className="checkout-right"
-                style={{ position: "sticky", top: 24 }}
-              >
-                <div
-                  style={{
-                    background: "#FFFFFF",
-                    border: "1px solid #EBEBEB",
-                    borderRadius: 16,
-                    padding: 24,
-                  }}
-                >
-                  <h2
-                    style={{
-                      fontSize: 16,
-                      fontWeight: 600,
-                      color: "#0A0A0A",
-                      marginBottom: 20,
-                    }}
-                  >
-                    Order details
-                  </h2>
-                  <Row label={amountLabel} value={`$${order.price}`} />
-                  <Row label="Katexs service fee (5%)" value={`$${partnerFee}`} />
-                  <div style={{ height: 1, background: "#EBEBEB", margin: "14px 0" }} />
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      fontSize: 16,
-                      fontWeight: 700,
-                      color: "#0A0A0A",
-                      marginBottom: 20,
-                    }}
-                  >
-                    <span>Total</span>
-                    <span>${total}</span>
+              {/* Trust bar */}
+              <div className="mt-10 pt-6 border-t border-border">
+                <div className="flex flex-wrap items-center justify-center gap-8 text-[13px] text-foreground-muted">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck size={16} className="text-foreground-subtle" />
+                    Secure Payment
                   </div>
-
-                  <PayBlock
-                    orderId={order.id}
-                    total={total}
-                    payMethod={payMethod}
-                    onRetryInit={loadOrderAndInit}
-                  />
+                  <div className="flex items-center gap-2">
+                    <RefreshCcw size={16} className="text-foreground-subtle" />
+                    Money-back Guarantee
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Headphones size={16} className="text-foreground-subtle" />
+                    24/7 Support
+                  </div>
                 </div>
-              </aside>
-            </div>
+              </div>
+            </TooltipProvider>
           </Elements>
         ) : (
-          <div style={{ fontSize: 13, color: "#666" }}>Loading payment form…</div>
+          <div className="text-[13px] text-foreground-muted">Loading payment form…</div>
         )}
       </main>
       <SiteFooter />
-    </div>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        padding: "6px 0",
-        fontSize: 14,
-      }}
-    >
-      <span style={{ color: "#555" }}>{label}</span>
-      <span style={{ color: "#0A0A0A" }}>{value}</span>
     </div>
   );
 }
