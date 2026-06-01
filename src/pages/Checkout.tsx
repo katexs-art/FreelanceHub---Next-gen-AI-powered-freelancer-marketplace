@@ -539,7 +539,6 @@ export default function Checkout() {
                   <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
                     {([
                       { id: "card", label: "Credit / Debit card" },
-                      { id: "paypal", label: "PayPal" },
                     ] as const).map((opt) => {
                       const active = payMethod === opt.id;
                       return (
@@ -566,9 +565,7 @@ export default function Checkout() {
                     })}
                   </div>
                   <div style={{ fontSize: 13, color: "#666" }}>
-                    {payMethod === "card"
-                      ? "Enter your card details on the right to complete payment securely."
-                      : "Click Pay Now on the right to be redirected to PayPal."}
+                    Enter your card details on the right to complete payment securely.
                   </div>
                 </div>
 
