@@ -62,7 +62,7 @@ export function RiverCommandBar() {
     const t = setInterval(() => {
       i = (i + 1) % PLACEHOLDERS.length;
       setPlaceholder(PLACEHOLDERS[i]);
-    }, 2800);
+    }, 3000);
     return () => clearInterval(t);
   }, [focused, value]);
 
