@@ -5,10 +5,10 @@ import { SEO } from "@/components/SEO";
 import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
+import landingHero from "@/assets/landing-hero.mp4.asset.json";
 
 
-const VIDEO_URL =
-  "https://lquoahkuzqwtiihshdaf.supabase.co/storage/v1/object/public/katexs-assets/7438233-uhd_4096_2160_25fps%20(1)%20(1)%20(1).mp4";
+const VIDEO_URL = landingHero.url;
 
 const CATEGORIES = [
   { label: "Build with AI", slug: "build-with-ai", desc: "Custom AI apps, agents, automations" },
