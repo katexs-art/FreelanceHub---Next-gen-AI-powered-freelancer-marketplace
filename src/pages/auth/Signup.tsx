@@ -58,7 +58,7 @@ export default function Signup() {
       return toast.error(m);
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -75,6 +75,15 @@ export default function Signup() {
     if (error) {
       setErrorMsg(error.message);
       toast.error(error.message);
+      return;
+    }
+    // Supabase returns a user with empty `identities` when the email is already registered
+    // (anti-enumeration: no error, no email re-sent). Detect and tell the user clearly.
+    const identities = (data?.user as { identities?: unknown[] } | null)?.identities;
+    if (data?.user && Array.isArray(identities) && identities.length === 0) {
+      setErrorMsg(
+        `An account with ${form.email} already exists. Try signing in, or reset your password if you've forgotten it.`,
+      );
       return;
     }
     setSuccessEmail(form.email);
