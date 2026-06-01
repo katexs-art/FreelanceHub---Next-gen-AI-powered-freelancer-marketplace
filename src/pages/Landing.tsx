@@ -361,11 +361,9 @@ export default function Landing() {
         <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           {gigsLoading
             ? Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ background: "#1a1a1a", border: "1px solid #333", borderRadius: 16, height: 280 }} />
+                <div key={i} className="kx-shimmer" style={{ border: "1px solid #2a2a2a", borderRadius: 16, height: 280 }} />
               ))
-            : featuredGigs.length === 0
-              ? <div style={{ gridColumn: "1 / -1", color: "#888", fontSize: 14 }}>No featured services yet — check back soon.</div>
-              : featuredGigs.map((g: any) => {
+            : featuredGigs.map((g: any) => {
                   const seller = g.seller || {};
                   const sName = seller.full_name || seller.username || "Expert";
                   const sInit = sName.charAt(0).toUpperCase();
