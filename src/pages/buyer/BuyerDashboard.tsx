@@ -3,132 +3,258 @@ import { Link } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { GigCard, type GigCardData } from "@/components/marketplace/GigCard";
-import { Eyebrow, HairlineDivider } from "@/components/ui/mono";
 import { EmptyState } from "@/components/EmptyState";
-import { ClipboardList } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table";
+import {
+  ClipboardList, MessageSquare, Plus, Search, ShoppingBag, Users, Gift, Star,
+} from "lucide-react";
+import { formatDistanceToNow, format } from "date-fns";
 
 interface OrderRow {
-  id: string; order_number: string; status: string; price: number; created_at: string;
-  gigs: { title: string; thumbnail_url: string | null } | null;
+  id: string;
+  order_number: string;
+  status: string;
+  price: number;
+  created_at: string;
+  delivery_deadline: string | null;
+  seller_id: string;
+  gig_id: string | null;
+  gigs: { title: string; thumbnail_url: string | null; category: string | null } | null;
+  seller: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+}
+
+interface ExpertRec {
+  id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+  primary_category: string | null;
+  average_rating: number | null;
+  starting_price: number | null;
+}
+
+interface ConvRow {
+  id: string;
+  last_message_preview: string | null;
+  last_message_at: string;
+  other: { full_name: string | null; username: string | null; avatar_url: string | null } | null;
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  pending_payment: "Pending Payment",
+  in_progress: "In Progress",
+  delivered: "Delivered",
+  revision_requested: "Revision",
+  completed: "Completed",
+  cancelled: "Cancelled",
+  refunded: "Refunded",
+  disputed: "Disputed",
+};
+
+const statusVariant = (s: string): "default" | "success" | "outline" | "destructive" => {
+  if (s === "completed") return "success";
+  if (s === "cancelled" || s === "refunded" || s === "disputed") return "destructive";
+  if (s === "pending_payment" || s === "revision_requested") return "outline";
+  return "default";
+};
+
+function Avatar({ url, name, size = 32 }: { url?: string | null; name?: string | null; size?: number }) {
+  const initial = (name?.[0] ?? "?").toUpperCase();
+  return url ? (
+    <img src={url} alt="" className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />
+  ) : (
+    <div
+      className="rounded-full bg-white/[0.06] border border-white/10 flex items-center justify-center text-xs font-medium shrink-0"
+      style={{ width: size, height: size }}
+    >
+      {initial}
+    </div>
+  );
 }
 
 export default function BuyerDashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [orders, setOrders] = useState<OrderRow[]>([]);
-  const [saved, setSaved] = useState<GigCardData[]>([]);
-  const [recs, setRecs] = useState<GigCardData[]>([]);
-  const [personalized, setPersonalized] = useState(false);
-  const [stats, setStats] = useState({ active: 0, completed: 0, spent: 0 });
+  const [recs, setRecs] = useState<ExpertRec[]>([]);
+  const [convs, setConvs] = useState<ConvRow[]>([]);
+  const [stats, setStats] = useState({ active: 0, spent: 0, experts: 0, messages: 0 });
+
+  const firstName = (profile?.full_name ?? user?.email ?? "there").split(" ")[0].split("@")[0];
+  const today = format(new Date(), "EEEE, MMMM d");
 
   useEffect(() => {
     if (!user) return;
     (async () => {
-      const { data: ord } = await supabase.from("orders")
-        .select("id, order_number, status, price, created_at, plays:gig_id(title, thumbnail_url)")
-        .eq("buyer_id", user.id).order("created_at", { ascending: false }).limit(8);
-      const rows = (ord ?? []) as any as OrderRow[];
-      setOrders(rows);
+      // Orders + joined gig/seller
+      const { data: ord } = await supabase
+        .from("orders")
+        .select(
+          "id, order_number, status, price, created_at, delivery_deadline, seller_id, gig_id, gigs:gig_id(title, thumbnail_url, category)",
+        )
+        .eq("buyer_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
 
-      const { data: all } = await supabase.from("orders")
-        .select("status, price").eq("buyer_id", user.id);
-      const a = (all ?? []) as Array<{ status: string; price: number }>;
-      setStats({
-        active: a.filter((o) => !["completed","cancelled","refunded"].includes(o.status)).length,
-        completed: a.filter((o) => o.status === "completed").length,
-        spent: a.filter((o) => o.status === "completed").reduce((s, o) => s + (o.price ?? 0), 0),
-      });
-
-      const { data: sg } = await supabase.from("saved_gigs")
-        .select("gigs:gig_id(id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id)")
-        .eq("user_id", user.id).limit(4);
-      const sgGigs = ((sg ?? []) as any[]).map((r) => r.gigs).filter(Boolean);
-      const ids = [...new Set(sgGigs.map((g) => g.seller_id))];
-      const { data: sellers } = ids.length
-        ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
+      const rows = (ord ?? []) as any[];
+      const sellerIds = [...new Set(rows.map((r) => r.seller_id))];
+      const { data: sellers } = sellerIds.length
+        ? await supabase
+            .from("profiles")
+            .select("id, full_name, username, avatar_url")
+            .in("id", sellerIds)
         : { data: [] as any };
-      const byId = new Map((sellers ?? []).map((s: any) => [s.id, s]));
-      setSaved(sgGigs.map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null })));
+      const sellerMap = new Map((sellers ?? []).map((s: any) => [s.id, s]));
+      const enriched: OrderRow[] = rows.map((r) => ({ ...r, seller: sellerMap.get(r.seller_id) ?? null }));
+      setOrders(enriched);
 
-      // --- Personalized recommendations ---
-      // Signal 1: categories from gigs the buyer has ordered
-      const { data: orderedGigs } = await supabase.from("orders")
-        .select("gig_id, plays:gig_id(category)").eq("buyer_id", user.id);
-      const catSet = new Set<string>();
-      ((orderedGigs ?? []) as any[]).forEach((o) => { if (o.gigs?.category) catSet.add(o.gigs.category); });
+      // Stats
+      const { data: all } = await supabase
+        .from("orders")
+        .select("status, price, seller_id")
+        .eq("buyer_id", user.id);
+      const a = (all ?? []) as Array<{ status: string; price: number; seller_id: string }>;
+      const activeStatuses = ["in_progress", "delivered", "revision_requested", "pending_payment"];
+      const completedOrPaid = a.filter((o) => !["pending_payment", "cancelled", "refunded"].includes(o.status));
 
-      // Signal 2: AI search history (suggested categories + clicked gigs)
-      const { data: aiSessions } = await supabase.from("ai_search_sessions")
-        .select("suggested_categories, clicked_gig_id")
-        .eq("user_id", user.id).order("created_at", { ascending: false }).limit(20);
-      const excludeGigIds = new Set<string>();
-      ((aiSessions ?? []) as any[]).forEach((s) => {
-        (s.suggested_categories ?? []).forEach((c: string) => c && catSet.add(c));
+      // Unread messages
+      const { count: msgCount } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", user.id)
+        .eq("is_read", false);
+
+      setStats({
+        active: a.filter((o) => activeStatuses.includes(o.status)).length,
+        spent: completedOrPaid.reduce((s, o) => s + (o.price ?? 0), 0),
+        experts: new Set(completedOrPaid.map((o) => o.seller_id)).size,
+        messages: msgCount ?? 0,
       });
-      ((orderedGigs ?? []) as any[]).forEach((o) => o.gig_id && excludeGigIds.add(o.gig_id));
 
-      const cats = [...catSet];
-      let recQuery = supabase.from("gigs")
-        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id,category")
-        .eq("status", "active");
-      if (cats.length > 0) recQuery = recQuery.in("category", cats);
-      const { data: recRaw } = await recQuery
+      // Recent conversations
+      const { data: cv } = await supabase
+        .from("conversations")
+        .select("id, last_message_preview, last_message_at, participant_one, participant_two")
+        .or(`participant_one.eq.${user.id},participant_two.eq.${user.id}`)
+        .order("last_message_at", { ascending: false })
+        .limit(3);
+      const cvRows = (cv ?? []) as any[];
+      const otherIds = cvRows.map((c) => (c.participant_one === user.id ? c.participant_two : c.participant_one));
+      const { data: others } = otherIds.length
+        ? await supabase.from("profiles").select("id, full_name, username, avatar_url").in("id", otherIds)
+        : { data: [] as any };
+      const otherMap = new Map((others ?? []).map((p: any) => [p.id, p]));
+      setConvs(
+        cvRows.map((c) => ({
+          id: c.id,
+          last_message_preview: c.last_message_preview,
+          last_message_at: c.last_message_at,
+          other: (otherMap.get(c.participant_one === user.id ? c.participant_two : c.participant_one) ?? null) as ConvRow["other"],
+        })) as ConvRow[],
+      );
+
+      // Recommended experts: based on categories from past orders, fallback to top rated
+      const cats = [
+        ...new Set(rows.map((r) => r.gigs?.category).filter(Boolean)),
+      ] as string[];
+      let expertQuery = supabase
+        .from("profiles")
+        .select("id, full_name, username, avatar_url, primary_category, average_rating")
+        .eq("role", "seller")
+        .eq("seller_status", "approved")
+        .not("average_rating", "is", null)
         .order("average_rating", { ascending: false })
-        .order("total_orders", { ascending: false })
         .limit(12);
-
-      let rec = ((recRaw ?? []) as any[]).filter((g) => !excludeGigIds.has(g.id));
-      // Fallback to popular gigs if personalization yields too few
-      if (rec.length < 4) {
-        const { data: popRaw } = await supabase.from("gigs")
-          .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id,category")
-          .eq("status", "active").order("total_orders", { ascending: false }).limit(12);
-        const seen = new Set(rec.map((g) => g.id));
-        ((popRaw ?? []) as any[]).forEach((g) => {
-          if (!seen.has(g.id) && !excludeGigIds.has(g.id) && rec.length < 4) { rec.push(g); seen.add(g.id); }
+      if (cats.length) expertQuery = expertQuery.in("primary_category", cats);
+      const { data: ex } = await expertQuery;
+      let experts = (ex ?? []) as any[];
+      if (experts.length < 4) {
+        const { data: top } = await supabase
+          .from("profiles")
+          .select("id, full_name, username, avatar_url, primary_category, average_rating")
+          .eq("role", "seller")
+          .eq("seller_status", "approved")
+          .order("average_rating", { ascending: false, nullsFirst: false })
+          .limit(8);
+        const seen = new Set(experts.map((e) => e.id));
+        (top ?? []).forEach((e: any) => {
+          if (!seen.has(e.id) && experts.length < 4) { experts.push(e); seen.add(e.id); }
         });
       }
-      rec = rec.slice(0, 4);
+      experts = experts.slice(0, 4);
 
-      const rIds = [...new Set(rec.map((g) => g.seller_id))];
-      const { data: rs } = rIds.length
-        ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", rIds)
+      // Starting price per expert
+      const expIds = experts.map((e) => e.id);
+      const { data: gigs } = expIds.length
+        ? await supabase
+            .from("gigs")
+            .select("seller_id, starting_price")
+            .in("seller_id", expIds)
+            .eq("status", "active")
         : { data: [] as any };
-      const rById = new Map((rs ?? []).map((s: any) => [s.id, s]));
-      setRecs(rec.map((g: any) => ({ ...g, seller: rById.get(g.seller_id) ?? null })));
-      setPersonalized(cats.length > 0);
+      const priceMap = new Map<string, number>();
+      (gigs ?? []).forEach((g: any) => {
+        const cur = priceMap.get(g.seller_id);
+        if (cur === undefined || g.starting_price < cur) priceMap.set(g.seller_id, g.starting_price);
+      });
+      setRecs(experts.map((e) => ({ ...e, starting_price: priceMap.get(e.id) ?? null })));
     })();
   }, [user?.id]);
 
+  const activeOrders = orders.filter((o) =>
+    ["in_progress", "delivered", "revision_requested", "pending_payment"].includes(o.status),
+  );
+
   return (
     <AppShell>
-      <div className="max-w-6xl space-y-10">
-        <div>
-          <Eyebrow>Partner</Eyebrow>
-          <h1 className="display-md mt-2">Welcome back</h1>
-        </div>
+      <div className="max-w-6xl mx-auto space-y-10">
+        {/* Welcome header */}
+        <header>
+          <h1 className="text-3xl md:text-4xl font-semibold tracking-tight">
+            Welcome back, {firstName}
+          </h1>
+          <p className="text-foreground-muted mt-1 text-sm">{today}</p>
 
-        <div className="grid grid-cols-3 border-hairline divide-x divide-white/[0.08]">
-          <div className="p-6">
-            <Eyebrow className="text-primary">Active</Eyebrow>
-            <div className="mt-2 font-mono tabular-nums text-3xl text-primary">{stats.active}</div>
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              { label: "Active Projects", value: stats.active },
+              { label: "Total Spent", value: `$${stats.spent.toLocaleString()}` },
+              { label: "Experts Hired", value: stats.experts },
+              { label: "Unread Messages", value: stats.messages },
+            ].map((s) => (
+              <div key={s.label} className="rounded-2xl border border-white/[0.08] bg-background-subtle p-4">
+                <div className="text-xs uppercase tracking-wider text-foreground-muted">{s.label}</div>
+                <div className="mt-2 text-2xl font-semibold tabular-nums">{s.value}</div>
+              </div>
+            ))}
           </div>
-          <div className="p-6">
-            <Eyebrow className="text-primary">Completed</Eyebrow>
-            <div className="mt-2 font-mono tabular-nums text-3xl text-primary">{stats.completed}</div>
-          </div>
-          <div className="p-6">
-            <Eyebrow className="text-primary">Lifetime spend</Eyebrow>
-            <div className="mt-2 font-mono tabular-nums text-3xl text-primary">${stats.spent}</div>
-          </div>
-        </div>
+        </header>
 
+        {/* Quick actions */}
+        <section className="flex flex-wrap gap-2">
+          <Link to="/post-job"><Button variant="green"><Plus /> Post a Project</Button></Link>
+          <Link to="/services"><Button variant="outline"><Search /> Find an Expert</Button></Link>
+          <Link to="/buyer/orders"><Button variant="outline"><ShoppingBag /> View Orders</Button></Link>
+          <Button variant="ghost" disabled className="opacity-70">
+            <Gift /> Refer a Friend
+            <span className="ml-1 text-[10px] uppercase tracking-wider rounded-full border border-white/15 px-2 py-0.5">
+              Soon
+            </span>
+          </Button>
+        </section>
+
+        {/* Active projects */}
         <section>
           <div className="flex items-end justify-between mb-4">
-            <Eyebrow>Recent projects</Eyebrow>
-            <Link to="/buyer/orders" className="text-xs font-mono uppercase tracking-[0.14em] text-foreground-muted hover:text-foreground">View all</Link>
+            <h2 className="text-lg font-semibold">Active projects</h2>
+            <Link to="/buyer/orders" className="text-xs text-foreground-muted hover:text-foreground">
+              View all
+            </Link>
           </div>
-          {orders.length === 0 ? (
+          {activeOrders.length === 0 ? (
             <EmptyState
               icon={ClipboardList}
               title="No active projects"
@@ -137,43 +263,173 @@ export default function BuyerDashboard() {
               secondaryAction={{ label: "Find an Expert", to: "/services", variant: "outline" }}
             />
           ) : (
-            <ul className="border-hairline divide-y divide-white/[0.08]">
-              {orders.map((o) => (
-                <li key={o.id}>
-                  <Link to={`/orders/${o.id}`} className="flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors">
-                    <div className="w-12 h-12 bg-background-elevated overflow-hidden shrink-0 border-hairline">
-                      {o.gigs?.thumbnail_url && <img src={o.gigs.thumbnail_url} alt="" className="w-full h-full object-cover" />}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {activeOrders.slice(0, 4).map((o) => {
+                const sellerName = o.seller?.full_name ?? o.seller?.username ?? "Expert";
+                return (
+                  <div key={o.id} className="rounded-2xl border border-white/[0.08] bg-background-subtle p-5 flex flex-col gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="text-xs font-mono uppercase tracking-wider text-foreground-muted">{o.order_number}</div>
+                        <div className="mt-1 font-medium truncate">{o.gigs?.title ?? "Untitled project"}</div>
+                      </div>
+                      <Badge variant={statusVariant(o.status)}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs font-mono uppercase tracking-[0.14em] text-foreground-muted">{o.order_number}</div>
-                      <div className="text-sm truncate">{o.gigs?.title ?? "—"}</div>
+                    <div className="flex items-center gap-2">
+                      <Avatar url={o.seller?.avatar_url} name={sellerName} size={28} />
+                      <span className="text-sm text-foreground-muted truncate">{sellerName}</span>
                     </div>
-                    <span className="mono-tag">{o.status.replace(/_/g," ")}</span>
-                    <div className="font-mono text-sm tabular">${o.price}</div>
-                  </Link>
-                </li>
-              ))}
+                    <div className="flex items-center justify-between text-xs text-foreground-muted">
+                      <span>
+                        {o.delivery_deadline
+                          ? `Due ${formatDistanceToNow(new Date(o.delivery_deadline), { addSuffix: true })}`
+                          : "No deadline"}
+                      </span>
+                      <span className="font-mono tabular-nums text-foreground">${o.price}</span>
+                    </div>
+                    <Link to={`/orders/${o.id}`} className="mt-auto">
+                      <Button variant="outline" size="sm" className="w-full">View Project</Button>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Recommended experts */}
+        <section>
+          <h2 className="text-lg font-semibold mb-4">Recommended experts</h2>
+          {recs.length === 0 ? (
+            <EmptyState icon={Users} title="No experts to recommend yet" message="Place your first order to get personalized recommendations." variant="plain" />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {recs.map((e) => {
+                const name = e.full_name ?? e.username ?? "Expert";
+                return (
+                  <div key={e.id} className="rounded-2xl border border-white/[0.08] bg-background-subtle p-5 flex flex-col items-center text-center gap-2">
+                    <Avatar url={e.avatar_url} name={name} size={56} />
+                    <div className="font-medium truncate w-full">{name}</div>
+                    <div className="text-xs text-foreground-muted truncate w-full">
+                      {e.primary_category ?? "Specialist"}
+                    </div>
+                    <div className="flex items-center gap-1 text-xs">
+                      <Star size={12} className="fill-foreground text-foreground" />
+                      <span className="tabular-nums">{(e.average_rating ?? 0).toFixed(1)}</span>
+                    </div>
+                    {e.starting_price != null && (
+                      <div className="text-xs text-foreground-muted">From ${e.starting_price}</div>
+                    )}
+                    <Link to={`/u/${e.username ?? e.id}`} className="w-full mt-2">
+                      <Button variant="outline" size="sm" className="w-full">View Profile</Button>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Recent messages */}
+        <section>
+          <div className="flex items-end justify-between mb-4">
+            <h2 className="text-lg font-semibold">Recent messages</h2>
+            <Link to="/inbox" className="text-xs text-foreground-muted hover:text-foreground">
+              View all messages
+            </Link>
+          </div>
+          {convs.length === 0 ? (
+            <EmptyState
+              icon={MessageSquare}
+              title="No conversations yet"
+              message="Reach out to an expert to start a conversation."
+              action={{ label: "Find an Expert", to: "/services" }}
+            />
+          ) : (
+            <ul className="rounded-2xl border border-white/[0.08] bg-background-subtle divide-y divide-white/[0.06]">
+              {convs.map((c) => {
+                const name = c.other?.full_name ?? c.other?.username ?? "Conversation";
+                return (
+                  <li key={c.id}>
+                    <Link to={`/inbox?c=${c.id}`} className="flex items-center gap-3 p-4 hover:bg-white/[0.03] transition-colors">
+                      <Avatar url={c.other?.avatar_url} name={name} size={40} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="font-medium truncate">{name}</div>
+                          <div className="text-xs text-foreground-muted shrink-0">
+                            {formatDistanceToNow(new Date(c.last_message_at), { addSuffix: true })}
+                          </div>
+                        </div>
+                        <div className="text-sm text-foreground-muted truncate">
+                          {c.last_message_preview ?? "—"}
+                        </div>
+                      </div>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </section>
 
-        {saved.length > 0 && (
-          <section>
-            <Eyebrow className="mb-4">Saved</Eyebrow>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {saved.map((g) => <GigCard key={g.id} gig={g} />)}
-            </div>
-          </section>
-        )}
-
+        {/* Recent orders */}
         <section>
-          <Eyebrow className="mb-4">{personalized ? "Recommended for you" : "Recommended"}</Eyebrow>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {recs.map((g) => <GigCard key={g.id} gig={g} />)}
-          </div>
+          <h2 className="text-lg font-semibold mb-4">Recent orders</h2>
+          {orders.length === 0 ? (
+            <EmptyState
+              icon={ShoppingBag}
+              title="No orders yet"
+              message="Browse our catalog of experts and place your first order."
+              action={{ label: "Browse Experts", to: "/services" }}
+              variant="plain"
+            />
+          ) : (
+            <div className="rounded-2xl border border-white/[0.08] bg-background-subtle overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-white/[0.08] hover:bg-transparent">
+                    <TableHead>Order #</TableHead>
+                    <TableHead>Expert</TableHead>
+                    <TableHead className="hidden md:table-cell">Service</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden sm:table-cell">Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orders.slice(0, 8).map((o) => {
+                    const sellerName = o.seller?.full_name ?? o.seller?.username ?? "Expert";
+                    return (
+                      <TableRow
+                        key={o.id}
+                        className="cursor-pointer border-white/[0.06]"
+                        onClick={() => (window.location.href = `/orders/${o.id}`)}
+                      >
+                        <TableCell className="font-mono text-xs">{o.order_number}</TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Avatar url={o.seller?.avatar_url} name={sellerName} size={24} />
+                            <span className="truncate max-w-[120px]">{sellerName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell max-w-[240px] truncate">
+                          {o.gigs?.title ?? "—"}
+                        </TableCell>
+                        <TableCell className="font-mono tabular-nums">${o.price}</TableCell>
+                        <TableCell>
+                          <Badge variant={statusVariant(o.status)}>{STATUS_LABEL[o.status] ?? o.status}</Badge>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell text-foreground-muted text-xs">
+                          {format(new Date(o.created_at), "MMM d, yyyy")}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </section>
-
-        <HairlineDivider />
       </div>
     </AppShell>
   );
