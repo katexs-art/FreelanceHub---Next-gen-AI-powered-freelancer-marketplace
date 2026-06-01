@@ -191,24 +191,34 @@ export function RiverCommandBar() {
     <div style={{ maxWidth: 820, margin: "0 auto", width: "100%" }}>
       <style>{`
         @keyframes riverGlow {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(127,119,221,0.6), 0 0 30px rgba(127,119,221,0.35), 0 0 60px rgba(127,119,221,0.15); }
-          50% { box-shadow: 0 0 0 1px rgba(127,119,221,0.9), 0 0 45px rgba(127,119,221,0.5), 0 0 80px rgba(127,119,221,0.2); }
+          0%, 100% { box-shadow: 0 0 0 1px rgba(22,163,74,0.55), 0 0 30px rgba(22,163,74,0.3), 0 0 60px rgba(22,163,74,0.12); }
+          50% { box-shadow: 0 0 0 1px rgba(22,163,74,0.9), 0 0 45px rgba(22,163,74,0.5), 0 0 80px rgba(22,163,74,0.2); }
         }
         @keyframes riverPulse {
           0%, 100% { transform: scale(1); opacity: 1; }
           50% { transform: scale(1.08); opacity: 0.85; }
         }
+        @keyframes riverRingPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.55); }
+          70% { box-shadow: 0 0 0 8px rgba(22,163,74,0); }
+        }
+        @keyframes riverFadeIn {
+          0% { opacity: 0; transform: translateY(6px); }
+          100% { opacity: 1; transform: translateY(0); }
+        }
         .river-bar { transition: border-color .25s ease, box-shadow .3s ease, background .25s ease; }
-        .river-bar--focused { animation: riverGlow 2.6s ease-in-out infinite; border-color: rgba(127,119,221,0.7) !important; }
-        .river-r-btn { transition: transform .2s ease, background .2s ease; }
-        .river-r-btn:hover { transform: scale(1.05); }
+        .river-bar--focused { animation: riverGlow 2.6s ease-in-out infinite; border-color: rgba(22,163,74,0.7) !important; }
+        .river-r-logo { animation: riverRingPulse 2.2s ease-out infinite; }
+        .river-ask-btn { transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
+        .river-ask-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(22,163,74,0.35); }
         .river-chip { transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease; }
-        .river-chip:hover { background: rgba(127,119,221,0.1) !important; border-color: rgba(127,119,221,0.6) !important; color: #fff !important; transform: translateY(-1px); }
+        .river-chip:hover { background: rgba(22,163,74,0.1) !important; border-color: rgba(22,163,74,0.6) !important; color: #fff !important; transform: translateY(-1px); }
         .river-mic--on { animation: riverPulse 1.2s ease-in-out infinite; color: #ef4444 !important; }
+        .river-card-in { animation: riverFadeIn .45s ease-out both; }
       `}</style>
 
       <div style={{ position: "absolute", marginTop: -28, display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 6, height: 6, borderRadius: 999, background: "#10b981", animation: "riverPulse 2s ease-in-out infinite" }} />
+        <span style={{ width: 6, height: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 2s ease-in-out infinite" }} />
         <span style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>
           Powered by River AI
         </span>
@@ -222,21 +232,28 @@ export function RiverCommandBar() {
             background: "#0a0a0a",
             border: "1px solid #1f1f1f",
             borderRadius: 999,
-            padding: "6px 6px 6px 16px",
+            padding: "6px 8px 6px 8px",
           }}
         >
-          <button
-            type="button"
-            onClick={toggleMic}
-            aria-label={listening ? "Stop voice input" : "Start voice input"}
-            className={listening ? "river-mic--on" : ""}
+          {/* Left: River R logo with green pulse */}
+          <div
+            className="river-r-logo"
+            aria-hidden="true"
             style={{
-              background: "transparent", border: "none", cursor: "pointer",
-              color: "#888", padding: 8, display: "flex", alignItems: "center", justifyContent: "center",
+              height: 40, width: 40, borderRadius: 999,
+              background: "#0a0a0a", border: "1px solid #1f1f1f",
+              color: "#fff", display: "grid", placeItems: "center",
+              fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 16,
+              position: "relative", flexShrink: 0,
             }}
           >
-            {listening ? <MicOff size={18} /> : <Mic size={18} />}
-          </button>
+            R
+            <span style={{
+              position: "absolute", top: 2, right: 2, height: 8, width: 8, borderRadius: 999,
+              background: "#16A34A", boxShadow: "0 0 0 2px #0a0a0a",
+              animation: "riverPulse 1.6s ease-in-out infinite",
+            }} />
+          </div>
 
           <input
             value={value}
@@ -246,28 +263,47 @@ export function RiverCommandBar() {
             placeholder={placeholder}
             style={{
               flex: 1, background: "transparent", border: "none", outline: "none",
-              color: "#fff", fontSize: 15, padding: "14px 4px",
+              color: "#fff", fontSize: 15, padding: "14px 6px",
             }}
           />
 
+          {/* Right: mic icon */}
           <button
-            type="submit"
-            disabled={loading || value.trim().length < 3}
-            aria-label="Ask River"
-            className="river-r-btn"
+            type="button"
+            onClick={toggleMic}
+            aria-label={listening ? "Stop voice input" : "Start voice input"}
+            className={listening ? "river-mic--on" : ""}
             style={{
-              height: 44, width: 44, borderRadius: 999,
-              background: loading || value.trim().length < 3 ? "#1f1f1f" : "#7F77DD",
-              color: "#fff", border: "none", cursor: loading ? "default" : "pointer",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 16,
+              background: "transparent", border: "none", cursor: "pointer",
+              color: "#888", padding: 8, display: "flex", alignItems: "center", justifyContent: "center",
               flexShrink: 0,
             }}
           >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : <span>R</span>}
+            {listening ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
+
+          {/* Right: Ask River button */}
+          <button
+            type="submit"
+            disabled={loading || value.trim().length < 3}
+            className="river-ask-btn"
+            style={{
+              height: 44, borderRadius: 999, padding: "0 18px",
+              background: loading || value.trim().length < 3 ? "#1f1f1f" : "#16A34A",
+              color: "#fff", border: "none",
+              cursor: loading || value.trim().length < 3 ? "default" : "pointer",
+              display: "inline-flex", alignItems: "center", gap: 8,
+              fontSize: 13, fontWeight: 700, letterSpacing: "0.01em",
+              flexShrink: 0,
+            }}
+          >
+            {loading ? <Loader2 size={16} className="animate-spin" /> : (
+              <>Ask River <span aria-hidden="true">→</span></>
+            )}
           </button>
         </div>
       </form>
+
 
       {/* Quick category chips */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 20 }}>
