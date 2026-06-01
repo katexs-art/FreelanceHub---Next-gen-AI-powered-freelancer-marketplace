@@ -1,50 +1,23 @@
-## Diagnosis
+## Problem
 
-The function code is correct:
-- Raw body via `req.text()` ✓
-- `constructEventAsync` with `SubtleCryptoProvider` ✓
-- Reads `STRIPE_WEBHOOK_SECRET` ✓
-- `verify_jwt = false` ✓
+Buyers see `orders_buyer_id_fkey` violation when clicking Continue. The `orders.buyer_id` has a foreign key to `public.profiles(id)`. Investigation shows:
 
-Stripe itself is rejecting with `invalid signature`, which means **the `STRIPE_WEBHOOK_SECRET` stored in Lovable Cloud does not match the signing secret of the endpoint Stripe is calling.**
+- The `on_auth_user_created` trigger on `auth.users` already exists and runs `handle_new_user()` (which inserts into `profiles` with `ON CONFLICT DO NOTHING`).
+- However, **2 existing auth users have no profile row** — including `kdh@katexs.com` (the buyer hitting the error) and `admin@katexs.com`. These accounts predate or skipped the trigger, so any order they try to create fails the FK.
+- Order creation already uses `auth.uid()` correctly (via the `create_gig_order` RPC + Checkout page), so the buyer ID source is fine — the issue is purely the missing profile row.
 
-Two clues from your screenshot confirm this:
+## Fix
 
-1. You have **two webhook endpoints** registered in Stripe:
-   - `https://lquoahkuzqwtiihshdaf.supabase.co/...` → 404 (old/dead project)
-   - `https://nswgubxabcjyfsgbiicz.supabase.co/...` → 400 invalid signature (current project)
-   Each Stripe endpoint has its **own** signing secret (`whsec_...`). The secret currently stored in Lovable was almost certainly copied from the old endpoint (or a different one), so the new endpoint's signatures never verify.
+**One migration that:**
 
-2. The failing event is `account.updated` from a Connect account (`acct_1RdZfwG3VPLjdDVY`, `livemode: true`). That means this is a **Connect** webhook (created under "Connect applications" in Stripe), which has a *separate* signing secret from your normal account webhooks. If you copied a non-Connect `whsec_...`, every Connect event will fail signature verification.
+1. **Backfills missing profiles** for every `auth.users` row that lacks one, using their email + metadata, matching the logic in `handle_new_user()`.
+2. **Re-asserts the trigger** (`DROP TRIGGER IF EXISTS` + `CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users ... EXECUTE FUNCTION public.handle_new_user()`) so we're certain it's wired up.
+3. **Hardens `handle_new_user()`** to never block signup: wrap the insert in an exception handler that logs but doesn't raise, so a future edge case (e.g. unique-username clash) can't leave an auth user orphaned again.
 
-## Fix (no code changes needed)
+No code changes needed — order creation already pulls `buyer_id` from `auth.uid()` server-side in the `create_gig_order` SECURITY DEFINER function.
 
-### Step 1 — Clean up the dead endpoint in Stripe
-In Stripe Dashboard → Developers → Webhooks, **delete** the endpoint pointing to `lquoahkuzqwtiihshdaf.supabase.co`. That's an old project and is the source of the 404s.
+## Verification
 
-### Step 2 — Grab the correct signing secret
-In Stripe Dashboard, open the endpoint pointing to:
-
-```
-https://nswgubxabcjyfsgbiicz.supabase.co/functions/v1/stripe-webhook
-```
-
-Click **"Reveal" / "Signing secret"** → copy the value (starts with `whsec_`).
-
-Important: if this endpoint is registered under **Connect → Webhooks** (because it receives events like `account.updated`), use that endpoint's signing secret — not the one from a standard account-level endpoint.
-
-### Step 3 — Update the secret in Lovable Cloud
-I'll call `update_secret` for `STRIPE_WEBHOOK_SECRET` so you can paste the fresh `whsec_...` into a secure form. No new code, no redeploy needed — the edge function reads the env var on each invocation.
-
-### Step 4 — Verify
-- In Stripe, click **"Resend"** on one of the failed 400 events.
-- Expected: `200 OK` in Stripe and a clean `received: true` log on our side.
-- I'll tail `stripe-webhook` logs to confirm.
-
-## Optional follow-up
-
-If you actually want **both** standard *and* Connect events flowing into this same function, Stripe gives you two different `whsec_` values (one per endpoint). The function can only verify against one secret at a time. Options:
-- (A) Keep only the Connect endpoint (recommended if you only need Connect events like `account.updated`, `payout.*`, etc.).
-- (B) Register the function URL twice — once as a standard endpoint, once as a Connect endpoint — and I'll update the function to accept either secret (`STRIPE_WEBHOOK_SECRET` + `STRIPE_CONNECT_WEBHOOK_SECRET`, try each in turn).
-
-Tell me which one applies and I'll wire it up after you paste the secret.
+1. Re-run the missing-profiles query → expect 0 rows.
+2. Sign in as `kdh@katexs.com`, open a gig, click Continue → order should be created and route to `/checkout/:id` without FK error.
+3. Complete a test payment end-to-end to confirm `stripe-payment-intent` → checkout → `orders` flow works.
