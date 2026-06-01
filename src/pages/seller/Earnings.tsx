@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { PayoutMethodCard } from "@/components/marketplace/PayoutMethodCard";
 import { StripeConnectCard } from "@/components/marketplace/StripeConnectCard";
+import { EmptyState } from "@/components/EmptyState";
 
 interface Acct {
   available_balance: number; pending_balance: number; lifetime_earnings: number;
