@@ -15,6 +15,9 @@ export interface Profile {
   bio: string | null;
   seller_status?: string | null;
   rejection_reason?: string | null;
+  is_online?: boolean | null;
+  response_rate?: number | null;
+  response_time_minutes?: number | null;
 }
 
 // ---------------------------------------------------------------------------
