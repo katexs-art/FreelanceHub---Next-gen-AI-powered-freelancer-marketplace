@@ -443,7 +443,7 @@ export default function Inbox() {
                 style={{
                   background: "#FFFFFF",
                   borderBottom: "1px solid #EBEBEB",
-                  padding: "16px 24px",
+                  padding: isMobile ? "12px 14px" : "16px 24px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -453,6 +453,16 @@ export default function Inbox() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  {isMobile && (
+                    <button
+                      type="button"
+                      onClick={() => nav("/inbox")}
+                      aria-label="Back to messages"
+                      style={{ background: "transparent", border: "none", padding: 4, marginRight: 2, cursor: "pointer", color: "#0A0A0A" }}
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                  )}
                   <div
                     style={{
                       width: 40,
