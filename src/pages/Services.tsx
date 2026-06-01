@@ -80,6 +80,12 @@ export default function Services() {
   const [activity, setActivity] = useState<Activity[]>([]);
   const [gigs, setGigs] = useState<GigCardData[]>([]);
   const [gigsLoaded, setGigsLoaded] = useState(false);
+  const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [priceIdx, setPriceIdx] = useState<number | null>(null);
+  const [deliveryIdx, setDeliveryIdx] = useState<number | null>(null);
+  const [ratingIdx, setRatingIdx] = useState<number | null>(null);
+  const [levelIdx, setLevelIdx] = useState<number | null>(null);
+
 
   useEffect(() => {
     (async () => {
