@@ -719,7 +719,7 @@ export default function Checkout() {
             {/* RIGHT COLUMN */}
             <aside className="checkout-right sticky top-24">
               <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <h2 className="text-[16px] font-semibold text-foreground mb-5">
+                <h2 className="text-[17px] font-bold text-foreground mb-5 tracking-tight">
                   Order summary
                 </h2>
 
