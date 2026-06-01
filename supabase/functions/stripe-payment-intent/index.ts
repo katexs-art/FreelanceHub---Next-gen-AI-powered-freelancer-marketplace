@@ -1,6 +1,6 @@
 // Creates / retrieves a Stripe PaymentIntent for an escrow order.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
+import Stripe from "npm:stripe@17.5.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,7 +42,10 @@ Deno.serve(async (req) => {
     if (order.buyer_id !== user.id) throw new Error("Forbidden");
     if (order.status !== "pending_payment") throw new Error("Order is not awaiting payment");
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-04-30.basil" });
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: "2025-04-30.basil",
+      httpClient: Stripe.createFetchHttpClient(),
+    });
 
     let pi: Stripe.PaymentIntent | null = null;
     if (order.stripe_payment_intent_id) {
@@ -57,7 +60,7 @@ Deno.serve(async (req) => {
       pi = await stripe.paymentIntents.create({
         amount: chargeAmount,
         currency: "usd",
-        automatic_payment_methods: { enabled: true },
+        payment_method_types: ["card", "paypal"],
         metadata: {
           order_id: order.id,
           buyer_id: order.buyer_id,
