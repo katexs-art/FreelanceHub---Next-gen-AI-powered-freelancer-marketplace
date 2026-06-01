@@ -76,8 +76,6 @@ function ago(iso: string) {
 }
 
 export default function Services() {
-  const navigate = useNavigate();
-  const [q, setQ] = useState("");
   const [sellers, setSellers] = useState<Seller[]>([]);
   const [activity, setActivity] = useState<Activity[]>([]);
   const [gigs, setGigs] = useState<GigCardData[]>([]);
@@ -87,6 +85,7 @@ export default function Services() {
   const [deliveryIdx, setDeliveryIdx] = useState<number | null>(null);
   const [ratingIdx, setRatingIdx] = useState<number | null>(null);
   const [levelIdx, setLevelIdx] = useState<number | null>(null);
+
 
 
   useEffect(() => {
