@@ -384,7 +384,26 @@ export default function Checkout() {
     return (
       <div className="min-h-screen flex flex-col">
         <SiteHeader />
-        <main className="flex-1 container-page py-10 text-sm">{err ?? "Project not found"}</main>
+        <main className="flex-1 container-page py-10 text-sm">
+          <div style={{ marginBottom: 12 }}>{err ?? "Project not found"}</div>
+          <button
+            type="button"
+            onClick={loadOrderAndInit}
+            style={{
+              height: 40,
+              padding: "0 16px",
+              background: "#16A34A",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: 10,
+              fontSize: 14,
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Try again
+          </button>
+        </main>
         <SiteFooter />
       </div>
     );
