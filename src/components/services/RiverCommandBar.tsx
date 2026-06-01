@@ -53,6 +53,7 @@ export function RiverCommandBar() {
   const [error, setError] = useState<string | null>(null);
   const [micError, setMicError] = useState<"denied" | "no-speech" | "unsupported" | null>(null);
   const [listening, setListening] = useState(false);
+  const [retryingMic, setRetryingMic] = useState(false);
   const recogRef = useRef<any>(null);
   const abortRef = useRef<AbortController | null>(null);
   const lastSendAt = useRef(0);
@@ -233,6 +234,33 @@ export function RiverCommandBar() {
 
   const onSubmit = (e: React.FormEvent) => { e.preventDefault(); submit(value); };
 
+  // One-click retry: explicitly re-request mic permission via getUserMedia,
+  // then start speech recognition once granted.
+  const retryMic = useCallback(async () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+
+    setRetryingMic(true);
+    setMicError(null);
+    setError(null);
+
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Permission granted — start listening
+      setRetryingMic(false);
+      recogRef.current?.stop?.();
+      toggleMic();
+    } catch (err: any) {
+      setRetryingMic(false);
+      // Still denied — keep error state
+      setMicError("denied");
+      setError("Microphone access is still blocked. Enable it in your browser settings to use voice search.");
+      toast.error("Microphone still blocked", {
+        description: "Permission was denied again. Enable microphone access in your browser settings.",
+      });
+    }
+  }, [toggleMic]);
+
 
   const onChipClick = (label: string) => {
     const text = `Find me a top ${label} expert`;
@@ -388,8 +416,20 @@ export function RiverCommandBar() {
                   <div style={{ fontWeight: 600, marginBottom: micError ? 8 : 0 }}>{error}</div>
                   {micError === "denied" && (
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                      <button type="button" onClick={toggleMic} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999, padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
-                        <RefreshCw size={12} /> Retry mic
+                      <button
+                        type="button"
+                        onClick={retryMic}
+                        disabled={retryingMic}
+                        style={{
+                          display: "inline-flex", alignItems: "center", gap: 6,
+                          background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999,
+                          padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600,
+                          cursor: retryingMic ? "default" : "pointer",
+                          opacity: retryingMic ? 0.7 : 1,
+                        }}
+                      >
+                        {retryingMic ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
+                        {retryingMic ? "Retrying…" : "Retry mic"}
                       </button>
                       <span style={{ color: "#a3a3a3", fontSize: 12 }}>or type your request above</span>
                     </div>
