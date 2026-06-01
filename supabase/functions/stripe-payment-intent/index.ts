@@ -57,7 +57,7 @@ Deno.serve(async (req) => {
       pi = await stripe.paymentIntents.create({
         amount: chargeAmount,
         currency: "usd",
-        payment_method_types: ["card", "paypal"],
+        automatic_payment_methods: { enabled: true },
         metadata: {
           order_id: order.id,
           buyer_id: order.buyer_id,
