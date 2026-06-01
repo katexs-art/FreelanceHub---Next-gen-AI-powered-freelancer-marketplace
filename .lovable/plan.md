@@ -1,33 +1,76 @@
-## Goal
-The homepage renders, but several sections look blank or sparse: category cards have no icons, there's no Featured Gigs grid, and the How It Works / Stats sections have no headings. Fix all of these in `src/pages/Landing.tsx` only — no backend/business-logic changes.
+## Root cause
+
+`custom_offers.price` is stored in **cents** (a $5 offer = `500`). The DB function `accept_custom_offer` is now correct — it divides by 100 before inserting into `orders.price` (dollars) — but **two legacy orders** were created before that fix and ended up with `orders.price = 500` for a $5 offer.
+
+The checkout reads `orders.price` directly and treats it as dollars, so those legacy orders display "$500" and the PaymentIntent would charge `$500 + 5% = $525`.
+
+Confirmed in DB:
+```
+offer_price (cents) | orders.price (dollars)
+       600          |        6    ✓ (new, post-fix)
+       500          |      500    ✗ (legacy bug — $5 offer showing as $500)
+       500          |      500    ✗
+```
+
+Secondary bug: `accept_custom_offer` uses a **10%** platform fee, but the UI and `stripe-payment-intent` edge function both use **5%**. The user's fix explicitly mandates 5%.
 
 ## Changes
 
-### 1. Category cards — add icons + visual polish
-- Add a `lucide-react` icon to each entry in the `CATEGORIES` array (Code2, Mic, Sparkles, TrendingUp, Settings, BarChart3, PenTool, GraduationCap).
-- Render the icon in a 44×44 rounded square at the top of each card (subtle white/5 background, white stroke), above the label. Removes the "blank dark box" feeling.
+### 1. Data repair migration
+For every order linked to a `custom_offers` row where `orders.price == custom_offers.price` (i.e. the cents value was copied verbatim), divide by 100:
 
-### 2. New "Featured gigs" grid section (between Categories and Top Performers)
-- Query `gigs` table on mount: `status = 'active'`, ordered by `created_at desc`, limit 8. Join `profiles` for seller name/avatar.
-- Render a 4-col grid (responsive: 2 cols tablet, 1 col mobile) of gig cards: thumbnail (or gradient fallback), title (2-line clamp), seller mini-row, "From $price".
-- Section heading "Featured gigs" + "Browse all →" link to `/services`. Skeletons while loading.
-- Pure presentation; reuses existing `gigs` schema.
+```sql
+UPDATE public.orders o
+SET price            = ROUND(c.price / 100.0),
+    platform_fee     = ROUND(ROUND(c.price / 100.0) * 0.05),
+    seller_earnings  = ROUND(c.price / 100.0) - ROUND(ROUND(c.price / 100.0) * 0.05)
+FROM public.custom_offers c
+WHERE c.order_id = o.id
+  AND o.price = c.price          -- only the inflated rows
+  AND o.status = 'pending_payment';
+```
 
-### 3. How It Works — add heading + eyebrow
-- Add eyebrow "HOW IT WORKS" and H2 "Three steps to ship" above the 3-column grid. Currently the section is just floating numbers with no title.
+Only pending_payment orders are touched — no completed/charged orders are altered.
 
-### 4. Trust stats — add heading
-- Add eyebrow "BY THE NUMBERS" and H2 "Trusted by builders" above the stats grid.
+### 2. Align fee to 5% in `accept_custom_offer`
+Change `_fee := round(_price * 0.10)` → `_fee := round(_price * 0.05)` so all three layers (DB function, edge function, UI) agree.
 
-### 5. Section spacing
-- Reduce `padding: 60px 80px` to `padding: 80px 80px` consistently and ensure each section has a visible header so the black background never looks like dead space.
+### 3. Tighten `stripe-payment-intent` edge function
+Stop "verifying then trusting" `order.price`. Recompute charge strictly from `custom_offers.price` when an offer exists:
 
-## Out of scope
-- No DB migrations, no edge functions, no schema changes, no route changes.
-- No font/theme tokens changed.
-- Only `src/pages/Landing.tsx` is edited.
+```ts
+const priceDollars = offer
+  ? Math.round(offer.price / 100)   // authoritative source for offer-based orders
+  : order.price;
+const partnerFee = Math.round(priceDollars * 0.05);
+const expectedChargeCents = (priceDollars + partnerFee) * 100;
 
-## Technical notes
-- Icons imported from existing `lucide-react` dependency.
-- Featured gigs uses the existing Supabase client and `gigs` + `profiles` tables already used elsewhere (see `Browse.tsx`/`Services.tsx`).
-- All new markup uses the same inline-style dark palette (`#1a1a1a` cards, `#333` borders, `#fff` text) already used on this page — no design-system token changes.
+// If order.price drifted from offer, self-heal once before charging
+if (offer && order.price !== priceDollars) {
+  await admin.from("orders").update({
+    price: priceDollars,
+    platform_fee: partnerFee,
+    seller_earnings: priceDollars - partnerFee,
+  }).eq("id", order.id);
+}
+```
+
+This makes the PaymentIntent amount mathematically impossible to exceed the offer the buyer accepted, even if a stale/bad row exists.
+
+### 4. Checkout (`src/pages/Checkout.tsx`)
+No display logic change needed — it already reads `order.price` from the DB and computes 5%. After the migration + edge-function fix, `$5` orders will correctly show `$5.00 + $0.25 = $5.25`. The existing amount-mismatch guard stays as a defense-in-depth safety net.
+
+### 5. Verification (post-deploy)
+- Re-run the diagnostic query and confirm no row has `orders.price == custom_offers.price` for pending_payment orders.
+- Open checkout for an order with `custom_offers.price = 500` → expect display "$5.00", fee "$0.25", total "$5.25", PaymentIntent `amount: 525`.
+- Open checkout for a `$500` offer (`custom_offers.price = 50000`) → expect "$500.00 + $25.00 = $525.00", PaymentIntent `amount: 52500`.
+
+## Files / artifacts
+
+- New migration: data repair + `accept_custom_offer` fee fix (one file).
+- `supabase/functions/stripe-payment-intent/index.ts`: authoritative-source recompute + self-heal.
+- `src/pages/Checkout.tsx`: no functional change (guard already present); optionally remove the now-redundant mismatch-block path once the edge function self-heals — keep it for safety.
+
+## Out of scope (flagged for follow-up)
+
+- Migrating `orders.price` to be stored in cents everywhere would be the ideal long-term fix but is a larger refactor touching analytics, admin, and webhook code. Not done here.
