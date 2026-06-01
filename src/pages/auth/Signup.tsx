@@ -20,6 +20,8 @@ export default function Signup() {
   const nav = useNavigate();
   const [role, setRole] = useState<Role>("client");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successEmail, setSuccessEmail] = useState<string | null>(null);
   const [form, setForm] = useState({
     full_name: "",
     email: "",
