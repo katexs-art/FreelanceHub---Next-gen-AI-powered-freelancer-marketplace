@@ -504,7 +504,7 @@ export default function Checkout() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F7F7]">
       <SiteHeader />
-      <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-10">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className="mb-6">
           <div className="eyebrow mb-2">Checkout</div>
           <h1 className="text-2xl font-semibold text-foreground tracking-tight">
