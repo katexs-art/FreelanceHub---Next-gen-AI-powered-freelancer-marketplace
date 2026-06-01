@@ -176,6 +176,8 @@ export default function Landing() {
         .kx-btn-primary:hover { background: #eee !important; }
         .kx-seller-card { transition: all 0.2s ease; }
         .kx-seller-card:hover { border-color: #fff !important; box-shadow: 0 4px 20px rgba(255,255,255,0.06); }
+        @keyframes kxShimmer { 0% { background-position: -400px 0; } 100% { background-position: 400px 0; } }
+        .kx-shimmer { background: linear-gradient(90deg, #161616 0%, #222 50%, #161616 100%); background-size: 800px 100%; animation: kxShimmer 1.4s linear infinite; }
       `}</style>
 
       <SiteHeader variant="transparent" />
