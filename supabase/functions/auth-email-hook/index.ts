@@ -248,7 +248,7 @@ async function handleWebhook(req: Request): Promise<Response> {
 
   const messageId = crypto.randomUUID()
   const resendKey = Deno.env.get('RESEND_API_KEY_1') ?? Deno.env.get('RESEND_API_KEY')
-  const fromEmail = Deno.env.get('RESEND_FROM_EMAIL') ?? 'support@wegrow.one'
+  const fromEmail = 'support@wegrow.one'
 
   if (!resendKey) {
     console.error('RESEND_API_KEY is not configured', { run_id, emailType })
