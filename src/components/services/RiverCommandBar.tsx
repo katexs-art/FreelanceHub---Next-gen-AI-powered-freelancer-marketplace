@@ -214,7 +214,11 @@ export function RiverCommandBar() {
     }
   }, [loading, user]);
 
+  // Keep ref pointing to the latest submit so voice callbacks always call the current one.
+  useEffect(() => { submitRef.current = submit; }, [submit]);
+
   const onSubmit = (e: React.FormEvent) => { e.preventDefault(); submit(value); };
+
 
   const onChipClick = (label: string) => {
     const text = `Find me a top ${label} expert`;
