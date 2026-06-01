@@ -17,6 +17,7 @@ import {
   RefreshCcw,
   Headphones,
   Tag,
+  AlertTriangle,
 } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -279,6 +280,7 @@ export default function Checkout() {
     if (!order_id || !user) return;
     logCheckout("load-start", { order_id, userId: user.id });
     setErr(null);
+    setAmountMismatch(null);
     setLoading(true);
     setClientSecret(null);
     const { data: o, error } = await supabase
@@ -408,10 +410,6 @@ export default function Checkout() {
       if (mismatches.length > 0) {
         logCheckout("amount-mismatch", { piAmount, expectedTotalCents, offerCents, orderPrice: o.price });
         setAmountMismatch(mismatches.join(" "));
-        setErr(
-          "Checkout blocked: the amounts don't match. Please contact support before paying. " +
-            mismatches.join(" "),
-        );
         setLoading(false);
         return;
       }
@@ -502,120 +500,120 @@ export default function Checkout() {
           </h1>
         </div>
 
-        {clientSecret && stripePromise ? (
-          <Elements
-            stripe={stripePromise}
-            options={{
-              clientSecret,
-              appearance: {
-                theme: "stripe",
-                variables: {
-                  colorPrimary: "#0A0A0A",
-                  colorText: "#0A0A0A",
-                  colorBackground: "#FFFFFF",
-                  borderRadius: "8px",
-                  fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
-                },
-              },
-            }}
-          >
-            <TooltipProvider delayDuration={150}>
-              <div className="checkout-grid">
-                <style>{`
-                  .checkout-grid {
-                    display: grid;
-                    grid-template-columns: 60% 40%;
-                    gap: 32px;
-                    align-items: start;
-                  }
-                  @media (max-width: 900px) {
-                    .checkout-grid { grid-template-columns: 1fr; }
-                    .checkout-right { position: static !important; }
-                  }
-                `}</style>
+        <TooltipProvider delayDuration={150}>
+          <div className="checkout-grid">
+            <style>{`
+              .checkout-grid {
+                display: grid;
+                grid-template-columns: 60% 40%;
+                gap: 32px;
+                align-items: start;
+              }
+              @media (max-width: 900px) {
+                .checkout-grid { grid-template-columns: 1fr; }
+                .checkout-right { position: static !important; }
+              }
+            `}</style>
 
-                {/* LEFT COLUMN */}
-                <div className="space-y-5">
-                  {/* Project card */}
-                  <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                    <div className="flex gap-4 items-start">
-                      <img
-                        src={thumb}
-                        alt={itemTitle}
-                        className="w-20 h-20 rounded-lg object-cover flex-shrink-0 bg-[#F7F7F7]"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div
-                          className="text-[16px] font-semibold text-foreground leading-snug"
-                          style={{
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {itemTitle}
-                        </div>
-                        <div className="text-[13px] text-foreground-subtle mt-1">
-                          {itemSubtitle}
-                        </div>
-                      </div>
+            {/* LEFT COLUMN */}
+            <div className="space-y-5">
+              {/* Project card */}
+              <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <div className="flex gap-4 items-start">
+                  <img
+                    src={thumb}
+                    alt={itemTitle}
+                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0 bg-[#F7F7F7]"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div
+                      className="text-[16px] font-semibold text-foreground leading-snug"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {itemTitle}
                     </div>
-
-                    <div className="h-px bg-border my-5" />
-
-                    <div className="flex items-center gap-3">
-                      <img
-                        src={sellerAvatar}
-                        alt={sellerName}
-                        className="w-10 h-10 rounded-full object-cover bg-[#F7F7F7]"
-                      />
-                      <div className="min-w-0">
-                        <div className="text-[14px] font-medium text-foreground">
-                          {sellerName}
-                        </div>
-                        {deadline && (
-                          <div className="flex items-center gap-1.5 text-[12px] text-foreground-subtle mt-0.5">
-                            <Clock size={12} />
-                            Delivery by {deadline.toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
+                    <div className="text-[13px] text-foreground-subtle mt-1">
+                      {itemSubtitle}
                     </div>
                   </div>
+                </div>
 
-                  {/* Payment method card */}
-                  <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                    <h2 className="text-[15px] font-semibold text-foreground mb-4">
-                      How would you like to pay?
-                    </h2>
+                <div className="h-px bg-border my-5" />
 
-                    <div className="flex gap-2 mb-5">
-                      {(
-                        [
-                          { id: "card", label: "Credit / Debit card" },
-                          { id: "paypal", label: "PayPal" },
-                        ] as const
-                      ).map((opt) => {
-                        const active = payMethod === opt.id;
-                        return (
-                          <button
-                            key={opt.id}
-                            type="button"
-                            onClick={() => setPayMethod(opt.id)}
-                            className="h-9 px-4 text-[13px] font-medium rounded-full transition-colors"
-                            style={{
-                              background: active ? "#0A0A0A" : "#FFFFFF",
-                              color: active ? "#FFFFFF" : "#0A0A0A",
-                              border: `1px solid ${active ? "#0A0A0A" : "#EBEBEB"}`,
-                            }}
-                          >
-                            {opt.label}
-                          </button>
-                        );
-                      })}
+                <div className="flex items-center gap-3">
+                  <img
+                    src={sellerAvatar}
+                    alt={sellerName}
+                    className="w-10 h-10 rounded-full object-cover bg-[#F7F7F7]"
+                  />
+                  <div className="min-w-0">
+                    <div className="text-[14px] font-medium text-foreground">
+                      {sellerName}
                     </div>
+                    {deadline && (
+                      <div className="flex items-center gap-1.5 text-[12px] text-foreground-subtle mt-0.5">
+                        <Clock size={12} />
+                        Delivery by {deadline.toLocaleDateString()}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
 
+              {/* Payment method card */}
+              <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <h2 className="text-[15px] font-semibold text-foreground mb-4">
+                  How would you like to pay?
+                </h2>
+
+                <div className="flex gap-2 mb-5">
+                  {(
+                    [
+                      { id: "card", label: "Credit / Debit card" },
+                      { id: "paypal", label: "PayPal" },
+                    ] as const
+                  ).map((opt) => {
+                    const active = payMethod === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setPayMethod(opt.id)}
+                        className="h-9 px-4 text-[13px] font-medium rounded-full transition-colors"
+                        style={{
+                          background: active ? "#0A0A0A" : "#FFFFFF",
+                          color: active ? "#FFFFFF" : "#0A0A0A",
+                          border: `1px solid ${active ? "#0A0A0A" : "#EBEBEB"}`,
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {clientSecret && stripePromise ? (
+                  <Elements
+                    stripe={stripePromise}
+                    options={{
+                      clientSecret,
+                      appearance: {
+                        theme: "stripe",
+                        variables: {
+                          colorPrimary: "#0A0A0A",
+                          colorText: "#0A0A0A",
+                          colorBackground: "#FFFFFF",
+                          borderRadius: "8px",
+                          fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+                        },
+                      },
+                    }}
+                  >
                     <PayBlock
                       orderId={order.id}
                       total={total}
@@ -624,148 +622,170 @@ export default function Checkout() {
                       onRetryInit={loadOrderAndInit}
                       hideInternalButton
                     />
-                  </div>
-
-                  {/* Promo code collapsible */}
-                  <div className="bg-white border border-border rounded-2xl overflow-hidden">
-                    <button
-                      type="button"
-                      onClick={() => setShowPromo((v) => !v)}
-                      className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#FAFAFA] transition-colors"
-                    >
-                      <span className="flex items-center gap-2 text-[14px] font-medium text-foreground">
-                        <Tag size={14} className="text-foreground-subtle" />
-                        Apply promo code
-                      </span>
-                      {showPromo ? (
-                        <ChevronDown size={16} className="text-foreground-subtle" />
-                      ) : (
-                        <ChevronRight size={16} className="text-foreground-subtle" />
-                      )}
-                    </button>
-                    {showPromo && (
-                      <div className="px-5 pb-5 pt-1 flex gap-2">
-                        <input
-                          type="text"
-                          value={promo}
-                          onChange={(e) => setPromo(e.target.value)}
-                          placeholder="Enter promo code"
-                          className="flex-1 h-11 px-3.5 rounded-[10px] border border-border bg-white text-[14px] outline-none focus:border-foreground"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => toast.message("Promo codes coming soon")}
-                          className="h-11 px-5 rounded-[10px] bg-foreground text-background text-[14px] font-medium"
-                        >
-                          Apply
-                        </button>
+                  </Elements>
+                ) : amountMismatch ? (
+                  <div className="rounded-[12px] border border-red-200 bg-red-50 p-5">
+                    <div className="flex items-start gap-3">
+                      <AlertTriangle size={20} className="text-red-600 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <div className="text-[14px] font-semibold text-red-700 mb-1">
+                          Payment blocked for your protection
+                        </div>
+                        <div className="text-[13px] text-red-600 leading-relaxed">
+                          The amount shown on this checkout does not match the agreed price in the custom offer. To prevent an incorrect charge, payment has been blocked.
+                        </div>
+                        <div className="mt-3 text-[13px] text-red-600">
+                          Please contact your seller or Katexs support to resolve this before proceeding.
+                        </div>
+                        {amountMismatch && (
+                          <div className="mt-3 text-[12px] text-red-500 font-mono bg-red-100 rounded-lg px-3 py-2 break-all">
+                            {amountMismatch}
+                          </div>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div className="text-[13px] text-foreground-muted">Loading payment form…</div>
+                )}
+              </div>
 
-                {/* RIGHT COLUMN */}
-                <aside className="checkout-right sticky top-24">
-                  <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                    <h2 className="text-[16px] font-semibold text-foreground mb-5">
-                      Order summary
-                    </h2>
-
-                    <div className="flex justify-between py-1.5 text-[14px]">
-                      <span className="text-foreground-muted">{amountLabel}</span>
-                      <span className="text-foreground tabular-nums">${order.price}</span>
-                    </div>
-                    <div className="flex justify-between py-1.5 text-[14px]">
-                      <span className="text-foreground-muted flex items-center gap-1.5">
-                        Katexs service fee (5%)
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button type="button" aria-label="About the service fee" className="inline-flex">
-                              <Info size={13} className="text-foreground-subtle" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[220px] text-xs">
-                            Covers secure escrow payments, dispute protection, and 24/7 support.
-                          </TooltipContent>
-                        </Tooltip>
-                      </span>
-                      <span className="text-foreground tabular-nums">${partnerFee}</span>
-                    </div>
-
-                    <div className="h-px bg-border my-4" />
-
-                    <div className="flex justify-between items-baseline mb-5">
-                      <span className="text-[14px] font-medium text-foreground">Total</span>
-                      <span className="text-[22px] font-bold text-foreground tabular-nums">
-                        ${total}
-                      </span>
-                    </div>
-
+              {/* Promo code collapsible */}
+              <div className="bg-white border border-border rounded-2xl overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowPromo((v) => !v)}
+                  className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-[#FAFAFA] transition-colors"
+                >
+                  <span className="flex items-center gap-2 text-[14px] font-medium text-foreground">
+                    <Tag size={14} className="text-foreground-subtle" />
+                    Apply promo code
+                  </span>
+                  {showPromo ? (
+                    <ChevronDown size={16} className="text-foreground-subtle" />
+                  ) : (
+                    <ChevronRight size={16} className="text-foreground-subtle" />
+                  )}
+                </button>
+                {showPromo && (
+                  <div className="px-5 pb-5 pt-1 flex gap-2">
+                    <input
+                      type="text"
+                      value={promo}
+                      onChange={(e) => setPromo(e.target.value)}
+                      placeholder="Enter promo code"
+                      className="flex-1 h-11 px-3.5 rounded-[10px] border border-border bg-white text-[14px] outline-none focus:border-foreground"
+                    />
                     <button
                       type="button"
-                      onClick={() => !amountMismatch && payState?.onPay()}
-                      disabled={!payState || payState.disabled || !!amountMismatch}
-                      className="w-full text-white font-semibold text-[15px] rounded-[12px] h-[52px] transition-colors"
-                      style={{
-                        background: amountMismatch ? "#9CA3AF" : sidebarBtnBg,
-                        cursor: payState?.busy
-                          ? "wait"
-                          : !payState || payState.disabled || amountMismatch
-                          ? "not-allowed"
-                          : "pointer",
-                        opacity: payState?.busy ? 0.85 : 1,
-                      }}
+                      onClick={() => toast.message("Promo codes coming soon")}
+                      className="h-11 px-5 rounded-[10px] bg-foreground text-background text-[14px] font-medium"
                     >
-                      {amountMismatch ? "Payment blocked" : sidebarBtnLabel}
+                      Apply
                     </button>
-
-
-                    <div className="flex items-center justify-center gap-1.5 mt-3 text-[12px] text-foreground-subtle">
-                      <ShieldCheck size={13} /> Secure 256-bit SSL encryption
-                    </div>
-
-                    <div className="h-px bg-border my-4" />
-
-                    <ul className="space-y-2.5">
-                      <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
-                        <Check size={14} className="text-[#16A34A]" />
-                        3-day delivery guarantee
-                      </li>
-                      <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
-                        <Check size={14} className="text-[#16A34A]" />
-                        Money-back guarantee
-                      </li>
-                    </ul>
-
-                    <div className="mt-4 text-[11px] text-foreground-subtle text-center leading-relaxed">
-                      By clicking Pay Now you agree to Katexs Terms of Service and Payment Terms.
-                    </div>
                   </div>
-                </aside>
+                )}
               </div>
+            </div>
 
-              {/* Trust bar */}
-              <div className="mt-10 pt-6 border-t border-border">
-                <div className="flex flex-wrap items-center justify-center gap-8 text-[13px] text-foreground-muted">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck size={16} className="text-foreground-subtle" />
-                    Secure Payment
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <RefreshCcw size={16} className="text-foreground-subtle" />
-                    Money-back Guarantee
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Headphones size={16} className="text-foreground-subtle" />
-                    24/7 Support
-                  </div>
+            {/* RIGHT COLUMN */}
+            <aside className="checkout-right sticky top-24">
+              <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+                <h2 className="text-[16px] font-semibold text-foreground mb-5">
+                  Order summary
+                </h2>
+
+                <div className="flex justify-between py-1.5 text-[14px]">
+                  <span className="text-foreground-muted">{amountLabel}</span>
+                  <span className="text-foreground tabular-nums">${order.price}</span>
+                </div>
+                <div className="flex justify-between py-1.5 text-[14px]">
+                  <span className="text-foreground-muted flex items-center gap-1.5">
+                    Katexs service fee (5%)
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button type="button" aria-label="About the service fee" className="inline-flex">
+                          <Info size={13} className="text-foreground-subtle" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[220px] text-xs">
+                        Covers secure escrow payments, dispute protection, and 24/7 support.
+                      </TooltipContent>
+                    </Tooltip>
+                  </span>
+                  <span className="text-foreground tabular-nums">${partnerFee}</span>
+                </div>
+
+                <div className="h-px bg-border my-4" />
+
+                <div className="flex justify-between items-baseline mb-5">
+                  <span className="text-[14px] font-medium text-foreground">Total</span>
+                  <span className="text-[22px] font-bold text-foreground tabular-nums">
+                    ${total}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => !amountMismatch && payState?.onPay()}
+                  disabled={!payState || payState.disabled || !!amountMismatch}
+                  className="w-full text-white font-semibold text-[15px] rounded-[12px] h-[52px] transition-colors"
+                  style={{
+                    background: amountMismatch ? "#9CA3AF" : sidebarBtnBg,
+                    cursor: payState?.busy
+                      ? "wait"
+                      : !payState || payState.disabled || amountMismatch
+                      ? "not-allowed"
+                      : "pointer",
+                    opacity: payState?.busy ? 0.85 : 1,
+                  }}
+                >
+                  {amountMismatch ? "Payment blocked" : sidebarBtnLabel}
+                </button>
+
+
+                <div className="flex items-center justify-center gap-1.5 mt-3 text-[12px] text-foreground-subtle">
+                  <ShieldCheck size={13} /> Secure 256-bit SSL encryption
+                </div>
+
+                <div className="h-px bg-border my-4" />
+
+                <ul className="space-y-2.5">
+                  <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
+                    <Check size={14} className="text-[#16A34A]" />
+                    3-day delivery guarantee
+                  </li>
+                  <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
+                    <Check size={14} className="text-[#16A34A]" />
+                    Money-back guarantee
+                  </li>
+                </ul>
+
+                <div className="mt-4 text-[11px] text-foreground-subtle text-center leading-relaxed">
+                  By clicking Pay Now you agree to Katexs Terms of Service and Payment Terms.
                 </div>
               </div>
-            </TooltipProvider>
-          </Elements>
-        ) : (
-          <div className="text-[13px] text-foreground-muted">Loading payment form…</div>
-        )}
+            </aside>
+          </div>
+
+          {/* Trust bar */}
+          <div className="mt-10 pt-6 border-t border-border">
+            <div className="flex flex-wrap items-center justify-center gap-8 text-[13px] text-foreground-muted">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={16} className="text-foreground-subtle" />
+                Secure Payment
+              </div>
+              <div className="flex items-center gap-2">
+                <RefreshCcw size={16} className="text-foreground-subtle" />
+                Money-back Guarantee
+              </div>
+              <div className="flex items-center gap-2">
+                <Headphones size={16} className="text-foreground-subtle" />
+                24/7 Support
+              </div>
+            </div>
+          </div>
+        </TooltipProvider>
       </main>
       <SiteFooter />
     </div>
