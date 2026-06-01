@@ -927,6 +927,42 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          buyer_orders_email: boolean
+          buyer_orders_inapp: boolean
+          marketing_email: boolean
+          messages_email: boolean
+          messages_inapp: boolean
+          seller_orders_email: boolean
+          seller_orders_inapp: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buyer_orders_email?: boolean
+          buyer_orders_inapp?: boolean
+          marketing_email?: boolean
+          messages_email?: boolean
+          messages_inapp?: boolean
+          seller_orders_email?: boolean
+          seller_orders_inapp?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buyer_orders_email?: boolean
+          buyer_orders_inapp?: boolean
+          marketing_email?: boolean
+          messages_email?: boolean
+          messages_inapp?: boolean
+          seller_orders_email?: boolean
+          seller_orders_inapp?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string | null
@@ -2294,6 +2330,10 @@ export type Database = {
       reset_test_orders: { Args: never; Returns: undefined }
       reset_test_users: { Args: never; Returns: undefined }
       seller_follower_count: { Args: { _seller: string }; Returns: number }
+      should_notify: {
+        Args: { _category: string; _channel: string; _user_id: string }
+        Returns: boolean
+      }
       simulate_mark_order_paid: {
         Args: { _order_id: string }
         Returns: undefined

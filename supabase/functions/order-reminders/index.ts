@@ -38,28 +38,29 @@ Deno.serve(async (req) => {
     const notifs: any[] = [];
     const patch: Record<string, string> = {};
 
+    const push = async (user_id: string, category: "buyer_orders" | "seller_orders", title: string) => {
+      const { data: ok } = await admin.rpc("should_notify", { _user_id: user_id, _category: category, _channel: "inapp" });
+      if (ok !== false) notifs.push({ user_id, type: "order", title, link: `/orders/${o.id}` });
+    };
+
     if (!o.reminder_halfway_sent_at && now >= half && now < end) {
-      notifs.push({ user_id: o.seller_id, type: "order", title: "Reminder — you are halfway through your delivery window. Stay on track.", link: `/orders/${o.id}` });
+      await push(o.seller_id, "seller_orders", "Reminder — you are halfway through your delivery window. Stay on track.");
       patch.reminder_halfway_sent_at = new Date().toISOString();
     }
     if (!o.reminder_24h_sent_at && now >= dayBefore && now < end) {
-      notifs.push(
-        { user_id: o.buyer_id, type: "order", title: "Delivery deadline is in 24 hours.", link: `/orders/${o.id}` },
-        { user_id: o.seller_id, type: "order", title: "Delivery deadline is in 24 hours.", link: `/orders/${o.id}` },
-      );
+      await push(o.buyer_id, "buyer_orders", "Delivery deadline is in 24 hours.");
+      await push(o.seller_id, "seller_orders", "Delivery deadline is in 24 hours.");
       patch.reminder_24h_sent_at = new Date().toISOString();
     }
     if (!o.reminder_late_sent_at && now > end && !o.delivered_at) {
-      notifs.push(
-        { user_id: o.buyer_id, type: "order", title: "Your delivery is overdue — we are following up with your seller.", link: `/orders/${o.id}` },
-        { user_id: o.seller_id, type: "order", title: "Your delivery is overdue — submit your work immediately to avoid a dispute.", link: `/orders/${o.id}` },
-      );
+      await push(o.buyer_id, "buyer_orders", "Your delivery is overdue — we are following up with your seller.");
+      await push(o.seller_id, "seller_orders", "Your delivery is overdue — submit your work immediately to avoid a dispute.");
       patch.reminder_late_sent_at = new Date().toISOString();
       (patch as any).status = "late";
     }
 
-    if (notifs.length) {
-      await admin.from("notifications").insert(notifs);
+    if (Object.keys(patch).length) {
+      if (notifs.length) await admin.from("notifications").insert(notifs);
       await admin.from("orders").update(patch).eq("id", o.id);
       fired += notifs.length;
     }

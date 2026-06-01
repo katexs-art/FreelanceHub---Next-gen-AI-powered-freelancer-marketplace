@@ -133,12 +133,18 @@ Deno.serve(async (req) => {
           }
           // If this order originated from a custom offer, mark it accepted
           await admin.from("custom_offers").update({ status: "accepted" }).eq("order_id", order.id);
-          // Notifications
+          // Notifications (gated by per-user preferences)
           const deadline = order.delivery_deadline ? new Date(order.delivery_deadline).toLocaleDateString() : "soon";
-          await admin.from("notifications").insert([
-            { user_id: order.seller_id, type: "order", title: `Your order has started — deliver by ${deadline}`, link: `/orders/${order.id}` },
-            { user_id: order.buyer_id, type: "order", title: "Your payment is secured — your expert is now working on your project.", link: `/orders/${order.id}` },
-          ]);
+          const candidates = [
+            { user_id: order.seller_id, category: "seller_orders", row: { user_id: order.seller_id, type: "order", title: `Your order has started — deliver by ${deadline}`, link: `/orders/${order.id}` } },
+            { user_id: order.buyer_id, category: "buyer_orders", row: { user_id: order.buyer_id, type: "order", title: "Your payment is secured — your expert is now working on your project.", link: `/orders/${order.id}` } },
+          ];
+          const toInsert: any[] = [];
+          for (const c of candidates) {
+            const { data: ok } = await admin.rpc("should_notify", { _user_id: c.user_id, _category: c.category, _channel: "inapp" });
+            if (ok !== false) toInsert.push(c.row);
+          }
+          if (toInsert.length) await admin.from("notifications").insert(toInsert);
           console.log("escrow order activated", order.id);
         }
       }
