@@ -70,6 +70,7 @@ export default function Inbox() {
   const { conversationId } = useParams();
   const { user } = useAuth();
   const nav = useNavigate();
+  const isMobile = useIsMobile();
   const [convs, setConvs] = useState<Conv[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
