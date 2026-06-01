@@ -20,6 +20,71 @@ const mk = (heading: string, items: string[]): Column => ({
 
 const CATS_RAW: { label: string; columns: Column[] }[] = [
   {
+    label: "Voice AI",
+    columns: [
+      mk("Voice Agents", [
+        "Voice AI Agents and Callers", "AI Phone Systems", "Conversational AI Builds",
+        "AI Appointment Booking", "Inbound Voice AI", "Outbound Voice AI",
+      ]),
+      mk("Voices & Audio", [
+        "Voice Cloning and Custom Voices", "Text to Speech", "AI Podcast Production",
+        "AI Audio Ads", "AI Sonic Branding", "Multilingual Voice AI",
+      ]),
+    ],
+  },
+  {
+    label: "Automation",
+    columns: [
+      mk("Workflow Automation", [
+        "AI Workflow Automation", "Zapier Automation", "Make Automation",
+        "n8n Workflows", "CRM and Pipeline Automation", "Webhook Setup",
+      ]),
+      mk("Ops & Agents", [
+        "AI Virtual Assistants", "AI Agent Building", "Lead Nurture Sequences",
+        "Follow Up Campaigns", "Abandoned Lead Recovery", "API Integrations",
+      ]),
+    ],
+  },
+  {
+    label: "Marketing",
+    columns: [
+      mk("Growth & Social", [
+        "Social Media Management", "Instagram Marketing", "TikTok Marketing",
+        "LinkedIn Marketing", "Email Marketing", "AI Lead Generation",
+      ]),
+      mk("Paid & SEO", [
+        "Facebook Ads", "Google Ads Management", "SEO Strategy",
+        "Generative Engine Optimization", "Conversion Tracking", "Ad Creatives",
+      ]),
+    ],
+  },
+  {
+    label: "Development",
+    columns: [
+      mk("Web & Apps", [
+        "Full Stack Development", "React Development", "Next.js Development",
+        "Mobile App Development", "AI Mobile Apps", "AI Websites and Software",
+      ]),
+      mk("AI Builds", [
+        "AI Chatbot Development", "AI Integrations", "AI Fine-Tuning",
+        "Vibe Coding and MVP Builds", "Deployments and DevOps", "API Development",
+      ]),
+    ],
+  },
+  {
+    label: "Design",
+    columns: [
+      mk("Brand & Visual", [
+        "Logo Design", "Brand Identity", "UI and UX Design",
+        "Web Design", "Presentation Design", "Social Media Design",
+      ]),
+      mk("AI Design", [
+        "AI Logo and Brand Identity", "AI Illustration", "AI Avatar Design",
+        "AI Image Editing", "ComfyUI Workflows", "Midjourney Art",
+      ]),
+    ],
+  },
+  {
     label: "AI Services",
     columns: [
       mk("Build with AI", [
