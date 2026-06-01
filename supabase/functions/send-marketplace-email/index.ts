@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
         "X-Connection-Api-Key": resendKey,
       },
       body: JSON.stringify({
-        from: `katexs ai <${FROM_EMAIL}>`,
+        from: FROM_EMAIL.includes("<") ? FROM_EMAIL : `katexs ai <${FROM_EMAIL}>`,
         to: [to],
         subject,
         html,
