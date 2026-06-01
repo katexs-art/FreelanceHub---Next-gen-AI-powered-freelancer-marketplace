@@ -4,11 +4,21 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ScrollToTop } from "@/components/ScrollToTop";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { lazy, Suspense } from "react";
 
 const Loading = () => (
-  <div className="min-h-screen flex items-center justify-center text-sm text-foreground-muted">Loading…</div>
+  <div className="min-h-screen flex items-center justify-center p-6">
+    <div className="w-full max-w-md space-y-3">
+      <Skeleton className="h-8 w-2/3" />
+      <Skeleton className="h-4 w-full" />
+      <Skeleton className="h-4 w-5/6" />
+      <Skeleton className="h-32 w-full rounded-xl" />
+    </div>
+  </div>
 );
 
 const Landing = lazy(() => import("./pages/Landing"));
@@ -73,7 +83,8 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        
+        <ScrollToTop />
+        <ErrorBoundary>
         <Suspense fallback={<Loading />}>
           <Routes>
             <Route path="/" element={<Landing />} />
@@ -144,6 +155,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
+        </ErrorBoundary>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
