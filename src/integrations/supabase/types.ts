@@ -379,6 +379,7 @@ export type Database = {
           expires_at: string | null
           gig_id: string | null
           id: string
+          order_id: string | null
           price: number
           revisions: number
           seller_id: string
@@ -393,6 +394,7 @@ export type Database = {
           expires_at?: string | null
           gig_id?: string | null
           id?: string
+          order_id?: string | null
           price: number
           revisions?: number
           seller_id: string
@@ -407,6 +409,7 @@ export type Database = {
           expires_at?: string | null
           gig_id?: string | null
           id?: string
+          order_id?: string | null
           price?: number
           revisions?: number
           seller_id?: string
@@ -425,6 +428,13 @@ export type Database = {
             columns: ["gig_id"]
             isOneToOne: false
             referencedRelation: "gigs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "custom_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
             referencedColumns: ["id"]
           },
           {
@@ -2387,6 +2397,7 @@ export type Database = {
         | "bid"
       offer_status:
         | "pending"
+        | "pending_payment"
         | "accepted"
         | "declined"
         | "withdrawn"
@@ -2563,7 +2574,14 @@ export const Constants = {
         "river_match",
         "bid",
       ],
-      offer_status: ["pending", "accepted", "declined", "withdrawn", "expired"],
+      offer_status: [
+        "pending",
+        "pending_payment",
+        "accepted",
+        "declined",
+        "withdrawn",
+        "expired",
+      ],
       order_status: [
         "pending_payment",
         "pending_requirements",

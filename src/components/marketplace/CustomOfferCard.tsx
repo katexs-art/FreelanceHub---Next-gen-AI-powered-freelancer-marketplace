@@ -10,6 +10,7 @@ interface Offer {
   id: string; description: string | null; price: number;
   delivery_days: number; revisions: number; status: string;
   buyer_id: string; seller_id: string; gig_id: string | null;
+  order_id: string | null;
 }
 
 export function CustomOfferCard({ offerId }: { offerId: string }) {
@@ -27,14 +28,14 @@ export function CustomOfferCard({ offerId }: { offerId: string }) {
   if (!offer) return null;
   const isBuyer = user?.id === offer.buyer_id;
   const isPending = offer.status === "pending";
+  const isPendingPayment = offer.status === "pending_payment";
 
   const accept = async () => {
     setBusy(true);
     const { data, error } = await supabase.rpc("accept_custom_offer", { _offer_id: offer.id });
     setBusy(false);
     if (error) return toast.error(error.message);
-    toast.success("Offer accepted");
-    nav(`/orders/${data}`);
+    nav(`/checkout/${data}`);
   };
   const decline = async () => {
     setBusy(true);
@@ -47,10 +48,12 @@ export function CustomOfferCard({ offerId }: { offerId: string }) {
     setBusy(false); load();
   };
 
+  const statusLabel = isPendingPayment ? "Pending payment" : offer.status;
+
   return (
     <div className="bg-background border border-border rounded-xl p-4 max-w-sm">
       <div className="flex items-center gap-2 text-xs text-foreground-muted">
-        <FileText className="h-3.5 w-3.5" /> Custom offer · <span className="capitalize">{offer.status}</span>
+        <FileText className="h-3.5 w-3.5" /> Custom offer · <span className="capitalize">{statusLabel}</span>
       </div>
       {offer.description && <p className="text-sm mt-2 whitespace-pre-line">{offer.description}</p>}
       <div className="mt-3 flex items-baseline justify-between">
@@ -64,7 +67,7 @@ export function CustomOfferCard({ offerId }: { offerId: string }) {
           {isBuyer ? (
             <>
               <Button size="sm" onClick={accept} disabled={busy} className="flex-1">
-                <Check className="h-4 w-4" /> Accept
+                <Check className="h-4 w-4" /> Accept & pay
               </Button>
               <Button size="sm" variant="outline" onClick={decline} disabled={busy}>
                 <X className="h-4 w-4" />
@@ -74,6 +77,17 @@ export function CustomOfferCard({ offerId }: { offerId: string }) {
             <Button size="sm" variant="outline" onClick={withdraw} disabled={busy} className="flex-1">
               Withdraw offer
             </Button>
+          )}
+        </div>
+      )}
+      {isPendingPayment && (
+        <div className="mt-3">
+          {isBuyer && offer.order_id ? (
+            <Button size="sm" onClick={() => nav(`/checkout/${offer.order_id}`)} className="flex-1 w-full">
+              Complete payment
+            </Button>
+          ) : (
+            <div className="text-xs text-foreground-muted">Awaiting buyer payment…</div>
           )}
         </div>
       )}
