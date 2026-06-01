@@ -42,24 +42,42 @@ Deno.serve(async (req) => {
     if (order.buyer_id !== user.id) throw new Error("Forbidden");
     if (order.status !== "pending_payment") throw new Error("Order is not awaiting payment");
 
-    // If this order originated from a custom offer, verify the order price matches it.
-    // custom_offers.price is stored in cents; orders.price is in dollars.
+    // If this order originated from a custom offer, the offer is the AUTHORITATIVE
+    // source of truth for the price. custom_offers.price is stored in cents;
+    // orders.price is in dollars. If the order row drifted from the offer, self-heal
+    // before charging so we can never overcharge based on stale order data.
     const { data: offer } = await admin
       .from("custom_offers")
       .select("id, price")
       .eq("order_id", order.id)
       .maybeSingle();
+
+    let priceDollars: number = order.price;
     if (offer) {
       const offerDollars = Math.round((offer.price as number) / 100);
-      if (offerDollars !== order.price) {
-        throw new Error(
-          `Order price ($${order.price}) does not match the custom offer ($${offerDollars}). Refusing to charge.`,
-        );
-      }
+      if (offerDollars <= 0) throw new Error("Invalid custom offer price");
+      priceDollars = offerDollars;
     }
 
-    const partnerFee = Math.round(order.price * 0.05);
-    const expectedChargeCents = (order.price + partnerFee) * 100;
+    const partnerFee = Math.round(priceDollars * 0.05);
+    const expectedChargeCents = (priceDollars + partnerFee) * 100;
+
+    if (offer && order.price !== priceDollars) {
+      await admin
+        .from("orders")
+        .update({
+          price: priceDollars,
+          platform_fee: partnerFee,
+          seller_earnings: priceDollars - partnerFee,
+        })
+        .eq("id", order.id);
+      console.log("stripe-payment-intent: self-healed order amount", {
+        order_id: order.id,
+        from: order.price,
+        to: priceDollars,
+      });
+    }
+
 
     const stripe = new Stripe(stripeKey, {
       apiVersion: "2025-04-30.basil",
