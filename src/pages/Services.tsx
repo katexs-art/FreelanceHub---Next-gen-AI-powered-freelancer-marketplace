@@ -11,14 +11,37 @@ import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState"
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 const CATEGORIES = [
-  { label: "Build with AI", slug: "build-with-ai" },
-  { label: "Sound and Speak with AI", slug: "sound-and-speak-with-ai" },
-  { label: "Create with AI", slug: "create-with-ai" },
-  { label: "Grow with AI", slug: "grow-with-ai" },
-  { label: "Run with AI", slug: "run-with-ai" },
-  { label: "Understand AI", slug: "understand-ai" },
-  { label: "Write with AI", slug: "write-with-ai" },
-  { label: "Learn AI", slug: "learn-ai" },
+  { label: "Voice AI", match: ["voice"] },
+  { label: "Chatbot Development", match: ["chatbot"] },
+  { label: "AI Automation", match: ["automation", "workflow"] },
+  { label: "Prompt Engineering", match: ["prompt"] },
+  { label: "AI Consulting", match: ["consult", "strategy"] },
+  { label: "Custom AI Models", match: ["model", "fine-tun", "machine learning"] },
+  { label: "AI Content", match: ["content", "writing", "copy"] },
+  { label: "AI Integration", match: ["integration", "api"] },
+  { label: "GoHighLevel", match: ["ghl", "gohighlevel", "highlevel"] },
+  { label: "Digital Marketing", match: ["marketing", "seo", "ads", "social"] },
+];
+
+const PRICE_RANGES = [
+  { label: "$0 – $50", min: 0, max: 50 },
+  { label: "$50 – $200", min: 50, max: 200 },
+  { label: "$200 – $500", min: 200, max: 500 },
+  { label: "$500+", min: 500, max: null as number | null },
+];
+const DELIVERY_OPTS = [
+  { label: "1 day", days: 1 },
+  { label: "3 days", days: 3 },
+  { label: "7 days", days: 7 },
+];
+const RATING_OPTS = [
+  { label: "4.5+", value: 4.5 },
+  { label: "4.0+", value: 4.0 },
+];
+const LEVEL_OPTS = [
+  { label: "Rising", min: 0, max: 4.4 },
+  { label: "Top Rated", min: 4.5, max: 4.79 },
+  { label: "Pro", min: 4.8, max: 5 },
 ];
 
 type Seller = {
