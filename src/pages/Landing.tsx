@@ -446,23 +446,33 @@ export default function Landing() {
 
       {/* HOW IT WORKS */}
       <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
-        <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 48, maxWidth: 1200, margin: "0 auto" }}>
-          {[
-            { n: "1", t: "Tell River", d: "Describe what you need in plain English. River reads every word and understands the nuance." },
-            { n: "2", t: "Get matched", d: "Top 15 experts are notified instantly. They pitch you directly — no browsing required." },
-            { n: "3", t: "Ship it", d: "Pay securely into escrow. Approve delivery. Funds release in 3 days automatically." },
-          ].map((s) => (
-            <div key={s.n}>
-              <div style={{ fontSize: 72, fontWeight: 500, color: "#f0f0f0", lineHeight: 1 }}>{s.n}</div>
-              <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
-              <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6 }}>{s.d}</div>
-            </div>
-          ))}
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
+            How it works
+          </div>
+          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 48px" }}>Three steps to ship</h2>
+          <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
+            {[
+              { n: "1", t: "Tell River", d: "Describe what you need in plain English. River reads every word and understands the nuance." },
+              { n: "2", t: "Get matched", d: "Top 15 experts are notified instantly. They pitch you directly — no browsing required." },
+              { n: "3", t: "Ship it", d: "Pay securely into escrow. Approve delivery. Funds release in 3 days automatically." },
+            ].map((s) => (
+              <div key={s.n}>
+                <div style={{ fontSize: 72, fontWeight: 500, color: "#f0f0f0", lineHeight: 1 }}>{s.n}</div>
+                <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
+                <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6 }}>{s.d}</div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* TRUST STATS */}
-      <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
+      <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+        <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
+          By the numbers
+        </div>
+        <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 40px" }}>Trusted by builders</h2>
         <div className="kx-grid-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
           {[
             { v: "2,400+", l: "Verified AI experts" },
