@@ -783,13 +783,14 @@ export default function Checkout() {
                 <ul className="space-y-2.5">
                   <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
                     <Check size={14} className="text-[#16A34A]" />
-                    3-day delivery guarantee
+                    Money-back guarantee
                   </li>
                   <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
                     <Check size={14} className="text-[#16A34A]" />
-                    Money-back guarantee
+                    3-day delivery guarantee
                   </li>
                 </ul>
+
 
                 <div className="mt-4 text-[11px] text-foreground-subtle text-center leading-relaxed">
                   By clicking Pay Now you agree to Katexs Terms of Service and Payment Terms.
