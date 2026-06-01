@@ -403,6 +403,7 @@ export default function Inbox() {
         )}
 
         {/* COLUMN 3 — Active conversation */}
+        {(!isMobile || active) && (
         <section style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
           {!active ? (
             <div
