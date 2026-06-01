@@ -224,6 +224,33 @@ export default function Services() {
   const featured = sellers[0];
   const intel = sellers.slice(0, 6);
 
+  const filteredGigs = gigs.filter((g: any) => {
+    if (activeCat) {
+      const cat = CATEGORIES.find((c) => c.label === activeCat);
+      const hay = `${g.title ?? ""} ${g.category ?? ""}`.toLowerCase();
+      if (cat && !cat.match.some((m) => hay.includes(m))) return false;
+    }
+    if (priceIdx !== null) {
+      const r = PRICE_RANGES[priceIdx];
+      if (g.starting_price < r.min) return false;
+      if (r.max !== null && g.starting_price > r.max) return false;
+    }
+    if (deliveryIdx !== null) {
+      const d = DELIVERY_OPTS[deliveryIdx];
+      if (g.delivery_days == null || g.delivery_days > d.days) return false;
+    }
+    if (ratingIdx !== null) {
+      if (Number(g.average_rating ?? 0) < RATING_OPTS[ratingIdx].value) return false;
+    }
+    if (levelIdx !== null) {
+      const r = Number(g.average_rating ?? 0);
+      const l = LEVEL_OPTS[levelIdx];
+      if (r < l.min || r > l.max) return false;
+    }
+    return true;
+  });
+
+
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
       <SEO title="Services — Discover AI Experts | KATEXS" description="A precision marketplace where talent and intent meet through intelligence." />
