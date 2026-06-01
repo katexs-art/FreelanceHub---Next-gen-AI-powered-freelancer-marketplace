@@ -51,15 +51,18 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     if (role === "seller" && usernameStatus !== "ok") {
-      return toast.error("Pick a valid, available username");
+      const m = "Pick a valid, available username";
+      setErrorMsg(m);
+      return toast.error(m);
     }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: "https://katexs.com/services",
         data: {
           full_name: form.full_name,
           role,
@@ -69,10 +72,15 @@ export default function Signup() {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setErrorMsg(error.message);
+      toast.error(error.message);
+      return;
+    }
+    setSuccessEmail(form.email);
     toast.success("Check your email to confirm your account");
-    nav("/login");
   };
+
 
   const handleGoogle = async () => {
     sessionStorage.setItem("pending_role", role);
