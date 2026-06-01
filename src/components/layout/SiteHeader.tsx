@@ -86,25 +86,40 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
           <div className="flex-1 lg:hidden" />
 
           <div className="hidden md:flex items-center gap-2">
-            <Link to="/sign-in">
-              <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white text-[13px]">
-                Sign In
-              </Button>
-            </Link>
-            <Link to="/sign-up">
-              <button
-                className="text-white font-medium"
-                style={{
-                  background: "hsl(var(--primary))",
-                  borderRadius: 999,
-                  padding: "8px 20px",
-                  fontSize: 13,
-                  fontWeight: 500,
-                }}
-              >
-                Join Free
-              </button>
-            </Link>
+            {user ? (
+              <>
+                <Link to={dashHref}>
+                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white text-[13px]">
+                    HQ
+                  </Button>
+                </Link>
+                <Button variant="outline" size="sm" onClick={() => signOut()} className="border-white/25 bg-white/10 text-white hover:bg-white/15 hover:text-white text-[13px]">
+                  Sign out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link to="/sign-in">
+                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white text-[13px]">
+                    Sign In
+                  </Button>
+                </Link>
+                <Link to="/sign-up">
+                  <button
+                    className="text-white font-medium"
+                    style={{
+                      background: "hsl(var(--primary))",
+                      borderRadius: 999,
+                      padding: "8px 20px",
+                      fontSize: 13,
+                      fontWeight: 500,
+                    }}
+                  >
+                    Join Free
+                  </button>
+                </Link>
+              </>
+            )}
           </div>
 
           <button className="md:hidden p-2 text-white/70"><Menu className="h-5 w-5" /></button>

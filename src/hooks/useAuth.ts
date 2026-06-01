@@ -64,8 +64,16 @@ function init() {
   if (initialised) return;
   initialised = true;
 
-  supabase.auth.onAuthStateChange((_event, session) => {
+  supabase.auth.getSession().then(({ data: { session } }) => {
     const u = session?.user ?? null;
+    setState({ user: u, loading: false });
+    if (u) loadProfile(u.id);
+    else setState({ profileLoaded: true });
+  });
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    const u = session?.user ?? null;
+    if (!u && event === "INITIAL_SESSION" && state.user) return;
     setState({ user: u, loading: false });
     if (u) {
       setState({ profileLoaded: false });
@@ -74,13 +82,6 @@ function init() {
     } else {
       setState({ profile: null, profileLoaded: true });
     }
-  });
-
-  supabase.auth.getSession().then(({ data: { session } }) => {
-    const u = session?.user ?? null;
-    setState({ user: u, loading: false });
-    if (u) loadProfile(u.id);
-    else setState({ profileLoaded: true });
   });
 }
 
