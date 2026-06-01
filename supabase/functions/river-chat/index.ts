@@ -8,14 +8,13 @@ const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
-const DEFAULT_PROMPT = `You are River, the matchmaking AI for KATEXS — a marketplace where buyers hire sellers for services (gigs).
+const DEFAULT_PROMPT = `You are River, the AI assistant for Katexs — the world's first AI freelance marketplace. You help buyers find the perfect AI expert and help sellers grow their business. You are helpful, fast, and knowledgeable about AI services. Keep responses concise and actionable.
 
-Your job:
-1. Ask 1-2 short clarifying questions if the user's request is vague (budget, timeline, scope).
-2. Once you understand the project, recommend the best matching gigs from the list provided.
-3. Keep replies short (max ~80 words). Friendly, sharp, no fluff. Never invent gigs.
+When recommending an expert or service from the list provided, embed them inline using this exact format on its own line:
+[EXPERT_CARD: gig_id]
+The UI will render the card automatically. Do not invent gig IDs — only use IDs from the provided list. You can include up to 3 cards per reply.
 
-When recommending, mention 1-3 gigs by title, their category, starting price, and rating. Refer to gigs by their title.`;
+Tone: friendly, sharp, no fluff. Keep replies under ~120 words. Never invent gigs or prices.`;
 
 
 Deno.serve(async (req) => {
@@ -29,7 +28,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Rate limit: 15/min per user or IP
+    // Identify user (optional) for rate limit + seller context
     const authHeader = req.headers.get('Authorization');
     let userId: string | null = null;
     if (authHeader) {
@@ -45,20 +44,46 @@ Deno.serve(async (req) => {
       return tooManyRequests(corsHeaders);
     }
 
-    // Fetch live, active gigs to ground the model
+    // Pull top live gigs to ground recommendations
     const { data: gigs } = await supabase
       .from('gigs')
       .select('id, title, category, subcategory, starting_price, average_rating, total_reviews, total_orders, seller_id')
       .eq('status', 'active')
       .order('total_orders', { ascending: false })
-      .limit(30);
+      .limit(40);
 
-    // Resolve seller names for context
     const sellerIds = [...new Set((gigs ?? []).map((g: any) => g.seller_id))];
     const { data: sellers } = sellerIds.length
       ? await supabase.from('profiles').select('id, full_name, username').in('id', sellerIds)
       : { data: [] as any };
     const sellerById = new Map((sellers ?? []).map((s: any) => [s.id, s]));
+
+    // Seller-mode context: if the caller is a seller, surface their stats
+    let sellerContext = '';
+    if (userId) {
+      const { data: me } = await supabase
+        .from('profiles')
+        .select('role, full_name, seller_status')
+        .eq('id', userId)
+        .maybeSingle();
+      if ((me as any)?.seller_status === 'approved') {
+        const [{ data: acct }, { count: activeOrders }, { data: myGigs }] = await Promise.all([
+          supabase.from('seller_accounts').select('available_balance, pending_balance, lifetime_earnings').eq('seller_id', userId).maybeSingle(),
+          supabase.from('orders').select('id', { count: 'exact', head: true }).eq('seller_id', userId).in('status', ['in_progress', 'delivered', 'revision_requested'] as any),
+          supabase.from('gigs').select('id,title,impressions,total_orders,average_rating').eq('seller_id', userId),
+        ]);
+        const earnings = Math.round(((acct as any)?.lifetime_earnings ?? 0) / 100);
+        const avail = Math.round(((acct as any)?.available_balance ?? 0) / 100);
+        const gigLines = (myGigs ?? []).slice(0, 5).map((g: any) =>
+          `  • ${g.title} — ${g.impressions ?? 0} views · ${g.total_orders ?? 0} orders · ★${g.average_rating ?? 0}`,
+        ).join('\n');
+        sellerContext = `\n\nThe user is a Katexs seller. Their live stats:
+- Lifetime earnings: $${earnings}
+- Available to withdraw: $${avail}
+- Active orders: ${activeOrders ?? 0}
+- Their services:\n${gigLines || '  • (none yet)'}\n`;
+      }
+    }
 
     // Load custom system prompt if admin set one
     const { data: settings } = await supabase
@@ -69,10 +94,10 @@ Deno.serve(async (req) => {
       const s = sellerById.get(g.seller_id);
       const name = s?.full_name || s?.username || 'Seller';
       const cat = [g.category, g.subcategory].filter(Boolean).join(' / ') || 'general';
-      return `- "${g.title}" (${g.id}) — ${cat} · by ${name} · from $${g.starting_price ?? 0} · ★${g.average_rating ?? 0} (${g.total_reviews ?? 0} reviews) · ${g.total_orders ?? 0} orders`;
+      return `- id=${g.id} | "${g.title}" — ${cat} · by ${name} · from $${g.starting_price ?? 0} · ★${g.average_rating ?? 0} (${g.total_reviews ?? 0} reviews) · ${g.total_orders ?? 0} orders`;
     }).join('\n') || '- (no gigs available yet)';
 
-    const system = `${basePrompt}\n\nAvailable gigs:\n${gigList}`;
+    const system = `${basePrompt}${sellerContext}\n\nAvailable experts / gigs (use the id when emitting [EXPERT_CARD: id]):\n${gigList}`;
 
     const res = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -82,7 +107,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         model: 'google/gemini-2.5-flash',
-        max_tokens: 400,
+        max_tokens: 500,
         messages: [
           { role: 'system', content: system },
           ...messages.map((m: any) => ({
@@ -112,7 +137,27 @@ Deno.serve(async (req) => {
     const data = await res.json();
     const reply = data.choices?.[0]?.message?.content ?? '';
 
-    return new Response(JSON.stringify({ reply }), {
+    // Resolve any [EXPERT_CARD: id] references to compact card payloads the UI can render
+    const ids = Array.from(new Set([...reply.matchAll(/\[EXPERT_CARD:\s*([0-9a-f-]{8,})\s*\]/gi)].map((m) => m[1])));
+    let cards: any[] = [];
+    if (ids.length) {
+      const matched = (gigs ?? []).filter((g: any) => ids.includes(g.id));
+      cards = matched.map((g: any) => {
+        const s = sellerById.get(g.seller_id);
+        return {
+          id: g.id,
+          title: g.title,
+          category: [g.category, g.subcategory].filter(Boolean).join(' · '),
+          price: g.starting_price ?? 0,
+          rating: Number(g.average_rating ?? 0),
+          reviews: g.total_reviews ?? 0,
+          seller_name: s?.full_name || s?.username || 'Seller',
+          seller_username: s?.username ?? null,
+        };
+      });
+    }
+
+    return new Response(JSON.stringify({ reply, cards }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (e) {
