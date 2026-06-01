@@ -174,6 +174,7 @@ export default function Checkout() {
   const [loading, setLoading] = useState(true);
   const [showPromo, setShowPromo] = useState(false);
   const [promo, setPromo] = useState("");
+  const [payMethod, setPayMethod] = useState<"card" | "paypal">("card");
 
   useEffect(() => {
     if (authLoading) return;
