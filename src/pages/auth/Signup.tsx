@@ -20,6 +20,7 @@ export default function Signup() {
   const nav = useNavigate();
   const [role, setRole] = useState<Role>("client");
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successEmail, setSuccessEmail] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -30,6 +31,13 @@ export default function Signup() {
     country: "",
   });
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "ok" | "taken" | "invalid">("idle");
+
+  const sendSignupVerification = (email: string) =>
+    supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: "https://katexs.com/services" },
+    });
 
   useEffect(() => {
     if (role !== "seller" || !form.username) {
@@ -81,6 +89,13 @@ export default function Signup() {
     // (anti-enumeration: no error, no email re-sent). Detect and tell the user clearly.
     const identities = (data?.user as { identities?: unknown[] } | null)?.identities;
     if (data?.user && Array.isArray(identities) && identities.length === 0) {
+      const { error: resendError } = await sendSignupVerification(form.email);
+      if (!resendError) {
+        setSuccessEmail(form.email);
+        toast.success("Verification email sent again");
+        return;
+      }
+
       setErrorMsg(
         `An account with ${form.email} already exists. Try signing in, or reset your password if you've forgotten it.`,
       );
@@ -88,6 +103,20 @@ export default function Signup() {
     }
     setSuccessEmail(form.email);
     toast.success("Check your email to confirm your account");
+  };
+
+  const handleResendVerification = async () => {
+    if (!successEmail) return;
+    setResendLoading(true);
+    const { error } = await sendSignupVerification(successEmail);
+    setResendLoading(false);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+
+    toast.success("Verification email sent again");
   };
 
 
@@ -120,6 +149,15 @@ export default function Signup() {
         >
           Check your email at <strong>{successEmail}</strong> — click the link to verify your account.
         </div>
+        <button
+          type="button"
+          onClick={handleResendVerification}
+          disabled={resendLoading}
+          className="kx-submit-btn kx-submit-black"
+          style={{ marginTop: 18 }}
+        >
+          {resendLoading ? "Sending…" : "Resend verification email"}
+        </button>
       </AuthLayout>
     );
   }
