@@ -310,8 +310,8 @@ export function RiverCommandBar() {
 
           <input
             value={value}
-            onChange={(e) => setValue(e.target.value)}
-            onFocus={() => setFocused(true)}
+            onChange={(e) => { setValue(e.target.value); if (micError) { setMicError(null); setError(null); } }}
+            onFocus={() => { setFocused(true); if (micError) { setMicError(null); setError(null); } }}
             onBlur={() => setFocused(false)}
             placeholder={placeholder}
             style={{
