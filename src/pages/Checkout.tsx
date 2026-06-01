@@ -666,7 +666,17 @@ export default function Checkout() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-[13px] text-foreground-muted">Loading payment form…</div>
+                  <div
+                    aria-label="Loading payment form"
+                    className="rounded-[12px] border border-border bg-white p-4 min-h-[220px]"
+                    style={{
+                      background:
+                        "linear-gradient(90deg,#f3f4f6 0%,#e5e7eb 50%,#f3f4f6 100%)",
+                      backgroundSize: "200% 100%",
+                      animation: "kxshimmer 1.2s infinite linear",
+                    }}
+                  />
+
                 )}
               </div>
 
