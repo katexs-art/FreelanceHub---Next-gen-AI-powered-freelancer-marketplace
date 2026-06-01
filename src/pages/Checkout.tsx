@@ -81,7 +81,7 @@ function PayBlock({
           setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
         ),
       ]);
-      const { error, paymentIntent } = result as Awaited<ReturnType<typeof stripe.confirmPayment>>;
+      const { error, paymentIntent } = result as { error?: any; paymentIntent?: any };
       if (error) {
         setErrorMsg(error.message ?? "Payment failed");
         toast.error(error.message ?? "Payment failed");
