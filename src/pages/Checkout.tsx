@@ -391,15 +391,53 @@ export default function Checkout() {
                   >
                     Payment method
                   </h2>
+                  <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                    {([
+                      { id: "card", label: "Credit / Debit card" },
+                      { id: "paypal", label: "PayPal" },
+                    ] as const).map((opt) => {
+                      const active = payMethod === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setPayMethod(opt.id)}
+                          style={{
+                            flex: 1,
+                            height: 44,
+                            borderRadius: 12,
+                            border: `1px solid ${active ? "#0A0A0A" : "#EBEBEB"}`,
+                            background: active ? "#0A0A0A" : "#FFFFFF",
+                            color: active ? "#FFFFFF" : "#0A0A0A",
+                            fontSize: 14,
+                            fontWeight: 500,
+                            cursor: "pointer",
+                            transition: "all 0.15s",
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                   <div
                     style={{
                       background: "#F7F7F7",
                       border: "1px solid #EBEBEB",
                       borderRadius: 12,
                       padding: 16,
+                      minHeight: 60,
                     }}
                   >
-                    <PaymentElement />
+                    <PaymentElement
+                      options={{
+                        paymentMethodOrder: payMethod === "card" ? ["card"] : ["paypal"],
+                        wallets:
+                          payMethod === "card"
+                            ? { applePay: "never", googlePay: "never" }
+                            : { applePay: "never", googlePay: "never" },
+                      }}
+                    />
                   </div>
                 </div>
 
