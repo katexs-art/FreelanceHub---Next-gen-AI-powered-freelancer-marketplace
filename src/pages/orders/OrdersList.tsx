@@ -3,6 +3,8 @@ import { Link } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { EmptyState } from "@/components/EmptyState";
+import { ShoppingBag } from "lucide-react";
 
 interface OrderRow {
   id: string;
