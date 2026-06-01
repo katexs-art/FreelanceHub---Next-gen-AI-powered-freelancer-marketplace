@@ -362,7 +362,7 @@ export default function Landing() {
           </div>
           <Link to="/services" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all →</Link>
         </div>
-        <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div className="kx-grid-gigs" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           {gigsLoading
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="kx-shimmer" style={{ border: "1px solid #2a2a2a", borderRadius: 16, height: 280 }} />
