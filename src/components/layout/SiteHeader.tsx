@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { RoleSwitcher } from "@/components/layout/RoleSwitcher";
 import { Search, Menu, ArrowRight } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import katexsLogo from "@/assets/katexs-logo.png";
 
@@ -16,6 +17,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
   const location = useLocation();
   const [q, setQ] = useState("");
   const [scrolled, setScrolled] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const isTransparent = variant === "transparent";
 
@@ -35,6 +37,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
     const linkCls = "px-3 py-2 text-white text-[13px] opacity-80 hover:opacity-100 transition-opacity";
     const handleHowItWorks = (e: React.MouseEvent) => {
       e.preventDefault();
+      setMobileOpen(false);
       if (location.pathname === "/") {
         document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
       } else {
@@ -59,11 +62,12 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
             />
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8 ml-4">
+          <nav className="hidden lg:flex items-center gap-8 ml-4">
             <Link to="/services" className={linkCls}>Find Experts</Link>
-            <Link to="/post-job" className={linkCls}>Post a Project</Link>
             <Link to="/how-it-works" className={linkCls}>How It Works</Link>
-            <Link to="/pricing" className={linkCls}>Pricing</Link>
+            <Link to="/projects" className={linkCls}>Projects</Link>
+            <Link to="/post-job" className={linkCls}>Post a Project</Link>
+            {user && <Link to="/inbox" className={linkCls}>Messages</Link>}
           </nav>
 
           <form
@@ -85,7 +89,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
 
           <div className="flex-1 lg:hidden" />
 
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             {user ? (
               <>
                 <Link to={dashHref}>
@@ -122,7 +126,32 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
             )}
           </div>
 
-          <button className="md:hidden p-2 text-white/70"><Menu className="h-5 w-5" /></button>
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <button className="lg:hidden p-2 text-white/70"><Menu className="h-5 w-5" /></button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72 bg-black border-l border-white/10 p-6">
+              <div className="flex flex-col gap-4 mt-8">
+                <Link to="/services" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Find Experts</Link>
+                <Link to="/how-it-works" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>How It Works</Link>
+                <Link to="/projects" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Projects</Link>
+                <Link to="/post-job" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Post a Project</Link>
+                {user && <Link to="/inbox" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Messages</Link>}
+                <div className="border-t border-white/10 my-2" />
+                {user ? (
+                  <>
+                    <Link to={dashHref} className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>HQ</Link>
+                    <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-left text-white text-sm opacity-80 hover:opacity-100">Sign out</button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/sign-in" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Sign In</Link>
+                    <Link to="/sign-up" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Join Free</Link>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </header>
     );
@@ -135,13 +164,11 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
           <img src={katexsLogo} alt="KATEXS" style={{ height: 20, width: "auto", display: "block" }} />
         </Link>
 
-        <nav className="hidden md:flex items-center gap-1 text-sm">
+        <nav className="hidden lg:flex items-center gap-1 text-sm">
           <Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Find Experts</Link>
           <Link to="/how-it-works" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">How It Works</Link>
           <Link to="/projects" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Projects</Link>
-          {user && profile?.role === "client" && (
-            <Link to="/post-job" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Post a Project</Link>
-          )}
+          <Link to="/post-job" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Post a Project</Link>
           {user && (
             <Link to="/inbox" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Messages</Link>
           )}
@@ -171,7 +198,7 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
 
         {user && <RoleSwitcher />}
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden lg:flex items-center gap-2">
           {user ? (
             <>
               <Link to={dashHref}><Button variant="ghost" size="sm">HQ</Button></Link>
@@ -185,7 +212,32 @@ export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
           )}
         </div>
 
-        <button className="md:hidden p-2 text-foreground-muted"><Menu className="h-5 w-5" /></button>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetTrigger asChild>
+            <button className="lg:hidden p-2 text-foreground-muted"><Menu className="h-5 w-5" /></button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-72 p-6">
+            <div className="flex flex-col gap-4 mt-8">
+              <Link to="/services" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Find Experts</Link>
+              <Link to="/how-it-works" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>How It Works</Link>
+              <Link to="/projects" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Projects</Link>
+              <Link to="/post-job" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Post a Project</Link>
+              {user && <Link to="/inbox" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Messages</Link>}
+              <div className="border-t border-border my-2" />
+              {user ? (
+                <>
+                  <Link to={dashHref} className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>HQ</Link>
+                  <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-left text-sm text-foreground-muted hover:text-foreground">Sign out</button>
+                </>
+              ) : (
+                <>
+                  <Link to="/login" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Sign in</Link>
+                  <Link to="/signup" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Join</Link>
+                </>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
     </header>
   );
