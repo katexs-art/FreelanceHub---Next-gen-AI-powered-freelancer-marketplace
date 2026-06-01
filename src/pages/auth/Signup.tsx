@@ -32,6 +32,13 @@ export default function Signup() {
   });
   const [usernameStatus, setUsernameStatus] = useState<"idle" | "checking" | "ok" | "taken" | "invalid">("idle");
 
+  const sendSignupVerification = (email: string) =>
+    supabase.auth.resend({
+      type: "signup",
+      email,
+      options: { emailRedirectTo: "https://katexs.com/services" },
+    });
+
   useEffect(() => {
     if (role !== "seller" || !form.username) {
       setUsernameStatus("idle");
@@ -82,6 +89,13 @@ export default function Signup() {
     // (anti-enumeration: no error, no email re-sent). Detect and tell the user clearly.
     const identities = (data?.user as { identities?: unknown[] } | null)?.identities;
     if (data?.user && Array.isArray(identities) && identities.length === 0) {
+      const { error: resendError } = await sendSignupVerification(form.email);
+      if (!resendError) {
+        setSuccessEmail(form.email);
+        toast.success("Verification email sent again");
+        return;
+      }
+
       setErrorMsg(
         `An account with ${form.email} already exists. Try signing in, or reset your password if you've forgotten it.`,
       );
@@ -94,11 +108,7 @@ export default function Signup() {
   const handleResendVerification = async () => {
     if (!successEmail) return;
     setResendLoading(true);
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: successEmail,
-      options: { emailRedirectTo: "https://katexs.com/services" },
-    });
+    const { error } = await sendSignupVerification(successEmail);
     setResendLoading(false);
 
     if (error) {
