@@ -610,7 +610,7 @@ export default function Services() {
   );
 }
 
-function FilterGroup({ title, last, children }: { title: string; last?: boolean; children: React.ReactNode }) {
+function FilterGroup({ title, last, children }: { title: string; last?: boolean; children: ReactNode }) {
   return (
     <div style={{ paddingBottom: last ? 0 : 16, marginBottom: last ? 0 : 16, borderBottom: last ? "none" : "1px solid #161616" }}>
       <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>{title}</div>
