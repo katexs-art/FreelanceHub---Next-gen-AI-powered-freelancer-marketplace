@@ -31,6 +31,7 @@ const SUGGESTIONS = [
   "Automate my workflow",
 ];
 
+const STORAGE_KEY = "river_chat_history";
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/river-chat`;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
