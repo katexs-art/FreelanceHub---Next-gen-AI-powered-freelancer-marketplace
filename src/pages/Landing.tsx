@@ -334,15 +334,15 @@ export default function Landing() {
                 }}
               >
                 <div style={{
-                  width: 44, height: 44, borderRadius: 12, background: "rgba(255,255,255,0.06)",
-                  border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center",
+                  width: 44, height: 44, borderRadius: 12, background: `${c.color}1F`,
+                  border: `1px solid ${c.color}55`, display: "flex", alignItems: "center",
                   justifyContent: "center", marginBottom: 20,
                 }}>
-                  <Icon size={20} color="#fff" strokeWidth={1.75} />
+                  <Icon size={20} color={c.color} strokeWidth={1.75} />
                 </div>
                 <div style={{ fontSize: 15, fontWeight: 600, color: "#ffffff", marginBottom: 8 }}>{c.label}</div>
                 <div style={{ fontSize: 13, color: "#cccccc", lineHeight: 1.5, marginBottom: 16 }}>{c.desc}</div>
-                <div style={{ fontSize: 12, color: "#888888" }}>Browse experts →</div>
+                <div style={{ fontSize: 12, color: c.color }}>Browse →</div>
               </Link>
             );
           })}
