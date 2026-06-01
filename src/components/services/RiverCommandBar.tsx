@@ -234,6 +234,33 @@ export function RiverCommandBar() {
 
   const onSubmit = (e: React.FormEvent) => { e.preventDefault(); submit(value); };
 
+  // One-click retry: explicitly re-request mic permission via getUserMedia,
+  // then start speech recognition once granted.
+  const retryMic = useCallback(async () => {
+    const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+
+    setRetryingMic(true);
+    setMicError(null);
+    setError(null);
+
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+      // Permission granted — start listening
+      setRetryingMic(false);
+      recogRef.current?.stop?.();
+      toggleMic();
+    } catch (err: any) {
+      setRetryingMic(false);
+      // Still denied — keep error state
+      setMicError("denied");
+      setError("Microphone access is still blocked. Enable it in your browser settings to use voice search.");
+      toast.error("Microphone still blocked", {
+        description: "Permission was denied again. Enable microphone access in your browser settings.",
+      });
+    }
+  }, [toggleMic]);
+
 
   const onChipClick = (label: string) => {
     const text = `Find me a top ${label} expert`;
