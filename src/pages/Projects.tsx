@@ -17,13 +17,16 @@ type GigRow = {
   total_reviews: number;
   category: string | null;
   created_at: string;
-  seller: { id: string; username: string | null; full_name: string | null; avatar_url: string | null } | null;
+  seller_id: string;
   gig_packages: { delivery_days: number }[] | null;
 };
+
+type SellerInfo = { id: string; username: string | null; full_name: string | null; avatar_url: string | null };
 
 export default function Projects() {
   const { data: categories } = useCategories();
   const [gigs, setGigs] = useState<GigRow[]>([]);
+  const [sellers, setSellers] = useState<Record<string, SellerInfo>>({});
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState<string>("");
@@ -35,13 +38,24 @@ export default function Projects() {
       const { data, error } = await supabase
         .from("gigs")
         .select(
-          "id,title,thumbnail_url,starting_price,average_rating,total_reviews,category,created_at,seller:profiles!gigs_seller_id_fkey(id,username,full_name,avatar_url),gig_packages(delivery_days)"
+          "id,title,thumbnail_url,starting_price,average_rating,total_reviews,category,created_at,seller_id,gig_packages(delivery_days)"
         )
         .eq("status", "active")
         .order("created_at", { ascending: false })
         .limit(500);
       if (error) console.error("Failed to load services", error);
-      setGigs((data ?? []) as unknown as GigRow[]);
+      const rows = (data ?? []) as unknown as GigRow[];
+      setGigs(rows);
+      const ids = Array.from(new Set(rows.map((r) => r.seller_id)));
+      if (ids.length) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id,username,full_name,avatar_url")
+          .in("id", ids);
+        const map: Record<string, SellerInfo> = {};
+        (profs ?? []).forEach((p: any) => { map[p.id] = p; });
+        setSellers(map);
+      }
       setLoading(false);
     })();
   }, []);
@@ -65,6 +79,7 @@ export default function Projects() {
     const minDelivery = g.gig_packages?.length
       ? Math.min(...g.gig_packages.map((p) => p.delivery_days))
       : null;
+    const s = sellers[g.seller_id];
     return {
       id: g.id,
       title: g.title,
@@ -73,9 +88,7 @@ export default function Projects() {
       average_rating: Number(g.average_rating ?? 0),
       total_reviews: g.total_reviews,
       delivery_days: Number.isFinite(minDelivery as number) ? (minDelivery as number) : null,
-      seller: g.seller
-        ? { username: g.seller.username, full_name: g.seller.full_name, avatar_url: g.seller.avatar_url }
-        : null,
+      seller: s ? { username: s.username, full_name: s.full_name, avatar_url: s.avatar_url } : null,
     };
   };
 
