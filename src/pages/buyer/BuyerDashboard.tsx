@@ -152,8 +152,8 @@ export default function BuyerDashboard() {
           id: c.id,
           last_message_preview: c.last_message_preview,
           last_message_at: c.last_message_at,
-          other: otherMap.get(c.participant_one === user.id ? c.participant_two : c.participant_one) ?? null,
-        })),
+          other: (otherMap.get(c.participant_one === user.id ? c.participant_two : c.participant_one) ?? null) as ConvRow["other"],
+        })) as ConvRow[],
       );
 
       // Recommended experts: based on categories from past orders, fallback to top rated
