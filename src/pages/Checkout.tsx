@@ -195,7 +195,52 @@ function PayBlock({
             fontSize: 13,
           }}
         >
-          {errorMsg}
+          <div style={{ marginBottom: 8 }}>{errorMsg}</div>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMsg(null);
+                onPay();
+              }}
+              disabled={busy || !stripe || !elements}
+              style={{
+                height: 32,
+                padding: "0 12px",
+                background: "#0A0A0A",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: 8,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: busy ? "wait" : "pointer",
+              }}
+            >
+              Retry payment
+            </button>
+            {onRetryInit && (
+              <button
+                type="button"
+                onClick={() => {
+                  setErrorMsg(null);
+                  onRetryInit();
+                }}
+                style={{
+                  height: 32,
+                  padding: "0 12px",
+                  background: "#FFFFFF",
+                  color: "#0A0A0A",
+                  border: "1px solid #EBEBEB",
+                  borderRadius: 8,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                }}
+              >
+                Start a new payment session
+              </button>
+            )}
+          </div>
         </div>
       )}
       <div
