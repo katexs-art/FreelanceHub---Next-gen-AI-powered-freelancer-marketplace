@@ -486,13 +486,19 @@ export default function Checkout() {
   const thumb = gig?.thumbnail_url || "/placeholder.svg";
   const sellerName = seller?.full_name || seller?.username || "Expert";
   const sellerAvatar = seller?.avatar_url || "/placeholder.svg";
+  const sellerInitials = (() => {
+    const parts = sellerName.trim().split(/\s+/).filter(Boolean);
+    const first = parts[0]?.[0] ?? "K";
+    const last = parts.length > 1 ? parts[parts.length - 1][0] : "";
+    return (first + last).toUpperCase();
+  })();
   const amountLabel = order.gig_id ? "Selected package" : "Project amount";
 
   const sidebarBtnBg = payState?.succeeded
     ? "#15803D"
     : payState?.disabled && !payState?.busy
-    ? "#9CA3AF"
-    : "#16A34A";
+    ? "#4B5563"
+    : "#0A0A0A";
   const sidebarBtnLabel = payState?.label ?? `Pay Now — $${total}`;
 
   return (
@@ -532,15 +538,7 @@ export default function Checkout() {
                     className="w-20 h-20 rounded-lg object-cover flex-shrink-0 bg-[#F7F7F7]"
                   />
                   <div className="min-w-0 flex-1">
-                    <div
-                      className="text-[16px] font-semibold text-foreground leading-snug"
-                      style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
+                    <div className="text-[16px] font-semibold text-foreground leading-snug break-words">
                       {itemTitle}
                     </div>
                     <span className="inline-flex items-center mt-2 px-2.5 py-1 rounded-full bg-[#F7F7F7] border border-border text-[12px] font-medium text-foreground-muted">
@@ -561,9 +559,9 @@ export default function Checkout() {
                   ) : (
                     <div
                       aria-hidden
-                      className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F7F7F7] border border-border text-[14px] font-semibold text-foreground"
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-[#16A34A] text-white text-[13px] font-semibold"
                     >
-                      {sellerName.trim().charAt(0).toUpperCase() || "K"}
+                      {sellerInitials}
                     </div>
                   )}
                   <div className="min-w-0">
@@ -721,7 +719,7 @@ export default function Checkout() {
             {/* RIGHT COLUMN */}
             <aside className="checkout-right sticky top-24">
               <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
-                <h2 className="text-[16px] font-semibold text-foreground mb-5">
+                <h2 className="text-[17px] font-bold text-foreground mb-5 tracking-tight">
                   Order summary
                 </h2>
 
