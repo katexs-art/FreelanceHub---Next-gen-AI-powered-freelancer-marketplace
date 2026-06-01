@@ -20,6 +20,8 @@ export default function Signup() {
   const nav = useNavigate();
   const [role, setRole] = useState<Role>("client");
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successEmail, setSuccessEmail] = useState<string | null>(null);
   const [form, setForm] = useState({
     full_name: "",
     email: "",
@@ -49,15 +51,18 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
     if (role === "seller" && usernameStatus !== "ok") {
-      return toast.error("Pick a valid, available username");
+      const m = "Pick a valid, available username";
+      setErrorMsg(m);
+      return toast.error(m);
     }
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
+        emailRedirectTo: "https://katexs.com/services",
         data: {
           full_name: form.full_name,
           role,
@@ -67,10 +72,15 @@ export default function Signup() {
       },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setErrorMsg(error.message);
+      toast.error(error.message);
+      return;
+    }
+    setSuccessEmail(form.email);
     toast.success("Check your email to confirm your account");
-    nav("/login");
   };
+
 
   const handleGoogle = async () => {
     sessionStorage.setItem("pending_role", role);
@@ -80,6 +90,31 @@ export default function Signup() {
 
   const submitTone = role === "seller" ? "green" : "black";
 
+  if (successEmail) {
+    return (
+      <AuthLayout
+        title="Check your email"
+        subtitle="One quick step to activate your account"
+        footer={<>Already verified? <Link to="/login">Sign in</Link></>}
+      >
+        <KxAuthStyles />
+        <div
+          style={{
+            background: "#F0FDF4",
+            border: "1px solid #16A34A",
+            borderRadius: 12,
+            padding: 20,
+            color: "#0a0a0a",
+            fontSize: 14,
+            lineHeight: 1.55,
+          }}
+        >
+          Check your email at <strong>{successEmail}</strong> — click the link to verify your account.
+        </div>
+      </AuthLayout>
+    );
+  }
+
   return (
     <AuthLayout
       title="Create your account"
@@ -87,6 +122,8 @@ export default function Signup() {
       footer={<>Already have an account? <Link to="/login">Sign in</Link></>}
     >
       <KxAuthStyles />
+
+
 
       <div className="kx-toggle">
         <button
@@ -164,9 +201,27 @@ export default function Signup() {
         />
         <p style={{ fontSize: 12, color: "#bbb", marginTop: -8 }}>At least 8 characters</p>
 
+        {errorMsg && (
+          <div
+            role="alert"
+            style={{
+              background: "#FEF2F2",
+              border: "1px solid #DC2626",
+              color: "#B91C1C",
+              borderRadius: 10,
+              padding: "10px 12px",
+              fontSize: 13,
+              lineHeight: 1.4,
+            }}
+          >
+            {errorMsg}
+          </div>
+        )}
+
         <KxSubmit loading={loading} tone={submitTone}>
           {loading ? "Creating account…" : "Create account"}
         </KxSubmit>
+
 
         <KxTrustBadges />
 
