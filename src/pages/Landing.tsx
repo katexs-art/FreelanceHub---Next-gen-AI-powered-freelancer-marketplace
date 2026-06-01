@@ -56,6 +56,7 @@ export default function Landing() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [sellers, setSellers] = useState<TopSeller[]>([]);
+  const [sellersLoading, setSellersLoading] = useState(true);
   const [featuredGigs, setFeaturedGigs] = useState<any[]>([]);
   const [gigsLoading, setGigsLoading] = useState(true);
   const SR: any = typeof window !== "undefined" ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
