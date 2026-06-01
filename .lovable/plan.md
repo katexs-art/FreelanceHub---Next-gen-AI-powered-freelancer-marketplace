@@ -1,58 +1,49 @@
-## Goal
-Visually overhaul `src/pages/Checkout.tsx` to a world-class two-column checkout while keeping every piece of existing functionality (Stripe init, `PayBlock`, order loading, promo state, retry flows).
+## Context
 
-## Scope
-- Only `src/pages/Checkout.tsx`. No backend, hook, or routing changes.
-- Keep the `<Elements>` provider, `PayBlock` component, `loadOrderAndInit`, and all state intact.
+`src/pages/Checkout.tsx` already has the two-column layout, sticky summary, project card, pill tab switcher, collapsible promo row, and trust bar from earlier rounds. Custom-offer pricing was also fixed previously via the `accept_custom_offer` cents→dollars migration plus a three-way amount-integrity guard (order price ↔ custom offer ↔ Stripe PaymentIntent). The remaining work is verification + targeted polish to match the new spec.
 
-## Layout
-- Wrap main in `max-w-5xl mx-auto px-6 py-10` on a `#F7F7F7` canvas.
-- Grid: left 60% / right 40%, 32px gap. Stacks on `<900px`.
-- Page eyebrow + H1 "Checkout" above the grid; small "Back" link to gig.
+## Part 1 — Pricing read path (verify, harden, no schema change)
 
-## Left column
-1. **Project card** (white, border, radius 16, subtle shadow):
-   - 80px thumbnail, full (un-truncated, `line-clamp-2`) gig title at 16/600.
-   - Package subtitle in muted text.
-   - Thin divider.
-   - Row: 40px circular seller avatar, seller name (medium), small "Top seller" muted hint if available.
-   - Row: clock icon + "Delivery by {date}" in muted text.
-2. **Payment method card**:
-   - Heading "How would you like to pay?" (15/600).
-   - Pill toggle group (rounded-full, border, active = `#0A0A0A` bg + white text; inactive = white + border). Two pills: "Credit / Debit card" and "PayPal". Switching sets `payMethod` (Stripe re-mounts on key change — already wired).
-   - Remove the "Enter your card details on the right" helper text.
-   - Render `PayBlock` (which contains `<PaymentElement>`) **inside this card**, directly under the pills, so the element mounts in the left column. This requires moving `<PayBlock>` from the right sidebar to here. The Pay button stays inside `PayBlock`; we will pass a `hidePayButton` prop and instead render the CTA in the right sidebar — OR simpler: keep `PayBlock` intact under the pills and add a sticky summary CTA on the right that scrolls to it. **Decision:** keep `PayBlock` unchanged (Pay button + element together) under the pills — sidebar CTA becomes a non-functional total display + scroll-to-pay button on mobile only. Actually cleanest: split `PayBlock` so the `PaymentElement` renders in the left card and the Pay button renders in the right sidebar. Will refactor `PayBlock` minimally into two pieces sharing one `useStripe/useElements` context by lifting `onPay` to a parent ref/callback. Simpler approach chosen: **keep `PayBlock` as one unit under the pills on the left**, and the right sidebar shows the total + a visual "Pay" mirror button that triggers the same click via a shared ref. To avoid double-render of `PaymentElement`, only one instance exists (left). The right "Pay Now" button calls the same handler via a callback ref passed down.
-3. **Promo code**: collapsible row with chevron icon. Closed state: full-width ghost row "Apply promo code" + chevron-right. Open: chevron-down + input + Apply button.
+The checkout already reads `orders.price` fresh on every mount and resets `clientSecret` before each fetch. Two small hardening tweaks:
 
-## Right column (sticky `top-24`)
-- White card, border, radius 16, padding 24:
-  - "Order summary" heading (16/600).
-  - Row: amount label + `$price`.
-  - Row: "Katexs service fee (5%)" + `$fee` with `Info` tooltip icon (Radix `Tooltip` already in deps).
-  - Divider.
-  - Bold TOTAL row, label 14, value 20/700.
-  - Green CTA "Pay Now — $total" (full-width, h-52, brand green `#16A34A`, radius 12). Wires to the same `onPay` ref exposed by `PayBlock`.
-  - Below: shield icon + "Secure 256-bit SSL encryption" (12, gray).
-  - Below: two rows with `Check` icons — "3-day delivery guarantee", "Money-back guarantee".
+1. Confirm `loadOrderAndInit` clears `order`, `seller`, `gig`, `payState`, and `clientSecret` at the top so a stale render can never display a previous order's price during route changes between two different `/checkout/:order_id` URLs.
+2. Always display `${order.price}` as the project amount (never a fallback like gig starting price), and continue gating "Pay Now" behind the existing `amountMismatch` guard. The error banner stays; no behavior change for valid orders.
 
-## Trust bar
-- Below the grid, full-width centered row with 3 items (icon + label, 13, muted):
-  - `ShieldCheck` "Secure Payment"
-  - `RefreshCcw` "Money-back Guarantee"
-  - `Headphones` "24/7 Support"
-- Top border-hairline, py-6.
+No edge-function or DB changes — the cents→dollars fix in `accept_custom_offer` and the server/client integrity checks already in `stripe-payment-intent` and Checkout are the source of truth.
 
-## Typography & theming
-- Use existing system font + Tailwind tokens (`text-foreground`, `text-foreground-muted`, `border-border`, `bg-surface`). Replace inline `#888`, `#0A0A0A`, etc. with semantic classes where reasonable; keep brand green `#16A34A` for CTA (matches design token `--primary`).
-- Note: project memory states light Fiverr theme (not dark). The user said "Keep dark theme consistent" — interpreting as "consistent with site theme" (which is light). Will keep current light styling.
+## Part 2 — UI refinements
 
-## PayBlock refactor (minimal)
-- Add optional prop `payButtonSlot?: (props: { onPay, disabled, label }) => ReactNode` so the parent can render the Pay button in the sidebar while the `PaymentElement` stays in the left card. If slot provided, internal button is hidden. Error/secure-text stays under the element.
-- All current logging, retry, error UI preserved.
+Apply only the deltas vs the current implementation, in `src/pages/Checkout.tsx`:
+
+- **Project card**
+  - Add a circular initials avatar fallback when `seller.avatar_url` is empty (first letter of seller name on `#F7F7F7` bg).
+  - Surface the package type prominently: keep the gig thumbnail + title, then under the seller row add a small pill showing "Standard package" for gig orders or "Custom offer" for custom-offer orders.
+  - Keep delivery date row with the clock icon.
+
+- **Payment method card**
+  - Rename heading from "How would you like to pay?" to **"Pay with"**.
+  - Soften the active pill: replace the black `#0A0A0A` active state with a light selected style (white bg, `#0A0A0A` text, 2px `#0A0A0A` border) so it reads as a tab, not a CTA. Inactive stays subtle gray border.
+  - Drop the "Loading payment form…" line; rely on the existing shimmer skeleton inside the PaymentElement frame.
+  - PaymentElement mounts unchanged — same `Elements` provider, same `clientSecret`, same `payMethod` keying. No Stripe behavior touched.
+
+- **Order summary sidebar**
+  - Reorder trust lines: **Money-back guarantee** first, then **3-day delivery guarantee**.
+  - Pay Now button keeps full width, `#16A34A`, `${total}` label, disabled fallback `#9CA3AF`, and the existing `amountMismatch` block.
+  - Keep "Secure 256-bit SSL encryption" lock row under the button.
+  - Keep the small terms disclosure but reduce to a single line under the trust list.
+
+- **Promo code** — already a chevron collapsible; no change beyond visual alignment with the other cards.
+
+- **Trust bar** — already present (Secure Payment, Money-back Guarantee, 24/7 Support); leave as-is.
+
+- **Typography & theme** — system stack already in use per project memory. No font swap to DM Sans (would break the project-wide system-font rule in `mem://style/typography`); if the user explicitly wants DM Sans here I'll surface that as a follow-up rather than override the global rule.
 
 ## Out of scope
-- No changes to Stripe Elements options, `confirmPayment` call, payment intent invocation, or order fetch logic.
-- No new dependencies.
 
-## Files
-- `src/pages/Checkout.tsx` — edited.
+- No design-direction exploration (spec is concrete; one rendered output is what's asked for).
+- No new DB migration, no edge-function changes, no Stripe API change.
+- No change to PayBlock internals or `confirmPayment` flow.
+
+## One open question
+
+The spec says "Use DM Sans font" but the project's locked typography rule is the system stack. I will keep the system stack (per memory) unless you confirm you want to override it just for Checkout.

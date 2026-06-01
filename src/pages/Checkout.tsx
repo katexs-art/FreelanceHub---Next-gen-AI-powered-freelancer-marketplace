@@ -283,6 +283,12 @@ export default function Checkout() {
     setAmountMismatch(null);
     setLoading(true);
     setClientSecret(null);
+    setStripePromise(null);
+    setOrder(null);
+    setSeller(null);
+    setGig(null);
+    setPayState(null);
+
     const { data: o, error } = await supabase
       .from("orders")
       .select(
