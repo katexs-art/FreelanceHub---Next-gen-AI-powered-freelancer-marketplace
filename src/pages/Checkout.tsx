@@ -703,21 +703,22 @@ export default function Checkout() {
 
                     <button
                       type="button"
-                      onClick={() => payState?.onPay()}
-                      disabled={!payState || payState.disabled}
+                      onClick={() => !amountMismatch && payState?.onPay()}
+                      disabled={!payState || payState.disabled || !!amountMismatch}
                       className="w-full text-white font-semibold text-[15px] rounded-[12px] h-[52px] transition-colors"
                       style={{
-                        background: sidebarBtnBg,
+                        background: amountMismatch ? "#9CA3AF" : sidebarBtnBg,
                         cursor: payState?.busy
                           ? "wait"
-                          : !payState || payState.disabled
+                          : !payState || payState.disabled || amountMismatch
                           ? "not-allowed"
                           : "pointer",
                         opacity: payState?.busy ? 0.85 : 1,
                       }}
                     >
-                      {sidebarBtnLabel}
+                      {amountMismatch ? "Payment blocked" : sidebarBtnLabel}
                     </button>
+
 
                     <div className="flex items-center justify-center gap-1.5 mt-3 text-[12px] text-foreground-subtle">
                       <ShieldCheck size={13} /> Secure 256-bit SSL encryption
