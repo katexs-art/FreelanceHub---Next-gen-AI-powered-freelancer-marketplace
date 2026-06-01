@@ -483,24 +483,10 @@ export default function Checkout() {
                       );
                     })}
                   </div>
-                  <div
-                    style={{
-                      background: "#F7F7F7",
-                      border: "1px solid #EBEBEB",
-                      borderRadius: 12,
-                      padding: 16,
-                      minHeight: 60,
-                    }}
-                  >
-                    <PaymentElement
-                      options={{
-                        paymentMethodOrder: payMethod === "card" ? ["card"] : ["paypal"],
-                        wallets:
-                          payMethod === "card"
-                            ? { applePay: "never", googlePay: "never" }
-                            : { applePay: "never", googlePay: "never" },
-                      }}
-                    />
+                  <div style={{ fontSize: 13, color: "#666" }}>
+                    {payMethod === "card"
+                      ? "Enter your card details on the right to complete payment securely."
+                      : "Click Pay Now on the right to be redirected to PayPal."}
                   </div>
                 </div>
 
