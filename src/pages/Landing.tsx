@@ -167,6 +167,8 @@ export default function Landing() {
         @media (max-width: 768px) {
           .kx-hero-h1 { font-size: 40px !important; }
           .kx-section { padding: 48px 20px !important; }
+          .kx-grid-cats { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+          .kx-grid-gigs { grid-template-columns: 1fr !important; }
           .kx-grid-4 { grid-template-columns: 1fr 1fr !important; }
           .kx-grid-3 { grid-template-columns: 1fr !important; }
           .kx-grid-stats { grid-template-columns: 1fr 1fr !important; }
