@@ -477,6 +477,7 @@ export default function Services() {
           )}
         </div>
       </section>
+      <SiteFooter />
     </div>
   );
 }
