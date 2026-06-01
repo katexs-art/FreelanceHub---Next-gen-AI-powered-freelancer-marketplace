@@ -531,7 +531,7 @@ export default function Checkout() {
             `}</style>
 
             {/* LEFT COLUMN */}
-            <div className="space-y-5">
+            <div className="checkout-left space-y-5">
               {/* Project card */}
               <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 <div className="flex gap-4 items-start">
