@@ -559,9 +559,9 @@ export default function Checkout() {
                   ) : (
                     <div
                       aria-hidden
-                      className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F7F7F7] border border-border text-[14px] font-semibold text-foreground"
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-[#16A34A] text-white text-[13px] font-semibold"
                     >
-                      {sellerName.trim().charAt(0).toUpperCase() || "K"}
+                      {sellerInitials}
                     </div>
                   )}
                   <div className="min-w-0">
