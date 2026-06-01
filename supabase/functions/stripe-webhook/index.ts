@@ -131,6 +131,8 @@ Deno.serve(async (req) => {
               await admin.from("project_posts").update({ status: "in_progress" }).eq("id", bidRow.project_id);
             }
           }
+          // If this order originated from a custom offer, mark it accepted
+          await admin.from("custom_offers").update({ status: "accepted" }).eq("order_id", order.id);
           // Notifications
           const deadline = order.delivery_deadline ? new Date(order.delivery_deadline).toLocaleDateString() : "soon";
           await admin.from("notifications").insert([
