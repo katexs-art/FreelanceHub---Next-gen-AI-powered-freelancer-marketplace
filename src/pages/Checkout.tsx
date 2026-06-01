@@ -283,6 +283,12 @@ export default function Checkout() {
     setAmountMismatch(null);
     setLoading(true);
     setClientSecret(null);
+    setStripePromise(null);
+    setOrder(null);
+    setSeller(null);
+    setGig(null);
+    setPayState(null);
+
     const { data: o, error } = await supabase
       .from("orders")
       .select(
@@ -537,20 +543,29 @@ export default function Checkout() {
                     >
                       {itemTitle}
                     </div>
-                    <div className="text-[13px] text-foreground-subtle mt-1">
+                    <span className="inline-flex items-center mt-2 px-2.5 py-1 rounded-full bg-[#F7F7F7] border border-border text-[12px] font-medium text-foreground-muted">
                       {itemSubtitle}
-                    </div>
+                    </span>
                   </div>
                 </div>
 
                 <div className="h-px bg-border my-5" />
 
                 <div className="flex items-center gap-3">
-                  <img
-                    src={sellerAvatar}
-                    alt={sellerName}
-                    className="w-10 h-10 rounded-full object-cover bg-[#F7F7F7]"
-                  />
+                  {seller?.avatar_url ? (
+                    <img
+                      src={sellerAvatar}
+                      alt={sellerName}
+                      className="w-10 h-10 rounded-full object-cover bg-[#F7F7F7]"
+                    />
+                  ) : (
+                    <div
+                      aria-hidden
+                      className="w-10 h-10 rounded-full flex items-center justify-center bg-[#F7F7F7] border border-border text-[14px] font-semibold text-foreground"
+                    >
+                      {sellerName.trim().charAt(0).toUpperCase() || "K"}
+                    </div>
+                  )}
                   <div className="min-w-0">
                     <div className="text-[14px] font-medium text-foreground">
                       {sellerName}
@@ -565,10 +580,11 @@ export default function Checkout() {
                 </div>
               </div>
 
+
               {/* Payment method card */}
               <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 <h2 className="text-[15px] font-semibold text-foreground mb-4">
-                  How would you like to pay?
+                  Pay with
                 </h2>
 
                 <div className="flex gap-2 mb-5">
@@ -586,9 +602,12 @@ export default function Checkout() {
                         onClick={() => setPayMethod(opt.id)}
                         className="h-9 px-4 text-[13px] font-medium rounded-full transition-colors"
                         style={{
-                          background: active ? "#0A0A0A" : "#FFFFFF",
-                          color: active ? "#FFFFFF" : "#0A0A0A",
-                          border: `1px solid ${active ? "#0A0A0A" : "#EBEBEB"}`,
+                          background: "#FFFFFF",
+                          color: "#0A0A0A",
+                          border: active
+                            ? "2px solid #0A0A0A"
+                            : "1px solid #EBEBEB",
+                          padding: active ? "0 15px" : "0 16px",
                         }}
                       >
                         {opt.label}
@@ -596,6 +615,7 @@ export default function Checkout() {
                     );
                   })}
                 </div>
+
 
                 {clientSecret && stripePromise ? (
                   <Elements
@@ -646,7 +666,17 @@ export default function Checkout() {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-[13px] text-foreground-muted">Loading payment form…</div>
+                  <div
+                    aria-label="Loading payment form"
+                    className="rounded-[12px] border border-border bg-white p-4 min-h-[220px]"
+                    style={{
+                      background:
+                        "linear-gradient(90deg,#f3f4f6 0%,#e5e7eb 50%,#f3f4f6 100%)",
+                      backgroundSize: "200% 100%",
+                      animation: "kxshimmer 1.2s infinite linear",
+                    }}
+                  />
+
                 )}
               </div>
 
@@ -753,13 +783,14 @@ export default function Checkout() {
                 <ul className="space-y-2.5">
                   <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
                     <Check size={14} className="text-[#16A34A]" />
-                    3-day delivery guarantee
+                    Money-back guarantee
                   </li>
                   <li className="flex items-center gap-2 text-[13px] text-foreground-muted">
                     <Check size={14} className="text-[#16A34A]" />
-                    Money-back guarantee
+                    3-day delivery guarantee
                   </li>
                 </ul>
+
 
                 <div className="mt-4 text-[11px] text-foreground-subtle text-center leading-relaxed">
                   By clicking Pay Now you agree to Katexs Terms of Service and Payment Terms.
