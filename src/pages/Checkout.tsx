@@ -41,9 +41,13 @@ interface GigInfo {
 function PayBlock({
   orderId,
   total,
+  payMethod,
+  onReadyChange,
 }: {
   orderId: string;
   total: number;
+  payMethod: "card" | "paypal";
+  onReadyChange?: (ready: boolean) => void;
 }) {
   const stripe = useStripe();
   const elements = useElements();
@@ -51,37 +55,60 @@ function PayBlock({
   const [busy, setBusy] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [succeeded, setSucceeded] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [complete, setComplete] = useState(false);
+
+  useEffect(() => {
+    setReady(false);
+    setComplete(false);
+    onReadyChange?.(false);
+  }, [payMethod, onReadyChange]);
 
   const onPay = async () => {
     if (!stripe || !elements) return;
     setErrorMsg(null);
     setBusy(true);
-    const { error, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/orders/${orderId}/confirmed`,
-      },
-      redirect: "if_required",
-    });
-    if (error) {
-      setErrorMsg(error.message ?? "Payment failed");
+    try {
+      const result = await Promise.race([
+        stripe.confirmPayment({
+          elements,
+          confirmParams: {
+            return_url: `${window.location.origin}/orders/${orderId}/confirmed`,
+          },
+          redirect: "if_required",
+        }),
+        new Promise<never>((_, rej) =>
+          setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
+        ),
+      ]);
+      const { error, paymentIntent } = result as { error?: any; paymentIntent?: any };
+      if (error) {
+        setErrorMsg(error.message ?? "Payment failed");
+        toast.error(error.message ?? "Payment failed");
+        setBusy(false);
+        return;
+      }
+      if (
+        paymentIntent &&
+        (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")
+      ) {
+        setSucceeded(true);
+        setBusy(false);
+        setTimeout(() => nav(`/orders/${orderId}/confirmed`, { replace: true }), 600);
+        return;
+      }
+      setErrorMsg("Payment did not complete. Please try again.");
       setBusy(false);
-      return;
-    }
-    if (
-      paymentIntent &&
-      (paymentIntent.status === "succeeded" || paymentIntent.status === "processing")
-    ) {
-      setSucceeded(true);
+    } catch (e) {
+      const msg = (e as Error).message || "Payment failed - please try again";
+      setErrorMsg(msg);
+      toast.error(msg);
       setBusy(false);
-      setTimeout(() => nav(`/orders/${orderId}/confirmed`, { replace: true }), 800);
-      return;
     }
-    setErrorMsg("Payment did not complete. Please try again.");
-    setBusy(false);
   };
 
-  const bg = succeeded ? "#15803D" : "#16A34A";
+  const disabled = !stripe || !elements || busy || succeeded || !ready || !complete;
+  const bg = succeeded ? "#15803D" : disabled && !busy ? "#9CA3AF" : "#16A34A";
   const label = succeeded
     ? "✓ Payment successful"
     : busy
@@ -90,16 +117,52 @@ function PayBlock({
 
   return (
     <>
+      <div
+        style={{
+          background: "#FFFFFF",
+          border: "1px solid #EBEBEB",
+          borderRadius: 12,
+          padding: 16,
+          minHeight: 220,
+          marginBottom: 16,
+          position: "relative",
+        }}
+      >
+        {!ready && (
+          <div
+            aria-label="Loading payment form"
+            style={{
+              position: "absolute",
+              inset: 16,
+              borderRadius: 8,
+              background:
+                "linear-gradient(90deg,#f3f4f6 0%,#e5e7eb 50%,#f3f4f6 100%)",
+              backgroundSize: "200% 100%",
+              animation: "kxshimmer 1.2s infinite linear",
+            }}
+          >
+            <style>{`@keyframes kxshimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}`}</style>
+          </div>
+        )}
+        <PaymentElement
+          key={payMethod}
+          onReady={() => {
+            setReady(true);
+            onReadyChange?.(true);
+          }}
+          onChange={(e) => setComplete(e.complete)}
+          options={{
+            layout: "tabs",
+            paymentMethodOrder:
+              payMethod === "paypal" ? ["paypal", "card"] : ["card", "paypal"],
+            wallets: { applePay: "never", googlePay: "never" },
+          }}
+        />
+      </div>
       <button
         type="button"
         onClick={onPay}
-        disabled={!stripe || busy || succeeded}
-        onMouseOver={(e) => {
-          if (!busy && !succeeded) (e.currentTarget as HTMLButtonElement).style.background = "#15803D";
-        }}
-        onMouseOut={(e) => {
-          if (!busy && !succeeded) (e.currentTarget as HTMLButtonElement).style.background = "#16A34A";
-        }}
+        disabled={disabled}
         style={{
           width: "100%",
           marginTop: 4,
@@ -110,7 +173,7 @@ function PayBlock({
           height: 52,
           fontSize: 16,
           fontWeight: 600,
-          cursor: busy ? "wait" : succeeded ? "default" : "pointer",
+          cursor: busy ? "wait" : disabled ? "not-allowed" : "pointer",
           transition: "background 0.2s",
           opacity: busy ? 0.85 : 1,
         }}
@@ -225,17 +288,28 @@ export default function Checkout() {
         return;
       }
 
-      const { data: pi, error: piErr } = await supabase.functions.invoke(
-        "stripe-payment-intent",
-        { body: { order_id: o.id } },
-      );
-      if (piErr || !pi?.client_secret) {
-        setErr(piErr?.message || pi?.error || "Could not initialize payment");
+      try {
+        const invokePromise = supabase.functions.invoke("stripe-payment-intent", {
+          body: { order_id: o.id },
+        });
+        const { data: pi, error: piErr } = (await Promise.race([
+          invokePromise,
+          new Promise((_, rej) =>
+            setTimeout(() => rej(new Error("Payment failed - please try again")), 10000),
+          ),
+        ])) as Awaited<typeof invokePromise>;
+        if (piErr || !pi?.client_secret) {
+          setErr(piErr?.message || pi?.error || "Could not initialize payment");
+          setLoading(false);
+          return;
+        }
+        setClientSecret(pi.client_secret);
+        setStripePromise(loadStripe(pi.publishable_key));
+      } catch (e) {
+        setErr((e as Error).message || "Could not initialize payment");
         setLoading(false);
         return;
       }
-      setClientSecret(pi.client_secret);
-      setStripePromise(loadStripe(pi.publishable_key));
       setLoading(false);
     })();
   }, [authLoading, user, order_id, nav]);
@@ -420,24 +494,10 @@ export default function Checkout() {
                       );
                     })}
                   </div>
-                  <div
-                    style={{
-                      background: "#F7F7F7",
-                      border: "1px solid #EBEBEB",
-                      borderRadius: 12,
-                      padding: 16,
-                      minHeight: 60,
-                    }}
-                  >
-                    <PaymentElement
-                      options={{
-                        paymentMethodOrder: payMethod === "card" ? ["card"] : ["paypal"],
-                        wallets:
-                          payMethod === "card"
-                            ? { applePay: "never", googlePay: "never" }
-                            : { applePay: "never", googlePay: "never" },
-                      }}
-                    />
+                  <div style={{ fontSize: 13, color: "#666" }}>
+                    {payMethod === "card"
+                      ? "Enter your card details on the right to complete payment securely."
+                      : "Click Pay Now on the right to be redirected to PayPal."}
                   </div>
                 </div>
 
@@ -540,7 +600,7 @@ export default function Checkout() {
                     <span>${total}</span>
                   </div>
 
-                  <PayBlock orderId={order.id} total={total} />
+                  <PayBlock orderId={order.id} total={total} payMethod={payMethod} />
                 </div>
               </aside>
             </div>
