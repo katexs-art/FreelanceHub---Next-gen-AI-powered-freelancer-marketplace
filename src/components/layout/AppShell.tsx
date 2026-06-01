@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { RiverWidget } from "@/components/layout/RiverWidget";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useOnlineHeartbeat } from "@/hooks/useOnlineHeartbeat";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
