@@ -94,6 +94,7 @@ const App = () => (
             <Route path="/how-it-works" element={<HowItWorks />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/search" element={<Search />} />
+            <Route path="/find-experts" element={<FindExperts />} />
             
             <Route path="/pitch/:buyer_search_id" element={<ProtectedRoute><Pitch /></ProtectedRoute>} />
             <Route path="/projects" element={<Projects />} />
