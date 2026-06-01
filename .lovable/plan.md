@@ -1,20 +1,35 @@
-## Deploy stripe-webhook Edge Function
+## Fix stripe-webhook Edge Function
 
-The `stripe-webhook` function code already exists at `supabase/functions/stripe-webhook/index.ts` and is correctly configured in `supabase/config.toml` with `verify_jwt = false`. It already handles all three required events and verifies signatures via `STRIPE_WEBHOOK_SECRET`.
+Audit of `supabase/functions/stripe-webhook/index.ts` against the four requirements:
 
-### Note on URL
-The URL you provided (`lquoahkuzqwtiihshdaf.supabase.co`) belongs to a different backend. This Lovable project's backend is `nswgubxabcjyfsgbiicz`, so the deployed webhook URL will be:
+| # | Requirement | Current state |
+|---|---|---|
+| 1 | Read `STRIPE_WEBHOOK_SECRET` via `Deno.env.get` | Already correct |
+| 2 | Use `Stripe.createSubtleCryptoProvider()` + `constructEventAsync()` | Uses `constructEventAsync()` but does **not** pass an explicit `SubtleCryptoProvider` |
+| 3 | `verify_jwt = false` in `supabase/config.toml` | Already correct |
+| 4 | Read body as raw text via `req.text()` | Already correct |
 
-```
-https://nswgubxabcjyfsgbiicz.supabase.co/functions/v1/stripe-webhook
-```
+Only item 2 needs a code change. The rest already comply.
 
-Update your Stripe Dashboard webhook endpoint to this URL.
+### Change
 
-### Steps
-1. Deploy `stripe-webhook` via `supabase--deploy_edge_functions`.
-2. Pull recent logs to confirm a clean boot (no startup errors).
-3. Confirm `STRIPE_WEBHOOK_SECRET` and `STRIPE_SECRET_KEY` are present in runtime secrets.
-4. Report the correct production URL and the three configured events (`checkout.session.completed`, `payment_intent.succeeded`, `charge.refunded`) so you can register/update the endpoint in Stripe.
+In `supabase/functions/stripe-webhook/index.ts`:
 
-No code changes — deploy only.
+1. Instantiate the crypto provider once at module scope:
+   ```ts
+   const cryptoProvider = Stripe.createSubtleCryptoProvider();
+   ```
+2. Pass it as the 4th argument to `constructEventAsync`:
+   ```ts
+   event = await stripe.webhooks.constructEventAsync(
+     body, sig, webhookSecret, undefined, cryptoProvider
+   );
+   ```
+
+This makes signature verification work reliably in Deno (Web Crypto) instead of relying on Stripe's auto-detection.
+
+### Deploy
+
+After the edit, redeploy via `supabase--deploy_edge_functions` for `stripe-webhook` and tail logs to confirm a clean boot.
+
+No other files, no schema changes, no business-logic changes.

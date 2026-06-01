@@ -11,6 +11,7 @@ const corsHeaders = {
 };
 
 const FEE_PCT = 0.10;
+const cryptoProvider = Stripe.createSubtleCryptoProvider();
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -30,7 +31,7 @@ Deno.serve(async (req) => {
   try {
     const sig = req.headers.get("stripe-signature");
     if (!sig) return new Response("missing signature", { status: 400 });
-    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
+    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret, undefined, cryptoProvider);
   } catch (e) {
     console.error("webhook signature error", e);
     return new Response("invalid signature", { status: 400 });
