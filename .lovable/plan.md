@@ -1,52 +1,31 @@
-# Rename "Play"/"Plays" → "Service"/"Services" (UI only)
+## Root causes
 
-Replace all user-visible occurrences of "Play"/"Plays" with "Service"/"Services" while preserving:
-- Existing capitalization (Play → Service, play → service, Plays → Services, plays → services)
-- Code aliases and DB field names (PostgREST aliases like `plays:gig_id(...)` and downstream `o.plays` accessors stay untouched — not user-facing)
-- Unrelated words (display, playwright, autoplay, playsInline, displayName)
+1. **React hooks-order crash → blank white page.** `OrderWorkspace.tsx` calls `useState` for `disputeOpen` and `disputeReason` *after* the early `return` for loading/missing order. The first render registers 8 hooks, later renders register 10, React throws "Rendered more hooks than during previous render", and the whole route unmounts to a blank screen.
+2. **Embedded foreign joins return no data.** The `orders` table has no foreign keys to `gigs` or `profiles`, so the query `gigs:gig_id(...)`, `buyer:buyer_id(...)`, `seller:seller_id(...)` fails inside PostgREST and `data` comes back null. Even without the hooks crash this would show "Project not found".
+3. **No guard for orders with `gig_id = null`** (the test order `222ab2db…` has `gig_id = null` because it came from a custom offer / project bid). The current code blindly queries `gig_requirements.eq("gig_id", null)`.
+4. **No error state.** When the query fails the user only sees "Project not found" with no diagnostic; we'll add a proper not-found / error block.
 
-## Files to update
+RLS on `orders` is already correct (`orders_party_read` allows buyer, seller, admin) — no migration needed.
 
-**Sidebar / shell**
-- `src/components/layout/AppShell.tsx` — `"My plays"` → `"My services"`
+## Fix plan — `src/pages/orders/OrderWorkspace.tsx` only
 
-**Seller area**
-- `src/pages/seller/SellerDashboard.tsx` — "Active plays", "Create a play", "No plays yet", "Create your first play" (×2)
-- `src/pages/seller/MyGigs.tsx` — "My plays", "New play", "No plays yet", "Create a play", `<th>Play</th>`, "Untitled play"
-- `src/pages/seller/GigEditor.tsx` — "Play published", "Edit play"/"Create a new play", "Play title", "Play description", "Publish play"
-- `src/pages/seller/SellerAnalytics.tsx` — SEO description, "Top plays", `<th>Play</th>`, "No plays yet"
-
-**Buyer / marketplace**
-- `src/pages/GigDetail.tsx` — "Play not found", "Browse plays", "About this play", "Report play"
-- `src/pages/Explore.tsx` — "trending plays"
-- `src/pages/Services.tsx` — "Trending Plays" → "Trending Services"
-- `src/pages/SellerProfile.tsx` — "No active plays yet."
-- `src/pages/account/Saved.tsx` — "Saved plays", "Plays you've hearted…"
-- `src/pages/account/Settings.tsx` — "Saved plays →"
-- `src/pages/buyer/BuyerDashboard.tsx` — "Find a play" (leave `plays:gig_id` alias as-is)
-- `src/pages/orders/OrdersList.tsx` — fallback label `"Play"` → `"Service"`
-- `src/components/marketplace/SaveGigButton.tsx` — aria-label "Save/Unsave play"
-- `src/components/marketplace/PromoteGigDialog.tsx` — toast + dialog copy
-- `src/components/inbox/ConversationDetailsPanel.tsx` — "Related Plays" header + empty state
-- `src/components/layout/RiverWidget.tsx` — "Play matcher" → "Service matcher"
-
-**Pricing / How it works (marketing copy)**
-- `src/pages/Pricing.tsx` — "Free to list up to 10 Plays", "List your Plays…"
-- `src/pages/HowItWorks.tsx` — glossary entry "Play" → "Service" (keep "formerly Gig"), and prose mentions of Plays in steps
-
-**Admin**
-- `src/pages/admin/Admin.tsx` — nav label "Plays", stat labels "Plays"/"Saved Plays", `<a>Plays</a>`, section title "Plays", "No plays.", label map `gigs: "Plays"`, confirm "Delete play?"
-- `src/pages/admin/sections/ReportsQueue.tsx` — "Hide play"
-
-**Internal QA labels (optional, ask)**
-- `src/lib/testFlows.ts` — internal test titles ("Browse loads active plays", "Create project from play", "no active plays"). These appear in an internal admin Test Flows panel. I'll update them too for consistency.
-
-## Out of scope (intentionally untouched)
-
-- Supabase query aliases `plays:gig_id(...)` in `BuyerDashboard.tsx`, `Search.tsx`, `CheckoutSuccess.tsx` and the `.plays` accessors that read them — these are code identifiers, not UI strings. Renaming would touch business logic the user did not ask to change.
-- DB column/table names (gigs table stays `gigs`).
-- CSS utility classes containing "display", and HTML attrs `autoPlay`/`playsInline`.
+1. **Move all `useState` hooks to the top of the component**, above any early returns. This alone unblocks the blank page.
+2. **Stop relying on embedded joins.** Fetch the order with only its own columns, then in parallel fetch:
+   - `gigs` row by `gig_id` (skip if null)
+   - `gig_packages` row by `package_id` (skip if null)
+   - `profiles` rows for buyer_id and seller_id via `in("id", [...])`
+   - `gig_requirements` only if `gig_id` is present
+   - `order_deliveries` by `order_id`
+   Compose them into the existing `order` shape so the rest of the JSX keeps working.
+3. **Handle custom-offer / project orders (no gig).** Fall back to `order.project_title` for the title, hide the thumbnail, and skip the requirements section when there is no gig.
+4. **Loading + error + not-found states.**
+   - While fetching: existing "Loading…" stays.
+   - On query error: show an "Unable to load order" card with the error message and a retry button.
+   - When the query succeeds but returns no row (or RLS hides it from the current user): show a clear "Order not found" card with a link back to `/orders`.
+5. **Keep all existing behavior** (timeline, deliveries, requirements, dispute flow, review, messaging button). No business-logic changes.
 
 ## Verification
 
-After edits, re-run `rg -n "[Pp]lays?\b" src/` filtered to exclude code-only matches and confirm only the intentionally-skipped aliases remain.
+- Load `/orders/222ab2db-627c-4d38-a3aa-d7eddd01c1c5` as the buyer or seller and confirm the page renders with status `pending_requirements`, the project title, both participants, amount, deadline, timeline, and the message-seller button.
+- Visit a random UUID and confirm the "Order not found" card appears instead of a blank screen.
+- Confirm no React hooks warning in the console.

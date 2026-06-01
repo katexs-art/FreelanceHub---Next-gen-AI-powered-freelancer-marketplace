@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,6 +13,7 @@ import { OrderResolutionActions } from "@/components/marketplace/OrderResolution
 import { OrderTimeline, DeliveryCountdown } from "@/components/marketplace/OrderTimeline";
 import { shouldEmail } from "@/lib/emailPrefs";
 
+interface Party { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string | null }
 interface Order {
   id: string; order_number: string; status: string; price: number;
   buyer_id: string; seller_id: string; gig_id: string | null; package_id: string | null;
@@ -22,8 +23,8 @@ interface Order {
   dispute_deadline: string | null; escrow_status: string | null; project_title: string | null;
   gigs: { title: string; thumbnail_url: string | null } | null;
   gig_packages: { title: string | null; delivery_days: number; revisions: number } | null;
-  buyer: { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string } | null;
-  seller: { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string } | null;
+  buyer: Party | null;
+  seller: Party | null;
 }
 interface Requirement { id: string; question: string; field_type: string; is_required: boolean; sort_order: number; }
 interface Delivery { id: string; message: string | null; file_urls: string[]; created_at: string; is_revision: boolean; }
@@ -32,6 +33,8 @@ export default function OrderWorkspace() {
   const { id } = useParams();
   const { user } = useAuth();
   const nav = useNavigate();
+
+  // All hooks at top — never below an early return.
   const [order, setOrder] = useState<Order | null>(null);
   const [reqs, setReqs] = useState<Requirement[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -40,39 +43,116 @@ export default function OrderWorkspace() {
   const [deliveryFiles, setDeliveryFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [disputeOpen, setDisputeOpen] = useState(false);
+  const [disputeReason, setDisputeReason] = useState("");
 
   const load = async () => {
     if (!id) return;
-    const { data } = await supabase.from("orders").select(`
-      id, order_number, status, price, buyer_id, seller_id, gig_id, package_id,
-      dispute_deadline, escrow_status, project_title,
-      delivery_deadline, delivered_at, requirements_submitted, requirements_submitted_at,
-      revision_count, created_at, completed_at,
-      gigs:gig_id (title, thumbnail_url),
-      gig_packages:package_id (title, delivery_days, revisions),
-      buyer:buyer_id (full_name, username, avatar_url, email),
-      seller:seller_id (full_name, username, avatar_url, email)
-    `).eq("id", id).maybeSingle();
-    setOrder(data as any);
-    if (data) {
-      const [{ data: r }, { data: d }] = await Promise.all([
-        supabase.from("gig_requirements").select("*").eq("gig_id", (data as any).gig_id).order("sort_order"),
-        supabase.from("order_deliveries").select("*").eq("order_id", (data as any).id).order("created_at", { ascending: false }),
+    setLoading(true);
+    setLoadError(null);
+    try {
+      const { data: o, error: oErr } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+      if (oErr) throw oErr;
+      if (!o) {
+        setOrder(null);
+        setLoading(false);
+        return;
+      }
+
+      const [gigRes, pkgRes, profilesRes, reqsRes, delivRes] = await Promise.all([
+        o.gig_id
+          ? supabase.from("gigs").select("title, thumbnail_url").eq("id", o.gig_id).maybeSingle()
+          : Promise.resolve({ data: null, error: null } as any),
+        o.package_id
+          ? supabase.from("gig_packages").select("title, delivery_days, revisions").eq("id", o.package_id).maybeSingle()
+          : Promise.resolve({ data: null, error: null } as any),
+        supabase.from("profiles").select("id, full_name, username, avatar_url, email").in("id", [o.buyer_id, o.seller_id]),
+        o.gig_id
+          ? supabase.from("gig_requirements").select("*").eq("gig_id", o.gig_id).order("sort_order")
+          : Promise.resolve({ data: [], error: null } as any),
+        supabase.from("order_deliveries").select("*").eq("order_id", o.id).order("created_at", { ascending: false }),
       ]);
-      setReqs((r as any) ?? []);
-      setDeliveries((d as any) ?? []);
+
+      const profiles = (profilesRes.data as Party[] | null) ?? [];
+      const buyer = profiles.find((p) => p.id === o.buyer_id) ?? null;
+      const seller = profiles.find((p) => p.id === o.seller_id) ?? null;
+
+      setOrder({
+        ...(o as any),
+        gigs: gigRes.data ?? null,
+        gig_packages: pkgRes.data ?? null,
+        buyer,
+        seller,
+      });
+      setReqs((reqsRes.data as any) ?? []);
+      setDeliveries((delivRes.data as any) ?? []);
+    } catch (e: any) {
+      console.error("OrderWorkspace load failed", e);
+      setLoadError(e.message ?? "Failed to load order");
+      setOrder(null);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
-  if (loading) return <AppShell><div className="text-foreground-muted text-sm">Loading…</div></AppShell>;
-  if (!order || !user) return <AppShell><div>Project not found.</div></AppShell>;
+  if (loading) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl">
+          <div className="text-foreground-muted text-sm">Loading order…</div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl">
+          <div className="bg-background border border-border rounded-xl p-8 text-center">
+            <h1 className="text-lg font-semibold mb-1">Unable to load order</h1>
+            <p className="text-sm text-foreground-muted mb-4">{loadError}</p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={load}>Try again</Button>
+              <Button variant="outline" asChild><Link to="/orders">Back to orders</Link></Button>
+            </div>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!order) {
+    return (
+      <AppShell>
+        <div className="max-w-4xl">
+          <div className="bg-background border border-border rounded-xl p-8 text-center">
+            <h1 className="text-lg font-semibold mb-1">Order not found</h1>
+            <p className="text-sm text-foreground-muted mb-4">
+              This order doesn't exist or you don't have access to it.
+            </p>
+            <Button variant="outline" asChild><Link to="/orders">Back to orders</Link></Button>
+          </div>
+        </div>
+      </AppShell>
+    );
+  }
+
+  if (!user) {
+    return <AppShell><div>Please sign in to view this order.</div></AppShell>;
+  }
 
   const isBuyer = user.id === order.buyer_id;
   const isSeller = user.id === order.seller_id;
   const counterpart = isBuyer ? order.seller : order.buyer;
+  const orderTitle = order.gigs?.title ?? order.project_title ?? "Custom project";
 
   const submitRequirements = async () => {
     if (!order) return;
@@ -116,12 +196,11 @@ export default function OrderWorkspace() {
       }).eq("id", order.id);
       setDeliveryMsg(""); setDeliveryFiles([]);
       toast.success("Delivery sent");
-      // best-effort email to buyer
       if (order.buyer?.email && shouldEmail("orders")) {
         supabase.functions.invoke("send-marketplace-email", {
           body: {
             template: "order_delivered", to: order.buyer.email,
-            data: { order_id: order.id, order_number: order.order_number, gig_title: order.gigs?.title, seller_name: order.seller?.full_name ?? order.seller?.username },
+            data: { order_id: order.id, order_number: order.order_number, gig_title: orderTitle, seller_name: order.seller?.full_name ?? order.seller?.username },
           },
         });
       }
@@ -147,8 +226,6 @@ export default function OrderWorkspace() {
     load();
   };
 
-  const [disputeOpen, setDisputeOpen] = useState(false);
-  const [disputeReason, setDisputeReason] = useState("");
   const raiseDispute = async () => {
     if (!order) return;
     if (!disputeReason.trim()) return toast.error("Please describe the issue");
@@ -185,9 +262,9 @@ export default function OrderWorkspace() {
           </div>
           <div className="flex-1 min-w-0">
             <div className="text-xs text-foreground-muted">{order.order_number}</div>
-            <h1 className="text-lg font-semibold line-clamp-1">{order.gigs?.title}</h1>
+            <h1 className="text-lg font-semibold line-clamp-1">{orderTitle}</h1>
             <div className="text-xs text-foreground-muted mt-0.5">
-              with {counterpart?.full_name ?? counterpart?.username} · {order.gig_packages?.title ?? "Package"}
+              with {counterpart?.full_name ?? counterpart?.username ?? "—"} · {order.gig_packages?.title ?? "Package"}
             </div>
           </div>
           <div className="text-right">
@@ -233,9 +310,8 @@ export default function OrderWorkspace() {
           </section>
         )}
 
-
         {/* Requirements */}
-        {!order.requirements_submitted && (
+        {order.gig_id && !order.requirements_submitted && (
           <section className="mt-8 bg-background border border-border rounded-xl p-6">
             <h2 className="text-lg font-semibold mb-1">Requirements</h2>
             <p className="text-sm text-foreground-muted mb-4">
