@@ -3,7 +3,8 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
 import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
@@ -69,6 +70,7 @@ export default function Inbox() {
   const { conversationId } = useParams();
   const { user } = useAuth();
   const nav = useNavigate();
+  const isMobile = useIsMobile();
   const [convs, setConvs] = useState<Conv[]>([]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
@@ -221,18 +223,24 @@ export default function Inbox() {
           margin: "-2.5rem",
           height: "calc(100vh - 3.5rem)",
           display: "grid",
-          gridTemplateColumns: active ? "320px 1fr 260px" : "320px 1fr",
+          gridTemplateColumns: isMobile
+            ? "1fr"
+            : active
+            ? "320px 1fr 260px"
+            : "320px 1fr",
           background: "#fff",
         }}
       >
         {/* COLUMN 2 — Conversation list */}
+        {(!isMobile || !active) && (
         <aside
           style={{
             background: "#FFFFFF",
-            borderRight: "1px solid #EBEBEB",
+            borderRight: isMobile ? "none" : "1px solid #EBEBEB",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
+            minWidth: 0,
           }}
         >
           <div
@@ -392,8 +400,10 @@ export default function Inbox() {
             })}
           </div>
         </aside>
+        )}
 
         {/* COLUMN 3 — Active conversation */}
+        {(!isMobile || active) && (
         <section style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
           {!active ? (
             <div
@@ -433,7 +443,7 @@ export default function Inbox() {
                 style={{
                   background: "#FFFFFF",
                   borderBottom: "1px solid #EBEBEB",
-                  padding: "16px 24px",
+                  padding: isMobile ? "12px 14px" : "16px 24px",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
@@ -443,6 +453,16 @@ export default function Inbox() {
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                  {isMobile && (
+                    <button
+                      type="button"
+                      onClick={() => nav("/inbox")}
+                      aria-label="Back to messages"
+                      style={{ background: "transparent", border: "none", padding: 4, marginRight: 2, cursor: "pointer", color: "#0A0A0A" }}
+                    >
+                      <ArrowLeft size={20} />
+                    </button>
+                  )}
                   <div
                     style={{
                       width: 40,
@@ -754,7 +774,8 @@ export default function Inbox() {
             </>
           )}
         </section>
-        {active && active.other && user && (
+        )}
+        {!isMobile && active && active.other && user && (
           <ConversationDetailsPanel
             otherUser={active.other}
             conversationId={active.id}

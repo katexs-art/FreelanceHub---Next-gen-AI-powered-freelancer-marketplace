@@ -167,6 +167,8 @@ export default function Landing() {
         @media (max-width: 768px) {
           .kx-hero-h1 { font-size: 40px !important; }
           .kx-section { padding: 48px 20px !important; }
+          .kx-grid-cats { grid-template-columns: 1fr 1fr !important; gap: 12px !important; }
+          .kx-grid-gigs { grid-template-columns: 1fr !important; }
           .kx-grid-4 { grid-template-columns: 1fr 1fr !important; }
           .kx-grid-3 { grid-template-columns: 1fr !important; }
           .kx-grid-stats { grid-template-columns: 1fr 1fr !important; }
@@ -320,7 +322,7 @@ export default function Landing() {
           Browse by category
         </div>
         <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 32px" }}>What do you need done?</h2>
-        <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div className="kx-grid-cats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           {CATEGORIES.map((c) => {
             const Icon = c.Icon;
             return (
@@ -360,7 +362,7 @@ export default function Landing() {
           </div>
           <Link to="/services" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all →</Link>
         </div>
-        <div className="kx-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
+        <div className="kx-grid-gigs" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16 }}>
           {gigsLoading
             ? Array.from({ length: 8 }).map((_, i) => (
                 <div key={i} className="kx-shimmer" style={{ border: "1px solid #2a2a2a", borderRadius: 16, height: 280 }} />

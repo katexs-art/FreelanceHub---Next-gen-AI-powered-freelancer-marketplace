@@ -504,7 +504,7 @@ export default function Checkout() {
   return (
     <div className="min-h-screen flex flex-col bg-[#F7F7F7]">
       <SiteHeader />
-      <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-10">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
         <div className="mb-6">
           <div className="eyebrow mb-2">Checkout</div>
           <h1 className="text-2xl font-semibold text-foreground tracking-tight">
@@ -521,14 +521,17 @@ export default function Checkout() {
                 gap: 32px;
                 align-items: start;
               }
+              .checkout-left { min-width: 0; }
+              .checkout-right { min-width: 0; }
               @media (max-width: 900px) {
-                .checkout-grid { grid-template-columns: 1fr; }
-                .checkout-right { position: static !important; }
+                .checkout-grid { grid-template-columns: 1fr; gap: 16px; }
+                .checkout-right { position: static !important; order: -1; }
+                .checkout-left { order: 1; }
               }
             `}</style>
 
             {/* LEFT COLUMN */}
-            <div className="space-y-5">
+            <div className="checkout-left space-y-5">
               {/* Project card */}
               <div className="bg-white border border-border rounded-2xl p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                 <div className="flex gap-4 items-start">
