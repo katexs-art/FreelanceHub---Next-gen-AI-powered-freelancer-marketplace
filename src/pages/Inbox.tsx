@@ -400,6 +400,7 @@ export default function Inbox() {
             })}
           </div>
         </aside>
+        )}
 
         {/* COLUMN 3 — Active conversation */}
         <section style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
