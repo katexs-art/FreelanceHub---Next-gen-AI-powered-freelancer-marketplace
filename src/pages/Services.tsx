@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Search, Bookmark } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -11,14 +11,37 @@ import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState"
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 
 const CATEGORIES = [
-  { label: "Build with AI", slug: "build-with-ai" },
-  { label: "Sound and Speak with AI", slug: "sound-and-speak-with-ai" },
-  { label: "Create with AI", slug: "create-with-ai" },
-  { label: "Grow with AI", slug: "grow-with-ai" },
-  { label: "Run with AI", slug: "run-with-ai" },
-  { label: "Understand AI", slug: "understand-ai" },
-  { label: "Write with AI", slug: "write-with-ai" },
-  { label: "Learn AI", slug: "learn-ai" },
+  { label: "Voice AI", match: ["voice"] },
+  { label: "Chatbot Development", match: ["chatbot"] },
+  { label: "AI Automation", match: ["automation", "workflow"] },
+  { label: "Prompt Engineering", match: ["prompt"] },
+  { label: "AI Consulting", match: ["consult", "strategy"] },
+  { label: "Custom AI Models", match: ["model", "fine-tun", "machine learning"] },
+  { label: "AI Content", match: ["content", "writing", "copy"] },
+  { label: "AI Integration", match: ["integration", "api"] },
+  { label: "GoHighLevel", match: ["ghl", "gohighlevel", "highlevel"] },
+  { label: "Digital Marketing", match: ["marketing", "seo", "ads", "social"] },
+];
+
+const PRICE_RANGES = [
+  { label: "$0 – $50", min: 0, max: 50 },
+  { label: "$50 – $200", min: 50, max: 200 },
+  { label: "$200 – $500", min: 200, max: 500 },
+  { label: "$500+", min: 500, max: null as number | null },
+];
+const DELIVERY_OPTS = [
+  { label: "1 day", days: 1 },
+  { label: "3 days", days: 3 },
+  { label: "7 days", days: 7 },
+];
+const RATING_OPTS = [
+  { label: "4.5+", value: 4.5 },
+  { label: "4.0+", value: 4.0 },
+];
+const LEVEL_OPTS = [
+  { label: "Rising", min: 0, max: 4.4 },
+  { label: "Top Rated", min: 4.5, max: 4.79 },
+  { label: "Pro", min: 4.8, max: 5 },
 ];
 
 type Seller = {
@@ -57,6 +80,12 @@ export default function Services() {
   const [activity, setActivity] = useState<Activity[]>([]);
   const [gigs, setGigs] = useState<GigCardData[]>([]);
   const [gigsLoaded, setGigsLoaded] = useState(false);
+  const [activeCat, setActiveCat] = useState<string | null>(null);
+  const [priceIdx, setPriceIdx] = useState<number | null>(null);
+  const [deliveryIdx, setDeliveryIdx] = useState<number | null>(null);
+  const [ratingIdx, setRatingIdx] = useState<number | null>(null);
+  const [levelIdx, setLevelIdx] = useState<number | null>(null);
+
 
   useEffect(() => {
     (async () => {
@@ -107,18 +136,37 @@ export default function Services() {
     (async () => {
       const { data } = await supabase
         .from("gigs")
-        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id")
+        .select("id,title,thumbnail_url,starting_price,average_rating,total_reviews,seller_id,category")
         .eq("status", "active")
         .order("total_orders", { ascending: false })
-        .limit(12);
-      const ids = [...new Set((data ?? []).map((g: any) => g.seller_id))];
-      const { data: ss } = ids.length
-        ? await supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
-        : { data: [] as any };
+        .limit(48);
+      const gigList = (data ?? []) as any[];
+      const ids = [...new Set(gigList.map((g) => g.seller_id))];
+      const gigIds = gigList.map((g) => g.id);
+      const [{ data: ss }, { data: pkgs }] = await Promise.all([
+        ids.length
+          ? supabase.from("profiles").select("id,username,full_name,avatar_url").in("id", ids)
+          : Promise.resolve({ data: [] as any }),
+        gigIds.length
+          ? supabase.from("gig_packages").select("gig_id,delivery_days").in("gig_id", gigIds)
+          : Promise.resolve({ data: [] as any }),
+      ]);
       const byId = new Map((ss ?? []).map((s: any) => [s.id, s]));
-      setGigs((data ?? []).map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null })) as GigCardData[]);
+      const minDelivery = new Map<string, number>();
+      (pkgs ?? []).forEach((p: any) => {
+        const cur = minDelivery.get(p.gig_id);
+        if (cur === undefined || p.delivery_days < cur) minDelivery.set(p.gig_id, p.delivery_days);
+      });
+      setGigs(
+        gigList.map((g) => ({
+          ...g,
+          seller: byId.get(g.seller_id) ?? null,
+          delivery_days: minDelivery.get(g.id) ?? null,
+        })) as GigCardData[],
+      );
       setGigsLoaded(true);
     })();
+
 
     (async () => {
       const items: Activity[] = [];
@@ -176,6 +224,33 @@ export default function Services() {
   const featured = sellers[0];
   const intel = sellers.slice(0, 6);
 
+  const filteredGigs = gigs.filter((g: any) => {
+    if (activeCat) {
+      const cat = CATEGORIES.find((c) => c.label === activeCat);
+      const hay = `${g.title ?? ""} ${g.category ?? ""}`.toLowerCase();
+      if (cat && !cat.match.some((m) => hay.includes(m))) return false;
+    }
+    if (priceIdx !== null) {
+      const r = PRICE_RANGES[priceIdx];
+      if (g.starting_price < r.min) return false;
+      if (r.max !== null && g.starting_price > r.max) return false;
+    }
+    if (deliveryIdx !== null) {
+      const d = DELIVERY_OPTS[deliveryIdx];
+      if (g.delivery_days == null || g.delivery_days > d.days) return false;
+    }
+    if (ratingIdx !== null) {
+      if (Number(g.average_rating ?? 0) < RATING_OPTS[ratingIdx].value) return false;
+    }
+    if (levelIdx !== null) {
+      const r = Number(g.average_rating ?? 0);
+      const l = LEVEL_OPTS[levelIdx];
+      if (r < l.min || r > l.max) return false;
+    }
+    return true;
+  });
+
+
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh", fontFamily: "Inter, system-ui, sans-serif" }}>
       <SEO title="Services — Discover AI Experts | KATEXS" description="A precision marketplace where talent and intent meet through intelligence." />
@@ -195,6 +270,12 @@ export default function Services() {
           .svc-grid-3 { grid-template-columns: 1fr !important; }
           .svc-grid-2 { grid-template-columns: 1fr !important; }
           .svc-grid-4 { grid-template-columns: 1fr 1fr !important; }
+          .svc-results-grid { grid-template-columns: 1fr !important; }
+          .svc-results-grid > aside { position: static !important; }
+          .svc-activity-split { flex-direction: column !important; }
+          .svc-h1 { font-size: 40px !important; }
+          .svc-section { padding: 56px 20px !important; }
+        }
           .svc-activity-split { flex-direction: column !important; }
           .svc-h1 { font-size: 40px !important; }
           .svc-section { padding: 56px 20px !important; }
@@ -202,16 +283,16 @@ export default function Services() {
       `}</style>
 
       {/* HERO */}
-      <section className="svc-section" style={{ padding: "140px 80px 80px", textAlign: "center" }}>
+      <section className="svc-section" style={{ padding: "140px 80px 60px", textAlign: "center" }}>
         <h1 className="svc-h1" style={{ fontSize: 64, fontWeight: 600, lineHeight: 1.05, letterSpacing: "-0.02em", maxWidth: 880, margin: "0 auto 20px" }}>
-          The freelance market,<br />rebuilt from first principles
+          Find the perfect AI expert.<br />Hire in minutes.
         </h1>
         <p style={{ fontSize: 18, color: "#cccccc", maxWidth: 620, margin: "0 auto 40px", lineHeight: 1.6 }}>
           A precision marketplace where talent and intent meet through intelligence — not noise.
         </p>
         <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/services?q=${encodeURIComponent(q.trim())}`); }}
-          style={{ maxWidth: 640, margin: "0 auto", position: "relative" }}
+          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/search?q=${encodeURIComponent(q.trim())}`); }}
+          style={{ maxWidth: 720, margin: "0 auto", position: "relative" }}
         >
           <div style={{ position: "absolute", top: -22, left: 4, display: "flex", alignItems: "center", gap: 6 }}>
             <span className="svc-pulse" style={{ width: 6, height: 6, borderRadius: 999, background: "#10b981" }} />
@@ -224,7 +305,7 @@ export default function Services() {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Describe the expert you need…"
+              placeholder="What AI service do you need? (e.g. voice AI, chatbot, automation...)"
               style={{ flex: 1, background: "transparent", border: "none", outline: "none", color: "#fff", fontSize: 15, padding: "12px 0" }}
             />
             <button type="submit" style={{ background: "#fff", color: "#000", border: "none", borderRadius: 999, padding: "12px 26px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
@@ -235,24 +316,101 @@ export default function Services() {
       </section>
 
       {/* CATEGORY PILLS */}
-      <section style={{ padding: "0 80px 80px" }}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", maxWidth: 1000, margin: "0 auto" }}>
-          {CATEGORIES.map((c) => (
-            <Link
-              key={c.slug}
-              to={`/category/${c.slug}`}
-              className="svc-cat"
-              style={{
-                padding: "9px 18px", borderRadius: 999, border: "1px solid #1f1f1f",
-                background: "rgba(255,255,255,0.02)", color: "#cccccc",
-                fontSize: 13, fontWeight: 500, textDecoration: "none", transition: "all 0.2s ease",
-              }}
+      <section style={{ padding: "0 80px 40px" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center", maxWidth: 1100, margin: "0 auto" }}>
+          {CATEGORIES.map((c) => {
+            const isActive = activeCat === c.label;
+            return (
+              <button
+                key={c.label}
+                type="button"
+                onClick={() => setActiveCat(isActive ? null : c.label)}
+                className="svc-cat"
+                style={{
+                  padding: "9px 18px", borderRadius: 999,
+                  border: `1px solid ${isActive ? "#fff" : "#1f1f1f"}`,
+                  background: isActive ? "#fff" : "rgba(255,255,255,0.02)",
+                  color: isActive ? "#000" : "#cccccc",
+                  fontSize: 13, fontWeight: 500, cursor: "pointer", transition: "all 0.2s ease",
+                }}
+              >
+                {c.label}
+              </button>
+            );
+          })}
+          {(activeCat || priceIdx !== null || deliveryIdx !== null || ratingIdx !== null || levelIdx !== null) && (
+            <button
+              type="button"
+              onClick={() => { setActiveCat(null); setPriceIdx(null); setDeliveryIdx(null); setRatingIdx(null); setLevelIdx(null); }}
+              style={{ padding: "9px 18px", borderRadius: 999, border: "1px solid transparent", background: "transparent", color: "#888", fontSize: 12, cursor: "pointer" }}
             >
-              {c.label}
-            </Link>
-          ))}
+              Clear all
+            </button>
+          )}
         </div>
       </section>
+
+      {/* RESULTS GRID + FILTERS */}
+      <section className="svc-section svc-results" style={{ padding: "20px 80px 80px" }}>
+        <div className="svc-results-grid" style={{ maxWidth: 1280, margin: "0 auto", display: "grid", gridTemplateColumns: "260px 1fr", gap: 32 }}>
+          <aside style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 22, alignSelf: "start", position: "sticky", top: 120 }}>
+            <h3 style={{ fontSize: 11, fontWeight: 700, color: "#aaa", letterSpacing: "0.18em", textTransform: "uppercase", margin: "0 0 14px" }}>Filters</h3>
+
+            <FilterGroup title="Category">
+              {CATEGORIES.map((c) => (
+                <FilterRow key={c.label} active={activeCat === c.label} onClick={() => setActiveCat(activeCat === c.label ? null : c.label)} label={c.label} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Price range">
+              {PRICE_RANGES.map((p, i) => (
+                <FilterRow key={p.label} active={priceIdx === i} onClick={() => setPriceIdx(priceIdx === i ? null : i)} label={p.label} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Delivery time">
+              {DELIVERY_OPTS.map((d, i) => (
+                <FilterRow key={d.label} active={deliveryIdx === i} onClick={() => setDeliveryIdx(deliveryIdx === i ? null : i)} label={`Up to ${d.label}`} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Rating">
+              {RATING_OPTS.map((r, i) => (
+                <FilterRow key={r.label} active={ratingIdx === i} onClick={() => setRatingIdx(ratingIdx === i ? null : i)} label={`${r.label} stars`} />
+              ))}
+            </FilterGroup>
+
+            <FilterGroup title="Expert level" last>
+              {LEVEL_OPTS.map((l, i) => (
+                <FilterRow key={l.label} active={levelIdx === i} onClick={() => setLevelIdx(levelIdx === i ? null : i)} label={l.label} />
+              ))}
+            </FilterGroup>
+          </aside>
+
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 600, margin: 0, color: "#fff" }}>
+                {gigsLoaded ? `${filteredGigs.length} expert${filteredGigs.length === 1 ? "" : "s"}` : "Loading…"}
+                {activeCat && <span style={{ color: "#888", fontWeight: 400 }}> in {activeCat}</span>}
+              </h2>
+            </div>
+            {!gigsLoaded ? (
+              <div className="svc-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} style={{ background: "#0a0a0a", aspectRatio: "4/3", borderRadius: 12 }} />
+                ))}
+              </div>
+            ) : filteredGigs.length === 0 ? (
+              <EmptyCategoryState surface="dark" />
+            ) : (
+              <div className="svc-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 20 }}>
+                {filteredGigs.map((g) => <GigCard key={g.id} gig={g} />)}
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
 
       {/* RIVER'S PICKS */}
       <section className="svc-section" style={{ padding: "80px", borderTop: "1px solid #111", borderBottom: "1px solid #111" }}>
@@ -453,31 +611,37 @@ export default function Services() {
           </div>
         </div>
       </section>
-
-      {/* TRENDING GIGS */}
-      <section className="svc-section" style={{ padding: "100px 80px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ display: "flex", alignItems: "center", marginBottom: 32, gap: 20 }}>
-            <h2 style={{ fontSize: 14, fontWeight: 700, letterSpacing: "0.2em", textTransform: "uppercase", margin: 0 }}>Trending Services</h2>
-            <div style={{ flex: 1, height: 1, background: "#1a1a1a" }} />
-            <Link to="/explore" style={{ fontSize: 12, color: "#aaaaaa", textDecoration: "none" }}>View all →</Link>
-          </div>
-          {!gigsLoaded ? (
-            <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} style={{ background: "#0a0a0a", aspectRatio: "4/3", borderRadius: 8 }} />
-              ))}
-            </div>
-          ) : gigs.length === 0 ? (
-            <EmptyCategoryState surface="dark" />
-          ) : (
-            <div className="svc-grid-4" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 20 }}>
-              {gigs.map((g) => <GigCard key={g.id} gig={g} />)}
-            </div>
-          )}
-        </div>
-      </section>
       <SiteFooter />
     </div>
   );
 }
+
+function FilterGroup({ title, last, children }: { title: string; last?: boolean; children: ReactNode }) {
+  return (
+    <div style={{ paddingBottom: last ? 0 : 16, marginBottom: last ? 0 : 16, borderBottom: last ? "none" : "1px solid #161616" }}>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#fff", letterSpacing: "0.12em", textTransform: "uppercase", marginBottom: 10 }}>{title}</div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>{children}</div>
+    </div>
+  );
+}
+
+function FilterRow({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        textAlign: "left", background: "transparent", border: "none", padding: "4px 0",
+        color: active ? "#fff" : "#aaa", fontSize: 13, fontWeight: active ? 600 : 400,
+        cursor: "pointer", display: "flex", alignItems: "center", gap: 8,
+      }}
+    >
+      <span style={{
+        width: 14, height: 14, borderRadius: 4, border: "1px solid #2a2a2a",
+        background: active ? "#fff" : "transparent", flexShrink: 0,
+      }} />
+      {label}
+    </button>
+  );
+}
+

@@ -30,7 +30,6 @@ const CATS_RAW: { label: string; columns: Column[] }[] = [
       mk("Sound and Speak with AI", [
         "Voice AI Agents and Callers", "Voice Cloning and Custom Voices", "AI Phone Systems",
         "Conversational AI Builds", "Text to Speech", "AI Podcast Production",
-        "AI Audio Ads", "AI Sonic Branding",
       ]),
       mk("Create and Grow with AI", [
         "AI Video Creation", "AI UGC Content", "AI Video Avatars",
@@ -39,83 +38,72 @@ const CATS_RAW: { label: string; columns: Column[] }[] = [
       ]),
       mk("Run and Learn AI", [
         "AI Workflow Automation", "CRM and Pipeline Automation", "AI Virtual Assistants",
-        "AI Strategy and Consulting", "AI Lessons and Training", "AI Prompt Engineering",
-        "AI Tools Onboarding", "AI for Business Workshops",
+        "AI Strategy and Consulting", "AI Prompt Engineering", "AI Tools Onboarding",
       ]),
     ],
   },
   {
-    label: "GoHighLevel",
+    label: "Voice AI",
     columns: [
-      mk("Build with GHL", [
-        "Full GHL Account Setup", "GHL Sub-Account Setup", "GHL White Label Setup",
-        "GHL SaaS Mode", "GHL Snapshot Creation", "GHL CRM Build",
-        "GHL Pipeline Setup", "GHL Migration",
+      mk("Voice Agents", [
+        "Voice AI Agents and Callers", "AI Phone Systems", "Conversational AI Builds",
+        "AI Appointment Booking", "Inbound Voice AI", "Outbound Voice AI",
       ]),
-      mk("Automate with GHL", [
-        "Workflow Automation Setup", "Lead Nurture Sequences", "Follow Up Campaigns",
-        "SMS Automation", "Email Automation", "Re-engagement Campaigns",
-        "Abandoned Lead Recovery", "GHL AI Workflow Setup",
-      ]),
-      mk("Sell and Grow with GHL", [
-        "Sales Funnel Build", "Landing Page Design", "Website Build in GHL",
-        "Membership Site Setup", "Course and Community Setup", "Checkout Page Setup",
-        "Email Marketing Campaigns", "Review Request Campaigns",
-      ]),
-      mk("Speak and Connect", [
-        "GHL Voice AI Configuration", "GHL AI Employee Setup", "GHL Conversation AI",
-        "AI Appointment Booking", "Zapier to GHL Integration", "Stripe Payment Setup in GHL",
-        "Google Ads Integration", "Calendar and Booking Setup",
+      mk("Voices & Audio", [
+        "Voice Cloning and Custom Voices", "Text to Speech", "AI Podcast Production",
+        "AI Audio Ads", "AI Sonic Branding", "Multilingual Voice AI",
       ]),
     ],
   },
   {
-    label: "Digital Marketing",
+    label: "Automation",
     columns: [
-      mk("Social Media", [
-        "Social Media Management", "Social Media Strategy", "Instagram Marketing",
-        "TikTok Marketing", "Facebook Marketing", "LinkedIn Marketing",
-        "YouTube Marketing", "Pinterest Marketing",
+      mk("Workflow Automation", [
+        "AI Workflow Automation", "Zapier Automation", "Make Automation",
+        "n8n Workflows", "CRM and Pipeline Automation", "Webhook Setup",
       ]),
-      mk("Search and SEO", [
-        "SEO Strategy", "On-Page SEO", "Technical SEO",
-        "Link Building", "Local SEO", "Google Ads",
-        "Keyword Research", "SEO Audits",
-      ]),
-      mk("Content and Email", [
-        "Content Strategy", "Blog Writing", "Email Marketing",
-        "Newsletter Setup", "Drip Campaigns", "Copywriting",
-        "Brand Messaging", "Content Calendar",
-      ]),
-      mk("Paid and Analytics", [
-        "Facebook Ads", "Google Ads Management", "TikTok Ads",
-        "YouTube Ads", "Ad Creatives", "Analytics Setup",
-        "Conversion Tracking", "A/B Testing",
+      mk("Ops & Agents", [
+        "AI Virtual Assistants", "AI Agent Building", "Lead Nurture Sequences",
+        "Follow Up Campaigns", "Abandoned Lead Recovery", "API Integrations",
       ]),
     ],
   },
   {
-    label: "Programming & Tech",
+    label: "Marketing",
     columns: [
-      mk("Web Development", [
-        "Full Stack Development", "Frontend Development", "Backend Development",
-        "React Development", "Next.js Development", "WordPress Development",
-        "Webflow Development", "Shopify Development",
+      mk("Growth & Social", [
+        "Social Media Management", "Instagram Marketing", "TikTok Marketing",
+        "LinkedIn Marketing", "Email Marketing", "AI Lead Generation",
       ]),
-      mk("Apps and Software", [
-        "Mobile App Development", "iOS Development", "Android Development",
-        "Chrome Extension Development", "SaaS Development", "API Development",
-        "Database Architecture", "DevOps and Cloud",
+      mk("Paid & SEO", [
+        "Facebook Ads", "Google Ads Management", "SEO Strategy",
+        "Generative Engine Optimization", "Conversion Tracking", "Ad Creatives",
       ]),
-      mk("Automation", [
-        "Zapier Automation", "Make Automation", "n8n Workflows",
-        "Python Scripting", "Web Scraping", "Browser Automation",
-        "Webhook Setup", "API Integrations",
+    ],
+  },
+  {
+    label: "Development",
+    columns: [
+      mk("Web & Apps", [
+        "Full Stack Development", "React Development", "Next.js Development",
+        "Mobile App Development", "AI Mobile Apps", "AI Websites and Software",
       ]),
-      mk("Support and QA", [
-        "Bug Fixes and Improvements", "Code Review", "Technical SEO",
-        "Website Speed Optimization", "Security Audits", "Software Testing",
-        "Code Documentation", "Tech Consulting",
+      mk("AI Builds", [
+        "AI Chatbot Development", "AI Integrations", "AI Fine-Tuning",
+        "Vibe Coding and MVP Builds", "Deployments and DevOps", "API Development",
+      ]),
+    ],
+  },
+  {
+    label: "Design",
+    columns: [
+      mk("Brand & Visual", [
+        "Logo Design", "Brand Identity", "UI and UX Design",
+        "Web Design", "Presentation Design", "Social Media Design",
+      ]),
+      mk("AI Design", [
+        "AI Logo and Brand Identity", "AI Illustration", "AI Avatar Design",
+        "AI Image Editing", "ComfyUI Workflows", "Midjourney Art",
       ]),
     ],
   },
@@ -125,17 +113,14 @@ const CATS_RAW: { label: string; columns: Column[] }[] = [
       mk("Analyze with Data", [
         "Data Analytics and Reporting", "Business Intelligence Dashboards", "Data Visualization",
         "Web Analytics", "Predictive Analytics", "AI-Powered Data Analysis",
-        "Market Research", "Financial Data Analysis",
       ]),
       mk("Build with Data", [
         "Machine Learning Development", "Deep Learning", "Computer Vision",
         "Natural Language Processing", "AI Model Training", "Data Pipeline and ETL",
-        "Database Architecture", "Real-Time Data Pipelines",
       ]),
       mk("Clean and Manage Data", [
         "Data Entry and Processing", "Data Cleaning", "Data Scraping",
-        "Data Labeling for AI", "CRM Data Management", "Data Strategy and Consulting",
-        "Business Intelligence Strategy", "Data Compliance",
+        "Data Labeling for AI", "CRM Data Management", "Data Compliance",
       ]),
     ],
   },
@@ -145,57 +130,14 @@ const CATS_RAW: { label: string; columns: Column[] }[] = [
       mk("Strategy and Consulting", [
         "Business Strategy", "Business Plan Writing", "Market Research",
         "Competitor Analysis", "Financial Modeling", "Investor Pitch Decks",
-        "Business Consulting", "Operations Consulting",
       ]),
       mk("Admin and Support", [
         "Virtual Assistant", "Project Management", "Customer Support Setup",
-        "CRM Setup", "HR and Recruiting", "Legal Document Drafting",
-        "Accounting and Bookkeeping", "Business Process Documentation",
+        "CRM Setup", "HR and Recruiting", "Accounting and Bookkeeping",
       ]),
       mk("Sales and Growth", [
         "Sales Strategy", "Lead Generation", "Cold Email Setup",
-        "LinkedIn Outreach", "Sales Funnel Consulting", "Revenue Operations",
-        "Partnership Development", "Growth Hacking",
-      ]),
-    ],
-  },
-  {
-    label: "Video & Animation",
-    columns: [
-      mk("Video Production", [
-        "Video Editing", "YouTube Video Editing", "Short Form Video",
-        "Video Ads and Commercials", "Corporate Videos", "Documentary Editing",
-        "Color Grading", "Video Thumbnails",
-      ]),
-      mk("Animation", [
-        "2D Animation", "3D Animation", "Motion Graphics",
-        "Whiteboard Animation", "Logo Animation", "Explainer Videos",
-        "Character Animation", "Kinetic Typography",
-      ]),
-      mk("AI Video", [
-        "AI Video Creation", "AI Music Videos", "AI Video Avatars",
-        "AI UGC Content", "AI Videography", "AI Visual Effects",
-        "AI Generated Content", "Video Script Writing",
-      ]),
-    ],
-  },
-  {
-    label: "Design & Creative",
-    columns: [
-      mk("Brand and Identity", [
-        "Logo Design", "Brand Identity", "Brand Style Guide",
-        "Business Card Design", "Packaging Design", "Brand Naming",
-        "Typography Design", "Color Palette",
-      ]),
-      mk("Digital Design", [
-        "UI and UX Design", "Web Design", "App Design",
-        "Social Media Design", "Presentation Design", "Infographic Design",
-        "Email Template Design", "Banner Ads",
-      ]),
-      mk("AI Design", [
-        "AI Logo and Brand Identity", "AI Illustration", "AI Social Media Design",
-        "AI Presentation Design", "AI Pattern Design", "AI 3D Modeling",
-        "ComfyUI Workflows", "Midjourney Art",
+        "LinkedIn Outreach", "Revenue Operations", "Growth Hacking",
       ]),
     ],
   },
