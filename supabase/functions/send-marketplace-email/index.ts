@@ -28,7 +28,7 @@ interface Payload {
 
 const BRAND = "katexs ai";
 const APP_URL = Deno.env.get("APP_PUBLIC_URL") ?? "https://katexs.com";
-const FROM_EMAIL = Deno.env.get("RESEND_FROM_EMAIL") ?? "noreply@kate-xs.com";
+const FROM_EMAIL = "noreply@kate-xs.com";
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
 function shell(title: string, body: string, cta?: { href: string; label: string }) {
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
         "X-Connection-Api-Key": resendKey,
       },
       body: JSON.stringify({
-        from: `katexs ai <${FROM_EMAIL}>`,
+        from: FROM_EMAIL.includes("<") ? FROM_EMAIL : `katexs ai <${FROM_EMAIL}>`,
         to: [to],
         subject,
         html,
