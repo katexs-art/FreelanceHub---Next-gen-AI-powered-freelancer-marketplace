@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, KeyboardEvent } from "react";
 import { ChevronDown, X } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
@@ -80,7 +80,8 @@ function FilterPill({ label, active, onClear, children }: FilterPillProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className={`inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm font-medium transition-colors ${
+          aria-label={label}
+          className={`inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 ${
             active
               ? "bg-foreground text-background border-foreground"
               : "bg-background border-border text-foreground hover:border-foreground/40"
@@ -88,17 +89,23 @@ function FilterPill({ label, active, onClear, children }: FilterPillProps) {
         >
           <span>{label}</span>
           {active && onClear ? (
-            <span
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClear(); }}
-              className="ml-0.5 inline-flex items-center justify-center rounded-full hover:bg-background/20 p-0.5"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClear();
+                }
+              }}
+              className="ml-0.5 inline-flex items-center justify-center rounded-full hover:bg-background/20 p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-background"
               aria-label="Clear filter"
             >
-              <X size={12} />
-            </span>
+              <X size={12} aria-hidden="true" />
+            </button>
           ) : (
-            <ChevronDown size={14} className="opacity-70" />
+            <ChevronDown size={14} className="opacity-70" aria-hidden="true" />
           )}
         </button>
       </DropdownMenuTrigger>
@@ -119,6 +126,30 @@ export default function Services() {
   const [rating, setRating] = useState<RatingOpt>(null);
   const [location, setLocation] = useState<LocationOpt>(null);
   const [sort, setSort] = useState<Sort>("newest");
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const handleGridNav = (e: KeyboardEvent<HTMLDivElement>) => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const cards = Array.from(grid.querySelectorAll<HTMLAnchorElement>("a"));
+    if (cards.length === 0) return;
+    const idx = cards.indexOf(document.activeElement as HTMLAnchorElement);
+    if (idx < 0) return;
+    // Detect columns from layout (cards on the same row share offsetTop).
+    const rowTop = cards[idx].offsetTop;
+    const cols = cards.filter((c) => c.offsetTop === rowTop).length || 1;
+    let target = -1;
+    if (e.key === "ArrowRight") target = Math.min(idx + 1, cards.length - 1);
+    else if (e.key === "ArrowLeft") target = Math.max(idx - 1, 0);
+    else if (e.key === "ArrowDown") target = Math.min(idx + cols, cards.length - 1);
+    else if (e.key === "ArrowUp") target = Math.max(idx - cols, 0);
+    else if (e.key === "Home") target = 0;
+    else if (e.key === "End") target = cards.length - 1;
+    if (target >= 0 && target !== idx) {
+      e.preventDefault();
+      cards[target].focus();
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -247,8 +278,13 @@ export default function Services() {
 
         {/* Filter bar + results */}
         <section className="container-page pb-16">
-          {/* Filter pills */}
-          <div className="flex flex-wrap items-center gap-2 mb-5">
+          {/* Filter pills — Arrow Left/Right + Home/End to move between pills */}
+          <div
+            role="toolbar"
+            aria-label="Service filters"
+            onKeyDown={(e) => handleArrowNav(e, "horizontal", "button")}
+            className="flex flex-wrap items-center gap-2 mb-5"
+          >
             <FilterPill
               label={cat ? `Category: ${cat}` : "Category"}
               active={!!cat}
@@ -302,13 +338,15 @@ export default function Services() {
 
           {/* Results header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="text-sm font-semibold text-foreground" aria-live="polite">
               {loading ? "Loading…" : `${filtered.length} service${filtered.length === 1 ? "" : "s"}`}
             </h2>
+            <label className="sr-only" htmlFor="services-sort">Sort services</label>
             <select
+              id="services-sort"
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}
-              className="h-9 rounded-md bg-background border border-border px-3 text-sm"
+              className="h-9 rounded-md bg-background border border-border px-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
             >
               <option value="newest">Newest</option>
               <option value="top_rated">Top Rated</option>
@@ -329,7 +367,13 @@ export default function Services() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div
+              ref={gridRef}
+              role="grid"
+              aria-label="Expert services"
+              onKeyDown={(e) => handleGridNav(e)}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
               {filtered.map((g) => <GigCard key={g.id} gig={toCard(g)} />)}
             </div>
           )}
@@ -338,4 +382,29 @@ export default function Services() {
       <SiteFooter />
     </div>
   );
+}
+
+// ---------- keyboard helpers ----------
+
+function handleArrowNav(
+  e: KeyboardEvent<HTMLElement>,
+  axis: "horizontal" | "vertical",
+  selector: string,
+) {
+  const container = e.currentTarget;
+  const items = Array.from(container.querySelectorAll<HTMLElement>(selector))
+    .filter((el) => !el.hasAttribute("disabled"));
+  if (items.length === 0) return;
+  const idx = items.indexOf(document.activeElement as HTMLElement);
+  const next = axis === "horizontal" ? "ArrowRight" : "ArrowDown";
+  const prev = axis === "horizontal" ? "ArrowLeft" : "ArrowUp";
+  let target = -1;
+  if (e.key === next) target = idx < 0 ? 0 : (idx + 1) % items.length;
+  else if (e.key === prev) target = idx < 0 ? items.length - 1 : (idx - 1 + items.length) % items.length;
+  else if (e.key === "Home") target = 0;
+  else if (e.key === "End") target = items.length - 1;
+  if (target >= 0) {
+    e.preventDefault();
+    items[target].focus();
+  }
 }
