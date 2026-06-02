@@ -563,7 +563,7 @@ export default function Inbox() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
                   {user && active.other?.id && (
                     <CustomOfferComposer
                       conversationId={active.id}
