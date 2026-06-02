@@ -11,6 +11,7 @@ import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare, Wifi } f
 import { LeaveReview } from "@/components/marketplace/LeaveReview";
 import { OrderResolutionActions } from "@/components/marketplace/OrderResolutionActions";
 import { OrderTimeline, DeliveryCountdown } from "@/components/marketplace/OrderTimeline";
+import { DeliveryActivityTimeline } from "@/components/marketplace/DeliveryActivityTimeline";
 import { shouldEmail } from "@/lib/emailPrefs";
 
 interface Party { id?: string; full_name: string | null; username: string | null; avatar_url: string | null; email?: string | null }
@@ -351,37 +352,17 @@ export default function OrderWorkspace() {
           </section>
         )}
 
-        {/* Deliveries */}
+        {/* Delivery Activity */}
         <section className="mt-8 bg-background border border-border rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Deliveries</h2>
-          {deliveries.length === 0 ? (
-            <p className="text-sm text-foreground-muted">No deliveries yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {deliveries.map((d) => (
-                <div key={d.id} className="border border-border rounded-lg p-4">
-                  <div className="flex items-center justify-between text-xs text-foreground-muted">
-                    <span>{d.is_revision ? "Revision" : "Delivery"} · {new Date(d.created_at).toLocaleString()}</span>
-                  </div>
-                  {d.message && <p className="mt-2 text-sm whitespace-pre-line">{d.message}</p>}
-                  {d.file_urls.length > 0 && (
-                    <ul className="mt-3 space-y-1.5 text-sm">
-                      {d.file_urls.map((path) => (
-                        <li key={path}>
-                          <button className="text-primary hover:underline" onClick={async () => {
-                            const { data } = await supabase.storage.from("delivery-files").createSignedUrl(path, 3600);
-                            if (data?.signedUrl) window.open(data.signedUrl, "_blank");
-                          }}>
-                            {path.split("/").pop()}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <h2 className="text-lg font-semibold mb-4">Delivery Activity</h2>
+          <DeliveryActivityTimeline
+            order={order as any}
+            deliveries={deliveries}
+            onFileClick={async (path) => {
+              const { data } = await supabase.storage.from("delivery-files").createSignedUrl(path, 3600);
+              if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+            }}
+          />
 
           {isSeller && (order.status === "active" || order.status === "revision_requested") && (
             <div className="mt-6 border-t border-border pt-6 space-y-3">
