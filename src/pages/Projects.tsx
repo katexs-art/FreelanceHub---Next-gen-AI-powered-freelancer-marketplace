@@ -328,7 +328,7 @@ export default function Projects() {
                       size="sm"
                       className="bg-green-600 hover:bg-green-700 text-white w-full md:w-auto"
                     >
-                      <Link to={`/projects/${p.id}/bid`}>View & Bid</Link>
+                      <Link to={`/projects/${p.id}`}>View & Bid</Link>
                     </Button>
                   </div>
                 </div>
