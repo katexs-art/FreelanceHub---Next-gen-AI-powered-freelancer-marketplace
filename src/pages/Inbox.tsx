@@ -345,7 +345,7 @@ export default function Inbox() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => nav(`/inbox/${c.id}`)}
+                  onClick={() => { nav(`/inbox/${c.id}`); if (isMobile) setListOpen(false); }}
                   onMouseEnter={() => setHoverRow(c.id)}
                   onMouseLeave={() => setHoverRow(null)}
                   style={{
