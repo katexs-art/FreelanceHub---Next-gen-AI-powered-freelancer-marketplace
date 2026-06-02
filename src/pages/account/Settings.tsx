@@ -11,6 +11,7 @@ import { SkillsTagInput } from "@/components/postjob/SkillsTagInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AppearanceTab } from "@/components/settings/AppearanceTab";
 import { ExpertRecommendationsRail } from "@/components/settings/ExpertRecommendationsRail";
+import { RecommendationsBlock } from "@/components/hq/RecommendationsBlock";
 import { SearchableSelect, SearchableMultiSelect } from "@/components/ui/searchable-select";
 import { COUNTRIES } from "@/lib/countries";
 import { LANGUAGES } from "@/lib/languages";
@@ -341,6 +342,7 @@ export default function Settings() {
           </div>
         </div>
       )}
+      <RecommendationsBlock />
     </AppShell>
   );
 }
