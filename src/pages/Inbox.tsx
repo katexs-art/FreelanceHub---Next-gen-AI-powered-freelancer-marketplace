@@ -827,7 +827,7 @@ export default function Inbox() {
             </>
           )}
         </section>
-        )}
+
         {!isMobile && active && active.other && user && (
           <ConversationDetailsPanel
             otherUser={active.other}
