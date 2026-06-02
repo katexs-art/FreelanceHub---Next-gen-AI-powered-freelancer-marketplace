@@ -4,7 +4,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight, ArrowLeft } from "lucide-react";
+import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight, Menu } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
 import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
@@ -80,6 +81,7 @@ export default function Inbox() {
   const [hoverIcon, setHoverIcon] = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
 
@@ -231,8 +233,9 @@ export default function Inbox() {
           background: "#fff",
         }}
       >
-        {/* COLUMN 2 — Conversation list */}
-        {(!isMobile || !active) && (
+        {/* COLUMN 2 — Conversation list (drawer on mobile, inline on desktop) */}
+        {(() => {
+        const listAside = (
         <aside
           style={{
             background: "#FFFFFF",
@@ -342,7 +345,7 @@ export default function Inbox() {
               return (
                 <button
                   key={c.id}
-                  onClick={() => nav(`/inbox/${c.id}`)}
+                  onClick={() => { nav(`/inbox/${c.id}`); if (isMobile) setListOpen(false); }}
                   onMouseEnter={() => setHoverRow(c.id)}
                   onMouseLeave={() => setHoverRow(null)}
                   style={{
@@ -426,11 +429,20 @@ export default function Inbox() {
             })}
           </div>
         </aside>
-        )}
+        );
+        return isMobile ? (
+          <Sheet open={listOpen} onOpenChange={setListOpen}>
+            <SheetContent side="left" className="p-0 w-[88vw] max-w-[360px] sm:w-[360px]">
+              {listAside}
+            </SheetContent>
+          </Sheet>
+        ) : listAside;
+        })()}
+
 
         {/* COLUMN 3 — Active conversation */}
-        {(!isMobile || active) && (
         <section style={{ display: "flex", flexDirection: "column", minWidth: 0, minHeight: 0 }}>
+
           {!active ? (
             <div
               style={{
@@ -459,7 +471,23 @@ export default function Inbox() {
                   <MessageSquare size={34} strokeWidth={1.75} />
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 600, color: "#475569", marginBottom: 6 }}>Select a conversation</div>
-                <div style={{ fontSize: 14, color: "#94A3B8" }}>Choose a conversation from the left to start messaging</div>
+                <div style={{ fontSize: 14, color: "#94A3B8", marginBottom: isMobile ? 20 : 0 }}>
+                  {isMobile ? "Open your messages to start chatting" : "Choose a conversation from the left to start messaging"}
+                </div>
+                {isMobile && (
+                  <button
+                    type="button"
+                    onClick={() => setListOpen(true)}
+                    style={{
+                      background: "#4F46E5", color: "#fff", border: "none",
+                      borderRadius: 999, padding: "10px 20px", fontSize: 14,
+                      fontWeight: 600, cursor: "pointer", display: "inline-flex",
+                      alignItems: "center", gap: 8,
+                    }}
+                  >
+                    <Menu size={16} /> Open messages
+                  </button>
+                )}
               </div>
             </div>
           ) : (
@@ -482,11 +510,11 @@ export default function Inbox() {
                   {isMobile && (
                     <button
                       type="button"
-                      onClick={() => nav("/inbox")}
-                      aria-label="Back to messages"
+                      onClick={() => setListOpen(true)}
+                      aria-label="Open conversations"
                       style={{ background: "transparent", border: "none", padding: 4, marginRight: 2, cursor: "pointer", color: "#0F172A" }}
                     >
-                      <ArrowLeft size={20} />
+                      <Menu size={20} />
                     </button>
                   )}
                   <div style={{ position: "relative", flexShrink: 0 }}>
@@ -815,7 +843,7 @@ export default function Inbox() {
             </>
           )}
         </section>
-        )}
+
         {!isMobile && active && active.other && user && (
           <ConversationDetailsPanel
             otherUser={active.other}
