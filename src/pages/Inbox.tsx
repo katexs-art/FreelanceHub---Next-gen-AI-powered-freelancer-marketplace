@@ -506,7 +506,7 @@ export default function Inbox() {
                   flexShrink: 0,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, minWidth: 0, flex: 1 }}>
                   {isMobile && (
                     <button
                       type="button"
@@ -543,8 +543,8 @@ export default function Inbox() {
                       <div style={{ position: "absolute", bottom: -1, right: -1, width: 10, height: 10, background: "#10B981", borderRadius: "50%", border: "2px solid #fff" }} />
                     )}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#0F172A" }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#0F172A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {active.other?.full_name ?? active.other?.username ?? "User"}
                     </div>
                     <div style={{ fontSize: 12, color: active.other?.is_online ? "#10B981" : "#94A3B8", display: "flex", alignItems: "center", gap: 5 }}>
@@ -563,7 +563,7 @@ export default function Inbox() {
                     </div>
                   </div>
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
                   {user && active.other?.id && (
                     <CustomOfferComposer
                       conversationId={active.id}
