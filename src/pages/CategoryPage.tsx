@@ -5,6 +5,7 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { EmptyCategoryState } from "@/components/marketplace/EmptyCategoryState";
 import { supabase } from "@/integrations/supabase/client";
+import { trackCategoryView } from "@/lib/recentlyViewed";
 
 type Cat = { id: string; name: string; slug: string; parent_id: string | null };
 
@@ -18,6 +19,7 @@ export default function CategoryPage() {
 
   useEffect(() => {
     if (!slug) return;
+    trackCategoryView(slug);
     (async () => {
       setLoading(true);
       const { data: current } = await supabase

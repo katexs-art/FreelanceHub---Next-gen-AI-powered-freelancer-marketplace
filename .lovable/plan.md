@@ -1,49 +1,48 @@
-## 1. Sidebar — show all nav items on every dashboard page
+## /hq dashboard upgrades + currency + black-bar fixes
 
-Edit `src/components/layout/AppShell.tsx`:
+### 1. Fix black bar on /hq
+Root cause: `AppShell` outer wrapper is `min-h-screen bg-background`, but the inner `<div className="flex">` (sidebar + main) has no min-height. When the page is short, the area between the bottom of the sidebar/main and the (dark) `SiteFooter` collapses, but the dark footer's overflow paint plus html background can show as a black strip. Also `<main>` doesn't extend to the bottom of the viewport.
 
-- Replace the role-split `sellerLinks` / `buyerLinks` with a single unified list shown to every authenticated user:
-  - HQ → `/hq`
-  - Projects → `/buyer/orders` (buyer) or `/seller/orders` (seller); for buyers we still show the "Projects" entry
-  - Saved → `/saved`
-  - Find experts → `/services`
-  - Messages → `/inbox`
-  - Settings → `/settings`
-- Sellers keep their extra entries (My services, Earnings, Analytics, Verification) appended below the shared block, so nothing seller-specific is lost.
-- Order: HQ · Projects · Saved · Find experts · (seller extras) · divider · Messages · Settings.
+Fix:
+- In `src/components/layout/AppShell.tsx`: wrap the flex row so it grows: change container to `flex flex-col min-h-screen bg-background`, and give the row `flex-1` + `bg-background`. Ensure `<main>` is `flex-1 bg-background`.
+- Add `bg-background` to the html/body via `index.css` `html,body { background: hsl(var(--background)); }` to remove any default black showing during paint/scroll.
 
-## 2. Theme switcher actually applies
+### 2. Currency formatting fix
+Notifications like `$10.0000000000000000` come from two migrations that build the body in SQL: `'You received a ... $' || (NEW.price/100.0)::text`. Postgres `numeric` cast leaves trailing zeros.
 
-Root cause: `kx-theme-*` class is set on a div inside `AppShell`, but `<body>` / `<html>` still use the default `:root` tokens, and any portal content (Radix popovers, dialogs, toasts) renders outside that div so it never sees the override. The theme also isn't applied on routes that don't use `AppShell`.
+Fix:
+- New migration to `CREATE OR REPLACE` the trigger function (`notify_custom_offer` / equivalent — to be confirmed by reading the existing function) so the body uses `to_char(NEW.price/100.0, 'FM999999990.00')` and renders `$10.00`.
+- Backfill: `UPDATE notifications SET body = regexp_replace(body, '\$(\d+)\.\d+', '$' || ... )` — single SQL statement to round any existing `$N.000…` strings to 2dp.
+- Frontend helper `src/lib/money.ts` exporting `formatUSD(cents)` and `formatAmount(n)` (uses `Intl.NumberFormat('en-US', { style:'currency', currency:'USD' })`). Sweep components currently rendering raw `$${amount}` (Earnings widget, Active Orders widget, Order pages, Custom Offer cards, Notifications display) to use it. Scope: replace existing `$${…}` template literals only; no logic changes.
 
-Changes:
+### 3. Right side "Top Picks For You" rail on /hq
+Reuse `ExpertRecommendationsRail` (already built for Settings) but generalized:
+- Move to `src/components/hq/TopPicksRail.tsx` (copy + tweak: heading "Top Picks For You", same 3-card rotation every 30s, fallback to top-rated when no history).
+- Mount on `/hq` to the right of the widget grid. Update `Hq.tsx` layout to `grid grid-cols-[1fr_240px] gap-8` on `lg`, single column below.
+- Source signals: `getRecentlyViewed()` gig categories + buyer's past order categories (query `orders` for `gig.primary_category`). Falls back to `profiles` ordered by `river_score`.
 
-- **New `src/components/ThemeProvider.tsx`**
-  - Mounts once at the app root (wrap `<App />` children in `src/App.tsx`, inside `AuthProvider`).
-  - Subscribes to `useTheme()` and writes:
-    - `document.documentElement.dataset.theme = theme` (e.g. `data-theme="midnight"`)
-    - toggles `kx-theme-<id>` class on `document.documentElement`
-  - Removes stale `kx-theme-*` classes before adding the new one.
-  - On mount, reads `localStorage["kx-theme"]` and applies immediately to avoid a flash; profile sync (already in `useTheme`) updates it after auth loads.
+### 4. Bottom "Experts you might need next" row (full width, just above footer)
+- New `src/components/hq/ExpertsYouMightNeed.tsx`: horizontal scroll of `GigCard` items with left/right chevron buttons that scroll the container by ~320px. Uses snap-x + scrollbar-hidden.
+- Data: combines recently-viewed gig categories + categories of past orders → query `gigs` where `primary_category in (...)` + `status='active'`, ordered by `average_rating desc, total_reviews desc`, limit 12. Falls back to top-rated gigs if no signal.
+- Renders inside `AppShell` but outside the `max-w-6xl` wrapper, full width, with internal `px-10` to align.
 
-- **`src/index.css`**
-  - Duplicate each `.kx-theme-*` block as `[data-theme="..."]` so tokens apply regardless of whether the class lands on `<html>` or a wrapper. Keep the existing class selectors for backwards compatibility.
-  - Add `--bg-primary`, `--bg-secondary`, `--accent`, `--text-primary` aliases mapped to existing tokens (`--background`, `--background-subtle`, `--primary`, `--foreground`) inside `:root` and each theme block, so the names from the spec exist.
-  - Ensure the `midnight` block also overrides `--background-subtle`, `--sidebar-background`, `--card`, etc. (already present) — verify nothing is missing.
+### 5. Second row "Open projects matching your skills" / "Recently posted projects"
+- New `src/components/hq/ProjectRecsRow.tsx`: same horizontal-scroll shell with arrows.
+- Heading switches by `profile.role`:
+  - seller: title = "Open projects matching your skills", query `project_posts` where `status='open'` and `skills && profile.seller_skills` (Postgres array overlap), order by `created_at desc`, limit 12.
+  - buyer: title = "Recently posted projects", query `project_posts` where `status='open'`, order by `created_at desc`, limit 12.
+- Each card: title, budget range, category chip, deadline, "View" link to `/projects/:id`.
 
-- **`src/components/layout/AppShell.tsx`**
-  - Remove the local `kx-theme-${theme}` class from the wrapper div (now handled globally on `<html>`). Keep the `bg-background` so it picks up the cascaded tokens.
+### 6. Browse-history tracking
+- Extend `src/lib/recentlyViewed.ts` to also track category visits (`trackCategoryView(slug)`) into a parallel `katexs:recent-categories` LRU.
+- Call `trackCategoryView` from `CategoryPage.tsx` and on `Services.tsx` filter changes.
+- Recommendation queries read both `getRecentlyViewedGigs()` (existing) and `getRecentCategories()`.
 
-- **`src/hooks/useTheme.ts`**
-  - No API change; the existing `setTheme` already persists to `localStorage` and `profiles.theme_preference`. ThemeProvider just reacts to its store.
+### File map
+**Create:** `src/lib/money.ts`, `src/components/hq/TopPicksRail.tsx`, `src/components/hq/ExpertsYouMightNeed.tsx`, `src/components/hq/ProjectRecsRow.tsx`, new migration for notification trigger + backfill.
 
-### Verification
+**Edit:** `src/pages/Hq.tsx` (add rail + two horizontal rows), `src/components/layout/AppShell.tsx` (flex-col + bg fix), `src/index.css` (html/body bg), `src/lib/recentlyViewed.ts` (add category tracking), `src/pages/CategoryPage.tsx` + `src/pages/Services.tsx` (hook), and currency call sites identified by sweep.
 
-- Click Midnight in Appearance → `<html data-theme="midnight" class="kx-theme-midnight">`, sidebar + main + header instantly dark.
-- Click Ocean → tokens flip to blue accent on the same page without reload.
-- Reload `/settings` → still on chosen theme (localStorage hydrate before paint).
-- Login on another device → profile `theme_preference` syncs.
-
-## Out of scope
-
-No DB changes (column already exists), no changes to widgets, settings form, or recommendations rail.
+### Out of scope
+- No changes to widget customization, settings page, sidebar nav, or theme system.
+- No new tables; uses existing `gigs`, `profiles`, `project_posts`, `orders`.
