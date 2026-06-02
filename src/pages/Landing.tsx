@@ -382,8 +382,35 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* HOW IT WORKS */}
+      <section className="kx-section" style={{ background: "#0a0a0a", padding: "80px", borderTop: "1px solid #1a1a1a", borderBottom: "1px solid #1a1a1a" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
+            How it works
+          </div>
+          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 48px" }}>Three steps to ship</h2>
+          <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32 }}>
+            {[
+              { Icon: FileText, t: "Post your need", d: "Describe your project in plain English. No forms, no friction." },
+              { Icon: Sparkles, t: "Get matched by River", d: "Our AI finds the top experts for your job and notifies them instantly." },
+              { Icon: CheckCircle2, t: "Work gets done", d: "Pay into escrow, approve delivery, and funds release automatically." },
+            ].map(({ Icon, t, d }, i) => (
+              <div key={t} style={{ background: "#111", border: "1px solid #1f1f1f", borderRadius: 16, padding: 28 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  <Icon size={22} color="#fff" strokeWidth={1.75} />
+                </div>
+                <div style={{ fontSize: 12, color: "#888", marginBottom: 6 }}>Step {i + 1}</div>
+                <div style={{ fontSize: 18, fontWeight: 500, color: "#fff", marginBottom: 8 }}>{t}</div>
+                <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6 }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FEATURED GIGS */}
       <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 8 }}>
