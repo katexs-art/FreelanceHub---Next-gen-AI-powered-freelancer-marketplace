@@ -270,6 +270,8 @@ export default function Settings() {
           <p><Link className="underline" to="/settings/notifications">Notification preferences →</Link></p>
           <p><Link className="underline" to="/saved">Saved services →</Link></p>
         </section>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* STICKY SAVE BAR */}
