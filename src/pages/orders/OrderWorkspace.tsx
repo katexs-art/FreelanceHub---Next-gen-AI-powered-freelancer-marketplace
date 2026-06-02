@@ -26,7 +26,7 @@ interface Order {
   buyer: Party | null;
   seller: Party | null;
 }
-interface Requirement { id: string; question: string; field_type: string; is_required: boolean; sort_order: number; }
+
 interface Delivery { id: string; message: string | null; file_urls: string[]; created_at: string; is_revision: boolean; }
 
 export default function OrderWorkspace() {
