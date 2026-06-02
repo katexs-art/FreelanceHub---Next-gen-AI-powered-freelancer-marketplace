@@ -543,25 +543,26 @@ export default function Inbox() {
                       <div style={{ position: "absolute", bottom: -1, right: -1, width: 10, height: 10, background: "#10B981", borderRadius: "50%", border: "2px solid #fff" }} />
                     )}
                   </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ minWidth: 0, flex: 1, overflow: "hidden" }}>
                     <div style={{ fontSize: 15, fontWeight: 600, color: "#0F172A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {active.other?.full_name ?? active.other?.username ?? "User"}
                     </div>
-                    <div style={{ fontSize: 12, color: active.other?.is_online ? "#10B981" : "#94A3B8", display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ fontSize: 12, color: active.other?.is_online ? "#10B981" : "#94A3B8", display: "flex", alignItems: "center", gap: 5, minWidth: 0, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>
                       {active.other?.is_online ? (
                         <>
-                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981", flexShrink: 0 }} />
                           Online
                         </>
                       ) : active.other?.last_seen_at ? (
                         `Last seen ${new Date(active.other.last_seen_at).toLocaleString()}`
                       ) : active.other?.username ? (
-                        <Link to={`/u/${active.other.username}`} style={{ color: "#94A3B8", textDecoration: "none" }}>
+                        <Link to={`/u/${active.other.username}`} style={{ color: "#94A3B8", textDecoration: "none", overflow: "hidden", textOverflow: "ellipsis" }}>
                           @{active.other.username}
                         </Link>
                       ) : ""}
                     </div>
                   </div>
+
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
                   {user && active.other?.id && (
