@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
       try {
         const { done, value } = await reader.read();
         if (done) {
-          // Resolve [EXPERT_CARD: id] tokens from accumulated text
+          clearTimeout(timeoutId);
           const ids = Array.from(new Set(
             [...fullText.matchAll(/\[EXPERT_CARD:\s*([0-9a-f-]{8,})\s*\]/gi)].map((m) => m[1])
           ));
@@ -227,13 +227,15 @@ Deno.serve(async (req) => {
             }
           } catch { /* ignore partial */ }
         }
-      } catch (_e) {
+      } catch (e) {
+        clearTimeout(timeoutId);
+        console.error('[river-chat] stream error:', (e as Error).message);
         controller.enqueue(sseLine({ delta: FALLBACK_REPLY }));
         controller.enqueue(sseLine({ done: true, cards: [] }));
         controller.close();
       }
     },
-    cancel() { try { reader.cancel(); } catch { /* noop */ } },
+    cancel() { clearTimeout(timeoutId); try { reader.cancel(); } catch { /* noop */ } },
   });
 
   return new Response(out, {
