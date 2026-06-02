@@ -80,7 +80,8 @@ function FilterPill({ label, active, onClear, children }: FilterPillProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className={`inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm font-medium transition-colors ${
+          aria-label={label}
+          className={`inline-flex items-center gap-1.5 h-10 px-4 rounded-full border text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 ${
             active
               ? "bg-foreground text-background border-foreground"
               : "bg-background border-border text-foreground hover:border-foreground/40"
@@ -88,17 +89,23 @@ function FilterPill({ label, active, onClear, children }: FilterPillProps) {
         >
           <span>{label}</span>
           {active && onClear ? (
-            <span
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClear(); }}
-              className="ml-0.5 inline-flex items-center justify-center rounded-full hover:bg-background/20 p-0.5"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onClear();
+                }
+              }}
+              className="ml-0.5 inline-flex items-center justify-center rounded-full hover:bg-background/20 p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-background"
               aria-label="Clear filter"
             >
-              <X size={12} />
-            </span>
+              <X size={12} aria-hidden="true" />
+            </button>
           ) : (
-            <ChevronDown size={14} className="opacity-70" />
+            <ChevronDown size={14} className="opacity-70" aria-hidden="true" />
           )}
         </button>
       </DropdownMenuTrigger>
