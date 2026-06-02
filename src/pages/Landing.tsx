@@ -236,7 +236,7 @@ export default function Landing() {
           style={{
             position: "relative", zIndex: 2, height: "100%",
             display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            textAlign: "center", padding: "0 24px",
+            textAlign: "center", padding: "80px 24px 0",
           }}
         >
           <div
