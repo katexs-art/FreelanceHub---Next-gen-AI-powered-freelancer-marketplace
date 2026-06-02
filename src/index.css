@@ -58,7 +58,7 @@
 
   .dark { color-scheme: light; }
 
-  .kx-theme-midnight {
+  .kx-theme-midnight, [data-theme="midnight"] {
     --background: 0 0% 4%;
     --background-subtle: 0 0% 7%;
     --background-elevated: 0 0% 9%;
@@ -83,8 +83,8 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 14%;
   }
-  .kx-theme-clean-white {}
-  .kx-theme-ocean {
+  .kx-theme-clean-white, [data-theme="clean-white"] {}
+  .kx-theme-ocean, [data-theme="ocean"] {
     --primary: 217 91% 53%; --primary-hover: 217 91% 47%;
     --accent: 217 91% 53%; --ring: 217 91% 53%;
     --background-subtle: 217 60% 97%;
@@ -92,7 +92,7 @@
     --sidebar-primary: 217 91% 53%; --sidebar-ring: 217 91% 53%;
     --sidebar-accent: 217 60% 94%;
   }
-  .kx-theme-forest {
+  .kx-theme-forest, [data-theme="forest"] {
     --primary: 160 84% 31%; --primary-hover: 160 84% 27%;
     --accent: 160 84% 31%; --ring: 160 84% 31%;
     --background-subtle: 160 45% 96%;
@@ -100,7 +100,7 @@
     --sidebar-primary: 160 84% 31%; --sidebar-ring: 160 84% 31%;
     --sidebar-accent: 160 40% 93%;
   }
-  .kx-theme-sunset {
+  .kx-theme-sunset, [data-theme="sunset"] {
     --primary: 21 90% 48%; --primary-hover: 21 90% 42%;
     --accent: 21 90% 48%; --ring: 21 90% 48%;
     --background-subtle: 21 80% 97%;
@@ -108,7 +108,7 @@
     --sidebar-primary: 21 90% 48%; --sidebar-ring: 21 90% 48%;
     --sidebar-accent: 21 70% 93%;
   }
-  .kx-theme-purple-haze {
+  .kx-theme-purple-haze, [data-theme="purple-haze"] {
     --primary: 262 83% 58%; --primary-hover: 262 83% 52%;
     --accent: 262 83% 58%; --ring: 262 83% 58%;
     --background-subtle: 262 60% 97%;

@@ -3,36 +3,35 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Package, ShoppingBag, Wallet, MessageSquare,
-  Settings, ShoppingCart, Search, LogOut, Plus, Bookmark, BadgeCheck, BarChart3,
+  Settings, Search, LogOut, Plus, Bookmark, BadgeCheck, BarChart3,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useOnlineHeartbeat } from "@/hooks/useOnlineHeartbeat";
-import { useTheme } from "@/hooks/useTheme";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { profile, signOut } = useAuth();
-  const { theme } = useTheme();
   useOnlineHeartbeat(!!profile);
   const nav = useNavigate();
   const isSeller = profile?.role === "seller" || profile?.role === "admin";
 
-  const sellerLinks = [
+  const projectsTo = isSeller ? "/seller/orders" : "/buyer/orders";
+
+  const links = [
     { to: "/hq", icon: LayoutDashboard, label: "HQ" },
-    { to: "/seller/gigs", icon: Package, label: "My services" },
-    { to: "/seller/orders", icon: ShoppingBag, label: "Projects" },
-    { to: "/seller/earnings", icon: Wallet, label: "Earnings" },
-    { to: "/seller/analytics", icon: BarChart3, label: "Analytics" },
-    { to: "/seller/verification", icon: BadgeCheck, label: "Verification" },
-  ];
-  const buyerLinks = [
-    { to: "/hq", icon: LayoutDashboard, label: "HQ" },
-    { to: "/buyer/orders", icon: ShoppingCart, label: "Projects" },
+    { to: projectsTo, icon: ShoppingBag, label: "Projects" },
     { to: "/saved", icon: Bookmark, label: "Saved" },
     { to: "/services", icon: Search, label: "Find experts" },
+    ...(isSeller
+      ? [
+          { to: "/seller/gigs", icon: Package, label: "My services" },
+          { to: "/seller/earnings", icon: Wallet, label: "Earnings" },
+          { to: "/seller/analytics", icon: BarChart3, label: "Analytics" },
+          { to: "/seller/verification", icon: BadgeCheck, label: "Verification" },
+        ]
+      : []),
   ];
-  const links = isSeller ? sellerLinks : buyerLinks;
   const shared = [
     { to: "/inbox", icon: MessageSquare, label: "Messages" },
     { to: "/settings", icon: Settings, label: "Settings" },
@@ -47,7 +46,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
 
   return (
-    <div className={cn("min-h-screen bg-background", `kx-theme-${theme}`)}>
+    <div className="min-h-screen bg-background">
+
       <header className="bg-background border-b-hairline sticky top-0 z-40">
         <div className="px-6 h-14 flex items-center gap-6">
           <Link to="/" className="font-mono font-medium text-sm tracking-[0.18em] uppercase">
