@@ -1,31 +1,27 @@
-Add a "Testimonials" section to `src/pages/Landing.tsx`, inserted between the **How it works** section (ends ~line 409) and the **Featured gigs** section (~line 411).
+## Goal
 
-### Section design
+Replace the static 3-column testimonials grid in `src/pages/Landing.tsx` with a carousel that lets visitors page through the 5 quotes.
 
-- Full-width black band matching the surrounding landing sections (`background: #000`, `padding: 80px`, `maxWidth: 1200` inner).
-- Eyebrow: "Testimonials" (uppercase, tracked, #888).
-- H2: "Trusted by service business innovators" (32px, weight 500, white).
-- 3-column responsive grid (collapses to 1 column on mobile via existing `.kx-grid-3` rule).
-- 5 testimonial cards (grid wraps the 4th/5th into a second row).
+## Behavior
 
-### Card
+- Show **3 cards at a time** on desktop, **2 on tablet** (≤960px), **1 on mobile** (≤640px).
+- **Prev / Next arrow buttons** in the section header (right side, next to the H2) — circular, white-bordered on black, with hover state.
+- **Dot indicators** centered below the carousel showing current page; click to jump.
+- **Auto-advance every 6 seconds**; pause on hover or when a control is focused.
+- **Loop**: advancing past the last page returns to the first.
+- Smooth horizontal slide transition (CSS `transform: translateX` with `transition: transform 500ms ease`).
+- Keyboard: Left/Right arrows navigate when the carousel region is focused. Arrow buttons are real `<button>`s with `aria-label`s; the track has `aria-roledescription="carousel"`.
 
-- `#0a0a0a` background, `1px solid #1f1f1f` border, 16px radius, 28px padding.
-- Green "(quote mark)" glyph at top (#16A34A, brand primary).
-- Quote body (15px, #e5e5e5, 1.6 line-height).
-- Footer row separated by a 1px divider: circular initials avatar in brand green tint, name (white, 14/500), title (12px, #888).
+## Implementation
 
-### Quotes (placeholders, service-business innovators)
+- Keep the existing testimonials data array and card markup (visual design unchanged — same #0a0a0a card, green quote glyph, avatar/name/title footer).
+- Wrap the cards in a viewport `<div>` with `overflow: hidden` and an inner track `<div>` that holds all cards side-by-side. Each card gets a fixed flex-basis based on `cardsPerView` so the track width = `cards.length * (100 / cardsPerView)%`.
+- New local state: `page` (0-indexed), `cardsPerView` (derived from a `useEffect` listening to `window.matchMedia` for 640px and 960px breakpoints).
+- `pageCount = Math.ceil(testimonials.length / cardsPerView)`; translateX offset = `-(page * 100 / pageCount)%` of the track.
+- Auto-advance via `useEffect` + `setInterval(6000)`; cleared on hover (`onMouseEnter`/`Leave` toggles a `paused` ref).
+- All styling inline to match the surrounding landing-page pattern. No new dependencies, no new files.
 
-1. Marcus Tan — Founder, Northbound HVAC
-2. Priya Shah — COO, Bright Smile Dental Group
-3. Diego Alvarez — CEO, Helix Home Services
-4. Sarah Okonkwo — Owner, Pinnacle Roofing Co.
-5. Kevin Herring — Managing Partner, Herring Legal
+## Scope
 
-Each quote highlights a concrete outcome (after-hours leads, voice AI IVR, onboarding automation, etc.).
-
-### Scope
-
-- Frontend only. No new components, no data fetching, no backend changes.
-- No new dependencies. Inline styles match the existing landing page pattern.
+- Only `src/pages/Landing.tsx` is modified (the testimonials section, ~lines 411-484).
+- No backend, data, or design-system changes. Colors and typography stay identical to the current section.
