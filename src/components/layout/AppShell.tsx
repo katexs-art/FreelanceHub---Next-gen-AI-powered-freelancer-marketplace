@@ -9,9 +9,11 @@ import { Button } from "@/components/ui/button";
 import { NotificationBell } from "@/components/layout/NotificationBell";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useOnlineHeartbeat } from "@/hooks/useOnlineHeartbeat";
+import { useTheme } from "@/hooks/useTheme";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { profile, signOut } = useAuth();
+  const { theme } = useTheme();
   useOnlineHeartbeat(!!profile);
   const nav = useNavigate();
   const isSeller = profile?.role === "seller" || profile?.role === "admin";
@@ -45,7 +47,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className={cn("min-h-screen bg-background", `kx-theme-${theme}`)}>
       <header className="bg-background border-b-hairline sticky top-0 z-40">
         <div className="px-6 h-14 flex items-center gap-6">
           <Link to="/" className="font-mono font-medium text-sm tracking-[0.18em] uppercase">
