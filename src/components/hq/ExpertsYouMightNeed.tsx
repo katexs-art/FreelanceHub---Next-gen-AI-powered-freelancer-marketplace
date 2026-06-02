@@ -34,7 +34,7 @@ export function ExpertsYouMightNeed() {
       }
 
       const sel =
-        "id, title, thumbnail_url, starting_price, average_rating, total_reviews, seller:profiles!gigs_seller_id_fkey(username, full_name, avatar_url)";
+        "id, title, thumbnail_url, starting_price, average_rating, total_reviews, seller_id";
 
       let q = supabase
         .from("gigs")
@@ -58,7 +58,14 @@ export function ExpertsYouMightNeed() {
           .limit(12);
         data = fb.data ?? [];
       }
-      if (active) setGigs((data ?? []) as unknown as GigCardData[]);
+
+      const sellerIds = Array.from(new Set((data ?? []).map((g: any) => g.seller_id))) as string[];
+      const { data: sellers } = sellerIds.length
+        ? await supabase.from("profiles").select("id, username, full_name, avatar_url").in("id", sellerIds)
+        : { data: [] as any[] };
+      const byId = new Map(((sellers ?? []) as any[]).map((s) => [s.id, s]));
+      const enriched = (data ?? []).map((g: any) => ({ ...g, seller: byId.get(g.seller_id) ?? null }));
+      if (active) setGigs(enriched as unknown as GigCardData[]);
     })();
     return () => { active = false; };
   }, [user?.id]);
