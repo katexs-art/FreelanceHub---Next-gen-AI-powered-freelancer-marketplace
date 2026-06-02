@@ -468,7 +468,7 @@ export default function Inbox() {
               <header
                 style={{
                   background: "#FFFFFF",
-                  borderBottom: "1px solid #EBEBEB",
+                  borderBottom: "1px solid #E2E8F0",
                   padding: isMobile ? "12px 14px" : "16px 24px",
                   display: "flex",
                   alignItems: "center",
@@ -484,49 +484,54 @@ export default function Inbox() {
                       type="button"
                       onClick={() => nav("/inbox")}
                       aria-label="Back to messages"
-                      style={{ background: "transparent", border: "none", padding: 4, marginRight: 2, cursor: "pointer", color: "#0A0A0A" }}
+                      style={{ background: "transparent", border: "none", padding: 4, marginRight: 2, cursor: "pointer", color: "#0F172A" }}
                     >
                       <ArrowLeft size={20} />
                     </button>
                   )}
-                  <div
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      background: "#F0F0F0",
-                      color: "#0A0A0A",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 14,
-                      fontWeight: 600,
-                      overflow: "hidden",
-                      flexShrink: 0,
-                    }}
-                  >
-                    {active.other?.avatar_url ? (
-                      <img src={active.other.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                    ) : (
-                      initials(active.other?.full_name, active.other?.username)
+                  <div style={{ position: "relative", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        background: "#EEF2FF",
+                        color: "#4F46E5",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 14,
+                        fontWeight: 700,
+                        overflow: "hidden",
+                      }}
+                    >
+                      {active.other?.avatar_url ? (
+                        <img src={active.other.avatar_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                      ) : (
+                        initials(active.other?.full_name, active.other?.username)
+                      )}
+                    </div>
+                    {active.other?.is_online && (
+                      <div style={{ position: "absolute", bottom: -1, right: -1, width: 10, height: 10, background: "#10B981", borderRadius: "50%", border: "2px solid #fff" }} />
                     )}
                   </div>
                   <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: "#0A0A0A" }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: "#0F172A" }}>
                       {active.other?.full_name ?? active.other?.username ?? "User"}
                     </div>
-                    <div style={{ fontSize: 12, color: active.other?.is_online ? "#16A34A" : "#AAAAAA" }}>
-                      {active.other?.is_online
-                        ? "Online"
-                        : active.other?.last_seen_at
-                          ? `Last seen ${new Date(active.other.last_seen_at).toLocaleString()}`
-                          : active.other?.username
-                            ? (
-                              <Link to={`/u/${active.other.username}`} style={{ color: "#AAAAAA", textDecoration: "none" }}>
-                                @{active.other.username}
-                              </Link>
-                            )
-                            : ""}
+                    <div style={{ fontSize: 12, color: active.other?.is_online ? "#10B981" : "#94A3B8", display: "flex", alignItems: "center", gap: 5 }}>
+                      {active.other?.is_online ? (
+                        <>
+                          <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
+                          Online
+                        </>
+                      ) : active.other?.last_seen_at ? (
+                        `Last seen ${new Date(active.other.last_seen_at).toLocaleString()}`
+                      ) : active.other?.username ? (
+                        <Link to={`/u/${active.other.username}`} style={{ color: "#94A3B8", textDecoration: "none" }}>
+                          @{active.other.username}
+                        </Link>
+                      ) : ""}
                     </div>
                   </div>
                 </div>
@@ -565,7 +570,7 @@ export default function Inbox() {
                   flex: 1,
                   overflowY: "auto",
                   padding: 24,
-                  background: "#F7F7F7",
+                  background: "#F8FAFC",
                   minHeight: 0,
                 }}
               >
@@ -576,10 +581,12 @@ export default function Inbox() {
                         style={{
                           display: "inline-block",
                           fontSize: 11,
-                          color: "#888888",
-                          background: "#F0F0F0",
+                          color: "#64748B",
+                          background: "#FFFFFF",
+                          border: "1px solid #E2E8F0",
                           padding: "3px 12px",
                           borderRadius: 999,
+                          fontWeight: 500,
                         }}
                       >
                         {g.label}
@@ -602,30 +609,33 @@ export default function Inbox() {
                           <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 12 }}>
                             <div
                               style={{
-                                background: "#FAFAFA",
-                                border: "1px solid #EBEBEB",
-                                borderLeft: "3px solid #7C3AED",
-                                borderRadius: 12,
+                                background: "#FFFFFF",
+                                border: "1px solid #E2E8F0",
+                                borderRadius: 16,
                                 padding: 16,
                                 maxWidth: "65%",
+                                boxShadow: "0 1px 3px rgba(15,23,42,0.04), 0 8px 24px -12px rgba(79,70,229,0.12)",
+                                overflow: "hidden",
+                                position: "relative",
                               }}
                             >
-                              <div style={{ fontSize: 11, color: "#7C3AED", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 600, marginBottom: 8 }}>
+                              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,#4F46E5,#7C3AED)" }} />
+                              <div style={{ fontSize: 10, color: "#4F46E5", textTransform: "uppercase", letterSpacing: "0.1em", fontWeight: 700, marginBottom: 8, marginTop: 4 }}>
                                 Proposal
                               </div>
-                              <div style={{ whiteSpace: "pre-line", fontSize: 14, color: "#333", lineHeight: 1.5 }}>
+                              <div style={{ whiteSpace: "pre-line", fontSize: 14, color: "#0F172A", lineHeight: 1.55 }}>
                                 {m.content}
                               </div>
-                              <hr style={{ border: "none", borderTop: "1px solid #EBEBEB", margin: "12px 0" }} />
+                              <hr style={{ border: "none", borderTop: "1px solid #E2E8F0", margin: "12px 0" }} />
                               {priceDollars && (
                                 <div style={{ fontSize: 14, marginBottom: 4 }}>
-                                  <span style={{ fontSize: 12, color: "#888" }}>Proposed Price: </span>
-                                  <span style={{ fontSize: 15, color: "#16A34A", fontWeight: 700 }}>${priceDollars}</span>
+                                  <span style={{ fontSize: 12, color: "#64748B" }}>Proposed Price: </span>
+                                  <span style={{ fontSize: 16, color: "#0F172A", fontWeight: 700 }}>${priceDollars}</span>
                                 </div>
                               )}
                               {m.pitch_delivery_days != null && (
-                                <div style={{ fontSize: 12, color: "#888" }}>
-                                  Delivery Time: <span style={{ color: "#333", fontWeight: 600 }}>{m.pitch_delivery_days} days</span>
+                                <div style={{ fontSize: 12, color: "#64748B" }}>
+                                  Delivery Time: <span style={{ color: "#0F172A", fontWeight: 600 }}>{m.pitch_delivery_days} days</span>
                                 </div>
                               )}
                               {!mine && (
@@ -642,24 +652,24 @@ export default function Inbox() {
                                       nav(`/checkout/${data}`);
                                     }}
                                     style={{
-                                      background: "#16A34A", color: "#fff", border: "none",
-                                      padding: "6px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                                      background: "#4F46E5", color: "#fff", border: "none",
+                                      padding: "8px 16px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
                                     }}
                                   >
-                                    Accept Proposal
+                                    Accept
                                   </button>
                                   <button
                                     onClick={() => chatInputRef.current?.focus()}
                                     style={{
-                                      background: "#fff", color: "#0A0A0A", border: "1px solid #0A0A0A",
-                                      padding: "6px 14px", borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                                      background: "#fff", color: "#475569", border: "1px solid #E2E8F0",
+                                      padding: "8px 16px", borderRadius: 999, fontSize: 12.5, fontWeight: 600, cursor: "pointer",
                                     }}
                                   >
-                                    Reply
+                                    Decline
                                   </button>
                                 </div>
                               )}
-                              <div style={{ fontSize: 11, color: "#AAAAAA", marginTop: 8 }}>{formatTime(m.created_at)}</div>
+                              <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 8 }}>{formatTime(m.created_at)}</div>
                             </div>
                           </div>
                         );
@@ -673,13 +683,13 @@ export default function Inbox() {
                                 width: 32,
                                 height: 32,
                                 borderRadius: "50%",
-                                background: "#F0F0F0",
-                                color: "#0A0A0A",
+                                background: "#EEF2FF",
+                                color: "#4F46E5",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 fontSize: 12,
-                                fontWeight: 600,
+                                fontWeight: 700,
                                 flexShrink: 0,
                                 overflow: "hidden",
                               }}
@@ -694,19 +704,21 @@ export default function Inbox() {
                           <div style={{ maxWidth: "65%" }}>
                             <div
                               style={{
-                                background: mine ? "#0A0A0A" : "#FAFAFA",
-                                color: mine ? "#FFFFFF" : "#333333",
-                                border: mine ? "none" : "1px solid #E5E5E5",
+                                background: mine ? "#4F46E5" : "#FFFFFF",
+                                color: mine ? "#FFFFFF" : "#0F172A",
+                                border: mine ? "none" : "1px solid #E2E8F0",
                                 borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
-                                padding: "12px 16px",
+                                padding: "10px 14px",
                                 fontSize: 14,
+                                lineHeight: 1.5,
                                 whiteSpace: "pre-line",
                                 wordBreak: "break-word",
+                                boxShadow: mine ? "0 4px 12px -4px rgba(79,70,229,0.4)" : "0 1px 2px rgba(15,23,42,0.04)",
                               }}
                             >
                               {m.content}
                             </div>
-                            <div style={{ fontSize: 11, color: "#AAAAAA", marginTop: 4, textAlign: mine ? "right" : "left" }}>
+                            <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 4, textAlign: mine ? "right" : "left" }}>
                               {formatTime(m.created_at)}
                             </div>
                           </div>
@@ -722,7 +734,7 @@ export default function Inbox() {
               <footer
                 style={{
                   background: "#FFFFFF",
-                  borderTop: "1px solid #EBEBEB",
+                  borderTop: "1px solid #E2E8F0",
                   padding: "16px 24px",
                   display: "flex",
                   alignItems: "center",
@@ -734,16 +746,17 @@ export default function Inbox() {
                   type="button"
                   aria-label="Attach"
                   style={{
-                    background: "transparent",
+                    background: hoverIcon === "attach" ? "#EEF2FF" : "transparent",
                     border: "none",
-                    width: 32,
-                    height: 32,
+                    width: 36,
+                    height: 36,
+                    borderRadius: 10,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: "pointer",
-                    color: hoverIcon === "attach" ? "#0A0A0A" : "#AAAAAA",
-                    transition: "color 0.15s",
+                    color: hoverIcon === "attach" ? "#4F46E5" : "#64748B",
+                    transition: "all 0.15s",
                   }}
                   onMouseEnter={() => setHoverIcon("attach")}
                   onMouseLeave={() => setHoverIcon(null)}
@@ -761,12 +774,13 @@ export default function Inbox() {
                   placeholder="Type a message..."
                   style={{
                     flex: 1,
-                    background: inputFocused ? "#FFFFFF" : "#F7F7F7",
-                    border: `1px solid ${inputFocused ? "#0A0A0A" : "#EBEBEB"}`,
+                    background: inputFocused ? "#FFFFFF" : "#F1F5F9",
+                    border: `1px solid ${inputFocused ? "#4F46E5" : "transparent"}`,
+                    boxShadow: inputFocused ? "0 0 0 3px rgba(79,70,229,0.12)" : "none",
                     borderRadius: 999,
                     padding: "12px 20px",
                     fontSize: 14,
-                    color: "#333",
+                    color: "#0F172A",
                     outline: "none",
                     transition: "all 0.15s",
                   }}
@@ -777,22 +791,23 @@ export default function Inbox() {
                   disabled={!draft.trim()}
                   aria-label="Send"
                   style={{
-                    background: "#0A0A0A",
+                    background: "#4F46E5",
                     color: "#FFFFFF",
                     border: "none",
                     borderRadius: 999,
-                    width: 42,
-                    height: 42,
+                    width: 44,
+                    height: 44,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     cursor: draft.trim() ? "pointer" : "not-allowed",
                     opacity: draft.trim() ? 1 : 0.4,
-                    transition: "background 0.2s",
+                    transition: "all 0.2s",
                     flexShrink: 0,
+                    boxShadow: draft.trim() ? "0 4px 12px -2px rgba(79,70,229,0.45)" : "none",
                   }}
-                  onMouseEnter={(e) => { if (draft.trim()) (e.currentTarget as HTMLButtonElement).style.background = "#333"; }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#0A0A0A"; }}
+                  onMouseEnter={(e) => { if (draft.trim()) (e.currentTarget as HTMLButtonElement).style.background = "#4338CA"; }}
+                  onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#4F46E5"; }}
                 >
                   <ArrowRight size={18} />
                 </button>
