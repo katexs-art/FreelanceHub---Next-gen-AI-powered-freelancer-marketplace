@@ -288,6 +288,10 @@ export default function OrderWorkspace() {
             </div>
           </div>
           <div className="text-right">
+            <div className="flex items-center justify-end gap-1.5 text-xs text-green-600 mb-1">
+              <Wifi className={`h-3 w-3 ${livePulse ? "animate-pulse" : ""}`} />
+              <span className={livePulse ? "font-medium" : ""}>Live</span>
+            </div>
             <div className="text-xs text-foreground-muted">Total</div>
             <div className="text-xl font-bold">${order.price}</div>
           </div>
