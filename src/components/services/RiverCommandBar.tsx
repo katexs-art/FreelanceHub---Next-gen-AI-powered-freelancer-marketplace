@@ -27,9 +27,9 @@ export function RiverCommandBar() {
   const { user } = useAuth();
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
   const [cards, setCards] = useState<ExpertCard[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
   const [micError, setMicError] = useState<"denied" | "no-speech" | "unsupported" | null>(null);
   const [listening, setListening] = useState(false);
   const [retryingMic, setRetryingMic] = useState(false);
@@ -98,13 +98,13 @@ export function RiverCommandBar() {
     if (now - lastSendAt.current < 500) return;
     lastSendAt.current = now;
 
-    setError(null); setStream(""); setCards([]);
+    setError(null); setCards([]); setSearched(false);
     if (!user) { setError("Please sign in to ask River."); return; }
 
     setLoading(true);
     const ctrl = new AbortController();
     abortRef.current = ctrl;
-    const timeout = setTimeout(() => ctrl.abort("timeout"), 15_000);
+    const timeout = setTimeout(() => ctrl.abort("timeout"), 20_000);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -120,11 +120,11 @@ export function RiverCommandBar() {
 
       if (resp.status === 401) { setError("Please sign in to ask River."); return; }
       if (resp.status === 429) { setError("You're going too fast — please wait a moment."); return; }
-      if (!resp.ok || !resp.body) { setError("River is taking a quick break. Try again in a moment."); return; }
+      if (!resp.ok || !resp.body) { setSearched(true); return; }
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
-      let buf = ""; let acc = ""; let finalCards: ExpertCard[] = [];
+      let buf = ""; let finalCards: ExpertCard[] = [];
       while (true) {
         const { done, value: chunk } = await reader.read();
         if (done) break;
@@ -138,16 +138,19 @@ export function RiverCommandBar() {
           if (!json) continue;
           try {
             const evt = JSON.parse(json);
-            if (typeof evt.delta === "string") { acc += evt.delta; setStream(stripTokens(acc)); }
-            else if (evt.done && Array.isArray(evt.cards)) finalCards = evt.cards;
+            if (evt.done && Array.isArray(evt.cards)) finalCards = evt.cards;
           } catch { /* ignore */ }
         }
       }
-      setStream(stripTokens(acc));
       setCards(finalCards);
+      setSearched(true);
     } catch (e: any) {
-      if (e?.name === "AbortError" || ctrl.signal.aborted) setError("River is taking too long. Please try again.");
-      else setError("Connection lost. Check your internet and try again.");
+      // Silently swallow timeouts/aborts — just show the no-match CTA.
+      if (e?.name === "AbortError" || ctrl.signal.aborted) {
+        setSearched(true);
+      } else {
+        setError("Connection lost. Check your internet and try again.");
+      }
     } finally {
       clearTimeout(timeout); abortRef.current = null; setLoading(false);
     }
@@ -224,8 +227,8 @@ export function RiverCommandBar() {
         </div>
       </form>
 
-      {/* Results / errors */}
-      {(loading || stream || cards.length > 0 || error) && (
+      {/* Results */}
+      {(loading || cards.length > 0 || searched || error) && (
         <div className="mt-6 text-left">
           {error && (
             <div className={`rounded-xl px-4 py-3.5 text-sm border ${micError ? "bg-yellow-50 border-yellow-200 text-yellow-900" : "bg-red-50 border-red-200 text-red-900"}`}>
@@ -263,24 +266,19 @@ export function RiverCommandBar() {
             </div>
           )}
 
-          {(stream || (loading && !error)) && (
-            <div className="mt-3 bg-background border border-border rounded-2xl p-5 text-foreground text-sm leading-relaxed whitespace-pre-wrap">
-              <div className="flex items-center gap-2 mb-2.5">
-                <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-[10px]">R</span>
-                <span className="text-[11px] tracking-[0.18em] uppercase text-foreground-muted font-semibold">River</span>
-              </div>
-              {stream || (
-                <span className="inline-flex gap-1">
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse [animation-delay:.15s]" />
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse [animation-delay:.3s]" />
-                </span>
-              )}
+          {loading && !error && (
+            <div className="flex items-center gap-2 text-sm text-foreground-muted">
+              <span className="inline-flex gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse [animation-delay:.15s]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse [animation-delay:.3s]" />
+              </span>
+              River is finding your experts…
             </div>
           )}
 
           {cards.length > 0 && (
-            <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+            <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
               {cards.map((c) => (
                 <Link key={c.id} to={`/gig/${c.slug || c.id}`}
                   className="block bg-background border border-border rounded-2xl p-4 text-foreground hover:border-primary/50 hover:-translate-y-0.5 transition-all">
@@ -298,6 +296,17 @@ export function RiverCommandBar() {
                   </div>
                 </Link>
               ))}
+            </div>
+          )}
+
+          {!loading && !error && searched && cards.length === 0 && (
+            <div className="rounded-2xl border border-border bg-background p-6 text-center">
+              <div className="text-sm font-semibold text-foreground">No exact match yet.</div>
+              <div className="text-xs text-foreground-muted mt-1">Post a project and qualified experts will come to you.</div>
+              <Link to="/post-job"
+                className="mt-4 inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+                Post a Project instead <span aria-hidden="true">→</span>
+              </Link>
             </div>
           )}
         </div>
