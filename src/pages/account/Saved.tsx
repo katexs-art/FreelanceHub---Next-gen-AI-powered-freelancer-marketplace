@@ -42,6 +42,7 @@ export default function Saved() {
               ? <p className="text-foreground-muted col-span-full text-sm">Nothing saved yet.</p>
               : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
         </div>
+        <RecommendationsBlock />
       </div>
     </AppShell>
   );
