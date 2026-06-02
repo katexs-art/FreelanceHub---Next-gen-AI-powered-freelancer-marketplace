@@ -166,33 +166,34 @@ export function SiteFooter() {
       {/* Bottom bar */}
       <div className="border-t border-[#1a1a1a]">
         <div className="container-page py-6">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 flex-wrap">
             {/* Copyright */}
-            <p className="text-[#666] text-xs">
+            <p className="text-[#666] text-xs whitespace-nowrap">
               © 2026 Katexs. All rights reserved.
             </p>
 
             {/* Trust badges */}
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-6 flex-wrap justify-center">
               <div className="flex items-center gap-2 text-[#666]">
                 <ShieldCheck className="h-4 w-4" />
-                <span className="text-xs">SSL Secured</span>
+                <span className="text-xs whitespace-nowrap">SSL Secured</span>
               </div>
               <div className="flex items-center gap-2 text-[#666]">
                 <CreditCard className="h-4 w-4" />
-                <span className="text-xs">Stripe Payments</span>
+                <span className="text-xs whitespace-nowrap">Stripe Payments</span>
               </div>
               <div className="flex items-center gap-2 text-[#666]">
                 <RotateCcw className="h-4 w-4" />
-                <span className="text-xs">Money-back Guarantee</span>
+                <span className="text-xs whitespace-nowrap">Money-back Guarantee</span>
               </div>
             </div>
 
             {/* Tagline */}
-            <p className="text-[#666] text-xs">
+            <p className="text-[#666] text-xs whitespace-nowrap">
               Built with AI. Powered by humans.
             </p>
           </div>
+
         </div>
       </div>
     </footer>
