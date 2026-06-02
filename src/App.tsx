@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { lazy, Suspense } from "react";
@@ -86,6 +87,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ThemeProvider>
         <ScrollToTop />
         <ErrorBoundary>
         <Suspense fallback={<Loading />}>
@@ -166,6 +168,7 @@ const App = () => (
           <RiverWidget />
         </Suspense>
         </ErrorBoundary>
+        </ThemeProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
