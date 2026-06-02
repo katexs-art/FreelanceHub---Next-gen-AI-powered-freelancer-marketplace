@@ -254,8 +254,13 @@ export default function Services() {
 
         {/* Filter bar + results */}
         <section className="container-page pb-16">
-          {/* Filter pills */}
-          <div className="flex flex-wrap items-center gap-2 mb-5">
+          {/* Filter pills — Arrow Left/Right + Home/End to move between pills */}
+          <div
+            role="toolbar"
+            aria-label="Service filters"
+            onKeyDown={(e) => handleArrowNav(e, "horizontal", "button")}
+            className="flex flex-wrap items-center gap-2 mb-5"
+          >
             <FilterPill
               label={cat ? `Category: ${cat}` : "Category"}
               active={!!cat}
@@ -309,13 +314,15 @@ export default function Services() {
 
           {/* Results header */}
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-foreground">
+            <h2 className="text-sm font-semibold text-foreground" aria-live="polite">
               {loading ? "Loading…" : `${filtered.length} service${filtered.length === 1 ? "" : "s"}`}
             </h2>
+            <label className="sr-only" htmlFor="services-sort">Sort services</label>
             <select
+              id="services-sort"
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}
-              className="h-9 rounded-md bg-background border border-border px-3 text-sm"
+              className="h-9 rounded-md bg-background border border-border px-3 text-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-foreground"
             >
               <option value="newest">Newest</option>
               <option value="top_rated">Top Rated</option>
@@ -336,7 +343,13 @@ export default function Services() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div
+              ref={gridRef}
+              role="grid"
+              aria-label="Expert services"
+              onKeyDown={(e) => handleGridNav(e)}
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+            >
               {filtered.map((g) => <GigCard key={g.id} gig={toCard(g)} />)}
             </div>
           )}
@@ -345,4 +358,29 @@ export default function Services() {
       <SiteFooter />
     </div>
   );
+}
+
+// ---------- keyboard helpers ----------
+
+function handleArrowNav(
+  e: KeyboardEvent<HTMLElement>,
+  axis: "horizontal" | "vertical",
+  selector: string,
+) {
+  const container = e.currentTarget;
+  const items = Array.from(container.querySelectorAll<HTMLElement>(selector))
+    .filter((el) => !el.hasAttribute("disabled"));
+  if (items.length === 0) return;
+  const idx = items.indexOf(document.activeElement as HTMLElement);
+  const next = axis === "horizontal" ? "ArrowRight" : "ArrowDown";
+  const prev = axis === "horizontal" ? "ArrowLeft" : "ArrowUp";
+  let target = -1;
+  if (e.key === next) target = idx < 0 ? 0 : (idx + 1) % items.length;
+  else if (e.key === prev) target = idx < 0 ? items.length - 1 : (idx - 1 + items.length) % items.length;
+  else if (e.key === "Home") target = 0;
+  else if (e.key === "End") target = items.length - 1;
+  if (target >= 0) {
+    e.preventDefault();
+    items[target].focus();
+  }
 }
