@@ -126,6 +126,30 @@ export default function Services() {
   const [rating, setRating] = useState<RatingOpt>(null);
   const [location, setLocation] = useState<LocationOpt>(null);
   const [sort, setSort] = useState<Sort>("newest");
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  const handleGridNav = (e: KeyboardEvent<HTMLDivElement>) => {
+    const grid = gridRef.current;
+    if (!grid) return;
+    const cards = Array.from(grid.querySelectorAll<HTMLAnchorElement>("a"));
+    if (cards.length === 0) return;
+    const idx = cards.indexOf(document.activeElement as HTMLAnchorElement);
+    if (idx < 0) return;
+    // Detect columns from layout (cards on the same row share offsetTop).
+    const rowTop = cards[idx].offsetTop;
+    const cols = cards.filter((c) => c.offsetTop === rowTop).length || 1;
+    let target = -1;
+    if (e.key === "ArrowRight") target = Math.min(idx + 1, cards.length - 1);
+    else if (e.key === "ArrowLeft") target = Math.max(idx - 1, 0);
+    else if (e.key === "ArrowDown") target = Math.min(idx + cols, cards.length - 1);
+    else if (e.key === "ArrowUp") target = Math.max(idx - cols, 0);
+    else if (e.key === "Home") target = 0;
+    else if (e.key === "End") target = cards.length - 1;
+    if (target >= 0 && target !== idx) {
+      e.preventDefault();
+      cards[target].focus();
+    }
+  };
 
   useEffect(() => {
     (async () => {
