@@ -471,7 +471,23 @@ export default function Inbox() {
                   <MessageSquare size={34} strokeWidth={1.75} />
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 600, color: "#475569", marginBottom: 6 }}>Select a conversation</div>
-                <div style={{ fontSize: 14, color: "#94A3B8" }}>Choose a conversation from the left to start messaging</div>
+                <div style={{ fontSize: 14, color: "#94A3B8", marginBottom: isMobile ? 20 : 0 }}>
+                  {isMobile ? "Open your messages to start chatting" : "Choose a conversation from the left to start messaging"}
+                </div>
+                {isMobile && (
+                  <button
+                    type="button"
+                    onClick={() => setListOpen(true)}
+                    style={{
+                      background: "#4F46E5", color: "#fff", border: "none",
+                      borderRadius: 999, padding: "10px 20px", fontSize: 14,
+                      fontWeight: 600, cursor: "pointer", display: "inline-flex",
+                      alignItems: "center", gap: 8,
+                    }}
+                  >
+                    <Menu size={16} /> Open messages
+                  </button>
+                )}
               </div>
             </div>
           ) : (
