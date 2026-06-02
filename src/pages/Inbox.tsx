@@ -756,18 +756,19 @@ export default function Inbox() {
                           <div style={{ maxWidth: "65%" }}>
                             <div
                               style={{
-                                background: mine ? "#4F46E5" : "#FFFFFF",
+                                background: mine ? "#4F46E5" : "#F1F5F9",
                                 color: mine ? "#FFFFFF" : "#0F172A",
-                                border: mine ? "none" : "1px solid #E2E8F0",
+                                border: "none",
                                 borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                                 padding: "10px 14px",
                                 fontSize: 14,
                                 lineHeight: 1.5,
                                 whiteSpace: "pre-line",
                                 wordBreak: "break-word",
-                                boxShadow: mine ? "0 4px 12px -4px rgba(79,70,229,0.4)" : "0 1px 2px rgba(15,23,42,0.04)",
+                                boxShadow: mine ? "0 4px 12px -4px rgba(79,70,229,0.4)" : "none",
                               }}
                             >
+
                               {m.content}
                             </div>
                             <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 4, textAlign: mine ? "right" : "left" }}>
