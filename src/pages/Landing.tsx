@@ -155,11 +155,10 @@ function TestimonialsCarousel() {
                   <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 16, borderTop: "1px solid #1a1a1a" }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: 999,
-                      background: "rgba(22,163,74,0.12)", color: "#16A34A",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 600, fontSize: 14,
+                      overflow: "hidden", flexShrink: 0,
+                      background: "rgba(22,163,74,0.12)",
                     }}>
-                      {t.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                      <img src={t.avatar} alt={t.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>{t.name}</div>
