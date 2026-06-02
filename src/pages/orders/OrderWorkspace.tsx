@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare } from "lucide-react";
+import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare, Wifi } from "lucide-react";
 import { LeaveReview } from "@/components/marketplace/LeaveReview";
 import { OrderResolutionActions } from "@/components/marketplace/OrderResolutionActions";
 import { OrderTimeline, DeliveryCountdown } from "@/components/marketplace/OrderTimeline";
