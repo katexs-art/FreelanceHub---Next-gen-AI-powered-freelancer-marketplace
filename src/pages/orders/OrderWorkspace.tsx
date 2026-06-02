@@ -81,14 +81,30 @@ export default function OrderWorkspace() {
       const buyer = profiles.find((p) => p.id === o.buyer_id) ?? null;
       const seller = profiles.find((p) => p.id === o.seller_id) ?? null;
 
-      setOrder({
+      const newOrder = {
         ...(o as any),
         gigs: gigRes.data ?? null,
         gig_packages: pkgRes.data ?? null,
         buyer,
         seller,
-      });
-      setDeliveries((delivRes.data as any) ?? []);
+      };
+      const newDeliveries = (delivRes.data as any) ?? [];
+
+      // Detect meaningful realtime changes for toast
+      const statusChanged = prevStatus.current !== null && prevStatus.current !== newOrder.status;
+      const newDeliveryArrived = prevDeliveryCount.current !== 0 && newDeliveries.length > prevDeliveryCount.current;
+
+      if (statusChanged) {
+        toast.success(`Order updated: ${newOrder.status.replace(/_/g, " ")}`);
+      } else if (newDeliveryArrived) {
+        toast.success("New delivery received");
+      }
+
+      prevStatus.current = newOrder.status;
+      prevDeliveryCount.current = newDeliveries.length;
+
+      setOrder(newOrder);
+      setDeliveries(newDeliveries);
     } catch (e: any) {
       console.error("OrderWorkspace load failed", e);
       setLoadError(e.message ?? "Failed to load order");
