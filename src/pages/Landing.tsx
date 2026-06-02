@@ -408,6 +408,83 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* TESTIMONIALS */}
+      <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
+            Testimonials
+          </div>
+          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 48px", maxWidth: 640 }}>
+            Trusted by service business innovators
+          </h2>
+          <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 24 }}>
+            {[
+              {
+                quote: "KATEXS replaced three agency retainers in a month. River matched us with a voice AI expert who shipped our IVR in 6 days — clients think we have a 20-person ops team.",
+                name: "Marcus Tan",
+                title: "Founder, Northbound HVAC",
+              },
+              {
+                quote: "We used to lose half our after-hours leads. The expert River sent us built an automation that texts back in 30 seconds. Booked revenue is up 38% this quarter.",
+                name: "Priya Shah",
+                title: "COO, Bright Smile Dental Group",
+              },
+              {
+                quote: "I've hired on every freelance platform. KATEXS is the only one where the AI actually understands the brief. Zero bad-fit pitches, escrow that just works.",
+                name: "Diego Alvarez",
+                title: "CEO, Helix Home Services",
+              },
+              {
+                quote: "Our roofing crew isn't technical. River walked us through it in plain English and matched us with someone who automated quoting end-to-end. Game changer.",
+                name: "Sarah Okonkwo",
+                title: "Owner, Pinnacle Roofing Co.",
+              },
+              {
+                quote: "Built our entire client onboarding flow with an expert from KATEXS in under two weeks. Cheaper than one month of our old SaaS stack — and it's ours.",
+                name: "Kevin Herring",
+                title: "Managing Partner, Herring Legal",
+              },
+            ].map((t) => (
+              <div
+                key={t.name}
+                style={{
+                  background: "#0a0a0a",
+                  border: "1px solid #1f1f1f",
+                  borderRadius: 16,
+                  padding: 28,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 20,
+                }}
+              >
+                <div style={{ fontSize: 36, color: "#16A34A", lineHeight: 0.8, fontWeight: 700 }}>"</div>
+                <p style={{ fontSize: 15, color: "#e5e5e5", lineHeight: 1.6, margin: 0, flex: 1 }}>
+                  {t.quote}
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 16, borderTop: "1px solid #1a1a1a" }}>
+                  <div
+                    style={{
+                      width: 40, height: 40, borderRadius: 999,
+                      background: "rgba(22,163,74,0.12)", color: "#16A34A",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 600, fontSize: 14,
+                    }}
+                  >
+                    {t.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>{t.name}</div>
+                    <div style={{ fontSize: 12, color: "#888" }}>{t.title}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+
+
       {/* FEATURED GIGS */}
       <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
 
