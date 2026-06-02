@@ -18,7 +18,7 @@ export function ActiveOrdersWidget() {
       .from("orders")
       .select("id, order_number, project_title, status, delivery_deadline")
       .eq(col, user.id)
-      .in("status", ["in_progress", "delivered"])
+      .in("status", ["active", "delivered", "revision_requested", "late"])
       .order("delivery_deadline", { ascending: true })
       .limit(5)
       .then(({ data }) => {
