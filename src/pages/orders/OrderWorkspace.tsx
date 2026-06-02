@@ -119,17 +119,23 @@ export default function OrderWorkspace() {
   // Realtime: refresh on any order or delivery change
   useEffect(() => {
     if (!id) return;
+    const triggerLoad = () => {
+      setLivePulse(true);
+      if (toastTimeout.current) clearTimeout(toastTimeout.current);
+      toastTimeout.current = setTimeout(() => setLivePulse(false), 2500);
+      load();
+    };
     const channel = supabase
       .channel(`order:${id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `id=eq.${id}` },
-        () => load(),
+        triggerLoad,
       )
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "order_deliveries", filter: `order_id=eq.${id}` },
-        () => load(),
+        triggerLoad,
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
