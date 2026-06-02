@@ -1258,6 +1258,7 @@ export type Database = {
           avatar_url: string | null
           average_rating: number | null
           bio: string | null
+          certifications: Json
           country: string | null
           created_at: string
           email: string
@@ -1270,6 +1271,7 @@ export type Database = {
           location: string | null
           member_since: string
           pending_packages: Json
+          portfolio_links: Json
           portfolio_urls: string[]
           primary_category: string | null
           rejection_reason: string | null
@@ -1286,12 +1288,14 @@ export type Database = {
           updated_at: string
           username: string | null
           website_url: string | null
+          years_experience: number | null
         }
         Insert: {
           application_submitted_at?: string | null
           avatar_url?: string | null
           average_rating?: number | null
           bio?: string | null
+          certifications?: Json
           country?: string | null
           created_at?: string
           email: string
@@ -1304,6 +1308,7 @@ export type Database = {
           location?: string | null
           member_since?: string
           pending_packages?: Json
+          portfolio_links?: Json
           portfolio_urls?: string[]
           primary_category?: string | null
           rejection_reason?: string | null
@@ -1320,12 +1325,14 @@ export type Database = {
           updated_at?: string
           username?: string | null
           website_url?: string | null
+          years_experience?: number | null
         }
         Update: {
           application_submitted_at?: string | null
           avatar_url?: string | null
           average_rating?: number | null
           bio?: string | null
+          certifications?: Json
           country?: string | null
           created_at?: string
           email?: string
@@ -1338,6 +1345,7 @@ export type Database = {
           location?: string | null
           member_since?: string
           pending_packages?: Json
+          portfolio_links?: Json
           portfolio_urls?: string[]
           primary_category?: string | null
           rejection_reason?: string | null
@@ -1354,6 +1362,7 @@ export type Database = {
           updated_at?: string
           username?: string | null
           website_url?: string | null
+          years_experience?: number | null
         }
         Relationships: []
       }
@@ -2225,6 +2234,7 @@ export type Database = {
           avatar_url: string | null
           average_rating: number | null
           bio: string | null
+          certifications: Json
           country: string | null
           created_at: string
           email: string
@@ -2237,6 +2247,7 @@ export type Database = {
           location: string | null
           member_since: string
           pending_packages: Json
+          portfolio_links: Json
           portfolio_urls: string[]
           primary_category: string | null
           rejection_reason: string | null
@@ -2253,6 +2264,7 @@ export type Database = {
           updated_at: string
           username: string | null
           website_url: string | null
+          years_experience: number | null
         }
         SetofOptions: {
           from: "*"
