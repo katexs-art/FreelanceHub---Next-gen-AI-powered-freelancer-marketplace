@@ -98,13 +98,13 @@ export function RiverCommandBar() {
     if (now - lastSendAt.current < 500) return;
     lastSendAt.current = now;
 
-    setError(null); setStream(""); setCards([]);
+    setError(null); setCards([]); setSearched(false);
     if (!user) { setError("Please sign in to ask River."); return; }
 
     setLoading(true);
     const ctrl = new AbortController();
     abortRef.current = ctrl;
-    const timeout = setTimeout(() => ctrl.abort("timeout"), 15_000);
+    const timeout = setTimeout(() => ctrl.abort("timeout"), 20_000);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -120,11 +120,11 @@ export function RiverCommandBar() {
 
       if (resp.status === 401) { setError("Please sign in to ask River."); return; }
       if (resp.status === 429) { setError("You're going too fast — please wait a moment."); return; }
-      if (!resp.ok || !resp.body) { setError("River is taking a quick break. Try again in a moment."); return; }
+      if (!resp.ok || !resp.body) { setSearched(true); return; }
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
-      let buf = ""; let acc = ""; let finalCards: ExpertCard[] = [];
+      let buf = ""; let finalCards: ExpertCard[] = [];
       while (true) {
         const { done, value: chunk } = await reader.read();
         if (done) break;
@@ -138,16 +138,19 @@ export function RiverCommandBar() {
           if (!json) continue;
           try {
             const evt = JSON.parse(json);
-            if (typeof evt.delta === "string") { acc += evt.delta; setStream(stripTokens(acc)); }
-            else if (evt.done && Array.isArray(evt.cards)) finalCards = evt.cards;
+            if (evt.done && Array.isArray(evt.cards)) finalCards = evt.cards;
           } catch { /* ignore */ }
         }
       }
-      setStream(stripTokens(acc));
       setCards(finalCards);
+      setSearched(true);
     } catch (e: any) {
-      if (e?.name === "AbortError" || ctrl.signal.aborted) setError("River is taking too long. Please try again.");
-      else setError("Connection lost. Check your internet and try again.");
+      // Silently swallow timeouts/aborts — just show the no-match CTA.
+      if (e?.name === "AbortError" || ctrl.signal.aborted) {
+        setSearched(true);
+      } else {
+        setError("Connection lost. Check your internet and try again.");
+      }
     } finally {
       clearTimeout(timeout); abortRef.current = null; setLoading(false);
     }
