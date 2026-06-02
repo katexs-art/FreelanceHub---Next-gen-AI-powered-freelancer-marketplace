@@ -1,27 +1,54 @@
-## Goal
 
-Replace the static 3-column testimonials grid in `src/pages/Landing.tsx` with a carousel that lets visitors page through the 5 quotes.
+## Context
 
-## Behavior
+`pg_cron` is already enabled (v1.6.4). The database also already has two security-definer functions that do exactly what the two requested jobs need — and they correctly handle balance math via triggers, which your raw SQL would have bypassed:
 
-- Show **3 cards at a time** on desktop, **2 on tablet** (≤960px), **1 on mobile** (≤640px).
-- **Prev / Next arrow buttons** in the section header (right side, next to the H2) — circular, white-bordered on black, with hover state.
-- **Dot indicators** centered below the carousel showing current page; click to jump.
-- **Auto-advance every 6 seconds**; pause on hover or when a control is focused.
-- **Loop**: advancing past the last page returns to the first.
-- Smooth horizontal slide transition (CSS `transform: translateX` with `transition: transform 500ms ease`).
-- Keyboard: Left/Right arrows navigate when the carousel region is focused. Arrow buttons are real `<button>`s with `aria-label`s; the track has `aria-roledescription="carousel"`.
+- `public.clear_due_seller_credits()` — flips matured `seller_credit` transactions from `pending` → `cleared`. The `trg_recompute_from_transaction` trigger then calls `recompute_seller_balance()`, which moves funds from `pending_balance` → `available_balance` from a single source of truth.
+- `public.auto_complete_orders()` — finds delivered orders past `auto_complete_at`, skips any with open disputes (notifying both parties), completes the rest, releases escrow, and clears the related `seller_credit` transactions (which again recomputes balances via trigger).
 
-## Implementation
+Schema notes that made your draft SQL incorrect:
+- `seller_accounts` uses `seller_id`, not `user_id`.
+- `transactions` uses a `status` enum (`pending`/`cleared`), not a `cleared` boolean.
+- Balances are derived — never written directly. They're recomputed by triggers from transactions + withdrawals.
 
-- Keep the existing testimonials data array and card markup (visual design unchanged — same #0a0a0a card, green quote glyph, avatar/name/title footer).
-- Wrap the cards in a viewport `<div>` with `overflow: hidden` and an inner track `<div>` that holds all cards side-by-side. Each card gets a fixed flex-basis based on `cardsPerView` so the track width = `cards.length * (100 / cardsPerView)%`.
-- New local state: `page` (0-indexed), `cardsPerView` (derived from a `useEffect` listening to `window.matchMedia` for 640px and 960px breakpoints).
-- `pageCount = Math.ceil(testimonials.length / cardsPerView)`; translateX offset = `-(page * 100 / pageCount)%` of the track.
-- Auto-advance via `useEffect` + `setInterval(6000)`; cleared on hover (`onMouseEnter`/`Leave` toggles a `paused` ref).
-- All styling inline to match the surrounding landing-page pattern. No new dependencies, no new files.
+So the right move is to schedule the existing functions on an hourly cadence rather than write parallel inline SQL.
 
-## Scope
+## Changes
 
-- Only `src/pages/Landing.tsx` is modified (the testimonials section, ~lines 411-484).
-- No backend, data, or design-system changes. Colors and typography stay identical to the current section.
+Single migration that:
+
+1. Ensures `pg_cron` is enabled (already is, but idempotent).
+2. Unschedules any prior jobs with the same names (idempotent re-run safety).
+3. Schedules two jobs at the top of every hour:
+   - `clear-funds` → `SELECT public.clear_due_seller_credits();`
+   - `auto-complete-orders` → `SELECT public.auto_complete_orders();`
+
+### SQL
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- Idempotent: remove existing jobs of the same names if present
+DO $$
+BEGIN
+  PERFORM cron.unschedule(jobid) FROM cron.job WHERE jobname IN ('clear-funds','auto-complete-orders');
+END $$;
+
+SELECT cron.schedule(
+  'clear-funds',
+  '0 * * * *',
+  $$ SELECT public.clear_due_seller_credits(); $$
+);
+
+SELECT cron.schedule(
+  'auto-complete-orders',
+  '0 * * * *',
+  $$ SELECT public.auto_complete_orders(); $$
+);
+```
+
+## Out of scope
+
+- No application/frontend code changes.
+- No edits to the existing SQL functions — they already implement the requested behavior correctly and safely (dispute handling, escrow release, balance recompute via triggers).
+- No changes to staggering — both jobs run at minute 0; if you'd prefer to offset (e.g. clear-funds at `:00`, auto-complete at `:30`), say the word and I'll adjust.
