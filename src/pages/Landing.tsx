@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
-import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug } from "lucide-react";
+import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug, FileText, Sparkles, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 import landingHero from "@/assets/landing-hero.mp4.asset.json";
@@ -27,7 +27,7 @@ const FALLBACK_GIGS = [
   { id: "fb-2", title: "I will create a realistic AI voice clone for your brand", thumbnail_url: null, starting_price: 120, average_rating: 5.0, total_reviews: 28, seller: { full_name: "Maya Chen", avatar_url: null } },
   { id: "fb-3", title: "I will design AI-generated product photography that converts", thumbnail_url: null, starting_price: 85, average_rating: 4.8, total_reviews: 67, seller: { full_name: "Diego Alvarez", avatar_url: null } },
   { id: "fb-4", title: "I will automate your marketing workflows with AI in 48 hours", thumbnail_url: null, starting_price: 300, average_rating: 4.9, total_reviews: 51, seller: { full_name: "Sarah Okonkwo", avatar_url: null } },
-  { id: "fb-5", title: "I will write SEO-optimized AI content that ranks on Google", thumbnail_url: null, starting_price: 65, average_rating: 4.7, total_reviews: 89, seller: { full_name: "Kevin Herring", avatar_url: null } },
+  { id: "fb-5", title: "I will write SEO-optimized AI content that ranks on Google", thumbnail_url: null, starting_price: 65, average_rating: 4.7, total_reviews: 89, seller: { full_name: "Jordan Reyes", avatar_url: null } },
   { id: "fb-6", title: "I will set up an AI customer support chatbot for your site", thumbnail_url: null, starting_price: 180, average_rating: 4.9, total_reviews: 34, seller: { full_name: "Priya Patel", avatar_url: null } },
   { id: "fb-7", title: "I will train a custom AI model on your business data", thumbnail_url: null, starting_price: 450, average_rating: 5.0, total_reviews: 19, seller: { full_name: "Marcus Cole", avatar_url: null } },
   { id: "fb-8", title: "I will create AI-powered video edits and short-form content", thumbnail_url: null, starting_price: 140, average_rating: 4.8, total_reviews: 56, seller: { full_name: "Lena Wu", avatar_url: null } },
@@ -60,6 +60,7 @@ export default function Landing() {
   const [sellersLoading, setSellersLoading] = useState(true);
   const [featuredGigs, setFeaturedGigs] = useState<any[]>([]);
   const [gigsLoading, setGigsLoading] = useState(true);
+  const [stats, setStats] = useState<{ experts: string; paid: string; satisfaction: string } | null>(null);
   const SR: any = typeof window !== "undefined" ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
   const [voiceSupported] = useState<boolean>(!!SR);
   const [listening, setListening] = useState(false);
@@ -151,6 +152,35 @@ export default function Landing() {
         setFeaturedGigs(FALLBACK_GIGS);
       } finally {
         setGigsLoading(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [{ count: expertsCount }, paidRes, reviewsRes] = await Promise.all([
+          supabase.from("profiles").select("id", { count: "exact", head: true }).eq("seller_status", "approved").is("suspended_at", null),
+          supabase.from("orders").select("seller_earnings").eq("status", "completed"),
+          supabase.from("reviews").select("rating").eq("is_public", true),
+        ]);
+        const paidCents = (paidRes.data ?? []).reduce((s: number, o: any) => s + (o.seller_earnings ?? 0), 0);
+        const ratings = (reviewsRes.data ?? []).map((r: any) => r.rating).filter((n: number) => typeof n === "number");
+        const positive = ratings.filter((n: number) => n >= 4).length;
+        const fmtPaid = (c: number) => {
+          const d = c / 100;
+          if (d >= 1_000_000) return `$${(d / 1_000_000).toFixed(1)}M+`;
+          if (d >= 1_000) return `$${(d / 1_000).toFixed(1)}K+`;
+          return `$${Math.round(d)}`;
+        };
+        const fmtCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K+` : `${n}+`);
+        setStats({
+          experts: fmtCount(expertsCount ?? 0),
+          paid: fmtPaid(paidCents),
+          satisfaction: ratings.length ? `${Math.round((positive / ratings.length) * 100)}%` : "—",
+        });
+      } catch (e) {
+        console.error("[Landing] stats fetch failed:", e);
       }
     })();
   }, []);
@@ -352,8 +382,35 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* HOW IT WORKS */}
+      <section className="kx-section" style={{ background: "#0a0a0a", padding: "80px", borderTop: "1px solid #1a1a1a", borderBottom: "1px solid #1a1a1a" }}>
+        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
+          <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
+            How it works
+          </div>
+          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 48px" }}>Three steps to ship</h2>
+          <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 32 }}>
+            {[
+              { Icon: FileText, t: "Post your need", d: "Describe your project in plain English. No forms, no friction." },
+              { Icon: Sparkles, t: "Get matched by River", d: "Our AI finds the top experts for your job and notifies them instantly." },
+              { Icon: CheckCircle2, t: "Work gets done", d: "Pay into escrow, approve delivery, and funds release automatically." },
+            ].map(({ Icon, t, d }, i) => (
+              <div key={t} style={{ background: "#111", border: "1px solid #1f1f1f", borderRadius: 16, padding: 28 }}>
+                <div style={{ width: 48, height: 48, borderRadius: 12, background: "rgba(255,255,255,0.06)", border: "1px solid #2a2a2a", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 20 }}>
+                  <Icon size={22} color="#fff" strokeWidth={1.75} />
+                </div>
+                <div style={{ fontSize: 12, color: "#888", marginBottom: 6 }}>Step {i + 1}</div>
+                <div style={{ fontSize: 18, fontWeight: 500, color: "#fff", marginBottom: 8 }}>{t}</div>
+                <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6 }}>{d}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* FEATURED GIGS */}
       <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32, flexWrap: "wrap", gap: 16 }}>
           <div>
             <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 8 }}>
@@ -482,41 +539,18 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto" }}>
-          <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
-            How it works
-          </div>
-          <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 48px" }}>Three steps to ship</h2>
-          <div className="kx-grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 48 }}>
-            {[
-              { n: "1", t: "Tell River", d: "Describe what you need in plain English. River reads every word and understands the nuance." },
-              { n: "2", t: "Get matched", d: "Top 15 experts are notified instantly. They pitch you directly — no browsing required." },
-              { n: "3", t: "Ship it", d: "Pay securely into escrow. Approve delivery. Funds release in 3 days automatically." },
-            ].map((s) => (
-              <div key={s.n}>
-                <div style={{ fontSize: 72, fontWeight: 500, color: "#f0f0f0", lineHeight: 1 }}>{s.n}</div>
-                <div style={{ fontSize: 20, fontWeight: 500, color: "#fff", marginTop: 24, marginBottom: 12 }}>{s.t}</div>
-                <div style={{ fontSize: 14, color: "#cccccc", lineHeight: 1.6 }}>{s.d}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* TRUST STATS */}
-      <section className="kx-section" style={{ background: "#000", padding: "80px" }}>
+      <section className="kx-section" style={{ background: "#000", padding: "60px 80px" }}>
         <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 12 }}>
           By the numbers
         </div>
         <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: "0 0 40px" }}>Trusted by builders</h2>
         <div className="kx-grid-stats" style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)" }}>
           {[
-            { v: "2,400+", l: "Verified AI experts" },
-            { v: "$2.1M+", l: "Paid out to experts" },
+            { v: stats?.experts ?? "—", l: "Verified AI experts" },
+            { v: stats?.paid ?? "—", l: "Paid out to experts" },
             { v: "3 days", l: "Average payment time" },
-            { v: "98%", l: "Satisfaction rate" },
+            { v: stats?.satisfaction ?? "—", l: "Satisfaction rate" },
           ].map((s, i) => (
             <div key={s.l} style={{ padding: "0 32px", borderLeft: i === 0 ? "none" : "1px solid #1a1a1a" }}>
               <div style={{ fontSize: 48, fontWeight: 500, color: "#fff", lineHeight: 1.1 }}>{s.v}</div>
@@ -525,6 +559,7 @@ export default function Landing() {
           ))}
         </div>
       </section>
+
 
 
       {/* BOTTOM CTA */}
