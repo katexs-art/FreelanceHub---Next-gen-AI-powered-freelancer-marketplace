@@ -1,42 +1,49 @@
-## Settings page upgrade
+## 1. Sidebar — show all nav items on every dashboard page
 
-### 1. Form & field changes (`src/pages/account/Settings.tsx`)
-- Remove the **Website URL** field (text input + `website_url` from form payload).
-- **Display name**: 600ms debounced auto-save to `profiles.full_name` with a small "Saved" indicator; sticky save bar stays for the other fields.
-- **Username**: read-only input with a `Lock` icon and tooltip "Username cannot be changed". Remove the availability checker logic.
-- **Country**: replace the free-text `Location` input with a searchable `Popover` + `Command` combobox. New `src/lib/countries.ts` lists all ~195 ISO countries. Persists to `profiles.country` (already exists). Filters as you type (2-letter prefix surfaces matches).
-- **Languages**: searchable multi-select combobox (same `Popover`+`Command` pattern) backed by `src/lib/languages.ts` (~100 entries). Selected languages render as removable chips above the trigger. Replaces the free-form `ChipInput` for languages.
-- **Bio**: stays a textarea.
-- **Required validation**: on save, if `full_name`, `country`, or `languages` is empty → red border (`border-destructive`) + inline `Required` helper. Block save until resolved.
+Edit `src/components/layout/AppShell.tsx`:
 
-### 2. Theme switcher fix (`src/index.css`)
-The themes already write `kx-theme-*` on `AppShell`, but Ocean/Forest/Sunset/Purple Haze only change `--primary`, so the dashboard barely shifts. Fix:
-- Extend each non-midnight theme block to also tint `--background-subtle`, `--sidebar-accent`, `--secondary`, `--ring`, and `--sidebar-ring` with a low-saturation wash of the accent hue (e.g. Ocean → `--background-subtle: 217 60% 97%`, `--sidebar-accent: 217 60% 94%`).
-- Add an explicit empty `.kx-theme-clean-white {}` block as a reset target.
-- No JS change needed — `useTheme` already persists `theme_preference` to Supabase, hydrates from `localStorage`, and `AppShell` re-renders on store change. Verify after the CSS change.
+- Replace the role-split `sellerLinks` / `buyerLinks` with a single unified list shown to every authenticated user:
+  - HQ → `/hq`
+  - Projects → `/buyer/orders` (buyer) or `/seller/orders` (seller); for buyers we still show the "Projects" entry
+  - Saved → `/saved`
+  - Find experts → `/services`
+  - Messages → `/inbox`
+  - Settings → `/settings`
+- Sellers keep their extra entries (My services, Earnings, Analytics, Verification) appended below the shared block, so nothing seller-specific is lost.
+- Order: HQ · Projects · Saved · Find experts · (seller extras) · divider · Messages · Settings.
 
-### 3. Visual cleanup (`src/pages/account/Settings.tsx`)
-- Wrap each section (Profile photo, Basic info, Credentials & expertise, Security, Preferences) in a bordered card: `rounded-2xl border border-border bg-card p-6 space-y-5`. Drop the `HairlineDivider` separators in favor of the card borders + `space-y-6` between cards.
-- Constrain inputs/selects/textareas with `max-w-[60%]` (full-width below `sm`).
-- Section labels: change `Eyebrow` color in this page to `text-[#6B7280]` for readability.
-- Tighten spacing: `space-y-6` between cards, `space-y-4` inside.
+## 2. Theme switcher actually applies
 
-### 4. Recommendations rail
-New file `src/components/settings/ExpertRecommendationsRail.tsx`:
-- Reads recent gig views from `localStorage` via existing `getRecentlyViewed`.
-- If history present: fetches those gigs → derives primary categories → fetches `profiles` where `seller_status='approved'`, matching `primary_category`, ordered by `river_score desc`, limit 12.
-- Fallback (no history): top sellers ordered by `river_score desc, average_rating desc`, limit 12.
-- Renders 3 cards visible at a time (avatar, full name, `primary_category`, `average_rating ★`, "View" → `/u/{username}`). 200px wide column. Rotates the 3-card window every 30s with a fade.
-- Header chip: `Experts you might like`.
+Root cause: `kx-theme-*` class is set on a div inside `AppShell`, but `<body>` / `<html>` still use the default `:root` tokens, and any portal content (Radix popovers, dialogs, toasts) renders outside that div so it never sees the override. The theme also isn't applied on routes that don't use `AppShell`.
 
-Mount in Settings: switch container from `max-w-3xl` to a two-column grid `grid lg:grid-cols-[minmax(0,1fr)_220px] gap-8`; rail collapses below the form on smaller screens.
+Changes:
 
-### 5. New files
-- `src/lib/countries.ts`
-- `src/lib/languages.ts`
-- `src/components/ui/searchable-select.tsx` (shared single + multi combobox built on `Popover` + `Command`)
-- `src/components/settings/ExpertRecommendationsRail.tsx`
+- **New `src/components/ThemeProvider.tsx`**
+  - Mounts once at the app root (wrap `<App />` children in `src/App.tsx`, inside `AuthProvider`).
+  - Subscribes to `useTheme()` and writes:
+    - `document.documentElement.dataset.theme = theme` (e.g. `data-theme="midnight"`)
+    - toggles `kx-theme-<id>` class on `document.documentElement`
+  - Removes stale `kx-theme-*` classes before adding the new one.
+  - On mount, reads `localStorage["kx-theme"]` and applies immediately to avoid a flash; profile sync (already in `useTheme`) updates it after auth loads.
 
-### 6. Out of scope
-- No DB migration (`theme_preference`, `country`, `languages` columns already exist on `profiles`).
-- No changes to public pages, auth, or other dashboards.
+- **`src/index.css`**
+  - Duplicate each `.kx-theme-*` block as `[data-theme="..."]` so tokens apply regardless of whether the class lands on `<html>` or a wrapper. Keep the existing class selectors for backwards compatibility.
+  - Add `--bg-primary`, `--bg-secondary`, `--accent`, `--text-primary` aliases mapped to existing tokens (`--background`, `--background-subtle`, `--primary`, `--foreground`) inside `:root` and each theme block, so the names from the spec exist.
+  - Ensure the `midnight` block also overrides `--background-subtle`, `--sidebar-background`, `--card`, etc. (already present) — verify nothing is missing.
+
+- **`src/components/layout/AppShell.tsx`**
+  - Remove the local `kx-theme-${theme}` class from the wrapper div (now handled globally on `<html>`). Keep the `bg-background` so it picks up the cascaded tokens.
+
+- **`src/hooks/useTheme.ts`**
+  - No API change; the existing `setTheme` already persists to `localStorage` and `profiles.theme_preference`. ThemeProvider just reacts to its store.
+
+### Verification
+
+- Click Midnight in Appearance → `<html data-theme="midnight" class="kx-theme-midnight">`, sidebar + main + header instantly dark.
+- Click Ocean → tokens flip to blue accent on the same page without reload.
+- Reload `/settings` → still on chosen theme (localStorage hydrate before paint).
+- Login on another device → profile `theme_preference` syncs.
+
+## Out of scope
+
+No DB changes (column already exists), no changes to widgets, settings form, or recommendations rail.
