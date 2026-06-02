@@ -19,7 +19,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isSeller = profile?.role === "seller" || profile?.role === "admin";
 
   const sellerLinks = [
-    { to: "/seller/dashboard", icon: LayoutDashboard, label: "HQ" },
+    { to: "/hq", icon: LayoutDashboard, label: "HQ" },
     { to: "/seller/gigs", icon: Package, label: "My services" },
     { to: "/seller/orders", icon: ShoppingBag, label: "Projects" },
     { to: "/seller/earnings", icon: Wallet, label: "Earnings" },
@@ -27,7 +27,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { to: "/seller/verification", icon: BadgeCheck, label: "Verification" },
   ];
   const buyerLinks = [
-    { to: "/buyer/dashboard", icon: LayoutDashboard, label: "HQ" },
+    { to: "/hq", icon: LayoutDashboard, label: "HQ" },
     { to: "/buyer/orders", icon: ShoppingCart, label: "Projects" },
     { to: "/saved", icon: Bookmark, label: "Saved" },
     { to: "/services", icon: Search, label: "Find experts" },
