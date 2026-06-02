@@ -1,60 +1,78 @@
-## Add Appearance theme picker to Settings
+## Customizable HQ Dashboard with Widget Control
 
-### 1. Database migration
-Add column to `profiles`:
-- `theme_preference text default 'clean-white'` (allowed: clean-white, midnight, ocean, forest, sunset, purple-haze)
+### 1. Route & Page
+- Add new route `/hq` → new `src/pages/Hq.tsx`, wrapped in `ProtectedRoute` + `AppShell`.
+- Update sidebar/nav links currently pointing to `/seller/dashboard` and `/buyer/dashboard` to also expose `/hq` (keep existing dashboards intact; `/hq` is the new unified, customizable workspace).
+- Page adapts widget availability based on `profile.role` (seller-only widgets hidden for pure clients, and vice versa).
 
-### 2. Theme tokens (src/index.css)
-Add scoped theme classes that override sidebar + dashboard surface variables. Each lives under `.kx-theme-<name>` so it only affects elements inside the AppShell wrapper, not public pages.
+### 2. Database
+Migration adds to `profiles`:
+- `dashboard_layout jsonb NOT NULL DEFAULT '[]'::jsonb`
 
-```css
-.kx-theme-midnight {
-  --background: 0 0% 4%; --foreground: 0 0% 100%;
-  --sidebar-background: 0 0% 4%; --sidebar-foreground: 0 0% 100%;
-  --sidebar-border: 0 0% 14%; --sidebar-accent: 0 0% 10%;
-  --border: 0 0% 16%; --card: 0 0% 7%; ...
-  --primary: 142 71% 36%;  /* keep green */
-}
-.kx-theme-ocean   { --primary: 217 91% 53%;  --sidebar-primary: 217 91% 53%; --ring: 217 91% 53%; }
-.kx-theme-forest  { --primary: 160 84% 31%;  --sidebar-primary: 160 84% 31%; --ring: 160 84% 31%; }
-.kx-theme-sunset  { --primary: 21 90% 48%;   --sidebar-primary: 21 90% 48%;  --ring: 21 90% 48%; }
-.kx-theme-purple  { --primary: 262 83% 58%;  --sidebar-primary: 262 83% 58%; --ring: 262 83% 58%; }
-/* clean-white = no class (root defaults) */
+Shape:
+```json
+[
+  { "id": "active_orders", "visible": true, "collapsed": false },
+  { "id": "messages",      "visible": true, "collapsed": false },
+  ...
+]
 ```
+Empty array → fall back to role-based default (Active Orders, Messages, Earnings, My Gigs for sellers; Active Orders, Messages, Open Projects, Notifications for buyers).
 
-### 3. Theme provider
-New `src/hooks/useTheme.ts`:
-- Reads `theme_preference` from `useAuth().profile` on mount.
-- Exposes `{ theme, setTheme(persist), preview(name), clearPreview() }`.
-- Persists via `supabase.from('profiles').update({ theme_preference })`.
-- Stores last-applied in `localStorage` so it loads instantly before profile fetch.
+### 3. Widget registry
+New `src/components/hq/widgets/index.ts` exporting a typed registry:
+```
+WIDGETS = {
+  active_orders, messages, earnings, my_gigs,
+  analytics, open_projects, river_ai, notifications
+}
+```
+Each entry: `{ id, title, icon, roles: ('seller'|'client'|'admin')[], minHeight, Component }`.
+Each `Component` is a small self-contained card that fetches its own data from Supabase (reusing existing queries already used in SellerDashboard/BuyerDashboard/Inbox/MyGigs).
 
-### 4. AppShell integration
-In `src/components/layout/AppShell.tsx`, wrap root `<div>` with `className={cn("min-h-screen bg-background", \`kx-theme-${effectiveTheme}\`)}` where `effectiveTheme = preview ?? saved`. Only the AppShell — public pages (Landing, Services, GigDetail, etc.) stay default.
+Widgets:
+- **Active Orders** — `orders` where status in (`in_progress`,`delivered`) for current user (buyer or seller side).
+- **Messages** — last 3 `conversations` with avatar + preview + inline "Reply" → opens Inbox at that conversation.
+- **Earnings Overview** — seller_accounts: available / pending / lifetime.
+- **My Gigs** — top active gigs with impressions + total_orders.
+- **Analytics** — profile views + gig clicks this week (sum `gigs.clicks`/`impressions` for the user).
+- **Open Projects** — latest `project_posts` where status='open' (for sellers to bid).
+- **River AI** — compact ask box, posts to existing `river-chat` edge function, shows last answer.
+- **Notifications** — last 8 from `notifications`.
 
-### 5. Settings page — tabs
-Refactor `src/pages/account/Settings.tsx`:
-- Wrap existing content in a `Tabs` component (shadcn) with two tabs: **Profile** (current content) and **Appearance** (new).
-- Default tab respects `?tab=` query param.
+### 4. Layout + drag/drop
+- Use **@dnd-kit/core** + **@dnd-kit/sortable** (lightweight, already common in shadcn ecosystems) — add as dependency.
+- 2-column responsive grid on desktop (`md:grid-cols-2`), single column on mobile. Widgets flow in order from saved layout.
+- Each `WidgetCard` shell renders: header (drag handle ⠿, title, collapse chevron, hide eye) + body (Component or hidden when collapsed).
+- Only in **edit mode**: dashed border, drag handle active, hide button visible. In view mode the card is clean.
 
-### 6. Appearance tab component
-New `src/components/settings/AppearanceTab.tsx`:
-- Heading "Make Katexs yours" + sub "Choose a theme for your dashboard".
-- Grid of 6 `ThemeCard`s (3 cols desktop, 2 mobile).
-- Each card: 200×140 mini preview with rendered sidebar bar (28px wide left band in theme bg/border) + chat bubble (rounded pill in theme primary) + a content line. Name below + checkmark badge top-right when active.
-- `onMouseEnter` → `preview(name)`, `onMouseLeave` → `clearPreview()`, `onClick` → `setTheme(name)` (saves to DB, toast "Theme applied").
+### 5. Edit mode UX
+- Top-right of `/hq`: `Customize Dashboard` button (becomes `Done` in edit mode).
+- Edit mode state local to page; entering it does NOT auto-save — saves on each reorder/hide/show via debounced `updateLayout()`.
+- `Add Widget` button (visible in edit mode) opens a `Dialog` showing grid of currently-hidden widgets (icon + title + "Add"). Adding appends to end with `visible: true`.
 
-### 7. Verification
-- Visit `/settings?tab=appearance`, hover each card → AppShell background changes.
-- Click → persists; reload keeps theme.
-- Visit `/` (Landing) → unaffected.
-- Visit `/inbox`, `/seller/dashboard`, `/buyer/dashboard`, `/projects` (AppShell wrapped) → theme applies.
+### 6. State + persistence hook
+New `src/hooks/useDashboardLayout.ts`:
+- Reads `profile.dashboard_layout`; merges with registry to drop unknown ids and append any newly-introduced widgets at the end (hidden by default for existing users so we don't surprise them).
+- Exposes `{ layout, visible, hidden, reorder(ids), toggleVisible(id), toggleCollapse(id), addWidget(id) }`.
+- Persists via `supabase.from('profiles').update({ dashboard_layout })` (debounced 400ms), with localStorage mirror so layout loads instantly before profile fetch resolves.
 
-### Files
-- `supabase/migrations/<new>.sql` — add `theme_preference` column
-- `src/index.css` — add 5 theme override blocks
-- `src/hooks/useTheme.ts` — new
-- `src/components/layout/AppShell.tsx` — wrap with theme class
-- `src/pages/account/Settings.tsx` — add Tabs
-- `src/components/settings/AppearanceTab.tsx` — new
-- `src/components/settings/ThemeCard.tsx` — new
+### 7. Files
+- `supabase/migrations/<new>.sql` — add `dashboard_layout` column
+- `src/pages/Hq.tsx` — new
+- `src/hooks/useDashboardLayout.ts` — new
+- `src/components/hq/WidgetCard.tsx` — shell with drag/collapse/hide chrome
+- `src/components/hq/AddWidgetDialog.tsx` — new
+- `src/components/hq/widgets/*.tsx` — 8 widget components
+- `src/components/hq/widgets/index.ts` — registry
+- `src/App.tsx` — register `/hq` route
+- `src/components/layout/AppShell.tsx` — add HQ to sidebar nav
+- `package.json` — add `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
+
+### 8. Verification
+- New user lands on `/hq` → sees default 4 widgets for their role.
+- Click `Customize Dashboard` → dashed borders + drag handles + hide buttons appear.
+- Drag to reorder → order persists across reload.
+- Hide widget → moves to `Add Widget` dialog; re-add restores it at end.
+- Collapse toggle hides body, persists.
+- Theme from Settings still applies (page is AppShell-wrapped).
