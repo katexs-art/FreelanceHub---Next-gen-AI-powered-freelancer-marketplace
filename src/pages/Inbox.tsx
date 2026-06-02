@@ -435,7 +435,7 @@ export default function Inbox() {
             <div
               style={{
                 flex: 1,
-                background: "#F7F7F7",
+                background: "#F8FAFC",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -445,21 +445,21 @@ export default function Inbox() {
               <div>
                 <div
                   style={{
-                    width: 80,
-                    height: 80,
+                    width: 84,
+                    height: 84,
                     borderRadius: "50%",
-                    background: "#F0F0F0",
-                    color: "#AAAAAA",
+                    background: "#EEF2FF",
+                    color: "#4F46E5",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                     margin: "0 auto 20px",
                   }}
                 >
-                  <MessageSquare size={32} />
+                  <MessageSquare size={34} strokeWidth={1.75} />
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 500, color: "#888", marginBottom: 6 }}>Select a conversation</div>
-                <div style={{ fontSize: 14, color: "#AAAAAA" }}>Choose a conversation from the left to start messaging</div>
+                <div style={{ fontSize: 18, fontWeight: 600, color: "#475569", marginBottom: 6 }}>Select a conversation</div>
+                <div style={{ fontSize: 14, color: "#94A3B8" }}>Choose a conversation from the left to start messaging</div>
               </div>
             </div>
           ) : (
