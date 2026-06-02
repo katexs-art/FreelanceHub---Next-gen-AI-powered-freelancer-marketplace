@@ -1266,6 +1266,7 @@ export type Database = {
           is_online: boolean
           languages: string[] | null
           last_seen: string | null
+          linkedin_url: string | null
           location: string | null
           member_since: string
           pending_packages: Json
@@ -1281,8 +1282,10 @@ export type Database = {
           seller_status: string
           suspended_at: string | null
           total_reviews: number
+          twitter_url: string | null
           updated_at: string
           username: string | null
+          website_url: string | null
         }
         Insert: {
           application_submitted_at?: string | null
@@ -1297,6 +1300,7 @@ export type Database = {
           is_online?: boolean
           languages?: string[] | null
           last_seen?: string | null
+          linkedin_url?: string | null
           location?: string | null
           member_since?: string
           pending_packages?: Json
@@ -1312,8 +1316,10 @@ export type Database = {
           seller_status?: string
           suspended_at?: string | null
           total_reviews?: number
+          twitter_url?: string | null
           updated_at?: string
           username?: string | null
+          website_url?: string | null
         }
         Update: {
           application_submitted_at?: string | null
@@ -1328,6 +1334,7 @@ export type Database = {
           is_online?: boolean
           languages?: string[] | null
           last_seen?: string | null
+          linkedin_url?: string | null
           location?: string | null
           member_since?: string
           pending_packages?: Json
@@ -1343,8 +1350,10 @@ export type Database = {
           seller_status?: string
           suspended_at?: string | null
           total_reviews?: number
+          twitter_url?: string | null
           updated_at?: string
           username?: string | null
+          website_url?: string | null
         }
         Relationships: []
       }
@@ -2224,6 +2233,7 @@ export type Database = {
           is_online: boolean
           languages: string[] | null
           last_seen: string | null
+          linkedin_url: string | null
           location: string | null
           member_since: string
           pending_packages: Json
@@ -2239,8 +2249,10 @@ export type Database = {
           seller_status: string
           suspended_at: string | null
           total_reviews: number
+          twitter_url: string | null
           updated_at: string
           username: string | null
+          website_url: string | null
         }
         SetofOptions: {
           from: "*"
