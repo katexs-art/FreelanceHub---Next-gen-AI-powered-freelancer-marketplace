@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen flex flex-col bg-background">
 
       <header className="bg-background border-b-hairline sticky top-0 z-40">
         <div className="px-6 h-14 flex items-center gap-6">
@@ -71,8 +71,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
 
-      <div className="flex">
-        <aside className="w-56 shrink-0 min-h-[calc(100vh-3.5rem)] py-4 bg-sidebar border-r border-sidebar-border">
+      <div className="flex flex-1 bg-background">
+        <aside className="w-56 shrink-0 py-4 bg-sidebar border-r border-sidebar-border">
           <nav className="space-y-0.5">
             {links.map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} end className={itemCls}>
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ))}
           </nav>
         </aside>
-        <main className="flex-1 p-10 min-w-0">{children}</main>
+        <main className="flex-1 p-10 min-w-0 bg-background">{children}</main>
       </div>
       <SiteFooter />
     </div>

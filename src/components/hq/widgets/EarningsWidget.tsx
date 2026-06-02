@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { formatUSD } from "@/lib/money";
 
 export function EarningsWidget() {
   const { user } = useAuth();
@@ -18,7 +19,7 @@ export function EarningsWidget() {
   }, [user?.id]);
 
   if (loading) return <p className="text-sm text-foreground-muted">Loading…</p>;
-  const fmt = (n: number) => `$${n.toLocaleString()}`;
+  const fmt = (n: number) => formatUSD(n);
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-3 gap-3">
