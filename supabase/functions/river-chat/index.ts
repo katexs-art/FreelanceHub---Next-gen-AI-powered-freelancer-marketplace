@@ -2,11 +2,18 @@ import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { checkRateLimit, tooManyRequests } from '../_shared/rate-limit.ts';
 
-const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY')!;
+const ANTHROPIC_API_KEY = Deno.env.get('ANTHROPIC_API_KEY') ?? '';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
+if (!ANTHROPIC_API_KEY) {
+  console.error('[river-chat] ANTHROPIC_API_KEY is not set at startup');
+} else {
+  console.log(`[river-chat] ANTHROPIC_API_KEY loaded (len=${ANTHROPIC_API_KEY.length})`);
+}
+
+const ANTHROPIC_TIMEOUT_MS = 30_000;
 const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
 const SYSTEM_PROMPT = `You are River, the AI assistant for Katexs — the world's first AI freelance marketplace. You help buyers find AI experts and help sellers grow their business. Be concise, warm, and helpful. When a user describes what they need, search the available services and recommend specific experts. Keep responses under 100 words unless explaining something complex. Never make up expert names or prices — only reference real data provided to you.
@@ -130,11 +137,23 @@ Deno.serve(async (req) => {
     }];
   }));
 
-  // --- Call Anthropic streaming ---
+  // --- Call Anthropic streaming (30s timeout) ---
+  if (!ANTHROPIC_API_KEY) {
+    console.error('[river-chat] missing ANTHROPIC_API_KEY at request time');
+    const stream = new ReadableStream({
+      start(c) { c.enqueue(sseLine({ delta: FALLBACK_REPLY })); c.enqueue(sseLine({ done: true, cards: [] })); c.close(); },
+    });
+    return new Response(stream, { headers: { ...corsHeaders, 'Content-Type': 'text/event-stream' } });
+  }
+
+  const ac = new AbortController();
+  const timeoutId = setTimeout(() => ac.abort(), ANTHROPIC_TIMEOUT_MS);
+
   let anthropicRes: Response;
   try {
     anthropicRes = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
+      signal: ac.signal,
       headers: {
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
@@ -151,7 +170,9 @@ Deno.serve(async (req) => {
         ],
       }),
     });
-  } catch (_e) {
+  } catch (e) {
+    clearTimeout(timeoutId);
+    console.error('[river-chat] anthropic fetch failed:', (e as Error).message);
     const stream = new ReadableStream({
       start(c) { c.enqueue(sseLine({ delta: FALLBACK_REPLY })); c.enqueue(sseLine({ done: true, cards: [] })); c.close(); },
     });
@@ -159,6 +180,9 @@ Deno.serve(async (req) => {
   }
 
   if (!anthropicRes.ok || !anthropicRes.body) {
+    clearTimeout(timeoutId);
+    const errBody = await anthropicRes.text().catch(() => '');
+    console.error(`[river-chat] anthropic non-ok ${anthropicRes.status}: ${errBody.slice(0, 200)}`);
     const stream = new ReadableStream({
       start(c) { c.enqueue(sseLine({ delta: FALLBACK_REPLY })); c.enqueue(sseLine({ done: true, cards: [] })); c.close(); },
     });
