@@ -429,7 +429,16 @@ export default function Inbox() {
             })}
           </div>
         </aside>
-        )}
+        );
+        return isMobile ? (
+          <Sheet open={listOpen} onOpenChange={setListOpen}>
+            <SheetContent side="left" className="p-0 w-[88vw] max-w-[360px] sm:w-[360px]">
+              {listAside}
+            </SheetContent>
+          </Sheet>
+        ) : listAside;
+        })()}
+
 
         {/* COLUMN 3 — Active conversation */}
         {(!isMobile || active) && (
