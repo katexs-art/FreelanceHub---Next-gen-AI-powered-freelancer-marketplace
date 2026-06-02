@@ -303,6 +303,7 @@ export default function Projects() {
             })}
           </div>
         )}
+        <RecommendationsBlock />
       </main>
       <SiteFooter />
     </div>
