@@ -27,9 +27,9 @@ export function RiverCommandBar() {
   const { user } = useAuth();
   const [value, setValue] = useState("");
   const [loading, setLoading] = useState(false);
-  const [stream, setStream] = useState("");
   const [cards, setCards] = useState<ExpertCard[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [searched, setSearched] = useState(false);
   const [micError, setMicError] = useState<"denied" | "no-speech" | "unsupported" | null>(null);
   const [listening, setListening] = useState(false);
   const [retryingMic, setRetryingMic] = useState(false);
