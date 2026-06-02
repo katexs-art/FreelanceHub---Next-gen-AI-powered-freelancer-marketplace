@@ -392,6 +392,7 @@ export default function PostJob() {
             </div>
           </form>
         </div>
+        <div className="container-page pb-10"><RecommendationsBlock /></div>
       </main>
       <SiteFooter />
     </div>
