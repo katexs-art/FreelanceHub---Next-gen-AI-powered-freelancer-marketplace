@@ -62,7 +62,7 @@ export default function OrderWorkspace() {
         return;
       }
 
-      const [gigRes, pkgRes, profilesRes, reqsRes, delivRes] = await Promise.all([
+      const [gigRes, pkgRes, profilesRes, delivRes] = await Promise.all([
         o.gig_id
           ? supabase.from("gigs").select("title, thumbnail_url").eq("id", o.gig_id).maybeSingle()
           : Promise.resolve({ data: null, error: null } as any),
@@ -70,9 +70,6 @@ export default function OrderWorkspace() {
           ? supabase.from("gig_packages").select("title, delivery_days, revisions").eq("id", o.package_id).maybeSingle()
           : Promise.resolve({ data: null, error: null } as any),
         supabase.from("profiles").select("id, full_name, username, avatar_url, email").in("id", [o.buyer_id, o.seller_id]),
-        o.gig_id
-          ? supabase.from("gig_requirements").select("*").eq("gig_id", o.gig_id).order("sort_order")
-          : Promise.resolve({ data: [], error: null } as any),
         supabase.from("order_deliveries").select("*").eq("order_id", o.id).order("created_at", { ascending: false }),
       ]);
 
@@ -87,7 +84,6 @@ export default function OrderWorkspace() {
         buyer,
         seller,
       });
-      setReqs((reqsRes.data as any) ?? []);
       setDeliveries((delivRes.data as any) ?? []);
     } catch (e: any) {
       console.error("OrderWorkspace load failed", e);
