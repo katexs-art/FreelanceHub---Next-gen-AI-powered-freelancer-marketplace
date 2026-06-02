@@ -236,7 +236,7 @@ export default function Inbox() {
         <aside
           style={{
             background: "#FFFFFF",
-            borderRight: isMobile ? "none" : "1px solid #EBEBEB",
+            borderRight: isMobile ? "none" : "1px solid #E2E8F0",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
@@ -246,17 +246,29 @@ export default function Inbox() {
           <div
             style={{
               padding: "20px 16px",
-              borderBottom: "1px solid #EBEBEB",
+              borderBottom: "1px solid #E2E8F0",
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
             }}
           >
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: "#0A0A0A", margin: 0 }}>Messages</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 700, color: "#0F172A", margin: 0, letterSpacing: "-0.01em" }}>Messages</h2>
             <button
               type="button"
               aria-label="Compose"
-              style={iconBtn("compose")}
+              style={{
+                background: hoverIcon === "compose" ? "#EEF2FF" : "transparent",
+                border: "none",
+                width: 34,
+                height: 34,
+                borderRadius: 10,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                color: hoverIcon === "compose" ? "#4F46E5" : "#64748B",
+                transition: "all 0.15s",
+              }}
               onMouseEnter={() => setHoverIcon("compose")}
               onMouseLeave={() => setHoverIcon(null)}
             >
@@ -274,47 +286,48 @@ export default function Inbox() {
               placeholder="Search messages..."
               style={{
                 width: "100%",
-                background: "#F7F7F7",
-                border: `1px solid ${searchFocused ? "#0A0A0A" : "#EBEBEB"}`,
+                background: searchFocused ? "#FFFFFF" : "#F1F5F9",
+                border: `1px solid ${searchFocused ? "#4F46E5" : "transparent"}`,
+                boxShadow: searchFocused ? "0 0 0 3px rgba(79,70,229,0.12)" : "none",
                 borderRadius: 999,
-                padding: "8px 16px",
+                padding: "9px 16px",
                 fontSize: 13,
-                color: "#333",
+                color: "#0F172A",
                 outline: "none",
                 boxSizing: "border-box",
-                transition: "border-color 0.15s",
+                transition: "all 0.15s",
               }}
             />
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
             {loading && (
-              <div style={{ padding: 16, fontSize: 12, color: "#888" }}>Loading…</div>
+              <div style={{ padding: 16, fontSize: 12, color: "#64748B" }}>Loading…</div>
             )}
             {!loading && filteredConvs.length === 0 && (
               <div style={{ padding: "32px 16px", textAlign: "center" }}>
                 <div
                   style={{
                     width: 64, height: 64, borderRadius: "50%",
-                    background: "#F7F7F7", color: "#666",
+                    background: "#EEF2FF", color: "#4F46E5",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     margin: "0 auto 16px",
                   }}
                 >
                   <MessageSquare size={28} strokeWidth={1.75} />
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: "#0a0a0a", marginBottom: 6 }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "#0F172A", marginBottom: 6 }}>
                   No conversations yet
                 </div>
-                <div style={{ fontSize: 13, color: "#666", marginBottom: 16, lineHeight: 1.5 }}>
+                <div style={{ fontSize: 13, color: "#64748B", marginBottom: 16, lineHeight: 1.5 }}>
                   Post a project or browse experts to get started.
                 </div>
                 <Link
                   to="/services"
                   style={{
-                    display: "inline-block", background: "#0a0a0a", color: "#fff",
-                    borderRadius: 999, padding: "8px 20px", fontSize: 13,
-                    fontWeight: 500, textDecoration: "none",
+                    display: "inline-block", background: "#4F46E5", color: "#fff",
+                    borderRadius: 999, padding: "9px 20px", fontSize: 13,
+                    fontWeight: 600, textDecoration: "none",
                   }}
                 >
                   Find an Expert
@@ -326,7 +339,6 @@ export default function Inbox() {
               const isHover = hoverRow === c.id;
               const online = !!c.other?.is_online;
               const unread = (c.unread_count ?? 0) > 0;
-              const leftBorderColor = isActive ? "#0A0A0A" : unread ? "#16A34A" : "transparent";
               return (
                 <button
                   key={c.id}
@@ -337,30 +349,29 @@ export default function Inbox() {
                     width: "100%",
                     textAlign: "left",
                     border: "none",
-                    background: isActive ? "#F5F5F5" : isHover ? "#F7F7F7" : "#FFFFFF",
-                    borderBottom: "1px solid #F5F5F5",
-                    borderLeft: `3px solid ${leftBorderColor}`,
-                    padding: "14px 16px",
+                    background: isActive ? "#EEF2FF" : isHover ? "#F8FAFC" : "#FFFFFF",
+                    borderLeft: `3px solid ${isActive ? "#4F46E5" : "transparent"}`,
+                    padding: "12px 16px",
                     cursor: "pointer",
                     display: "flex",
                     alignItems: "center",
                     gap: 12,
-                    transition: "background 0.15s",
+                    transition: "background 0.12s",
                   }}
                 >
                   <div style={{ position: "relative", flexShrink: 0 }}>
                     <div
                       style={{
-                        width: 42,
-                        height: 42,
+                        width: 44,
+                        height: 44,
                         borderRadius: "50%",
-                        background: "#F0F0F0",
-                        color: "#0A0A0A",
+                        background: "#EEF2FF",
+                        color: "#4F46E5",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 14,
-                        fontWeight: 600,
+                        fontSize: 15,
+                        fontWeight: 700,
                         overflow: "hidden",
                       }}
                     >
@@ -376,47 +387,38 @@ export default function Inbox() {
                           position: "absolute",
                           bottom: 0,
                           right: 0,
-                          width: 8,
-                          height: 8,
-                          background: "#16A34A",
+                          width: 10,
+                          height: 10,
+                          background: "#10B981",
                           borderRadius: "50%",
                           border: "2px solid #fff",
                           boxSizing: "content-box",
-                          marginRight: -1,
-                          marginBottom: -1,
+                          marginRight: -2,
+                          marginBottom: -2,
                         }}
                       />
                     )}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 14, fontWeight: unread ? 700 : 600, color: "#0A0A0A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                    <div style={{ fontSize: 14, fontWeight: unread ? 700 : 600, color: "#0F172A", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                       {c.other?.full_name ?? c.other?.username ?? "User"}
                     </div>
-                    <div style={{ fontSize: 12, color: "#888", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2 }}>
+                    <div style={{ fontSize: 12.5, color: unread ? "#334155" : "#64748B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", marginTop: 2, fontWeight: unread ? 500 : 400 }}>
                       {c.last_message_preview ?? "—"}
                     </div>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4, flexShrink: 0 }}>
-                    <span style={{ fontSize: 11, color: "#AAAAAA" }}>{formatListTimestamp(c.last_message_at)}</span>
-                    {(c.unread_count ?? 0) > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
+                    <span style={{ fontSize: 11, color: unread ? "#4F46E5" : "#94A3B8", fontWeight: unread ? 600 : 400 }}>{formatListTimestamp(c.last_message_at)}</span>
+                    {unread && (
                       <span
                         style={{
-                          minWidth: 18,
-                          height: 18,
-                          padding: "0 5px",
-                          background: "#16A34A",
-                          color: "#fff",
-                          borderRadius: 999,
-                          fontSize: 10,
-                          fontWeight: 700,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          boxSizing: "border-box",
+                          width: 9,
+                          height: 9,
+                          background: "#4F46E5",
+                          borderRadius: "50%",
                         }}
-                      >
-                        {c.unread_count}
-                      </span>
+                        aria-label={`${c.unread_count} unread`}
+                      />
                     )}
                   </div>
                 </button>
