@@ -510,11 +510,11 @@ export default function Inbox() {
                   {isMobile && (
                     <button
                       type="button"
-                      onClick={() => nav("/inbox")}
-                      aria-label="Back to messages"
+                      onClick={() => setListOpen(true)}
+                      aria-label="Open conversations"
                       style={{ background: "transparent", border: "none", padding: 4, marginRight: 2, cursor: "pointer", color: "#0F172A" }}
                     >
-                      <ArrowLeft size={20} />
+                      <Menu size={20} />
                     </button>
                   )}
                   <div style={{ position: "relative", flexShrink: 0 }}>
