@@ -4,6 +4,7 @@ import { Search, DollarSign, Clock, Users, Plus, FolderOpen, TrendingUp, Calenda
 import { toast } from "sonner";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { RecommendationsBlock } from "@/components/hq/RecommendationsBlock";
 import { SEO } from "@/components/SEO";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -303,6 +304,7 @@ export default function Projects() {
             })}
           </div>
         )}
+        <RecommendationsBlock />
       </main>
       <SiteFooter />
     </div>
