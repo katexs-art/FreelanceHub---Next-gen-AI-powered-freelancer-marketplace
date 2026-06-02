@@ -78,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {label}
               </NavLink>
             ))}
-            <div className="my-3 mx-4 h-px bg-white/10" />
+            <div className="my-3 mx-4 h-px bg-sidebar-border" />
             {shared.map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} className={itemCls}>
                 <Icon className="h-4 w-4" />
