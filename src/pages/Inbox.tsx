@@ -81,6 +81,7 @@ export default function Inbox() {
   const [hoverIcon, setHoverIcon] = useState<string | null>(null);
   const [inputFocused, setInputFocused] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [listOpen, setListOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
 
