@@ -28,7 +28,7 @@ type GigRow = {
   gig_packages: { delivery_days: number }[] | null;
 };
 
-type SellerInfo = { id: string; username: string | null; full_name: string | null; avatar_url: string | null };
+type SellerInfo = { id: string; username: string | null; full_name: string | null; avatar_url: string | null; location: string | null; country: string | null };
 
 const QUICK_CHIPS = [
   "Voice AI",
@@ -138,7 +138,7 @@ export default function Services() {
       if (ids.length) {
         const { data: profs } = await supabase
           .from("profiles")
-          .select("id,username,full_name,avatar_url")
+          .select("id,username,full_name,avatar_url,location,country")
           .in("id", ids);
         const map: Record<string, SellerInfo> = {};
         (profs ?? []).forEach((p: any) => { map[p.id] = p; });
@@ -169,7 +169,21 @@ export default function Services() {
     if (rating && rating.min > 0) {
       list = list.filter((g) => Number(g.average_rating ?? 0) >= rating.min);
     }
-    // NOTE: Location filter is UI-only — `gigs` has no location column yet.
+    if (location && location !== "Global") {
+      const codes: Record<string, string[]> = {
+        US: ["us", "united states", "usa", "america"],
+        UK: ["uk", "united kingdom", "england", "scotland", "wales", "britain", "gb"],
+        Canada: ["ca", "canada"],
+        Online: [], // matches sellers with no location set or explicitly "online" / "remote"
+      };
+      const needles = codes[location] ?? [];
+      list = list.filter((g) => {
+        const s = sellers[g.seller_id];
+        const loc = `${s?.location ?? ""} ${s?.country ?? ""}`.toLowerCase().trim();
+        if (location === "Online") return !loc || /online|remote|worldwide/.test(loc);
+        return needles.some((n) => loc.includes(n));
+      });
+    }
 
     const sorted = [...list];
     if (sort === "newest") sorted.sort((a, b) => +new Date(b.created_at) - +new Date(a.created_at));
@@ -177,7 +191,7 @@ export default function Services() {
     if (sort === "price_low") sorted.sort((a, b) => a.starting_price - b.starting_price);
     if (sort === "price_high") sorted.sort((a, b) => b.starting_price - a.starting_price);
     return sorted;
-  }, [gigs, cat, budget, delivery, rating, sort]);
+  }, [gigs, sellers, cat, budget, delivery, rating, location, sort]);
 
   const toCard = (g: GigRow): GigCardData => {
     const minDelivery = g.gig_packages?.length
