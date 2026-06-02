@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { lazy, Suspense } from "react";
