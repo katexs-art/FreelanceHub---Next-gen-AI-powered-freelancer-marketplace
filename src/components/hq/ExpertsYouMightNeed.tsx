@@ -25,11 +25,16 @@ export function ExpertsYouMightNeed() {
       if (user) {
         const { data: orderRows } = await supabase
           .from("orders")
-          .select("gigs:gig_id ( category )")
+          .select("gig_id")
           .eq("buyer_id", user.id)
+          .not("gig_id", "is", null)
           .limit(20);
-        for (const row of (orderRows ?? []) as any[]) {
-          if (row?.gigs?.category) cats.add(row.gigs.category as string);
+        const gIds = Array.from(new Set(((orderRows ?? []) as any[]).map((o) => o.gig_id).filter(Boolean)));
+        if (gIds.length) {
+          const { data: gs } = await supabase.from("gigs").select("category").in("id", gIds);
+          for (const g of (gs ?? []) as Array<{ category: string | null }>) {
+            if (g.category) cats.add(g.category);
+          }
         }
       }
 
