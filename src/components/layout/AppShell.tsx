@@ -40,8 +40,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     cn(
       "flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium tracking-tight transition-colors mx-2 rounded-lg",
       isActive
-        ? "bg-[#4F46E5] text-white"
-        : "text-white/70 hover:bg-white/10 hover:text-white"
+        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     );
 
   return (
