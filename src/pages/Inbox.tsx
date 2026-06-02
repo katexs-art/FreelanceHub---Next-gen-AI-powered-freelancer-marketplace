@@ -564,12 +564,34 @@ export default function Inbox() {
                   </div>
 
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
                   {user && active.other?.id && (
                     <CustomOfferComposer
                       conversationId={active.id}
                       sellerId={user.id}
                       buyerId={active.participant_one === user.id ? active.participant_two : active.participant_one}
+                      trigger={
+                        <button
+                          type="button"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: "#4F46E5",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 999,
+                            padding: "7px 14px",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            boxShadow: "0 4px 12px -4px rgba(79,70,229,0.4)",
+                          }}
+                        >
+                          <Paperclip size={14} /> Send offer
+                        </button>
+                      }
                     />
                   )}
                   <button
@@ -591,6 +613,7 @@ export default function Inbox() {
                     <MoreHorizontal size={18} />
                   </button>
                 </div>
+
               </header>
 
               {/* Messages area */}
