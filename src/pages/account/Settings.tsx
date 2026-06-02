@@ -8,8 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Eyebrow, HairlineDivider } from "@/components/ui/mono";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SkillsTagInput } from "@/components/postjob/SkillsTagInput";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AppearanceTab } from "@/components/settings/AppearanceTab";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { BadgeCheck, Camera, Check, Loader2, Plus, Trash2, X } from "lucide-react";
 
 type Cert = { name: string; organization: string; year: string };
