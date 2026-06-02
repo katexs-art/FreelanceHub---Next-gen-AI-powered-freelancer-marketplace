@@ -17,7 +17,7 @@ type Project = {
 };
 
 export function ProjectRecsRow() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const isSeller = profile?.role === "seller" || profile?.role === "admin";
   const [items, setItems] = useState<Project[] | null>(null);
   const scroller = useRef<HTMLDivElement>(null);
@@ -25,6 +25,16 @@ export function ProjectRecsRow() {
   useEffect(() => {
     let active = true;
     (async () => {
+      let skills: string[] = [];
+      if (isSeller && user) {
+        const { data: p } = await supabase
+          .from("profiles")
+          .select("seller_skills")
+          .eq("id", user.id)
+          .maybeSingle();
+        skills = ((p as { seller_skills?: string[] } | null)?.seller_skills) ?? [];
+      }
+
       let q = supabase
         .from("project_posts")
         .select("id, title, category, budget_min, budget_max, deadline, created_at, skills")
@@ -32,9 +42,8 @@ export function ProjectRecsRow() {
         .order("created_at", { ascending: false })
         .limit(12);
 
-      if (isSeller && profile?.seller_skills?.length) {
-        q = q.overlaps("skills", profile.seller_skills);
-      }
+      if (isSeller && skills.length) q = q.overlaps("skills", skills);
+
       let { data } = await q;
       if (isSeller && (!data || data.length === 0)) {
         const fb = await supabase
@@ -47,7 +56,8 @@ export function ProjectRecsRow() {
       }
       if (active) setItems((data ?? []) as Project[]);
     })();
-  }, [profile?.role, profile?.seller_skills?.join(",")]);
+    return () => { active = false; };
+  }, [user?.id, isSeller]);
 
   const scrollBy = (dir: 1 | -1) =>
     scroller.current?.scrollBy({ left: dir * 340, behavior: "smooth" });
