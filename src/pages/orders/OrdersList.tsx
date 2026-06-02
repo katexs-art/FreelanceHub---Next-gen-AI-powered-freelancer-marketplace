@@ -110,6 +110,7 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
           </table>
         </div>
       )}
+      <RecommendationsBlock />
     </AppShell>
   );
 }
