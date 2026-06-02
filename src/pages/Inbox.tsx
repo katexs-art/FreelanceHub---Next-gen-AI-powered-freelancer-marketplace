@@ -233,8 +233,9 @@ export default function Inbox() {
           background: "#fff",
         }}
       >
-        {/* COLUMN 2 — Conversation list */}
-        {(!isMobile || !active) && (
+        {/* COLUMN 2 — Conversation list (drawer on mobile, inline on desktop) */}
+        {(() => {
+        const listAside = (
         <aside
           style={{
             background: "#FFFFFF",
