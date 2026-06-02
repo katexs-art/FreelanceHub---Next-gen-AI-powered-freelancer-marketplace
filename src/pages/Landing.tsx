@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
-import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug } from "lucide-react";
+import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug, FileText, Sparkles, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
 import landingHero from "@/assets/landing-hero.mp4.asset.json";
