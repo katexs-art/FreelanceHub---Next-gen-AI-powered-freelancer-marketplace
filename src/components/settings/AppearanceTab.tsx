@@ -5,12 +5,18 @@ import { Eyebrow } from "@/components/ui/mono";
 import { toast } from "sonner";
 
 export function AppearanceTab() {
-  const { saved, setTheme, setPreview, clearPreview } = useTheme();
+  const { theme, saved, setTheme, setPreview, clearPreview } = useTheme();
 
   const onPick = async (id: ThemeId) => {
-    await setTheme(id);
-    toast.success("Theme applied");
+    try {
+      await setTheme(id);
+      clearPreview();
+      toast.success("Theme saved");
+    } catch (e: any) {
+      toast.error(e?.message ?? "Couldn't save theme");
+    }
   };
+
 
   return (
     <div className="space-y-6">

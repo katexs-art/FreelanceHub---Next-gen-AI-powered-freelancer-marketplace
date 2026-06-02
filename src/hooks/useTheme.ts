@@ -48,9 +48,14 @@ export function useTheme() {
     localStorage.setItem(STORAGE_KEY, id);
     update({ saved: id, preview: null });
     if (user) {
-      await supabase.from("profiles").update({ theme_preference: id } as any).eq("id", user.id);
+      const { error } = await supabase
+        .from("profiles")
+        .update({ theme_preference: id } as any)
+        .eq("id", user.id);
+      if (error) throw error;
     }
   };
+
 
   const preview = (id: ThemeId) => update({ preview: id });
   const clearPreview = () => update({ preview: null });
