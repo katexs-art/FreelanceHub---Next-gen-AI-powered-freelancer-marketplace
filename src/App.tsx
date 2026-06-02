@@ -124,6 +124,9 @@ const App = () => (
             <Route path="/seller-onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
 
             {/* Buyer */}
+            {/* HQ — unified customizable dashboard */}
+            <Route path="/hq" element={<ProtectedRoute><Hq /></ProtectedRoute>} />
+
             <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><BuyerDashboard /></ProtectedRoute>} />
             <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","seller","admin"]}><OrdersList as="buyer" /></ProtectedRoute>} />
 
