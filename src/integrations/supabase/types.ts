@@ -1261,6 +1261,7 @@ export type Database = {
           certifications: Json
           country: string | null
           created_at: string
+          dashboard_layout: Json
           email: string
           full_name: string | null
           id: string
@@ -1299,6 +1300,7 @@ export type Database = {
           certifications?: Json
           country?: string | null
           created_at?: string
+          dashboard_layout?: Json
           email: string
           full_name?: string | null
           id: string
@@ -1337,6 +1339,7 @@ export type Database = {
           certifications?: Json
           country?: string | null
           created_at?: string
+          dashboard_layout?: Json
           email?: string
           full_name?: string | null
           id?: string
@@ -2240,6 +2243,7 @@ export type Database = {
           certifications: Json
           country: string | null
           created_at: string
+          dashboard_layout: Json
           email: string
           full_name: string | null
           id: string
