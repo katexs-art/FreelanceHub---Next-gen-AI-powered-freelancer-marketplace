@@ -40,35 +40,12 @@ const CATEGORY_FILTERS = [
   "Development",
 ];
 
-const CATEGORY_COLORS: Record<string, string> = {
-  GoHighLevel: "bg-purple-100 text-purple-700 border-purple-200",
-  "Voice AI": "bg-blue-100 text-blue-700 border-blue-200",
-  "AI Automation": "bg-green-100 text-green-700 border-green-200",
-  Marketing: "bg-pink-100 text-pink-700 border-pink-200",
-  Development: "bg-orange-100 text-orange-700 border-orange-200",
-};
-
-function categoryClass(cat?: string | null) {
-  if (!cat) return "bg-gray-100 text-gray-700 border-gray-200";
-  return CATEGORY_COLORS[cat] ?? "bg-gray-100 text-gray-700 border-gray-200";
-}
-
 function ago(iso: string) {
   const s = Math.max(1, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (s < 60) return `${s}s ago`;
   if (s < 3600) return `${Math.floor(s / 60)}m ago`;
   if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
   return `${Math.floor(s / 86400)}d ago`;
-}
-
-function accentColor(p: ProjectPost) {
-  const ageHours = (Date.now() - new Date(p.created_at).getTime()) / 3_600_000;
-  if (p.deadline) {
-    const daysLeft = (new Date(p.deadline).getTime() - Date.now()) / 86_400_000;
-    if (daysLeft <= 3) return "border-l-orange-500";
-  }
-  if (ageHours < 24) return "border-l-green-500";
-  return "border-l-blue-500";
 }
 
 export default function Projects() {
@@ -175,25 +152,25 @@ export default function Projects() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-black">Open Projects</h1>
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-green-50 border border-green-200 text-green-700 text-xs font-semibold">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-[#0F172A]">Open Projects</h1>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#EEF2FF] border border-[#C7D2FE] text-[#4F46E5] text-xs font-semibold">
               <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-600" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4F46E5] opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4F46E5]" />
               </span>
               Live
             </span>
           </div>
-          <p className="text-foreground-muted mt-2">Browse open client projects and submit your proposal</p>
+          <p className="text-slate-500 mt-2">Browse open client projects and submit your proposal</p>
 
           {/* Stats */}
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <StatCard icon={FolderOpen} label="Total Open Projects" value={stats.total.toString()} tint="green" />
+            <StatCard icon={FolderOpen} label="Total Open Projects" value={stats.total.toString()} tint="blue" />
             <StatCard
               icon={TrendingUp}
               label="Avg Budget"
               value={stats.avg ? `$${stats.avg.toLocaleString()}` : "—"}
-              tint="blue"
+              tint="purple"
             />
             <StatCard icon={Calendar} label="Posted Today" value={stats.today.toString()} tint="orange" />
           </div>
@@ -202,16 +179,16 @@ export default function Projects() {
         {/* Search + Sort */}
         <div className="flex flex-col md:flex-row gap-3 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search by title, skill or category…"
-              className="pl-9 bg-white"
+              className="pl-9 bg-white border-slate-200 focus-visible:ring-2 focus-visible:ring-[#4F46E5]/30 focus-visible:border-[#4F46E5]"
             />
           </div>
           <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
-            <SelectTrigger className="md:w-56 bg-white rounded-md">
+            <SelectTrigger className="md:w-56 bg-white rounded-md border-slate-200">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -233,8 +210,8 @@ export default function Projects() {
                 className={cn(
                   "px-4 py-1.5 rounded-full text-sm font-medium border transition-colors",
                   active
-                    ? "bg-green-600 text-white border-green-600"
-                    : "bg-white text-foreground border-border hover:border-green-600 hover:text-green-700",
+                    ? "bg-[#0F172A] text-white border-[#0F172A]"
+                    : "bg-white text-slate-700 border-slate-200 hover:border-[#0F172A] hover:text-[#0F172A]",
                 )}
               >
                 {cat}
@@ -245,15 +222,15 @@ export default function Projects() {
 
         {/* Grid */}
         {loading ? (
-          <p className="text-foreground-muted">Loading…</p>
+          <p className="text-slate-500">Loading…</p>
         ) : filtered.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-[#f9f9f9] p-16 text-center">
-            <div className="mx-auto w-16 h-16 rounded-full bg-green-50 border border-green-200 flex items-center justify-center mb-4">
-              <FolderOpen className="h-7 w-7 text-green-600" />
+          <div className="rounded-2xl border border-dashed border-slate-200 bg-[#f9f9f9] p-16 text-center">
+            <div className="mx-auto w-16 h-16 rounded-full bg-[#EEF2FF] border border-[#C7D2FE] flex items-center justify-center mb-4">
+              <FolderOpen className="h-7 w-7 text-[#4F46E5]" />
             </div>
-            <h3 className="font-semibold text-lg text-black">No open projects yet</h3>
-            <p className="text-sm text-foreground-muted mt-1">Be the first to post one!</p>
-            <Button asChild className="mt-5 bg-green-600 hover:bg-green-700 text-white">
+            <h3 className="font-semibold text-lg text-[#0F172A]">No open projects yet</h3>
+            <p className="text-sm text-slate-500 mt-1">Be the first to post one!</p>
+            <Button asChild className="mt-5 bg-[#4F46E5] hover:bg-[#4338CA] text-white">
               <Link to="/post-job">
                 <Plus className="h-4 w-4" /> Post a Project
               </Link>
@@ -273,33 +250,26 @@ export default function Projects() {
               return (
                 <div
                   key={p.id}
-                  className={cn(
-                    "group bg-white border border-border border-l-4 rounded-2xl p-5 flex flex-col transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5",
-                    accentColor(p),
-                  )}
+                  className="group relative bg-white border border-slate-200 rounded-2xl p-5 pt-6 flex flex-col overflow-hidden transition-all duration-200 hover:shadow-[0_12px_32px_-12px_rgba(79,70,229,0.25)] hover:-translate-y-0.5 hover:border-slate-300"
                 >
+                  <span className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-[#4F46E5] to-[#7C3AED]" />
                   <div className="flex items-start justify-between gap-3">
-                    <h2 className="font-semibold text-base text-black line-clamp-2 flex-1">{p.title}</h2>
+                    <h2 className="font-semibold text-base text-[#0F172A] line-clamp-2 flex-1">{p.title}</h2>
                     {p.category && (
-                      <span
-                        className={cn(
-                          "shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full border",
-                          categoryClass(p.category),
-                        )}
-                      >
+                      <span className="shrink-0 text-[10px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full bg-[#0F172A] text-white">
                         {p.category}
                       </span>
                     )}
                   </div>
 
-                  <p className="mt-3 text-sm text-foreground-muted line-clamp-2">{p.description}</p>
+                  <p className="mt-3 text-sm text-slate-500 line-clamp-2">{p.description}</p>
 
                   {p.skills?.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {p.skills.slice(0, 5).map((s) => (
                         <span
                           key={s}
-                          className="text-xs px-2 py-0.5 rounded-full bg-green-50 border border-green-100 text-green-700"
+                          className="text-xs px-2 py-0.5 rounded-full bg-[#F1F5F9] text-slate-700"
                         >
                           {s}
                         </span>
@@ -307,15 +277,12 @@ export default function Projects() {
                     </div>
                   )}
 
-                  <div className="mt-4 flex items-center gap-3 text-xs text-foreground-muted">
-                    <span className="inline-flex items-center gap-1 font-medium text-black">
-                      <DollarSign className="h-3.5 w-3.5 text-green-600" />
-                      {budget}
-                    </span>
+                  <div className="mt-4 flex items-center gap-3 text-sm">
+                    <span className="font-semibold text-[#0F172A]">{budget}</span>
                   </div>
 
-                  <div className="mt-3 flex items-center justify-between gap-3 pt-3 border-t border-border">
-                    <div className="flex items-center gap-3 text-xs text-foreground-muted">
+                  <div className="mt-3 flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-3 text-xs text-slate-500">
                       <span className="inline-flex items-center gap-1">
                         <Users className="h-3.5 w-3.5" /> {p.bid_count} bid{p.bid_count === 1 ? "" : "s"}
                       </span>
@@ -326,7 +293,7 @@ export default function Projects() {
                     <Button
                       asChild
                       size="sm"
-                      className="bg-green-600 hover:bg-green-700 text-white w-full md:w-auto"
+                      className="bg-[#4F46E5] hover:bg-[#4338CA] text-white rounded-full w-full md:w-auto"
                     >
                       <Link to={`/projects/${p.id}`}>View & Bid</Link>
                     </Button>
@@ -351,21 +318,21 @@ function StatCard({
   icon: typeof FolderOpen;
   label: string;
   value: string;
-  tint: "green" | "blue" | "orange";
+  tint: "blue" | "purple" | "orange";
 }) {
   const tints = {
-    green: "bg-green-50 text-green-700 border-green-200",
-    blue: "bg-blue-50 text-blue-700 border-blue-200",
-    orange: "bg-orange-50 text-orange-700 border-orange-200",
+    blue: "bg-[#2563EB] text-white",
+    purple: "bg-[#7C3AED] text-white",
+    orange: "bg-[#EA580C] text-white",
   } as const;
   return (
-    <div className="bg-white border border-border rounded-2xl p-4 flex items-center gap-4">
-      <div className={cn("h-10 w-10 rounded-xl border flex items-center justify-center", tints[tint])}>
+    <div className="bg-white border border-slate-200 rounded-2xl p-4 flex items-center gap-4">
+      <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center shadow-sm", tints[tint])}>
         <Icon className="h-5 w-5" />
       </div>
       <div>
-        <p className="text-xs text-foreground-muted">{label}</p>
-        <p className="text-xl font-bold text-black leading-tight">{value}</p>
+        <p className="text-xs text-slate-500">{label}</p>
+        <p className="text-xl font-bold text-[#0F172A] leading-tight">{value}</p>
       </div>
     </div>
   );
