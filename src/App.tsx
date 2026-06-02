@@ -75,6 +75,7 @@ const BuyerDashboard = lazy(() => import("./pages/buyer/BuyerDashboard"));
 const Settings = lazy(() => import("./pages/account/Settings"));
 const SellerAnalytics = lazy(() => import("./pages/seller/SellerAnalytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Hq = lazy(() => import("./pages/Hq"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
 
 const queryClient = new QueryClient();
