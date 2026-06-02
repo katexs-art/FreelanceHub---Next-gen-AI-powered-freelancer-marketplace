@@ -86,6 +86,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ThemeProvider>
         <ScrollToTop />
         <ErrorBoundary>
         <Suspense fallback={<Loading />}>
