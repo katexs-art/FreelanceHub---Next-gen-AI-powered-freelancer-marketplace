@@ -40,8 +40,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     cn(
       "flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium tracking-tight transition-colors mx-2 rounded-lg",
       isActive
-        ? "bg-[#4F46E5] text-white"
-        : "text-white/70 hover:bg-white/10 hover:text-white"
+        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     );
 
   return (
@@ -70,10 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex">
-        <aside
-          className="w-56 shrink-0 min-h-[calc(100vh-3.5rem)] py-4"
-          style={{ background: "#0F172A", borderRight: "1px solid #1E293B" }}
-        >
+        <aside className="w-56 shrink-0 min-h-[calc(100vh-3.5rem)] py-4 bg-sidebar border-r border-sidebar-border">
           <nav className="space-y-0.5">
             {links.map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} end className={itemCls}>
@@ -81,7 +78,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {label}
               </NavLink>
             ))}
-            <div className="my-3 mx-4 h-px bg-white/10" />
+            <div className="my-3 mx-4 h-px bg-sidebar-border" />
             {shared.map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} className={itemCls}>
                 <Icon className="h-4 w-4" />
