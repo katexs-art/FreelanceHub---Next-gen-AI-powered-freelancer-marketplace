@@ -335,27 +335,14 @@ export default function OrderWorkspace() {
           <section className="mt-8 bg-background border border-border rounded-xl p-6">
             <h2 className="text-lg font-semibold mb-1">Requirements</h2>
             <p className="text-sm text-foreground-muted mb-4">
-              {isBuyer ? "Answer the expert's questions to start the project." : "Waiting for partner to send requirements."}
+              {isBuyer
+                ? "Send your requirements so the seller can start the project."
+                : "Waiting for the buyer to send their requirements."}
             </p>
-            {reqs.length === 0 && isBuyer && (
-              <p className="text-sm text-foreground-muted italic">No questions — confirm to start.</p>
-            )}
-            <div className="space-y-4">
-              {reqs.map((r) => (
-                <div key={r.id}>
-                  <label className="block text-sm font-medium mb-1.5">
-                    {r.question} {r.is_required && <span className="text-destructive">*</span>}
-                  </label>
-                  {isBuyer ? (
-                    <Textarea value={answers[r.id] ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [r.id]: e.target.value }))} rows={3} />
-                  ) : (
-                    <div className="text-sm text-foreground-muted italic">—</div>
-                  )}
-                </div>
-              ))}
-            </div>
             {isBuyer && (
-              <Button onClick={submitRequirements} disabled={busy} className="mt-5">Send requirements</Button>
+              <Button asChild>
+                <Link to={`/orders/${order.id}/requirements`}>Send requirements</Link>
+              </Button>
             )}
           </section>
         )}
