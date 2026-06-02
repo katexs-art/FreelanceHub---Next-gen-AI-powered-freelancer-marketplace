@@ -156,6 +156,35 @@ export default function Landing() {
     })();
   }, []);
 
+  useEffect(() => {
+    (async () => {
+      try {
+        const [{ count: expertsCount }, paidRes, reviewsRes] = await Promise.all([
+          supabase.from("profiles").select("id", { count: "exact", head: true }).eq("seller_status", "approved").is("suspended_at", null),
+          supabase.from("orders").select("seller_earnings").eq("status", "completed"),
+          supabase.from("reviews").select("rating").eq("is_public", true),
+        ]);
+        const paidCents = (paidRes.data ?? []).reduce((s: number, o: any) => s + (o.seller_earnings ?? 0), 0);
+        const ratings = (reviewsRes.data ?? []).map((r: any) => r.rating).filter((n: number) => typeof n === "number");
+        const positive = ratings.filter((n: number) => n >= 4).length;
+        const fmtPaid = (c: number) => {
+          const d = c / 100;
+          if (d >= 1_000_000) return `$${(d / 1_000_000).toFixed(1)}M+`;
+          if (d >= 1_000) return `$${(d / 1_000).toFixed(1)}K+`;
+          return `$${Math.round(d)}`;
+        };
+        const fmtCount = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}K+` : `${n}+`);
+        setStats({
+          experts: fmtCount(expertsCount ?? 0),
+          paid: fmtPaid(paidCents),
+          satisfaction: ratings.length ? `${Math.round((positive / ratings.length) * 100)}%` : "—",
+        });
+      } catch (e) {
+        console.error("[Landing] stats fetch failed:", e);
+      }
+    })();
+  }, []);
+
   return (
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
       <SEO
