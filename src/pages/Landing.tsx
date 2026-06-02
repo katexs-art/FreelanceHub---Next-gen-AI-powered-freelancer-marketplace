@@ -246,7 +246,7 @@ export default function Landing() {
               borderRadius: 999, marginBottom: 32, textTransform: "uppercase",
             }}
           >
-            The 1st AI Marketplace
+            The 1st AI Marketplace Built for Innovators
           </div>
 
           <h1
