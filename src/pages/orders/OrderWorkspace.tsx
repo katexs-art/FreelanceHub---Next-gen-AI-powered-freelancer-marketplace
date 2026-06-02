@@ -44,6 +44,10 @@ export default function OrderWorkspace() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
+  const [livePulse, setLivePulse] = useState(false);
+  const prevStatus = useRef<string | null>(null);
+  const prevDeliveryCount = useRef<number>(0);
+  const toastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = async () => {
     if (!id) return;
