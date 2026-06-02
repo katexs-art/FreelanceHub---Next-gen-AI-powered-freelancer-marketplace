@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { EmptyState } from "@/components/EmptyState";
 import { ShoppingBag } from "lucide-react";
+import { RecommendationsBlock } from "@/components/hq/RecommendationsBlock";
 
 interface OrderRow {
   id: string;
@@ -109,6 +110,7 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
           </table>
         </div>
       )}
+      <RecommendationsBlock />
     </AppShell>
   );
 }

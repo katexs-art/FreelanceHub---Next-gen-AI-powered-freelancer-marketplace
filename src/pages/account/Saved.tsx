@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
+import { RecommendationsBlock } from "@/components/hq/RecommendationsBlock";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -41,6 +42,7 @@ export default function Saved() {
               ? <p className="text-foreground-muted col-span-full text-sm">Nothing saved yet.</p>
               : gigs.map((g) => <GigCard key={g.id} gig={g} />)}
         </div>
+        <RecommendationsBlock />
       </div>
     </AppShell>
   );
