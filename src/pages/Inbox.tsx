@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
 import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
 import { ConversationDetailsPanel } from "@/components/inbox/ConversationDetailsPanel";
+import { RecommendationsBlock } from "@/components/hq/RecommendationsBlock";
 
 interface Conv {
   id: string;
@@ -877,6 +878,7 @@ export default function Inbox() {
           />
         )}
       </div>
+      <RecommendationsBlock />
     </AppShell>
   );
 }
