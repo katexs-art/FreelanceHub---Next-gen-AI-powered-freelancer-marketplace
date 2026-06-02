@@ -1283,6 +1283,7 @@ export type Database = {
           seller_skills: string[]
           seller_status: string
           suspended_at: string | null
+          theme_preference: string
           total_reviews: number
           twitter_url: string | null
           updated_at: string
@@ -1320,6 +1321,7 @@ export type Database = {
           seller_skills?: string[]
           seller_status?: string
           suspended_at?: string | null
+          theme_preference?: string
           total_reviews?: number
           twitter_url?: string | null
           updated_at?: string
@@ -1357,6 +1359,7 @@ export type Database = {
           seller_skills?: string[]
           seller_status?: string
           suspended_at?: string | null
+          theme_preference?: string
           total_reviews?: number
           twitter_url?: string | null
           updated_at?: string
@@ -2259,6 +2262,7 @@ export type Database = {
           seller_skills: string[]
           seller_status: string
           suspended_at: string | null
+          theme_preference: string
           total_reviews: number
           twitter_url: string | null
           updated_at: string
