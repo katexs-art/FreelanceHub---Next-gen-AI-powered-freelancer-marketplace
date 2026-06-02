@@ -70,10 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </header>
 
       <div className="flex">
-        <aside
-          className="w-56 shrink-0 min-h-[calc(100vh-3.5rem)] py-4"
-          style={{ background: "#0F172A", borderRight: "1px solid #1E293B" }}
-        >
+        <aside className="w-56 shrink-0 min-h-[calc(100vh-3.5rem)] py-4 bg-sidebar border-r border-sidebar-border">
           <nav className="space-y-0.5">
             {links.map(({ to, icon: Icon, label }) => (
               <NavLink key={to} to={to} end className={itemCls}>
