@@ -17,25 +17,6 @@ interface ExpertCard {
   seller_username: string | null;
 }
 
-const PLACEHOLDERS = [
-  "Find me a voice AI expert…",
-  "I need a chatbot built in 48 hours…",
-  "Who can automate my Go High Level?",
-  "Build me a custom AI agent…",
-];
-
-const QUICK_CATEGORIES = [
-  "Voice AI",
-  "Chatbot Dev",
-  "AI Automation",
-  "Prompt Engineering",
-  "GoHighLevel",
-  "AI Content",
-  "AI Agents",
-  "Custom AI",
-];
-
-
 const FN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/river-chat`;
 const ANON_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
 
@@ -45,8 +26,6 @@ const stripTokens = (s: string) =>
 export function RiverCommandBar() {
   const { user } = useAuth();
   const [value, setValue] = useState("");
-  const [placeholder, setPlaceholder] = useState(PLACEHOLDERS[0]);
-  const [focused, setFocused] = useState(false);
   const [loading, setLoading] = useState(false);
   const [stream, setStream] = useState("");
   const [cards, setCards] = useState<ExpertCard[]>([]);
@@ -57,23 +36,8 @@ export function RiverCommandBar() {
   const recogRef = useRef<any>(null);
   const abortRef = useRef<AbortController | null>(null);
   const lastSendAt = useRef(0);
-
-  // Cycle placeholders when input empty + not focused
-  useEffect(() => {
-    if (focused || value) return;
-    let i = 0;
-    const t = setInterval(() => {
-      i = (i + 1) % PLACEHOLDERS.length;
-      setPlaceholder(PLACEHOLDERS[i]);
-    }, 3000);
-    return () => clearInterval(t);
-  }, [focused, value]);
-
-  // Keep submit reachable from speech-recognition callbacks without stale closures
   const submitRef = useRef<(text: string) => void>(() => {});
 
-  // Voice input — Web Speech API. Streams interim text into the input,
-  // then auto-submits the final transcript to River.
   const toggleMic = useCallback(() => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
@@ -84,28 +48,18 @@ export function RiverCommandBar() {
       });
       return;
     }
-    if (listening) {
-      recogRef.current?.stop();
-      return;
-    }
+    if (listening) { recogRef.current?.stop(); return; }
 
-    setError(null);
-    setMicError(null);
+    setError(null); setMicError(null);
     let finalText = "";
-
     const r = new SR();
-    r.lang = "en-US";
-    r.interimResults = true;
-    r.continuous = false;
-    r.maxAlternatives = 1;
-
+    r.lang = "en-US"; r.interimResults = true; r.continuous = false; r.maxAlternatives = 1;
     r.onresult = (e: any) => {
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const res = e.results[i];
         const txt = res[0]?.transcript ?? "";
-        if (res.isFinal) finalText += txt;
-        else interim += txt;
+        if (res.isFinal) finalText += txt; else interim += txt;
       }
       setValue((finalText + interim).trim());
     };
@@ -115,9 +69,7 @@ export function RiverCommandBar() {
       if (code === "not-allowed" || code === "service-not-allowed") {
         setMicError("denied");
         setError("Microphone access is blocked. Enable it in your browser settings to use voice search.");
-        toast.error("Microphone blocked", {
-          description: "Permission denied. Enable microphone access in your browser settings.",
-        });
+        toast.error("Microphone blocked", { description: "Permission denied. Enable microphone access in your browser settings." });
       } else if (code === "no-speech") {
         setMicError("no-speech");
         setError("Didn't catch that. Try speaking closer to the microphone, or type your request below.");
@@ -130,19 +82,14 @@ export function RiverCommandBar() {
     r.onend = () => {
       setListening(false);
       const out = finalText.trim();
-      if (out.length >= 3) {
-        setValue(out);
-        submitRef.current(out);
-      }
+      if (out.length >= 3) { setValue(out); submitRef.current(out); }
     };
-
     recogRef.current = r;
     setListening(true);
     try { r.start(); } catch { setListening(false); }
   }, [listening]);
 
   useEffect(() => () => { recogRef.current?.stop?.(); abortRef.current?.abort(); }, []);
-
 
   const submit = useCallback(async (text: string) => {
     const trimmed = text.trim();
@@ -151,14 +98,8 @@ export function RiverCommandBar() {
     if (now - lastSendAt.current < 500) return;
     lastSendAt.current = now;
 
-    setError(null);
-    setStream("");
-    setCards([]);
-
-    if (!user) {
-      setError("Please sign in to ask River.");
-      return;
-    }
+    setError(null); setStream(""); setCards([]);
+    if (!user) { setError("Please sign in to ask River."); return; }
 
     setLoading(true);
     const ctrl = new AbortController();
@@ -173,11 +114,7 @@ export function RiverCommandBar() {
       const resp = await fetch(FN_URL, {
         method: "POST",
         signal: ctrl.signal,
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-          "apikey": ANON_KEY,
-        },
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${accessToken}`, "apikey": ANON_KEY },
         body: JSON.stringify({ message: trimmed, history: [] }),
       });
 
@@ -187,265 +124,138 @@ export function RiverCommandBar() {
 
       const reader = resp.body.getReader();
       const decoder = new TextDecoder();
-      let buf = "";
-      let acc = "";
-      let finalCards: ExpertCard[] = [];
-
+      let buf = ""; let acc = ""; let finalCards: ExpertCard[] = [];
       while (true) {
         const { done, value: chunk } = await reader.read();
         if (done) break;
         buf += decoder.decode(chunk, { stream: true });
         let nl: number;
         while ((nl = buf.indexOf("\n")) !== -1) {
-          let line = buf.slice(0, nl);
-          buf = buf.slice(nl + 1);
+          let line = buf.slice(0, nl); buf = buf.slice(nl + 1);
           if (line.endsWith("\r")) line = line.slice(0, -1);
           if (!line.startsWith("data: ")) continue;
           const json = line.slice(6).trim();
           if (!json) continue;
           try {
             const evt = JSON.parse(json);
-            if (typeof evt.delta === "string") {
-              acc += evt.delta;
-              setStream(stripTokens(acc));
-            } else if (evt.done && Array.isArray(evt.cards)) {
-              finalCards = evt.cards;
-            }
+            if (typeof evt.delta === "string") { acc += evt.delta; setStream(stripTokens(acc)); }
+            else if (evt.done && Array.isArray(evt.cards)) finalCards = evt.cards;
           } catch { /* ignore */ }
         }
       }
       setStream(stripTokens(acc));
       setCards(finalCards);
     } catch (e: any) {
-      if (e?.name === "AbortError" || ctrl.signal.aborted) {
-        setError("River is taking too long. Please try again.");
-      } else {
-        setError("Connection lost. Check your internet and try again.");
-      }
+      if (e?.name === "AbortError" || ctrl.signal.aborted) setError("River is taking too long. Please try again.");
+      else setError("Connection lost. Check your internet and try again.");
     } finally {
-      clearTimeout(timeout);
-      abortRef.current = null;
-      setLoading(false);
+      clearTimeout(timeout); abortRef.current = null; setLoading(false);
     }
   }, [loading, user]);
 
-  // Keep ref pointing to the latest submit so voice callbacks always call the current one.
   useEffect(() => { submitRef.current = submit; }, [submit]);
 
   const onSubmit = (e: React.FormEvent) => { e.preventDefault(); submit(value); };
 
-  // One-click retry: explicitly re-request mic permission via getUserMedia,
-  // then start speech recognition once granted.
   const retryMic = useCallback(async () => {
     const SR: any = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) return;
-
-    setRetryingMic(true);
-    setMicError(null);
-    setError(null);
-
+    setRetryingMic(true); setMicError(null); setError(null);
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
-      // Permission granted — start listening
       setRetryingMic(false);
       recogRef.current?.stop?.();
       toggleMic();
-    } catch (err: any) {
+    } catch {
       setRetryingMic(false);
-      // Still denied — keep error state
       setMicError("denied");
       setError("Microphone access is still blocked. Enable it in your browser settings to use voice search.");
-      toast.error("Microphone still blocked", {
-        description: "Permission was denied again. Enable microphone access in your browser settings.",
-      });
+      toast.error("Microphone still blocked", { description: "Permission was denied again. Enable microphone access in your browser settings." });
     }
   }, [toggleMic]);
 
-
-  const onChipClick = (label: string) => {
-    const text = `Find me a top ${label} expert`;
-    setValue(text);
-    submit(text);
-  };
-
   return (
-    <div style={{ maxWidth: 820, margin: "0 auto", width: "100%" }}>
+    <div className="w-full max-w-3xl mx-auto">
       <style>{`
-        @keyframes riverGlow {
-          0%, 100% { box-shadow: 0 0 0 1px rgba(22,163,74,0.55), 0 0 30px rgba(22,163,74,0.3), 0 0 60px rgba(22,163,74,0.12); }
-          50% { box-shadow: 0 0 0 1px rgba(22,163,74,0.9), 0 0 45px rgba(22,163,74,0.5), 0 0 80px rgba(22,163,74,0.2); }
-        }
-        @keyframes riverPulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.08); opacity: 0.85; }
-        }
+        @keyframes riverPulseDot { 0%,100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.12); opacity: 0.85; } }
         @keyframes riverRingPulse {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.55); }
-          70% { box-shadow: 0 0 0 8px rgba(22,163,74,0); }
+          0% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0.55); }
+          70% { box-shadow: 0 0 0 10px hsl(var(--primary) / 0); }
+          100% { box-shadow: 0 0 0 0 hsl(var(--primary) / 0); }
         }
-        @keyframes riverFadeIn {
-          0% { opacity: 0; transform: translateY(6px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        .river-bar { transition: border-color .25s ease, box-shadow .3s ease, background .25s ease; }
-        .river-bar--focused { animation: riverGlow 2.6s ease-in-out infinite; border-color: rgba(22,163,74,0.7) !important; }
-        .river-r-logo { animation: riverRingPulse 2.2s ease-out infinite; }
-        .river-ask-btn { transition: transform .2s ease, background .2s ease, box-shadow .2s ease; }
-        .river-ask-btn:not(:disabled):hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(22,163,74,0.35); }
-        .river-chip { transition: background .2s ease, border-color .2s ease, color .2s ease, transform .2s ease; }
-        .river-chip:hover { background: rgba(22,163,74,0.1) !important; border-color: rgba(22,163,74,0.6) !important; color: #fff !important; transform: translateY(-1px); }
-        .river-mic--on { animation: riverPulse 1.2s ease-in-out infinite; color: #ef4444 !important; }
-        .river-card-in { animation: riverFadeIn .45s ease-out both; }
+        .river-r-badge { animation: riverRingPulse 2.2s ease-out infinite; }
+        .river-mic--on { color: hsl(0 84% 60%) !important; animation: riverPulseDot 1.2s ease-in-out infinite; }
       `}</style>
 
-      <div style={{ position: "absolute", marginTop: -28, display: "flex", alignItems: "center", gap: 6 }}>
-        <span style={{ width: 6, height: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 2s ease-in-out infinite" }} />
-        <span style={{ fontSize: 10, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.5)", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>
-          Powered by River AI
-        </span>
-      </div>
-
       <form onSubmit={onSubmit}>
-        <div
-          className={`river-bar ${focused ? "river-bar--focused" : ""}`}
-          style={{
-            display: "flex", alignItems: "center", gap: 10,
-            background: "#0a0a0a",
-            border: "1px solid #1f1f1f",
-            borderRadius: 999,
-            padding: "6px 8px 6px 8px",
-          }}
-        >
-          {/* Left: River R logo with green pulse */}
+        <div className="flex items-center gap-2 bg-background border border-border rounded-full pl-2 pr-2 h-14 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)] transition-all focus-within:border-primary focus-within:shadow-[0_0_0_4px_hsl(var(--primary)/0.15)]">
+          {/* River R logo */}
           <div
-            className="river-r-logo"
+            className="river-r-badge flex-shrink-0 h-10 w-10 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-base"
             aria-hidden="true"
-            style={{
-              height: 40, width: 40, borderRadius: 999,
-              background: "#0a0a0a", border: "1px solid #1f1f1f",
-              color: "#fff", display: "grid", placeItems: "center",
-              fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 16,
-              position: "relative", flexShrink: 0,
-            }}
           >
             R
-            <span style={{
-              position: "absolute", top: 2, right: 2, height: 8, width: 8, borderRadius: 999,
-              background: "#16A34A", boxShadow: "0 0 0 2px #0a0a0a",
-              animation: "riverPulse 1.6s ease-in-out infinite",
-            }} />
           </div>
 
           <input
             value={value}
             onChange={(e) => { setValue(e.target.value); if (micError) { setMicError(null); setError(null); } }}
-            onFocus={() => { setFocused(true); if (micError) { setMicError(null); setError(null); } }}
-            onBlur={() => setFocused(false)}
-            placeholder={placeholder}
-            style={{
-              flex: 1, background: "transparent", border: "none", outline: "none",
-              color: "#fff", fontSize: 15, padding: "14px 6px",
-            }}
+            onFocus={() => { if (micError) { setMicError(null); setError(null); } }}
+            placeholder="Describe what you need — River finds your perfect expert..."
+            className="flex-1 bg-transparent border-none outline-none text-foreground placeholder:text-foreground-muted text-[15px] px-2"
           />
 
-          {/* Right: mic icon */}
           <button
             type="button"
             onClick={toggleMic}
             aria-label={listening ? "Stop voice input" : "Start voice input"}
-            className={listening ? "river-mic--on" : ""}
-            style={{
-              background: "transparent", border: "none", cursor: "pointer",
-              color: "#888", padding: 8, display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}
+            className={`flex-shrink-0 p-2 rounded-full text-foreground-muted hover:text-foreground hover:bg-muted transition-colors ${listening ? "river-mic--on" : ""}`}
           >
             {listening ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
 
-          {/* Right: Ask River button */}
           <button
             type="submit"
             disabled={loading || value.trim().length < 3}
-            className="river-ask-btn"
-            style={{
-              height: 44, borderRadius: 999, padding: "0 18px",
-              background: loading || value.trim().length < 3 ? "#1f1f1f" : "#16A34A",
-              color: "#fff", border: "none",
-              cursor: loading || value.trim().length < 3 ? "default" : "pointer",
-              display: "inline-flex", alignItems: "center", gap: 8,
-              fontSize: 13, fontWeight: 700, letterSpacing: "0.01em",
-              flexShrink: 0,
-            }}
+            className="flex-shrink-0 inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.5)]"
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : (
-              <>Ask River <span aria-hidden="true">→</span></>
-            )}
+            {loading ? <Loader2 size={16} className="animate-spin" /> : (<>Ask River <span aria-hidden="true">→</span></>)}
           </button>
         </div>
       </form>
 
-
-      {/* Quick category chips */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, justifyContent: "center", marginTop: 20 }}>
-        {QUICK_CATEGORIES.map((c) => (
-          <button
-            key={c}
-            type="button"
-            onClick={() => onChipClick(c)}
-            className="river-chip"
-            style={{
-              padding: "8px 14px", borderRadius: 999,
-              border: "1px solid #1f1f1f", background: "rgba(255,255,255,0.02)",
-              color: "#bbb", fontSize: 12, fontWeight: 500, cursor: "pointer",
-            }}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
-
-      {/* Results */}
+      {/* Results / errors */}
       {(loading || stream || cards.length > 0 || error) && (
-        <div style={{ marginTop: 28, textAlign: "left" }}>
+        <div className="mt-6 text-left">
           {error && (
-            <div style={{ background: micError ? "rgba(234,179,8,0.06)" : "rgba(239,68,68,0.08)", border: `1px solid ${micError ? "rgba(234,179,8,0.35)" : "rgba(239,68,68,0.3)"}`, borderRadius: 14, padding: "14px 16px", color: micError ? "#fde047" : "#fca5a5", fontSize: 14 }}>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-                <AlertCircle size={18} style={{ marginTop: 2, flexShrink: 0, color: micError ? "#facc15" : "#fca5a5" }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, marginBottom: micError ? 8 : 0 }}>{error}</div>
+            <div className={`rounded-xl px-4 py-3.5 text-sm border ${micError ? "bg-yellow-50 border-yellow-200 text-yellow-900" : "bg-red-50 border-red-200 text-red-900"}`}>
+              <div className="flex items-start gap-2.5">
+                <AlertCircle size={18} className="mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className={`font-semibold ${micError ? "mb-2" : ""}`}>{error}</div>
                   {micError === "denied" && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                      <button
-                        type="button"
-                        onClick={retryMic}
-                        disabled={retryingMic}
-                        style={{
-                          display: "inline-flex", alignItems: "center", gap: 6,
-                          background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999,
-                          padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600,
-                          cursor: retryingMic ? "default" : "pointer",
-                          opacity: retryingMic ? 0.7 : 1,
-                        }}
-                      >
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <button type="button" onClick={retryMic} disabled={retryingMic}
+                        className="inline-flex items-center gap-1.5 bg-yellow-100 border border-yellow-300 rounded-full px-3 py-1.5 text-xs font-semibold text-yellow-900 disabled:opacity-60">
                         {retryingMic ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
                         {retryingMic ? "Retrying…" : "Retry mic"}
                       </button>
-                      <span style={{ color: "#a3a3a3", fontSize: 12 }}>or type your request above</span>
+                      <span className="text-xs text-foreground-muted">or type your request above</span>
                     </div>
                   )}
                   {micError === "no-speech" && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                      <button type="button" onClick={toggleMic} style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "rgba(234,179,8,0.12)", border: "1px solid rgba(234,179,8,0.4)", borderRadius: 999, padding: "6px 12px", color: "#fde047", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <button type="button" onClick={toggleMic}
+                        className="inline-flex items-center gap-1.5 bg-yellow-100 border border-yellow-300 rounded-full px-3 py-1.5 text-xs font-semibold text-yellow-900">
                         <RefreshCw size={12} /> Try again
                       </button>
-                      <span style={{ color: "#a3a3a3", fontSize: 12 }}>or type your request above</span>
+                      <span className="text-xs text-foreground-muted">or type your request above</span>
                     </div>
                   )}
                   {micError === "unsupported" && (
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-                      <span style={{ color: "#a3a3a3", fontSize: 12 }}>Switch to Chrome, Edge, or Safari, or type your request above</span>
-                      <Keyboard size={14} style={{ color: "#a3a3a3" }} />
+                    <div className="flex flex-wrap gap-2 items-center">
+                      <span className="text-xs text-foreground-muted">Switch to Chrome, Edge, or Safari, or type your request above</span>
+                      <Keyboard size={14} className="text-foreground-muted" />
                     </div>
                   )}
                 </div>
@@ -454,56 +264,42 @@ export function RiverCommandBar() {
           )}
 
           {(stream || (loading && !error)) && (
-            <div style={{ background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 16, padding: 18, color: "#e5e5e5", fontSize: 14, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
-                <span style={{ height: 22, width: 22, borderRadius: 999, background: "#16A34A", color: "#fff", display: "grid", placeItems: "center", fontFamily: "'Syne', system-ui, sans-serif", fontWeight: 800, fontSize: 11 }}>R</span>
-                <span style={{ fontSize: 11, letterSpacing: "0.18em", textTransform: "uppercase", color: "#888", fontFamily: "'JetBrains Mono', ui-monospace, monospace", fontWeight: 600 }}>River</span>
+            <div className="mt-3 bg-background border border-border rounded-2xl p-5 text-foreground text-sm leading-relaxed whitespace-pre-wrap">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="h-5 w-5 rounded-full bg-primary text-primary-foreground grid place-items-center font-bold text-[10px]">R</span>
+                <span className="text-[11px] tracking-[0.18em] uppercase text-foreground-muted font-semibold">River</span>
               </div>
               {stream || (
-                <span style={{ display: "inline-flex", gap: 4 }}>
-                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 1s ease-in-out infinite" }} />
-                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 1s ease-in-out infinite .15s" }} />
-                  <span style={{ height: 6, width: 6, borderRadius: 999, background: "#16A34A", animation: "riverPulse 1s ease-in-out infinite .3s" }} />
+                <span className="inline-flex gap-1">
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse [animation-delay:.15s]" />
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse [animation-delay:.3s]" />
                 </span>
               )}
             </div>
           )}
 
           {cards.length > 0 && (
-            <div style={{ marginTop: 16, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 12 }}>
-              {cards.map((c, i) => (
-                <Link
-                  key={c.id}
-                  to={`/gig/${c.slug || c.id}`}
-                  className="river-card-in"
-                  style={{
-                    display: "block", textDecoration: "none",
-                    background: "#0a0a0a", border: "1px solid #1a1a1a", borderRadius: 14, padding: 16,
-                    color: "#fff", transition: "border-color .2s ease, transform .2s ease",
-                    animationDelay: `${i * 90}ms`,
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgba(22,163,74,0.5)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "#1a1a1a"; e.currentTarget.style.transform = "translateY(0)"; }}
-                >
-                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
-                    {c.title}
-                  </div>
-                  <div style={{ fontSize: 12, color: "#888", marginBottom: 10 }}>by {c.seller_name}</div>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div className="mt-4 grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))" }}>
+              {cards.map((c) => (
+                <Link key={c.id} to={`/gig/${c.slug || c.id}`}
+                  className="block bg-background border border-border rounded-2xl p-4 text-foreground hover:border-primary/50 hover:-translate-y-0.5 transition-all">
+                  <div className="text-sm font-semibold mb-1 line-clamp-2">{c.title}</div>
+                  <div className="text-xs text-foreground-muted mb-2.5">by {c.seller_name}</div>
+                  <div className="flex items-center justify-between">
                     {c.reviews > 0 ? (
-                      <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, color: "#ccc" }}>
-                        <Star size={12} className="fill-current" style={{ color: "#fbbf24" }} />
-                        <span style={{ fontWeight: 600, color: "#fff" }}>{c.rating.toFixed(1)}</span>
-                        <span style={{ color: "#888" }}>({c.reviews})</span>
+                      <span className="inline-flex items-center gap-1 text-xs">
+                        <Star size={12} className="fill-yellow-400 text-yellow-400" />
+                        <span className="font-semibold">{c.rating.toFixed(1)}</span>
+                        <span className="text-foreground-muted">({c.reviews})</span>
                       </span>
-                    ) : <span style={{ fontSize: 11, color: "#888" }}>New</span>}
-                    <span style={{ fontSize: 13, fontWeight: 700 }}>${c.price}</span>
+                    ) : <span className="text-[11px] text-foreground-muted">New</span>}
+                    <span className="text-sm font-bold">${c.price}</span>
                   </div>
                 </Link>
               ))}
             </div>
           )}
-
         </div>
       )}
     </div>
