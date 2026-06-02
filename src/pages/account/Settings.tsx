@@ -142,15 +142,28 @@ export default function Settings() {
     toast.success("Password updated");
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") === "appearance" ? "appearance" : "profile";
+
   return (
     <AppShell>
-      <div className="max-w-3xl pb-32 space-y-10">
+      <div className="max-w-3xl pb-32 space-y-8">
         <div>
           <Eyebrow>Account</Eyebrow>
           <h1 className="display-md mt-2">Settings</h1>
         </div>
 
-        {/* PROFILE PHOTO */}
+        <Tabs value={tab} onValueChange={(v) => setSearchParams({ tab: v })}>
+          <TabsList>
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="appearance" className="mt-8">
+            <AppearanceTab />
+          </TabsContent>
+
+          <TabsContent value="profile" className="mt-8 space-y-10">
         <section className="space-y-4">
           <Eyebrow>Profile photo</Eyebrow>
           <AvatarSection
