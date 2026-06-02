@@ -54,11 +54,12 @@ type TopSeller = {
 };
 
 const TESTIMONIALS = [
-  { quote: "KATEXS replaced three agency retainers in a month. River matched us with a voice AI expert who shipped our IVR in 6 days — clients think we have a 20-person ops team.", name: "Marcus Tan", title: "Founder, Northbound HVAC" },
-  { quote: "We used to lose half our after-hours leads. The expert River sent us built an automation that texts back in 30 seconds. Booked revenue is up 38% this quarter.", name: "Priya Shah", title: "COO, Bright Smile Dental Group" },
-  { quote: "I've hired on every freelance platform. KATEXS is the only one where the AI actually understands the brief. Zero bad-fit pitches, escrow that just works.", name: "Diego Alvarez", title: "CEO, Helix Home Services" },
-  { quote: "Our roofing crew isn't technical. River walked us through it in plain English and matched us with someone who automated quoting end-to-end. Game changer.", name: "Sarah Okonkwo", title: "Owner, Pinnacle Roofing Co." },
-  { quote: "Built our entire client onboarding flow with an expert from KATEXS in under two weeks. Cheaper than one month of our old SaaS stack — and it's ours.", name: "Kevin Herring", title: "Managing Partner, Herring Legal" },
+  { quote: "KATEXS replaced three agency retainers in a month. River matched us with a voice AI expert who shipped our IVR in 6 days — clients think we have a 20-person ops team.", name: "Marcus Tan", title: "Founder, Northbound HVAC", avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=faces" },
+  { quote: "We used to lose half our after-hours leads. The expert River sent us built an automation that texts back in 30 seconds. Booked revenue is up 38% this quarter.", name: "Priya Shah", title: "COO, Bright Smile Dental Group", avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=160&h=160&fit=crop&crop=faces" },
+  { quote: "I've hired on every freelance platform. KATEXS is the only one where the AI actually understands the brief. Zero bad-fit pitches, escrow that just works.", name: "Diego Alvarez", title: "CEO, Helix Home Services", avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=160&h=160&fit=crop&crop=faces" },
+  { quote: "Our roofing crew isn't technical. River walked us through it in plain English and matched us with someone who automated quoting end-to-end. Game changer.", name: "Sarah Okonkwo", title: "Owner, Pinnacle Roofing Co.", avatar: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=160&h=160&fit=crop&crop=faces" },
+  { quote: "We launched a new service line in 3 weeks with a KATEXS expert handling automations, copy, and the booking flow. Our old agency quoted 3 months.", name: "Amelia Chen", title: "Founder, Clearwater Med Spa", avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=160&h=160&fit=crop&crop=faces" },
+  { quote: "River is the first AI that doesn't waste my time. It scoped my project, found the right expert, and stayed in the loop until delivery. This is the future of hiring.", name: "Jamal Whitfield", title: "Director of Ops, Apex Auto Group", avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=160&h=160&fit=crop&crop=faces" },
 ];
 
 function TestimonialsCarousel() {
@@ -154,11 +155,10 @@ function TestimonialsCarousel() {
                   <div style={{ display: "flex", alignItems: "center", gap: 12, paddingTop: 16, borderTop: "1px solid #1a1a1a" }}>
                     <div style={{
                       width: 40, height: 40, borderRadius: 999,
-                      background: "rgba(22,163,74,0.12)", color: "#16A34A",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 600, fontSize: 14,
+                      overflow: "hidden", flexShrink: 0,
+                      background: "rgba(22,163,74,0.12)",
                     }}>
-                      {t.name.split(" ").map((n) => n[0]).join("").slice(0, 2)}
+                      <img src={t.avatar} alt={t.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>{t.name}</div>
