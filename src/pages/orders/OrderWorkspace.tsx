@@ -26,7 +26,7 @@ interface Order {
   buyer: Party | null;
   seller: Party | null;
 }
-interface Requirement { id: string; question: string; field_type: string; is_required: boolean; sort_order: number; }
+
 interface Delivery { id: string; message: string | null; file_urls: string[]; created_at: string; is_revision: boolean; }
 
 export default function OrderWorkspace() {
@@ -36,8 +36,6 @@ export default function OrderWorkspace() {
 
   // All hooks at top — never below an early return.
   const [order, setOrder] = useState<Order | null>(null);
-  const [reqs, setReqs] = useState<Requirement[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveryMsg, setDeliveryMsg] = useState("");
   const [deliveryFiles, setDeliveryFiles] = useState<File[]>([]);
@@ -64,7 +62,7 @@ export default function OrderWorkspace() {
         return;
       }
 
-      const [gigRes, pkgRes, profilesRes, reqsRes, delivRes] = await Promise.all([
+      const [gigRes, pkgRes, profilesRes, delivRes] = await Promise.all([
         o.gig_id
           ? supabase.from("gigs").select("title, thumbnail_url").eq("id", o.gig_id).maybeSingle()
           : Promise.resolve({ data: null, error: null } as any),
@@ -72,9 +70,6 @@ export default function OrderWorkspace() {
           ? supabase.from("gig_packages").select("title, delivery_days, revisions").eq("id", o.package_id).maybeSingle()
           : Promise.resolve({ data: null, error: null } as any),
         supabase.from("profiles").select("id, full_name, username, avatar_url, email").in("id", [o.buyer_id, o.seller_id]),
-        o.gig_id
-          ? supabase.from("gig_requirements").select("*").eq("gig_id", o.gig_id).order("sort_order")
-          : Promise.resolve({ data: [], error: null } as any),
         supabase.from("order_deliveries").select("*").eq("order_id", o.id).order("created_at", { ascending: false }),
       ]);
 
@@ -89,7 +84,6 @@ export default function OrderWorkspace() {
         buyer,
         seller,
       });
-      setReqs((reqsRes.data as any) ?? []);
       setDeliveries((delivRes.data as any) ?? []);
     } catch (e: any) {
       console.error("OrderWorkspace load failed", e);
@@ -101,6 +95,26 @@ export default function OrderWorkspace() {
   };
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+
+  // Realtime: refresh on any order or delivery change
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`order:${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `id=eq.${id}` },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "order_deliveries", filter: `order_id=eq.${id}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line
+  }, [id]);
 
   if (loading) {
     return (
@@ -154,26 +168,6 @@ export default function OrderWorkspace() {
   const counterpart = isBuyer ? order.seller : order.buyer;
   const orderTitle = order.gigs?.title ?? order.project_title ?? "Custom project";
 
-  const submitRequirements = async () => {
-    if (!order) return;
-    setBusy(true);
-    try {
-      const rows = reqs
-        .filter((r) => answers[r.id])
-        .map((r) => ({ order_id: order.id, requirement_id: r.id, answer: answers[r.id] }));
-      if (rows.length) await supabase.from("order_requirements_answers").insert(rows);
-      const newDeadline = new Date(Date.now() + (order.gig_packages?.delivery_days ?? 7) * 86400000).toISOString();
-      const { error } = await supabase.from("orders").update({
-        requirements_submitted: true,
-        requirements_submitted_at: new Date().toISOString(),
-        status: "active",
-        delivery_deadline: newDeadline,
-      }).eq("id", order.id);
-      if (error) throw error;
-      toast.success("Requirements sent");
-      load();
-    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
-  };
 
   const deliver = async () => {
     setBusy(true);
@@ -315,27 +309,14 @@ export default function OrderWorkspace() {
           <section className="mt-8 bg-background border border-border rounded-xl p-6">
             <h2 className="text-lg font-semibold mb-1">Requirements</h2>
             <p className="text-sm text-foreground-muted mb-4">
-              {isBuyer ? "Answer the expert's questions to start the project." : "Waiting for partner to send requirements."}
+              {isBuyer
+                ? "Send your requirements so the seller can start the project."
+                : "Waiting for the buyer to send their requirements."}
             </p>
-            {reqs.length === 0 && isBuyer && (
-              <p className="text-sm text-foreground-muted italic">No questions — confirm to start.</p>
-            )}
-            <div className="space-y-4">
-              {reqs.map((r) => (
-                <div key={r.id}>
-                  <label className="block text-sm font-medium mb-1.5">
-                    {r.question} {r.is_required && <span className="text-destructive">*</span>}
-                  </label>
-                  {isBuyer ? (
-                    <Textarea value={answers[r.id] ?? ""} onChange={(e) => setAnswers((a) => ({ ...a, [r.id]: e.target.value }))} rows={3} />
-                  ) : (
-                    <div className="text-sm text-foreground-muted italic">—</div>
-                  )}
-                </div>
-              ))}
-            </div>
             {isBuyer && (
-              <Button onClick={submitRequirements} disabled={busy} className="mt-5">Send requirements</Button>
+              <Button asChild>
+                <Link to={`/orders/${order.id}/requirements`}>Send requirements</Link>
+              </Button>
             )}
           </section>
         )}
