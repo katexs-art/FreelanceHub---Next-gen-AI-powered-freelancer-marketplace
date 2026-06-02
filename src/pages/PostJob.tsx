@@ -2,6 +2,7 @@ import { useState, KeyboardEvent, useRef, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { RecommendationsBlock } from "@/components/hq/RecommendationsBlock";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
