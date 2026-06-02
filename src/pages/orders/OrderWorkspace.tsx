@@ -102,6 +102,26 @@ export default function OrderWorkspace() {
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
 
+  // Realtime: refresh on any order or delivery change
+  useEffect(() => {
+    if (!id) return;
+    const channel = supabase
+      .channel(`order:${id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders", filter: `id=eq.${id}` },
+        () => load(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "order_deliveries", filter: `order_id=eq.${id}` },
+        () => load(),
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+    // eslint-disable-next-line
+  }, [id]);
+
   if (loading) {
     return (
       <AppShell>
