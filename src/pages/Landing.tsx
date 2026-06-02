@@ -60,6 +60,7 @@ export default function Landing() {
   const [sellersLoading, setSellersLoading] = useState(true);
   const [featuredGigs, setFeaturedGigs] = useState<any[]>([]);
   const [gigsLoading, setGigsLoading] = useState(true);
+  const [stats, setStats] = useState<{ experts: string; paid: string; satisfaction: string } | null>(null);
   const SR: any = typeof window !== "undefined" ? ((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition) : null;
   const [voiceSupported] = useState<boolean>(!!SR);
   const [listening, setListening] = useState(false);
