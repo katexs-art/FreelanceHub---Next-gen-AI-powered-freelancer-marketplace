@@ -50,6 +50,7 @@ const PostJob = lazy(() => import("./pages/PostJob"));
 const Projects = lazy(() => import("./pages/Projects"));
 const PlaceBid = lazy(() => import("./pages/PlaceBid"));
 const ProjectBids = lazy(() => import("./pages/ProjectBids"));
+const ProjectDetail = lazy(() => import("./pages/ProjectDetail"));
 const CategoryPage = lazy(() => import("./pages/CategoryPage"));
 const GigDetail = lazy(() => import("./pages/GigDetail"));
 const SellerProfile = lazy(() => import("./pages/SellerProfile"));
