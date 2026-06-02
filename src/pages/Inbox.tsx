@@ -564,12 +564,34 @@ export default function Inbox() {
                   </div>
 
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0, marginLeft: 8 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0, marginLeft: 12 }}>
                   {user && active.other?.id && (
                     <CustomOfferComposer
                       conversationId={active.id}
                       sellerId={user.id}
                       buyerId={active.participant_one === user.id ? active.participant_two : active.participant_one}
+                      trigger={
+                        <button
+                          type="button"
+                          style={{
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: 6,
+                            background: "#4F46E5",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 999,
+                            padding: "7px 14px",
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: "pointer",
+                            whiteSpace: "nowrap",
+                            boxShadow: "0 4px 12px -4px rgba(79,70,229,0.4)",
+                          }}
+                        >
+                          <Paperclip size={14} /> Send offer
+                        </button>
+                      }
                     />
                   )}
                   <button
@@ -591,6 +613,7 @@ export default function Inbox() {
                     <MoreHorizontal size={18} />
                   </button>
                 </div>
+
               </header>
 
               {/* Messages area */}
@@ -733,18 +756,19 @@ export default function Inbox() {
                           <div style={{ maxWidth: "65%" }}>
                             <div
                               style={{
-                                background: mine ? "#4F46E5" : "#FFFFFF",
+                                background: mine ? "#4F46E5" : "#F1F5F9",
                                 color: mine ? "#FFFFFF" : "#0F172A",
-                                border: mine ? "none" : "1px solid #E2E8F0",
+                                border: "none",
                                 borderRadius: mine ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
                                 padding: "10px 14px",
                                 fontSize: 14,
                                 lineHeight: 1.5,
                                 whiteSpace: "pre-line",
                                 wordBreak: "break-word",
-                                boxShadow: mine ? "0 4px 12px -4px rgba(79,70,229,0.4)" : "0 1px 2px rgba(15,23,42,0.04)",
+                                boxShadow: mine ? "0 4px 12px -4px rgba(79,70,229,0.4)" : "none",
                               }}
                             >
+
                               {m.content}
                             </div>
                             <div style={{ fontSize: 11, color: "#94A3B8", marginTop: 4, textAlign: mine ? "right" : "left" }}>

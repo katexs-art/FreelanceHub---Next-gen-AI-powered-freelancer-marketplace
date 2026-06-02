@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import { FileText } from "lucide-react";
 
 export function CustomOfferComposer({
-  conversationId, sellerId, buyerId, onSent,
-}: { conversationId: string; sellerId: string; buyerId: string; onSent?: () => void }) {
+  conversationId, sellerId, buyerId, onSent, trigger,
+}: { conversationId: string; sellerId: string; buyerId: string; onSent?: () => void; trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
@@ -51,10 +51,13 @@ export function CustomOfferComposer({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" type="button">
-          <FileText className="h-4 w-4" /> Send offer
-        </Button>
+        {trigger ?? (
+          <Button variant="outline" size="sm" type="button">
+            <FileText className="h-4 w-4" /> Send offer
+          </Button>
+        )}
       </DialogTrigger>
+
       <DialogContent>
         <DialogHeader><DialogTitle>Send a custom offer</DialogTitle></DialogHeader>
         <div className="space-y-3">
