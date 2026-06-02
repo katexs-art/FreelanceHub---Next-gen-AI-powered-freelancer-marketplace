@@ -36,8 +36,6 @@ export default function OrderWorkspace() {
 
   // All hooks at top — never below an early return.
   const [order, setOrder] = useState<Order | null>(null);
-  const [reqs, setReqs] = useState<Requirement[]>([]);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [deliveries, setDeliveries] = useState<Delivery[]>([]);
   const [deliveryMsg, setDeliveryMsg] = useState("");
   const [deliveryFiles, setDeliveryFiles] = useState<File[]>([]);
@@ -174,26 +172,6 @@ export default function OrderWorkspace() {
   const counterpart = isBuyer ? order.seller : order.buyer;
   const orderTitle = order.gigs?.title ?? order.project_title ?? "Custom project";
 
-  const submitRequirements = async () => {
-    if (!order) return;
-    setBusy(true);
-    try {
-      const rows = reqs
-        .filter((r) => answers[r.id])
-        .map((r) => ({ order_id: order.id, requirement_id: r.id, answer: answers[r.id] }));
-      if (rows.length) await supabase.from("order_requirements_answers").insert(rows);
-      const newDeadline = new Date(Date.now() + (order.gig_packages?.delivery_days ?? 7) * 86400000).toISOString();
-      const { error } = await supabase.from("orders").update({
-        requirements_submitted: true,
-        requirements_submitted_at: new Date().toISOString(),
-        status: "active",
-        delivery_deadline: newDeadline,
-      }).eq("id", order.id);
-      if (error) throw error;
-      toast.success("Requirements sent");
-      load();
-    } catch (e: any) { toast.error(e.message); } finally { setBusy(false); }
-  };
 
   const deliver = async () => {
     setBusy(true);
