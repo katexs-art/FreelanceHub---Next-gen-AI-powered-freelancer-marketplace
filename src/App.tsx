@@ -167,6 +167,7 @@ const App = () => (
           <RiverWidget />
         </Suspense>
         </ErrorBoundary>
+        </ThemeProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
