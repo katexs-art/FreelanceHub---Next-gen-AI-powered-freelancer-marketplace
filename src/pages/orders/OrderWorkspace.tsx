@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare } from "lucide-react";
+import { Clock, Package, CheckCircle2, Upload, RotateCw, MessageSquare, Wifi } from "lucide-react";
 import { LeaveReview } from "@/components/marketplace/LeaveReview";
 import { OrderResolutionActions } from "@/components/marketplace/OrderResolutionActions";
 import { OrderTimeline, DeliveryCountdown } from "@/components/marketplace/OrderTimeline";
@@ -44,6 +44,10 @@ export default function OrderWorkspace() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [disputeOpen, setDisputeOpen] = useState(false);
   const [disputeReason, setDisputeReason] = useState("");
+  const [livePulse, setLivePulse] = useState(false);
+  const prevStatus = useRef<string | null>(null);
+  const prevDeliveryCount = useRef<number>(0);
+  const toastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const load = async () => {
     if (!id) return;
@@ -77,14 +81,30 @@ export default function OrderWorkspace() {
       const buyer = profiles.find((p) => p.id === o.buyer_id) ?? null;
       const seller = profiles.find((p) => p.id === o.seller_id) ?? null;
 
-      setOrder({
+      const newOrder = {
         ...(o as any),
         gigs: gigRes.data ?? null,
         gig_packages: pkgRes.data ?? null,
         buyer,
         seller,
-      });
-      setDeliveries((delivRes.data as any) ?? []);
+      };
+      const newDeliveries = (delivRes.data as any) ?? [];
+
+      // Detect meaningful realtime changes for toast
+      const statusChanged = prevStatus.current !== null && prevStatus.current !== newOrder.status;
+      const newDeliveryArrived = prevDeliveryCount.current !== 0 && newDeliveries.length > prevDeliveryCount.current;
+
+      if (statusChanged) {
+        toast.success(`Order updated: ${newOrder.status.replace(/_/g, " ")}`);
+      } else if (newDeliveryArrived) {
+        toast.success("New delivery received");
+      }
+
+      prevStatus.current = newOrder.status;
+      prevDeliveryCount.current = newDeliveries.length;
+
+      setOrder(newOrder);
+      setDeliveries(newDeliveries);
     } catch (e: any) {
       console.error("OrderWorkspace load failed", e);
       setLoadError(e.message ?? "Failed to load order");
@@ -99,17 +119,23 @@ export default function OrderWorkspace() {
   // Realtime: refresh on any order or delivery change
   useEffect(() => {
     if (!id) return;
+    const triggerLoad = () => {
+      setLivePulse(true);
+      if (toastTimeout.current) clearTimeout(toastTimeout.current);
+      toastTimeout.current = setTimeout(() => setLivePulse(false), 2500);
+      load();
+    };
     const channel = supabase
       .channel(`order:${id}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "orders", filter: `id=eq.${id}` },
-        () => load(),
+        triggerLoad,
       )
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "order_deliveries", filter: `order_id=eq.${id}` },
-        () => load(),
+        triggerLoad,
       )
       .subscribe();
     return () => { supabase.removeChannel(channel); };
@@ -262,6 +288,10 @@ export default function OrderWorkspace() {
             </div>
           </div>
           <div className="text-right">
+            <div className="flex items-center justify-end gap-1.5 text-xs text-green-600 mb-1">
+              <Wifi className={`h-3 w-3 ${livePulse ? "animate-pulse" : ""}`} />
+              <span className={livePulse ? "font-medium" : ""}>Live</span>
+            </div>
             <div className="text-xs text-foreground-muted">Total</div>
             <div className="text-xl font-bold">${order.price}</div>
           </div>
