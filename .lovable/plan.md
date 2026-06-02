@@ -1,78 +1,42 @@
-## Customizable HQ Dashboard with Widget Control
+## Settings page upgrade
 
-### 1. Route & Page
-- Add new route `/hq` → new `src/pages/Hq.tsx`, wrapped in `ProtectedRoute` + `AppShell`.
-- Update sidebar/nav links currently pointing to `/seller/dashboard` and `/buyer/dashboard` to also expose `/hq` (keep existing dashboards intact; `/hq` is the new unified, customizable workspace).
-- Page adapts widget availability based on `profile.role` (seller-only widgets hidden for pure clients, and vice versa).
+### 1. Form & field changes (`src/pages/account/Settings.tsx`)
+- Remove the **Website URL** field (text input + `website_url` from form payload).
+- **Display name**: 600ms debounced auto-save to `profiles.full_name` with a small "Saved" indicator; sticky save bar stays for the other fields.
+- **Username**: read-only input with a `Lock` icon and tooltip "Username cannot be changed". Remove the availability checker logic.
+- **Country**: replace the free-text `Location` input with a searchable `Popover` + `Command` combobox. New `src/lib/countries.ts` lists all ~195 ISO countries. Persists to `profiles.country` (already exists). Filters as you type (2-letter prefix surfaces matches).
+- **Languages**: searchable multi-select combobox (same `Popover`+`Command` pattern) backed by `src/lib/languages.ts` (~100 entries). Selected languages render as removable chips above the trigger. Replaces the free-form `ChipInput` for languages.
+- **Bio**: stays a textarea.
+- **Required validation**: on save, if `full_name`, `country`, or `languages` is empty → red border (`border-destructive`) + inline `Required` helper. Block save until resolved.
 
-### 2. Database
-Migration adds to `profiles`:
-- `dashboard_layout jsonb NOT NULL DEFAULT '[]'::jsonb`
+### 2. Theme switcher fix (`src/index.css`)
+The themes already write `kx-theme-*` on `AppShell`, but Ocean/Forest/Sunset/Purple Haze only change `--primary`, so the dashboard barely shifts. Fix:
+- Extend each non-midnight theme block to also tint `--background-subtle`, `--sidebar-accent`, `--secondary`, `--ring`, and `--sidebar-ring` with a low-saturation wash of the accent hue (e.g. Ocean → `--background-subtle: 217 60% 97%`, `--sidebar-accent: 217 60% 94%`).
+- Add an explicit empty `.kx-theme-clean-white {}` block as a reset target.
+- No JS change needed — `useTheme` already persists `theme_preference` to Supabase, hydrates from `localStorage`, and `AppShell` re-renders on store change. Verify after the CSS change.
 
-Shape:
-```json
-[
-  { "id": "active_orders", "visible": true, "collapsed": false },
-  { "id": "messages",      "visible": true, "collapsed": false },
-  ...
-]
-```
-Empty array → fall back to role-based default (Active Orders, Messages, Earnings, My Gigs for sellers; Active Orders, Messages, Open Projects, Notifications for buyers).
+### 3. Visual cleanup (`src/pages/account/Settings.tsx`)
+- Wrap each section (Profile photo, Basic info, Credentials & expertise, Security, Preferences) in a bordered card: `rounded-2xl border border-border bg-card p-6 space-y-5`. Drop the `HairlineDivider` separators in favor of the card borders + `space-y-6` between cards.
+- Constrain inputs/selects/textareas with `max-w-[60%]` (full-width below `sm`).
+- Section labels: change `Eyebrow` color in this page to `text-[#6B7280]` for readability.
+- Tighten spacing: `space-y-6` between cards, `space-y-4` inside.
 
-### 3. Widget registry
-New `src/components/hq/widgets/index.ts` exporting a typed registry:
-```
-WIDGETS = {
-  active_orders, messages, earnings, my_gigs,
-  analytics, open_projects, river_ai, notifications
-}
-```
-Each entry: `{ id, title, icon, roles: ('seller'|'client'|'admin')[], minHeight, Component }`.
-Each `Component` is a small self-contained card that fetches its own data from Supabase (reusing existing queries already used in SellerDashboard/BuyerDashboard/Inbox/MyGigs).
+### 4. Recommendations rail
+New file `src/components/settings/ExpertRecommendationsRail.tsx`:
+- Reads recent gig views from `localStorage` via existing `getRecentlyViewed`.
+- If history present: fetches those gigs → derives primary categories → fetches `profiles` where `seller_status='approved'`, matching `primary_category`, ordered by `river_score desc`, limit 12.
+- Fallback (no history): top sellers ordered by `river_score desc, average_rating desc`, limit 12.
+- Renders 3 cards visible at a time (avatar, full name, `primary_category`, `average_rating ★`, "View" → `/u/{username}`). 200px wide column. Rotates the 3-card window every 30s with a fade.
+- Header chip: `Experts you might like`.
 
-Widgets:
-- **Active Orders** — `orders` where status in (`in_progress`,`delivered`) for current user (buyer or seller side).
-- **Messages** — last 3 `conversations` with avatar + preview + inline "Reply" → opens Inbox at that conversation.
-- **Earnings Overview** — seller_accounts: available / pending / lifetime.
-- **My Gigs** — top active gigs with impressions + total_orders.
-- **Analytics** — profile views + gig clicks this week (sum `gigs.clicks`/`impressions` for the user).
-- **Open Projects** — latest `project_posts` where status='open' (for sellers to bid).
-- **River AI** — compact ask box, posts to existing `river-chat` edge function, shows last answer.
-- **Notifications** — last 8 from `notifications`.
+Mount in Settings: switch container from `max-w-3xl` to a two-column grid `grid lg:grid-cols-[minmax(0,1fr)_220px] gap-8`; rail collapses below the form on smaller screens.
 
-### 4. Layout + drag/drop
-- Use **@dnd-kit/core** + **@dnd-kit/sortable** (lightweight, already common in shadcn ecosystems) — add as dependency.
-- 2-column responsive grid on desktop (`md:grid-cols-2`), single column on mobile. Widgets flow in order from saved layout.
-- Each `WidgetCard` shell renders: header (drag handle ⠿, title, collapse chevron, hide eye) + body (Component or hidden when collapsed).
-- Only in **edit mode**: dashed border, drag handle active, hide button visible. In view mode the card is clean.
+### 5. New files
+- `src/lib/countries.ts`
+- `src/lib/languages.ts`
+- `src/components/ui/searchable-select.tsx` (shared single + multi combobox built on `Popover` + `Command`)
+- `src/components/settings/ExpertRecommendationsRail.tsx`
 
-### 5. Edit mode UX
-- Top-right of `/hq`: `Customize Dashboard` button (becomes `Done` in edit mode).
-- Edit mode state local to page; entering it does NOT auto-save — saves on each reorder/hide/show via debounced `updateLayout()`.
-- `Add Widget` button (visible in edit mode) opens a `Dialog` showing grid of currently-hidden widgets (icon + title + "Add"). Adding appends to end with `visible: true`.
-
-### 6. State + persistence hook
-New `src/hooks/useDashboardLayout.ts`:
-- Reads `profile.dashboard_layout`; merges with registry to drop unknown ids and append any newly-introduced widgets at the end (hidden by default for existing users so we don't surprise them).
-- Exposes `{ layout, visible, hidden, reorder(ids), toggleVisible(id), toggleCollapse(id), addWidget(id) }`.
-- Persists via `supabase.from('profiles').update({ dashboard_layout })` (debounced 400ms), with localStorage mirror so layout loads instantly before profile fetch resolves.
-
-### 7. Files
-- `supabase/migrations/<new>.sql` — add `dashboard_layout` column
-- `src/pages/Hq.tsx` — new
-- `src/hooks/useDashboardLayout.ts` — new
-- `src/components/hq/WidgetCard.tsx` — shell with drag/collapse/hide chrome
-- `src/components/hq/AddWidgetDialog.tsx` — new
-- `src/components/hq/widgets/*.tsx` — 8 widget components
-- `src/components/hq/widgets/index.ts` — registry
-- `src/App.tsx` — register `/hq` route
-- `src/components/layout/AppShell.tsx` — add HQ to sidebar nav
-- `package.json` — add `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
-
-### 8. Verification
-- New user lands on `/hq` → sees default 4 widgets for their role.
-- Click `Customize Dashboard` → dashed borders + drag handles + hide buttons appear.
-- Drag to reorder → order persists across reload.
-- Hide widget → moves to `Add Widget` dialog; re-add restores it at end.
-- Collapse toggle hides body, persists.
-- Theme from Settings still applies (page is AppShell-wrapped).
+### 6. Out of scope
+- No DB migration (`theme_preference`, `country`, `languages` columns already exist on `profiles`).
+- No changes to public pages, auth, or other dashboards.
