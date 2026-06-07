@@ -107,7 +107,7 @@ export function SiteFooter() {
 
           {/* Middle — For Buyers */}
           <div className="lg:col-span-2">
-            <h4 className="text-white text-sm font-semibold mb-4">For Buyers</h4>
+            <h4 className="text-white text-sm font-semibold mb-4">For Partners</h4>
             <ul className="space-y-3">
               {BUYER_LINKS.map(({ label, href }) => (
                 <li key={label}>
@@ -121,7 +121,7 @@ export function SiteFooter() {
 
           {/* Middle — For Sellers */}
           <div className="lg:col-span-2">
-            <h4 className="text-white text-sm font-semibold mb-4">For Sellers</h4>
+            <h4 className="text-white text-sm font-semibold mb-4">For Experts</h4>
             <ul className="space-y-3">
               {SELLER_LINKS.map(({ label, href }) => (
                 <li key={label}>

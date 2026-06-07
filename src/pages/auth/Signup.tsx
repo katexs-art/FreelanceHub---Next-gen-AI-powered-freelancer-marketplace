@@ -178,14 +178,14 @@ export default function Signup() {
           onClick={() => setRole("client")}
           className={role === "client" ? "on-black" : ""}
         >
-          I'm buying
+          I'm a Partner
         </button>
         <button
           type="button"
           onClick={() => setRole("seller")}
           className={role === "seller" ? "on-green" : ""}
         >
-          I'm selling
+          I'm an Expert
         </button>
       </div>
 

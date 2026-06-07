@@ -61,15 +61,34 @@ export default function PlaceBid() {
       toast({ title: "Could not submit proposal", description: error.message, variant: "destructive" });
       return;
     }
-    // Best-effort email
+    // Email to partner: bid received
     if (project?.buyer_id) {
-      supabase.functions.invoke("send-marketplace-email", {
-        body: {
-          to_user_id: project.buyer_id,
-          subject: "A new proposal came in on your project",
-          body: "A new proposal came in on your project — review it now.",
-        },
-      }).catch(() => {});
+      (async () => {
+        try {
+          const [buyerRes, expertRes] = await Promise.all([
+            supabase.from("profiles").select("email, full_name").eq("id", project.buyer_id).maybeSingle(),
+            supabase.from("profiles").select("full_name, avg_rating, total_reviews").eq("id", user!.id).maybeSingle(),
+          ]);
+          const buyerEmail = buyerRes.data?.email;
+          if (!buyerEmail) return;
+          const expertName = expertRes.data?.full_name ?? "An expert";
+          const rating = expertRes.data?.avg_rating ?? null;
+          const reviewCount = expertRes.data?.total_reviews ?? 0;
+          await supabase.functions.invoke("send-marketplace-email", {
+            body: {
+              template: "new_message",
+              to: buyerEmail,
+              data: {
+                sender_name: expertName,
+                preview:
+                  `New bid on "${project.title}" — $${amount}, ${days} days delivery.` +
+                  (rating ? ` ${expertName} is rated ${Number(rating).toFixed(1)}★ (${reviewCount} reviews).` : "") +
+                  ` Proposal: ${cover.trim().slice(0, 150)}`,
+              },
+            },
+          });
+        } catch { /* best-effort */ }
+      })();
     }
     toast({ title: "Your proposal was submitted successfully" });
     nav("/projects");

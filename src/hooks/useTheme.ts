@@ -17,7 +17,7 @@ const STORAGE_KEY = "kx-theme";
 
 const listeners = new Set<(s: { saved: ThemeId; preview: ThemeId | null }) => void>();
 let store: { saved: ThemeId; preview: ThemeId | null } = {
-  saved: (typeof window !== "undefined" && (localStorage.getItem(STORAGE_KEY) as ThemeId)) || "clean-white",
+  saved: (typeof window !== "undefined" && (localStorage.getItem(STORAGE_KEY) as ThemeId)) || "midnight",
   preview: null,
 };
 

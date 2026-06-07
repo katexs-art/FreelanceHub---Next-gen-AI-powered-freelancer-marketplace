@@ -98,6 +98,34 @@ export default function ProjectBids() {
       toast({ title: "Could not accept proposal", description: error?.message, variant: "destructive" });
       return;
     }
+
+    // Email to expert: hired notification (notification+message handled by DB trigger on bids)
+    const expertProfile = profiles[bid.seller_id];
+    const partnerProfile = user ? await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle() : null;
+    if (expertProfile) {
+      (async () => {
+        try {
+          const { data: expertEmailRow } = await supabase
+            .from("profiles").select("email").eq("id", bid.seller_id).maybeSingle();
+          if (!expertEmailRow?.email) return;
+          await supabase.functions.invoke("send-marketplace-email", {
+            body: {
+              template: "order_placed",
+              to: expertEmailRow.email,
+              data: {
+                is_seller: true,
+                buyer_name: partnerProfile?.data?.full_name ?? "Your client",
+                order_number: "",
+                gig_title: project.title,
+                price: bid.bid_amount,
+                order_id: data,
+              },
+            },
+          });
+        } catch { /* best-effort */ }
+      })();
+    }
+
     nav(`/checkout/${data}`);
   };
 

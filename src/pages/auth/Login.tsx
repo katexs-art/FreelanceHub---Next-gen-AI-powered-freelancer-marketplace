@@ -40,7 +40,7 @@ export default function Login() {
     setLoading(false);
     if (redirect) return nav(redirect);
     const role = profile?.role || "client";
-    nav(role === "admin" ? "/admin" : role === "seller" ? "/seller/dashboard" : "/buyer/dashboard");
+    nav(role === "admin" ? "/admin" : role === "seller" ? "/seller/hq" : "/buyer/hq");
   };
 
   const handleGoogle = async () => {

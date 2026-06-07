@@ -18,16 +18,16 @@ export function RoleSwitcher() {
   return (
     <div className="hidden md:flex items-center gap-1 p-1 rounded-full bg-background-elevated border-hairline">
       <button
-        onClick={() => navigate("/buyer/dashboard")}
+        onClick={() => navigate("/buyer/hq")}
         className={cn(base, !isSelling ? "bg-primary text-primary-foreground" : "text-foreground-muted hover:text-foreground")}
       >
-        Buying
+        Partner
       </button>
       <button
-        onClick={() => navigate("/seller/dashboard")}
+        onClick={() => navigate("/seller/hq")}
         className={cn(base, isSelling ? "bg-primary text-primary-foreground" : "text-foreground-muted hover:text-foreground")}
       >
-        Selling
+        Expert
       </button>
     </div>
   );

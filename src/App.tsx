@@ -74,6 +74,8 @@ const NotificationPreferences = lazy(() => import("./pages/account/NotificationP
 const Saved = lazy(() => import("./pages/account/Saved"));
 const Verification = lazy(() => import("./pages/seller/Verification"));
 const BuyerDashboard = lazy(() => import("./pages/buyer/BuyerDashboard"));
+const BuyerHq = lazy(() => import("./pages/buyer/BuyerHq"));
+const SellerHq = lazy(() => import("./pages/seller/SellerHq"));
 const Settings = lazy(() => import("./pages/account/Settings"));
 const SellerAnalytics = lazy(() => import("./pages/seller/SellerAnalytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -130,6 +132,8 @@ const App = () => (
             {/* HQ — unified customizable dashboard */}
             <Route path="/hq" element={<ProtectedRoute><Hq /></ProtectedRoute>} />
 
+            <Route path="/buyer/hq" element={<ProtectedRoute roles={["client","admin"]}><BuyerHq /></ProtectedRoute>} />
+            <Route path="/seller/hq" element={<ProtectedRoute roles={["seller","admin"]}><SellerHq /></ProtectedRoute>} />
             <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><BuyerDashboard /></ProtectedRoute>} />
             <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","seller","admin"]}><OrdersList as="buyer" /></ProtectedRoute>} />
 
