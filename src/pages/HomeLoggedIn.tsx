@@ -96,7 +96,7 @@ function SectionHeader({ title, to }: { title: string; to: string }) {
 
 export default function HomeLoggedIn() {
   const { user, profile } = useAuth();
-  const firstName = (profile as any)?.full_name?.split(" ")[0] ?? (profile as any)?.username ?? "back";
+  const firstName = (profile as any)?.full_name?.split(" ")[0] ?? user?.email?.split("@")[0] ?? "there";
 
   const [unread, setUnread] = useState(0);
   const [recentGigs, setRecentGigs] = useState<FiverCardData[]>([]);
