@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState, Fragment } from "react";
 import { useParams, useNavigate, NavLink } from "react-router-dom";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -502,7 +503,7 @@ export default function Admin() {
   };
 
   if (profile && profile.role !== "admin") {
-    return <AppShell><div className="text-sm">Admin access required.</div></AppShell>;
+    return <><SiteHeader showCategories={false} /><div style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 14 }}>Admin access required.</div><SiteFooter /></>;
   }
 
   // Sort sellers: pending applications first
@@ -518,8 +519,10 @@ export default function Admin() {
   }, [sellers]);
 
   return (
-    <AppShell>
-      <div className="flex items-stretch -mx-4 -my-4" style={{ minHeight: "calc(100vh - 64px)" }}>
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="flex items-stretch" style={{ minHeight: "calc(100vh - 56px)" }}>
         <AdminSidebar active={active} indicators={indicators} health={health} />
 
         <div className="flex-1 min-w-0 p-6 bg-background">
@@ -688,7 +691,10 @@ export default function Admin() {
         onClose={() => setRejectSeller(null)}
         onSubmit={submitReject}
       />
-    </AppShell>
+      </div>
+      </div>
+      <SiteFooter />
+    </>
   );
 }
 

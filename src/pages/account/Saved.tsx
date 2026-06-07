@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { GigCard, GigCardSkeleton, type GigCardData } from "@/components/marketplace/GigCard";
 import { RecommendationsBlock } from "@/components/hq/RecommendationsBlock";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,8 +32,10 @@ export default function Saved() {
   }, [user?.id]);
 
   return (
-    <AppShell>
-      <div className="max-w-6xl">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-6xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold">Saved services</h1>
         <p className="text-sm text-foreground-muted mt-1">Services you've hearted for later.</p>
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -44,6 +47,8 @@ export default function Saved() {
         </div>
         <RecommendationsBlock />
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 }

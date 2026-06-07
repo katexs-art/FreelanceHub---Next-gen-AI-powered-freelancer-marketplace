@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -68,8 +69,10 @@ export default function NotificationPreferences() {
   };
 
   return (
-    <AppShell>
-      <div className="max-w-3xl">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-3xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold">Notifications</h1>
         <p className="text-foreground-muted mt-1 text-sm">
           Choose in-app and email alerts independently for each category.
@@ -113,6 +116,8 @@ export default function NotificationPreferences() {
           Critical security and payment confirmations are always sent regardless of these settings.
         </p>
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 }

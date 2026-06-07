@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Input } from "@/components/ui/input";
@@ -169,8 +170,10 @@ export default function Settings() {
   const tab = searchParams.get("tab") === "appearance" ? "appearance" : "profile";
 
   return (
-    <AppShell>
-      <div className="max-w-6xl pb-32">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-6xl mx-auto px-6 py-8 pb-32">
         <div className="mb-8">
           <Eyebrow>Account</Eyebrow>
           <h1 className="display-md mt-2">Settings</h1>
@@ -343,7 +346,10 @@ export default function Settings() {
         </div>
       )}
       <RecommendationsBlock />
-    </AppShell>
+      </div>
+      </div>
+      <SiteFooter />
+    </>
   );
 }
 

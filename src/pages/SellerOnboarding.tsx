@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
@@ -136,7 +137,7 @@ export default function SellerOnboarding() {
     try { localStorage.removeItem(draftKey(user.id)); } catch {}
   };
 
-  if (loading) return <AppShell><div className="text-sm text-foreground-muted">Loading…</div></AppShell>;
+  if (loading) return <><SiteHeader showCategories={false} /><div style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: "#888", fontSize: 14 }}>Loading…</div></div><SiteFooter /></>;
   if (!user) return <Navigate to="/login?redirect=/seller-onboarding" replace />;
   if (profile?.seller_status === "approved") { clearDraft(); return <Navigate to="/seller/dashboard" replace />; }
   if (profile?.seller_status === "pending_approval") { clearDraft(); return <Navigate to="/seller/dashboard" replace />; }
@@ -233,8 +234,10 @@ export default function SellerOnboarding() {
     setPackages({ ...packages, [tier]: { ...packages[tier], [field]: value } });
 
   return (
-    <AppShell>
-      <div className="max-w-3xl mx-auto py-4">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-3xl mx-auto px-6 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             {STEP_LABELS.map((label, i) => {
@@ -435,7 +438,9 @@ export default function SellerOnboarding() {
           )}
         </div>
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 }
 

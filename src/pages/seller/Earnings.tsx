@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -76,8 +77,10 @@ export default function Earnings() {
   };
 
   return (
-    <AppShell>
-      <div className="max-w-4xl space-y-8">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         <header>
           <h1 className="text-2xl font-bold">Earnings</h1>
           <p className="text-sm text-foreground-muted mt-1">Track your balance, ledger, and withdrawals.</p>
@@ -184,7 +187,9 @@ export default function Earnings() {
           )}
         </section>
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 }
 

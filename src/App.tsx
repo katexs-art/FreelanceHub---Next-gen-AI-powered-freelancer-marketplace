@@ -8,6 +8,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useAuth } from "@/hooks/useAuth";
 
 import { lazy, Suspense } from "react";
 
@@ -79,8 +80,13 @@ const SellerHq = lazy(() => import("./pages/seller/SellerHq"));
 const Settings = lazy(() => import("./pages/account/Settings"));
 const SellerAnalytics = lazy(() => import("./pages/seller/SellerAnalytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const Hq = lazy(() => import("./pages/Hq"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
+
+function HqRedirect() {
+  const { profile } = useAuth();
+  const to = profile?.role === "admin" ? "/admin" : profile?.role === "seller" ? "/seller/hq" : "/buyer/hq";
+  return <Navigate to={to} replace />;
+}
 
 const queryClient = new QueryClient();
 
@@ -128,9 +134,8 @@ const App = () => (
             
             <Route path="/seller-onboarding" element={<ProtectedRoute><SellerOnboarding /></ProtectedRoute>} />
 
-            {/* Buyer */}
-            {/* HQ — unified customizable dashboard */}
-            <Route path="/hq" element={<ProtectedRoute><Hq /></ProtectedRoute>} />
+            {/* /hq redirects to role-based dashboard */}
+            <Route path="/hq" element={<ProtectedRoute><HqRedirect /></ProtectedRoute>} />
 
             <Route path="/buyer/hq" element={<ProtectedRoute roles={["client","admin"]}><BuyerHq /></ProtectedRoute>} />
             <Route path="/seller/hq" element={<ProtectedRoute roles={["seller","admin"]}><SellerHq /></ProtectedRoute>} />

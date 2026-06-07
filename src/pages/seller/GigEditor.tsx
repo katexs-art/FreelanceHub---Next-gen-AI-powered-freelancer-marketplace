@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
@@ -165,8 +166,10 @@ export default function GigEditor() {
   };
 
   return (
-    <AppShell>
-      <div className="max-w-4xl">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-4xl mx-auto px-6 py-8">
         <h1 className="text-3xl font-bold">{id ? "Edit service" : "Create a new service"}</h1>
 
         {/* Stepper */}
@@ -324,7 +327,9 @@ export default function GigEditor() {
           </div>
         </div>
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 
   function updatePkg(idx: number, patch: Partial<Pkg>) {

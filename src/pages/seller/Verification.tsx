@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,8 +56,10 @@ export default function Verification() {
   const status = verif?.status ?? "unverified";
 
   return (
-    <AppShell>
-      <div className="max-w-2xl">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-2xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold">Verification</h1>
         <p className="text-sm text-foreground-muted mt-1">Get a Verified badge so partners trust you faster.</p>
 
@@ -80,7 +83,9 @@ export default function Verification() {
           )}
         </div>
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 }
 

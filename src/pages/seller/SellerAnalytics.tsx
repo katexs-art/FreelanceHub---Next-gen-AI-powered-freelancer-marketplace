@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
@@ -52,9 +53,11 @@ export default function SellerAnalytics() {
   }, [user]);
 
   return (
-    <AppShell>
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
       <SEO title="Analytics" description="Track impressions, clicks, projects and earnings across your services." />
-      <div className="max-w-5xl">
+      <div className="max-w-5xl mx-auto px-6 py-8">
         <h1 className="text-3xl font-bold mb-2">Analytics</h1>
         <p className="text-sm text-foreground-muted mb-8">Last 30 days</p>
 
@@ -115,7 +118,9 @@ export default function SellerAnalytics() {
           </div>
         )}
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 }
 

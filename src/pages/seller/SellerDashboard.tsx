@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -294,8 +295,10 @@ export default function SellerDashboard() {
   ];
 
   return (
-    <AppShell>
-      <div className="max-w-6xl">
+    <>
+      <SiteHeader showCategories={false} />
+      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div className="max-w-6xl mx-auto px-6 py-8">
         {pending && (
           <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900 p-4 text-sm">
             Your expert application is under review. We will notify you within 24 hours.
@@ -546,7 +549,9 @@ export default function SellerDashboard() {
           </div>
         </div>
       </div>
-    </AppShell>
+      </div>
+      <SiteFooter />
+    </>
   );
 }
 
