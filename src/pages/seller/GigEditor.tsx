@@ -165,6 +165,10 @@ export default function GigEditor() {
     if (id) { toast.success("Service published"); nav("/seller/gigs"); }
   };
 
+  function updatePkg(idx: number, patch: Partial<Pkg>) {
+    setPackages((arr) => arr.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
+  }
+
   return (
     <>
       <SiteHeader showCategories={false} />
@@ -327,15 +331,10 @@ export default function GigEditor() {
           </div>
         </div>
       </div>
-      </div>
-      </div>
       <SiteFooter />
+      </div>
     </>
   );
-
-  function updatePkg(idx: number, patch: Partial<Pkg>) {
-    setPackages((arr) => arr.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
-  }
 }
 
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {

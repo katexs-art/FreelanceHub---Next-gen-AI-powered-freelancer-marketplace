@@ -438,9 +438,8 @@ export default function SellerOnboarding() {
           )}
         </div>
       </div>
-      </div>
-      </div>
       <SiteFooter />
+      </div>
     </>
   );
 }
