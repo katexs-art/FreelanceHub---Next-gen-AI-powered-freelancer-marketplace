@@ -100,7 +100,7 @@ export default function BuyerHq() {
       if (sellerIds.length > 0) {
         const { data: profiles } = await supabase
           .from("profiles")
-          .select("id, full_name, avatar_url, username, avg_rating")
+          .select("id, full_name, avatar_url, username, average_rating")
           .in("id", sellerIds);
         (profiles ?? []).forEach((p) => { sellerMap[p.id] = p; });
       }
@@ -114,7 +114,7 @@ export default function BuyerHq() {
         seller_name: sellerMap[b.seller_id]?.full_name ?? "Expert",
         seller_avatar: sellerMap[b.seller_id]?.avatar_url ?? null,
         seller_username: sellerMap[b.seller_id]?.username ?? null,
-        avg_rating: sellerMap[b.seller_id]?.avg_rating ?? null,
+        avg_rating: sellerMap[b.seller_id]?.average_rating ?? null,
       }));
 
       enriched.sort((a, b) => (b.avg_rating ?? 0) - (a.avg_rating ?? 0));
@@ -146,14 +146,14 @@ export default function BuyerHq() {
     const { data } = await supabase
       .from("conversations")
       .select("id")
-      .or(`and(participant_a.eq.${user.id},participant_b.eq.${bid.seller_id}),and(participant_a.eq.${bid.seller_id},participant_b.eq.${user.id})`)
+      .or(`and(participant_one.eq.${user.id},participant_two.eq.${bid.seller_id}),and(participant_one.eq.${bid.seller_id},participant_two.eq.${user.id})`)
       .maybeSingle();
     if (data) {
       navigate(`/inbox/${data.id}`);
     } else {
       const { data: conv } = await supabase
         .from("conversations")
-        .insert({ participant_a: user.id, participant_b: bid.seller_id })
+        .insert({ participant_one: user.id, participant_two: bid.seller_id })
         .select("id")
         .single();
       if (conv) navigate(`/inbox/${conv.id}`);

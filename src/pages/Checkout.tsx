@@ -656,7 +656,7 @@ export default function Checkout() {
                           The amount shown on this checkout does not match the agreed price in the custom offer. To prevent an incorrect charge, payment has been blocked.
                         </div>
                         <div className="mt-3 text-[13px] text-red-600">
-                          Please contact your seller or Katexs support to resolve this before proceeding.
+                          Please contact your expert or Katexs support to resolve this before proceeding.
                         </div>
                         {amountMismatch && (
                           <div className="mt-3 text-[12px] text-red-500 font-mono bg-red-100 rounded-lg px-3 py-2 break-all">
