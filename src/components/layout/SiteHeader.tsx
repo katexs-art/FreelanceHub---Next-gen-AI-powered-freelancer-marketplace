@@ -1,244 +1,538 @@
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { RoleSwitcher } from "@/components/layout/RoleSwitcher";
-import { Search, Menu, ArrowRight } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { useEffect, useState } from "react";
+import { Search, MessageSquare, Heart, ChevronDown, Menu, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { NotificationBell } from "@/components/layout/NotificationBell";
+import { CategoryBar } from "@/components/layout/CategoryBar";
 import katexsLogo from "@/assets/katexs-logo.png";
 
 interface SiteHeaderProps {
+  /** "transparent" = fixed dark header used on the Landing page (no category bar).
+   *  "default"     = sticky dark header used on all other public pages + category bar. */
   variant?: "default" | "transparent";
+  /** Pass false to suppress the category bar even on the default variant. */
+  showCategories?: boolean;
 }
 
-export function SiteHeader({ variant = "default" }: SiteHeaderProps) {
+export function SiteHeader({
+  variant = "default",
+  showCategories = true,
+}: SiteHeaderProps) {
   const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const [q, setQ] = useState("");
-  const [scrolled, setScrolled] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [unreadMsgs, setUnreadMsgs] = useState(0);
+  const profileRef = useRef<HTMLDivElement>(null);
 
-  const isTransparent = variant === "transparent";
-
+  // ── unread message count ──────────────────────────────────────────────────
   useEffect(() => {
-    if (!isTransparent) return;
-    const onScroll = () => setScrolled(window.scrollY > 50);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [isTransparent]);
+    if (!user) return;
+    const load = async () => {
+      const { count } = await supabase
+        .from("messages")
+        .select("id", { count: "exact", head: true })
+        .eq("recipient_id", user.id)
+        .eq("is_read", false);
+      setUnreadMsgs(count ?? 0);
+    };
+    load();
+    const ch = supabase
+      .channel("sh-msgs")
+      .on("postgres_changes", { event: "*", schema: "public", table: "messages" }, load)
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user?.id]);
+
+  // ── close profile dropdown on outside click ───────────────────────────────
+  useEffect(() => {
+    if (!profileOpen) return;
+    const handle = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node))
+        setProfileOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [profileOpen]);
 
   const dashHref =
     profile?.role === "admin" ? "/admin" :
-    profile?.role === "seller" ? "/seller/dashboard" : "/buyer/dashboard";
+    profile?.role === "seller" ? "/seller/hq" : "/buyer/hq";
 
+  const ordersHref =
+    profile?.role === "seller" ? "/seller/orders" : "/buyer/orders";
+
+  const avatarInitial =
+    (profile?.full_name?.[0] ?? profile?.email?.[0] ?? "K").toUpperCase();
+
+  const isTransparent = variant === "transparent";
+
+  // ── shared inline styles ──────────────────────────────────────────────────
+  const navLink = (base: string = "#888") => ({
+    color: base,
+    textDecoration: "none" as const,
+    fontSize: 14,
+    transition: "color 0.15s",
+  });
+
+  const iconBtn = {
+    position: "relative" as const,
+    display: "flex",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    background: "transparent",
+    border: "none",
+    cursor: "pointer",
+    color: "#888",
+    textDecoration: "none" as const,
+    transition: "color 0.15s",
+  };
+
+  // ── Transparent variant (Landing page) ───────────────────────────────────
   if (isTransparent) {
-    const linkCls = "px-3 py-2 text-white text-[13px] opacity-80 hover:opacity-100 transition-opacity";
-    const handleHowItWorks = (e: React.MouseEvent) => {
-      e.preventDefault();
-      setMobileOpen(false);
-      if (location.pathname === "/") {
-        document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
-      } else {
-        navigate("/#how-it-works");
-      }
-    };
     return (
       <header
-        className="fixed top-0 left-0 right-0 z-[100] transition-[background-color,backdrop-filter] duration-300"
         style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0,
+          zIndex: 100,
           background: "#000",
-          backdropFilter: "none",
-          WebkitBackdropFilter: "none",
+          borderBottom: "1px solid #1e1e1e",
         }}
       >
-        <div className="flex items-center gap-6 h-16" style={{ padding: "0 40px" }}>
-          <Link to="/" className="flex items-center" style={{ background: "transparent", border: "none", padding: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: 64,
+            padding: "0 40px",
+            maxWidth: 1400,
+            margin: "0 auto",
+            gap: 16,
+          }}
+        >
+          <Link to="/" style={{ flexShrink: 0 }}>
             <img
               src={katexsLogo}
               alt="KATEXS"
-              style={{ height: 20, width: "auto", display: "block", background: "transparent", filter: "invert(1)" }}
+              style={{ height: 20, width: "auto", filter: "invert(1) brightness(2)" }}
             />
           </Link>
 
-          <nav className="hidden lg:flex items-center gap-8 ml-4">
-            <Link to="/services" className={linkCls}>Find Experts</Link>
-            <Link to="/how-it-works" className={linkCls}>How It Works</Link>
-            <Link to="/projects" className={linkCls}>Projects</Link>
-            <Link to="/post-job" className={linkCls}>Post a Project</Link>
-            {user && <Link to="/inbox" className={linkCls}>Messages</Link>}
+          <nav style={{ display: "flex", gap: 4, marginLeft: 8 }}>
+            {[
+              { to: "/services",    label: "Find Experts" },
+              { to: "/projects",    label: "Open Projects" },
+              { to: "/how-it-works", label: "How It Works" },
+            ].map(({ to, label }) => (
+              <Link
+                key={to}
+                to={to}
+                style={{ ...navLink(), padding: "8px 12px", borderRadius: 6 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}
+              >
+                {label}
+              </Link>
+            ))}
           </nav>
 
-          <form
-            onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/services?q=${encodeURIComponent(q)}`); }}
-            className="flex-1 max-w-md relative hidden lg:block"
-          >
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-black/50" />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Search the catalog..."
-              className="w-full h-9 pl-9 pr-24 rounded-full text-sm focus:outline-none text-black placeholder:text-black/40"
-              style={{ background: "#fff", borderRadius: 999 }}
-            />
-            <Button type="submit" size="sm" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 rounded-full px-3 text-xs bg-black text-white hover:bg-black/90">
-              Search <ArrowRight className="h-3 w-3" />
-            </Button>
-          </form>
+          <div style={{ flex: 1 }} />
 
-          <div className="flex-1 lg:hidden" />
-
-          <div className="hidden lg:flex items-center gap-2">
-            {user ? (
-              <>
-                <Link to={dashHref}>
-                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white text-[13px]">
-                    HQ
-                  </Button>
-                </Link>
-                <Button variant="outline" size="sm" onClick={() => signOut()} className="border-white/25 bg-white/10 text-white hover:bg-white/15 hover:text-white text-[13px]">
-                  Sign out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link to="/sign-in">
-                  <Button variant="ghost" size="sm" className="text-white hover:bg-white/10 hover:text-white text-[13px]">
-                    Sign In
-                  </Button>
-                </Link>
-                <Link to="/sign-up">
-                  <button
-                    className="text-white font-medium"
-                    style={{
-                      background: "hsl(var(--primary))",
-                      borderRadius: 999,
-                      padding: "8px 20px",
-                      fontSize: 13,
-                      fontWeight: 500,
-                    }}
-                  >
-                    Join Free
-                  </button>
-                </Link>
-              </>
-            )}
-          </div>
-
-          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-            <SheetTrigger asChild>
-              <button className="lg:hidden p-2 text-white/70"><Menu className="h-5 w-5" /></button>
-            </SheetTrigger>
-            <SheetContent side="right" className="w-72 bg-black border-l border-white/10 p-6">
-              <div className="flex flex-col gap-4 mt-8">
-                <Link to="/services" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Find Experts</Link>
-                <Link to="/how-it-works" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>How It Works</Link>
-                <Link to="/projects" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Projects</Link>
-                <Link to="/post-job" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Post a Project</Link>
-                {user && <Link to="/inbox" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Messages</Link>}
-                <div className="border-t border-white/10 my-2" />
-                {user ? (
-                  <>
-                    <Link to={dashHref} className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>HQ</Link>
-                    <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-left text-white text-sm opacity-80 hover:opacity-100">Sign out</button>
-                  </>
-                ) : (
-                  <>
-                    <Link to="/sign-in" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Sign In</Link>
-                    <Link to="/sign-up" className="text-white text-sm opacity-80 hover:opacity-100" onClick={() => setMobileOpen(false)}>Join Free</Link>
-                  </>
-                )}
-              </div>
-            </SheetContent>
-          </Sheet>
+          {user ? (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Link to={dashHref}
+                style={{ ...navLink("#ccc"), padding: "8px 14px", borderRadius: 6, fontWeight: 500 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#ccc"; }}>
+                Dashboard
+              </Link>
+            </div>
+          ) : (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Link to="/login"
+                style={{ ...navLink(), padding: "8px 14px", borderRadius: 6 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}>
+                Sign In
+              </Link>
+              <Link to="/signup"
+                style={{
+                  padding: "8px 20px", fontSize: 14, fontWeight: 600,
+                  color: "#fff", background: "#16A34A",
+                  textDecoration: "none", borderRadius: 6,
+                }}>
+                Join Free
+              </Link>
+            </div>
+          )}
         </div>
       </header>
     );
   }
 
+  // ── Default variant (all public marketplace pages) ────────────────────────
   return (
-    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b-hairline">
-      <div className="container-page flex items-center gap-6 h-16">
-        <Link to="/" className="flex items-center">
-          <img src={katexsLogo} alt="KATEXS" style={{ height: 20, width: "auto", display: "block" }} />
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-1 text-sm">
-          <Link to="/services" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Find Experts</Link>
-          <Link to="/how-it-works" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">How It Works</Link>
-          <Link to="/projects" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Projects</Link>
-          <Link to="/post-job" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Post a Project</Link>
-          {user && (
-            <Link to="/inbox" className="px-3 py-2 text-foreground-muted hover:text-foreground transition-colors">Messages</Link>
-          )}
-        </nav>
-
-        <form
-          onSubmit={(e) => { e.preventDefault(); if (q.trim()) navigate(`/services?q=${encodeURIComponent(q)}`); }}
-          className="flex-1 max-w-md relative hidden lg:block"
+    <>
+      <header
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 100,
+          background: "#0a0a0a",
+          borderBottom: "1px solid #1e1e1e",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            height: 64,
+            padding: "0 24px",
+            maxWidth: 1400,
+            margin: "0 auto",
+            gap: 12,
+          }}
         >
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-foreground-subtle" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search the catalog…"
-            className="w-full h-9 pl-9 pr-24 rounded-full surface text-sm focus:outline-none focus:border-white/30 transition-colors"
-          />
-          <Button
-            type="submit"
-            size="sm"
-            className="absolute right-1 top-1/2 -translate-y-1/2 h-7 rounded-full px-3 text-xs"
+          {/* Logo */}
+          <Link to="/" style={{ flexShrink: 0, display: "flex", alignItems: "center" }}>
+            <img
+              src={katexsLogo}
+              alt="KATEXS"
+              style={{ height: 20, width: "auto", filter: "invert(1) brightness(2)" }}
+            />
+          </Link>
+
+          {/* Search */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (q.trim()) navigate(`/services?q=${encodeURIComponent(q)}`);
+            }}
+            style={{ flex: 1, maxWidth: 560 }}
           >
-            Search <ArrowRight className="h-3 w-3" />
-          </Button>
-        </form>
+            <div style={{ position: "relative" }}>
+              <Search
+                size={16}
+                style={{
+                  position: "absolute", left: 14, top: "50%",
+                  transform: "translateY(-50%)",
+                  color: "#888", pointerEvents: "none",
+                }}
+              />
+              <input
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="What service are you looking for today?"
+                style={{
+                  width: "100%", height: 40,
+                  paddingLeft: 42, paddingRight: 76,
+                  borderRadius: 6,
+                  border: "1px solid #333",
+                  background: "#111111",
+                  color: "#ffffff",
+                  fontSize: 14,
+                  outline: "none",
+                  boxSizing: "border-box",
+                  transition: "border-color 0.15s",
+                }}
+                onFocus={(e) => { e.currentTarget.style.borderColor = "#555"; }}
+                onBlur={(e) => { e.currentTarget.style.borderColor = "#333"; }}
+              />
+              <button
+                type="submit"
+                style={{
+                  position: "absolute", right: 0, top: 0, bottom: 0,
+                  background: "#16A34A", color: "#fff",
+                  border: "none",
+                  borderRadius: "0 6px 6px 0",
+                  padding: "0 16px",
+                  fontSize: 13, fontWeight: 600,
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#15803d"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#16A34A"; }}
+              >
+                Search
+              </button>
+            </div>
+          </form>
 
-        <div className="flex-1 lg:hidden" />
+          <div style={{ flex: 1 }} />
 
-        {user && <RoleSwitcher />}
-
-        <div className="hidden lg:flex items-center gap-2">
+          {/* ── Logged-in right section ─── */}
           {user ? (
-            <>
-              <Link to={dashHref}><Button variant="ghost" size="sm">HQ</Button></Link>
-              <Button variant="outline" size="sm" onClick={() => signOut()}>Sign out</Button>
-            </>
+            <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+
+              {/* Notification bell (existing component) */}
+              <NotificationBell />
+
+              {/* Messages */}
+              <Link
+                to="/inbox"
+                title="Messages"
+                style={{ ...iconBtn }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}
+              >
+                <MessageSquare size={18} />
+                {unreadMsgs > 0 && (
+                  <span style={{
+                    position: "absolute", top: 2, right: 2,
+                    minWidth: 16, height: 16, padding: "0 3px",
+                    borderRadius: 999,
+                    background: "#16A34A", color: "#fff",
+                    fontSize: 10, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {unreadMsgs > 9 ? "9+" : unreadMsgs}
+                  </span>
+                )}
+              </Link>
+
+              {/* Saved/Favorites */}
+              <Link
+                to="/saved"
+                title="Saved"
+                style={{ ...iconBtn }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}
+              >
+                <Heart size={18} />
+              </Link>
+
+              {/* Orders button */}
+              <Link
+                to={ordersHref}
+                style={{
+                  display: "flex", alignItems: "center",
+                  height: 36, padding: "0 14px",
+                  borderRadius: 6,
+                  border: "1px solid #333",
+                  color: "#ffffff",
+                  fontSize: 13, fontWeight: 600,
+                  textDecoration: "none",
+                  whiteSpace: "nowrap",
+                  transition: "border-color 0.15s",
+                  marginLeft: 4,
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#555"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.borderColor = "#333"; }}
+              >
+                Orders
+              </Link>
+
+              {/* Avatar + dropdown */}
+              <div ref={profileRef} style={{ position: "relative", marginLeft: 4 }}>
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((v) => !v)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 6,
+                    background: "transparent", border: "none",
+                    cursor: "pointer", padding: "4px 6px", borderRadius: 8,
+                  }}
+                >
+                  <div style={{
+                    width: 32, height: 32, borderRadius: "50%",
+                    background: "#16A34A", color: "#fff",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 13, fontWeight: 700, overflow: "hidden", flexShrink: 0,
+                  }}>
+                    {profile?.avatar_url ? (
+                      <img
+                        src={profile.avatar_url}
+                        alt=""
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e) => {
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                    ) : avatarInitial}
+                  </div>
+                  <ChevronDown
+                    size={14}
+                    style={{
+                      color: "#888",
+                      transform: profileOpen ? "rotate(180deg)" : "none",
+                      transition: "transform 0.2s",
+                    }}
+                  />
+                </button>
+
+                {profileOpen && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 8px)", right: 0,
+                    background: "#111111", border: "1px solid #1e1e1e",
+                    borderRadius: 12, padding: "8px 0", minWidth: 210,
+                    zIndex: 200, boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
+                  }}>
+                    {/* User info */}
+                    <div style={{ padding: "10px 16px 12px", borderBottom: "1px solid #1e1e1e" }}>
+                      <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
+                        {profile?.full_name ?? profile?.email ?? "User"}
+                      </div>
+                      <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
+                        {profile?.role === "seller" ? "Expert" :
+                         profile?.role === "admin" ? "Admin" : "Partner"}
+                      </div>
+                    </div>
+
+                    {[
+                      { label: "Dashboard",  to: dashHref },
+                      { label: "Orders",     to: ordersHref },
+                      { label: "Inbox",      to: "/inbox" },
+                      { label: "Saved",      to: "/saved" },
+                      { label: "Settings",   to: "/settings" },
+                    ].map(({ label, to }) => (
+                      <Link
+                        key={to}
+                        to={to}
+                        onClick={() => setProfileOpen(false)}
+                        style={{ display: "block", padding: "9px 16px", fontSize: 14, color: "#ccc", textDecoration: "none" }}
+                        onMouseEnter={(e) => {
+                          const el = e.currentTarget as HTMLAnchorElement;
+                          el.style.background = "#1a1a1a"; el.style.color = "#fff";
+                        }}
+                        onMouseLeave={(e) => {
+                          const el = e.currentTarget as HTMLAnchorElement;
+                          el.style.background = "transparent"; el.style.color = "#ccc";
+                        }}
+                      >
+                        {label}
+                      </Link>
+                    ))}
+
+                    <div style={{ height: 1, background: "#1e1e1e", margin: "4px 0" }} />
+
+                    <button
+                      type="button"
+                      onClick={() => { setProfileOpen(false); signOut(); }}
+                      style={{
+                        width: "100%", textAlign: "left", background: "transparent",
+                        border: "none", padding: "9px 16px", fontSize: 14,
+                        color: "#888", cursor: "pointer",
+                      }}
+                      onMouseEnter={(e) => {
+                        const el = e.currentTarget as HTMLButtonElement;
+                        el.style.background = "#1a1a1a"; el.style.color = "#fff";
+                      }}
+                      onMouseLeave={(e) => {
+                        const el = e.currentTarget as HTMLButtonElement;
+                        el.style.background = "transparent"; el.style.color = "#888";
+                      }}
+                    >
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+
           ) : (
-            <>
-              <Link to="/login"><Button variant="ghost" size="sm">Sign in</Button></Link>
-              <Link to="/signup"><Button size="sm">Join</Button></Link>
-            </>
+            /* ── Logged-out right section ─── */
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <Link
+                to="/login"
+                style={{ ...navLink(), padding: "8px 14px", borderRadius: 6 }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/signup"
+                style={{
+                  padding: "8px 20px", fontSize: 14, fontWeight: 600,
+                  color: "#fff", background: "#16A34A",
+                  textDecoration: "none", borderRadius: 6,
+                }}
+              >
+                Join Free
+              </Link>
+            </div>
           )}
+
+          {/* ── Mobile hamburger ─── */}
+          <button
+            type="button"
+            onClick={() => setMobileOpen((v) => !v)}
+            style={{
+              display: "none", // shown via @media below
+              background: "transparent", border: "none",
+              color: "#888", cursor: "pointer", padding: 6,
+            }}
+            className="kx-hamburger"
+          >
+            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+          </button>
         </div>
 
-        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-          <SheetTrigger asChild>
-            <button className="lg:hidden p-2 text-foreground-muted"><Menu className="h-5 w-5" /></button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-72 p-6">
-            <div className="flex flex-col gap-4 mt-8">
-              <Link to="/services" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Find Experts</Link>
-              <Link to="/how-it-works" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>How It Works</Link>
-              <Link to="/projects" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Projects</Link>
-              <Link to="/post-job" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Post a Project</Link>
-              {user && <Link to="/inbox" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Messages</Link>}
-              <div className="border-t border-border my-2" />
-              {user ? (
-                <>
-                  <Link to={dashHref} className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>HQ</Link>
-                  <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-left text-sm text-foreground-muted hover:text-foreground">Sign out</button>
-                </>
-              ) : (
-                <>
-                  <Link to="/login" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Sign in</Link>
-                  <Link to="/signup" className="text-sm text-foreground-muted hover:text-foreground" onClick={() => setMobileOpen(false)}>Join</Link>
-                </>
-              )}
-            </div>
-          </SheetContent>
-        </Sheet>
-      </div>
-    </header>
+        {/* ── Mobile menu ─── */}
+        {mobileOpen && (
+          <div style={{ background: "#111111", borderTop: "1px solid #1e1e1e", padding: "16px 24px 20px" }}>
+            {user ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                {[
+                  { to: dashHref,   label: "Dashboard" },
+                  { to: ordersHref, label: "Orders" },
+                  { to: "/inbox",   label: "Messages" },
+                  { to: "/saved",   label: "Saved" },
+                  { to: "/settings", label: "Settings" },
+                  { to: "/services", label: "Find Experts" },
+                ].map(({ to, label }) => (
+                  <Link key={to} to={to} onClick={() => setMobileOpen(false)}
+                    style={{ padding: "10px 0", fontSize: 15, color: "#ccc", textDecoration: "none", borderBottom: "1px solid #1a1a1a" }}>
+                    {label}
+                  </Link>
+                ))}
+                <button type="button" onClick={() => { setMobileOpen(false); signOut(); }}
+                  style={{ textAlign: "left", background: "transparent", border: "none", padding: "10px 0", fontSize: 15, color: "#888", cursor: "pointer", marginTop: 4 }}>
+                  Sign out
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {[
+                  { to: "/services",    label: "Find Experts" },
+                  { to: "/projects",    label: "Open Projects" },
+                  { to: "/how-it-works", label: "How It Works" },
+                ].map(({ to, label }) => (
+                  <Link key={to} to={to} onClick={() => setMobileOpen(false)}
+                    style={{ fontSize: 15, color: "#ccc", textDecoration: "none" }}>
+                    {label}
+                  </Link>
+                ))}
+                <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                  <Link to="/login" onClick={() => setMobileOpen(false)}
+                    style={{ flex: 1, textAlign: "center", padding: "10px 0", fontSize: 14, color: "#fff", border: "1px solid #333", borderRadius: 6, textDecoration: "none" }}>
+                    Sign In
+                  </Link>
+                  <Link to="/signup" onClick={() => setMobileOpen(false)}
+                    style={{ flex: 1, textAlign: "center", padding: "10px 0", fontSize: 14, fontWeight: 600, color: "#fff", background: "#16A34A", borderRadius: 6, textDecoration: "none" }}>
+                    Join Free
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        <style>{`
+          @media (max-width: 768px) {
+            .kx-hamburger { display: flex !important; }
+          }
+        `}</style>
+      </header>
+
+      {/* Category bar — sticky just below the header */}
+      {showCategories && <CategoryBar />}
+    </>
   );
 }
