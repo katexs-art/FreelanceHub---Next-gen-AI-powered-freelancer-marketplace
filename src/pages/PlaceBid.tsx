@@ -61,36 +61,26 @@ export default function PlaceBid() {
       toast({ title: "Could not submit proposal", description: error.message, variant: "destructive" });
       return;
     }
-    // Email to partner: bid received
+    // Best-effort email — fetch buyer email then send via template
     if (project?.buyer_id) {
       (async () => {
-        try {
-          const [buyerRes, expertRes] = await Promise.all([
-            supabase.from("profiles").select("email, full_name").eq("id", project.buyer_id).maybeSingle(),
-            supabase.from("profiles").select("full_name, avg_rating, total_reviews").eq("id", user!.id).maybeSingle(),
-          ]);
-          const buyerEmail = buyerRes.data?.email;
-          if (!buyerEmail) return;
-          const expertName = expertRes.data?.full_name ?? "An expert";
-          const rating = expertRes.data?.avg_rating ?? null;
-          const reviewCount = expertRes.data?.total_reviews ?? 0;
-          await supabase.functions.invoke("send-marketplace-email", {
-            body: {
-              template: "bid_received",
-              to: buyerEmail,
-              data: {
-                project_title: project.title,
-                expert_name: expertName,
-                expert_rating: rating,
-                expert_reviews: reviewCount,
-                bid_amount: parseInt(amount, 10),
-                delivery_days: parseInt(days, 10),
-                proposal_preview: cover.trim(),
-                buyer_hq_url: "https://katexs.com/buyer/hq",
-              },
+        const [buyerRes, senderRes] = await Promise.all([
+          supabase.from("profiles").select("email, full_name").eq("id", project.buyer_id).maybeSingle(),
+          supabase.from("profiles").select("full_name").eq("id", user!.id).maybeSingle(),
+        ]);
+        const buyerEmail = buyerRes.data?.email;
+        if (!buyerEmail) return;
+        supabase.functions.invoke("send-marketplace-email", {
+          body: {
+            template: "new_message",
+            to: buyerEmail,
+            data: {
+              sender_name: senderRes.data?.full_name ?? "An expert",
+              preview: `A new proposal came in on your project "${project.title}". Bid: $${amount}. ${cover.trim().slice(0, 120)}`,
+              conversation_id: null,
             },
-          });
-        } catch { /* best-effort */ }
+          },
+        }).catch(() => {});
       })();
     }
     toast({ title: "Your proposal was submitted successfully" });

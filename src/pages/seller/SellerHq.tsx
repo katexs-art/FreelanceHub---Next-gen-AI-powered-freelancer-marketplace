@@ -95,7 +95,6 @@ export default function SellerHq() {
     const myBidsRaw = bidsRes.data ?? [];
     const myOrders = ordersRes.data ?? [];
 
-    // Enrich bids with project titles
     const projectIds = [...new Set(myBidsRaw.map((b) => b.project_id))];
     let projectTitleMap: Record<string, string> = {};
     if (projectIds.length > 0) {
@@ -108,7 +107,6 @@ export default function SellerHq() {
       project_title: projectTitleMap[b.project_id] ?? "Project",
     }));
 
-    // Already-bid project ids (to exclude from feed)
     const alreadyBidIds = new Set(myBidsRaw.map((b) => b.project_id));
 
     const activeBids = myBidsRaw.filter((b) => b.status === "pending").length;
@@ -119,7 +117,6 @@ export default function SellerHq() {
     setStats({ activeBids, activeOrders, completed: completedCount, totalEarned });
     setMyBids(enrichedBids);
     setMyGigs(gigsRes.data ?? []);
-    // Filter out projects user already bid on
     setProjects((projectsRes.data ?? []).filter((p) => !alreadyBidIds.has(p.id)));
     setLoading(false);
   }
