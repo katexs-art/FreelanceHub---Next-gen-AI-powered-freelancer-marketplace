@@ -347,7 +347,6 @@ export default function Settings() {
       )}
       <RecommendationsBlock />
       </div>
-      </div>
       <SiteFooter />
     </>
   );

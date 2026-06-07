@@ -692,7 +692,6 @@ export default function Admin() {
         onSubmit={submitReject}
       />
       </div>
-      </div>
       <SiteFooter />
     </>
   );

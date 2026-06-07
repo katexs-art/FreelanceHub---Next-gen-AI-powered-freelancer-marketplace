@@ -328,6 +328,7 @@ export default function GigEditor() {
         </div>
       </div>
       </div>
+      </div>
       <SiteFooter />
     </>
   );
