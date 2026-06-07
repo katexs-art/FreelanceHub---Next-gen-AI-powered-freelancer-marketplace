@@ -76,14 +76,17 @@ export default function PlaceBid() {
           const reviewCount = expertRes.data?.total_reviews ?? 0;
           await supabase.functions.invoke("send-marketplace-email", {
             body: {
-              template: "new_message",
+              template: "bid_received",
               to: buyerEmail,
               data: {
-                sender_name: expertName,
-                preview:
-                  `New bid on "${project.title}" — $${amount}, ${days} days delivery.` +
-                  (rating ? ` ${expertName} is rated ${Number(rating).toFixed(1)}★ (${reviewCount} reviews).` : "") +
-                  ` Proposal: ${cover.trim().slice(0, 150)}`,
+                project_title: project.title,
+                expert_name: expertName,
+                expert_rating: rating,
+                expert_reviews: reviewCount,
+                bid_amount: parseInt(amount, 10),
+                delivery_days: parseInt(days, 10),
+                proposal_preview: cover.trim(),
+                buyer_hq_url: "https://katexs.com/buyer/hq",
               },
             },
           });
