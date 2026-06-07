@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SEO } from "@/components/SEO";
+import { useAuth } from "@/hooks/useAuth";
+import HomeLoggedIn from "@/pages/HomeLoggedIn";
 import { Search, Mic, MessageSquare, Zap, Terminal, Briefcase, Cpu, PenTool, Plug, FileText, Sparkles, CheckCircle2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { riverScoreText, RiverNewPill } from "@/lib/riverScore";
@@ -193,6 +195,8 @@ function TestimonialsCarousel() {
 }
 
 export default function Landing() {
+  const { user } = useAuth();
+  if (user) return <HomeLoggedIn />;
 
   const nav = useNavigate();
   const [q, setQ] = useState("");
