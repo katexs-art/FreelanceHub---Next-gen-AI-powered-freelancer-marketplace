@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { AppShell } from "@/components/layout/AppShell";
+import { SiteHeader } from "@/components/layout/SiteHeader";
+import { SiteFooter } from "@/components/layout/SiteFooter";
 import { Star, Briefcase, ShoppingBag, DollarSign, Plus, MessageSquare } from "lucide-react";
 
 interface StatCardProps {
@@ -161,9 +162,10 @@ export default function BuyerHq() {
   }
 
   return (
-    <AppShell>
+    <>
+      <SiteHeader showCategories={false} />
       <div className="min-h-screen bg-[#0a0a0a] text-white" style={{ fontFamily: "'DM Sans', sans-serif" }}>
-        <div className="container-page py-8 max-w-5xl mx-auto">
+        <div className="container-page py-8 max-w-5xl mx-auto px-6">
 
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
@@ -303,6 +305,7 @@ export default function BuyerHq() {
 
         </div>
       </div>
-    </AppShell>
+      <SiteFooter />
+    </>
   );
 }
