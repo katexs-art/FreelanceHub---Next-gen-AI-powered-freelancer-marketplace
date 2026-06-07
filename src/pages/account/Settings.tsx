@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { supabase } from "@/integrations/supabase/client";
@@ -265,6 +265,11 @@ export default function Settings() {
                 </Field>
               </section>
 
+              {/* RESPONSE SETTINGS — sellers only */}
+              {profile?.role === "seller" && (
+                <ResponseSettingsSection userId={user?.id ?? ""} />
+              )}
+
               {/* CREDENTIALS */}
               <section className="rounded-2xl border border-border bg-card p-6 space-y-5">
                 <SectionLabel>Credentials & expertise</SectionLabel>
@@ -518,6 +523,64 @@ function PortfolioLinksEditor({
         </div>
       ))}
     </div>
+  );
+}
+
+const RESPONSE_TIME_OPTS = [
+  { value: 60,   label: "Within 1 hour" },
+  { value: 240,  label: "Within a few hours" },
+  { value: 1440, label: "Within 24 hours" },
+  { value: 4320, label: "A few days or more" },
+];
+
+function ResponseSettingsSection({ userId }: { userId: string }) {
+  const [responseTime, setResponseTime] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (!userId) return;
+    supabase.from("profiles").select("response_time_minutes").eq("id", userId).maybeSingle()
+      .then(({ data }) => {
+        if (data) setResponseTime((data as any).response_time_minutes ?? null);
+      });
+  }, [userId]);
+
+  const save = useCallback(async () => {
+    if (!userId) return;
+    setSaving(true);
+    const { error } = await supabase.from("profiles")
+      .update({ response_time_minutes: responseTime } as any)
+      .eq("id", userId);
+    setSaving(false);
+    if (error) { toast.error(error.message); return; }
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }, [userId, responseTime]);
+
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6 space-y-4">
+      <SectionLabel>Response settings</SectionLabel>
+      <div className="space-y-1.5 max-w-full sm:max-w-[60%]">
+        <label className="text-xs font-mono uppercase tracking-[0.14em] text-[#6B7280]">
+          Expected response time
+        </label>
+        <select
+          value={responseTime ?? ""}
+          onChange={(e) => setResponseTime(e.target.value ? Number(e.target.value) : null)}
+          className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm"
+        >
+          <option value="">Select…</option>
+          {RESPONSE_TIME_OPTS.map((o) => (
+            <option key={o.value} value={o.value}>{o.label}</option>
+          ))}
+        </select>
+        <p className="text-xs text-foreground-muted">Shown to buyers on your profile and gig pages.</p>
+      </div>
+      <Button size="sm" variant="outline" onClick={save} disabled={saving}>
+        {saving ? "Saving…" : saved ? "Saved" : "Save"}
+      </Button>
+    </section>
   );
 }
 

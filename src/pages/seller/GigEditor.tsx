@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Check, Upload, X } from "lucide-react";
+import { Check, Edit2, Plus, Trash2, Upload, X } from "lucide-react";
 
 type PkgType = "basic" | "standard" | "premium";
 interface Pkg {
@@ -26,7 +26,23 @@ const EMPTY_PKG = (t: PkgType): Pkg => ({
   package_type: t, title: "", description: "", price: "", delivery_days: "", revisions: "1", features: "",
 });
 
-const STEPS = ["Overview", "Pricing", "Description", "Gallery", "Publish"];
+type FieldType = "text" | "multiple_choice" | "file";
+interface Requirement {
+  id?: string;
+  question: string;
+  field_type: FieldType;
+  is_required: boolean;
+  sort_order: number;
+}
+const EMPTY_REQ = (): Requirement => ({ question: "", field_type: "text", is_required: true, sort_order: 0 });
+
+const FIELD_TYPE_LABELS: Record<FieldType, string> = {
+  text: "Free text",
+  multiple_choice: "Multiple choice",
+  file: "File attachment",
+};
+
+const STEPS = ["Overview", "Pricing", "Description", "Gallery", "Requirements", "Publish"];
 
 export default function GigEditor() {
   const { id } = useParams();
@@ -38,18 +54,17 @@ export default function GigEditor() {
   const [saving, setSaving] = useState(false);
   const [gigId, setGigId] = useState<string | null>(id ?? null);
 
-
-  const [overview, setOverview] = useState({
-    title: "",
-    category: "",
-    tags: "",
-  });
+  const [overview, setOverview] = useState({ title: "", category: "", tags: "" });
   const [description, setDescription] = useState("");
   const [thumbnail, setThumbnail] = useState<string>("");
   const [gallery, setGallery] = useState<string[]>([]);
   const [packages, setPackages] = useState<Pkg[]>([
     EMPTY_PKG("basic"), EMPTY_PKG("standard"), EMPTY_PKG("premium"),
   ]);
+  const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [addingReq, setAddingReq] = useState(false);
+  const [editingReqIdx, setEditingReqIdx] = useState<number | null>(null);
+  const [reqDraft, setReqDraft] = useState<Requirement>(EMPTY_REQ());
 
   // Load existing gig if editing
   useEffect(() => {
@@ -77,6 +92,16 @@ export default function GigEditor() {
             features: (p.features ?? []).join("\n"),
           };
         }));
+      }
+      const { data: reqs } = await supabase.from("gig_requirements").select("*").eq("gig_id", id).order("sort_order");
+      if (reqs && reqs.length) {
+        setRequirements(reqs.map((r: any) => ({
+          id: r.id,
+          question: r.question,
+          field_type: r.field_type as FieldType,
+          is_required: r.is_required,
+          sort_order: r.sort_order ?? 0,
+        })));
       }
     })();
   }, [id, user]);
@@ -144,6 +169,19 @@ export default function GigEditor() {
       const { error } = await supabase.from("gig_packages").insert(rows);
       if (error) { toast.error(error.message); return null; }
     }
+    // Replace requirements
+    await supabase.from("gig_requirements").delete().eq("gig_id", savedId);
+    if (requirements.length) {
+      const reqRows = requirements.map((r, i) => ({
+        gig_id: savedId,
+        question: r.question,
+        field_type: r.field_type,
+        is_required: r.is_required,
+        sort_order: i,
+      }));
+      const { error } = await supabase.from("gig_requirements").insert(reqRows);
+      if (error) { toast.error(error.message); return null; }
+    }
     return savedId;
   };
 
@@ -158,7 +196,7 @@ export default function GigEditor() {
     if (!overview.title || !overview.category) return toast.error("Add a title and category first");
     if (!packages[0].price || !packages[0].title) return toast.error("Basic package needs a title and price");
     if (!description) return toast.error("Add a description");
-    
+
     setSaving(true);
     const id = await upsertGig("active"); // auto-approve for now
     setSaving(false);
@@ -169,6 +207,30 @@ export default function GigEditor() {
     setPackages((arr) => arr.map((p, i) => (i === idx ? { ...p, ...patch } : p)));
   }
 
+  function saveReqDraft() {
+    if (!reqDraft.question.trim()) { toast.error("Question is required"); return; }
+    if (editingReqIdx !== null) {
+      setRequirements((arr) => arr.map((r, i) => i === editingReqIdx ? { ...r, ...reqDraft } : r));
+      setEditingReqIdx(null);
+    } else {
+      setRequirements((arr) => [...arr, { ...reqDraft, sort_order: arr.length }]);
+    }
+    setReqDraft(EMPTY_REQ());
+    setAddingReq(false);
+  }
+
+  function startEditReq(idx: number) {
+    setReqDraft({ ...requirements[idx] });
+    setEditingReqIdx(idx);
+    setAddingReq(true);
+  }
+
+  function cancelReqForm() {
+    setAddingReq(false);
+    setEditingReqIdx(null);
+    setReqDraft(EMPTY_REQ());
+  }
+
   return (
     <>
       <SiteHeader showCategories={false} />
@@ -177,7 +239,7 @@ export default function GigEditor() {
         <h1 className="text-3xl font-bold">{id ? "Edit service" : "Create a new service"}</h1>
 
         {/* Stepper */}
-        <div className="mt-8 mb-10 flex items-center gap-2">
+        <div className="mt-8 mb-10 flex items-center gap-2 flex-wrap">
           {STEPS.map((label, i) => (
             <button key={label} onClick={() => setStep(i)} className="flex items-center gap-2 group">
               <div className={cn(
@@ -297,19 +359,106 @@ export default function GigEditor() {
           )}
 
           {step === 4 && (
+            <div className="space-y-6">
+              <div>
+                <h3 className="font-semibold text-base">What do you need from buyers to get started?</h3>
+                <p className="text-sm text-foreground-muted mt-1">
+                  Add questions buyers must answer before you begin working.
+                </p>
+              </div>
+
+              {requirements.length > 0 && (
+                <div className="space-y-3">
+                  {requirements.map((r, i) => (
+                    <div key={i} className="flex items-start justify-between gap-3 rounded-lg border border-border p-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">{r.question}</p>
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-foreground-muted">
+                            {FIELD_TYPE_LABELS[r.field_type]}
+                          </span>
+                          {r.is_required && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">Required</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button onClick={() => startEditReq(i)} className="p-1.5 rounded hover:bg-secondary text-foreground-muted hover:text-foreground">
+                          <Edit2 className="h-3.5 w-3.5" />
+                        </button>
+                        <button onClick={() => setRequirements((arr) => arr.filter((_, j) => j !== i))} className="p-1.5 rounded hover:bg-secondary text-foreground-muted hover:text-destructive">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {requirements.length === 0 && !addingReq && (
+                <p className="text-sm text-foreground-muted">No requirements added yet. Buyers can start your order without providing extra info.</p>
+              )}
+
+              {addingReq ? (
+                <div className="rounded-lg border border-border p-5 space-y-4">
+                  <h4 className="text-sm font-semibold">{editingReqIdx !== null ? "Edit requirement" : "New requirement"}</h4>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-foreground-muted">Question <span className="text-destructive">*</span></label>
+                    <Input
+                      value={reqDraft.question}
+                      onChange={(e) => setReqDraft((d) => ({ ...d, question: e.target.value }))}
+                      placeholder="e.g. What colors do you prefer?"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs text-foreground-muted">Answer type</label>
+                    <select
+                      value={reqDraft.field_type}
+                      onChange={(e) => setReqDraft((d) => ({ ...d, field_type: e.target.value as FieldType }))}
+                      className="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm"
+                    >
+                      <option value="text">Free text</option>
+                      <option value="multiple_choice">Multiple choice</option>
+                      <option value="file">File attachment</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <label className="text-sm flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={reqDraft.is_required}
+                        onChange={(e) => setReqDraft((d) => ({ ...d, is_required: e.target.checked }))}
+                        className="rounded border-border"
+                      />
+                      Required
+                    </label>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={saveReqDraft}>Save</Button>
+                    <Button size="sm" variant="ghost" onClick={cancelReqForm}>Cancel</Button>
+                  </div>
+                </div>
+              ) : (
+                <Button variant="outline" onClick={() => { setReqDraft(EMPTY_REQ()); setAddingReq(true); }}>
+                  <Plus className="h-4 w-4 mr-1" /> Add requirement
+                </Button>
+              )}
+            </div>
+          )}
+
+          {step === 5 && (
             <div>
               <h3 className="font-semibold mb-2">Ready to publish?</h3>
               <p className="text-sm text-foreground-muted mb-6">
                 Double-check the basics. You can edit your gig any time after publishing.
               </p>
-
-
               <div className="space-y-2 text-sm">
                 <Row k="Title" v={overview.title || "—"} />
                 <Row k="Category" v={overview.category || "—"} />
                 <Row k="Starting price" v={packages[0].price ? `$${packages[0].price}` : "—"} />
                 <Row k="Packages" v={packages.filter((p) => p.title && p.price).length} />
                 <Row k="Gallery images" v={gallery.length} />
+                <Row k="Requirements" v={requirements.length} />
               </div>
             </div>
           )}
