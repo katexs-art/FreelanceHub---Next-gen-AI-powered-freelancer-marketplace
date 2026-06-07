@@ -11,6 +11,7 @@ export function CustomOfferComposer({
   conversationId, sellerId, buyerId, onSent, trigger,
 }: { conversationId: string; sellerId: string; buyerId: string; onSent?: () => void; trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [price, setPrice] = useState("");
   const [days, setDays] = useState("3");
@@ -18,6 +19,7 @@ export function CustomOfferComposer({
   const [busy, setBusy] = useState(false);
 
   const send = async () => {
+    if (!title.trim()) return toast.error("Please add a title");
     const p = Math.round(Number(price) * 100);
     if (!p || p < 500) return toast.error("Minimum offer is $5");
     setBusy(true);
@@ -27,7 +29,8 @@ export function CustomOfferComposer({
 
       const { data: offer, error } = await supabase.from("custom_offers").insert({
         conversation_id: conversationId, seller_id: sellerId, buyer_id: buyerId,
-        description: desc, price: p, delivery_days: Number(days) || 1, revisions: Number(revs) || 0,
+        title: title.trim(), description: desc, price: p,
+        delivery_days: Number(days) || 1, revisions: Number(revs) || 0,
       }).select("id").single();
       if (error) throw error;
 
@@ -38,7 +41,7 @@ export function CustomOfferComposer({
       });
       if (msgErr) throw msgErr;
 
-      setOpen(false); setDesc(""); setPrice("");
+      setOpen(false); setTitle(""); setDesc(""); setPrice("");
       toast.success("Offer sent");
       onSent?.();
     } catch (e: any) {
@@ -59,9 +62,16 @@ export function CustomOfferComposer({
       </DialogTrigger>
 
       <DialogContent>
-        <DialogHeader><DialogTitle>Send a custom offer</DialogTitle></DialogHeader>
+        <DialogHeader><DialogTitle>Send Custom Offer</DialogTitle></DialogHeader>
         <div className="space-y-3">
-          <Textarea placeholder="What's included?" value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} />
+          <div>
+            <label className="text-xs text-foreground-muted">Title</label>
+            <Input placeholder="e.g. GHL automation setup" value={title} onChange={(e) => setTitle(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs text-foreground-muted">Description</label>
+            <Textarea placeholder="What's included in this offer?" value={desc} onChange={(e) => setDesc(e.target.value)} rows={4} />
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="text-xs text-foreground-muted">Price (USD)</label>
@@ -76,7 +86,7 @@ export function CustomOfferComposer({
               <Input type="number" min="0" value={revs} onChange={(e) => setRevs(e.target.value)} />
             </div>
           </div>
-          <Button onClick={send} disabled={busy} className="w-full">Send offer</Button>
+          <Button onClick={send} disabled={busy} className="w-full">Send Offer</Button>
         </div>
       </DialogContent>
     </Dialog>

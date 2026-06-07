@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { MessageSquare, Pencil, Video, MoreHorizontal, Paperclip, ArrowRight, Menu } from "lucide-react";
+import { MessageSquare, Pencil, MoreHorizontal, Paperclip, ArrowRight, Menu, Flag, UserX, User } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
@@ -113,6 +113,52 @@ export default function Inbox() {
   const [listOpen, setListOpen] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const chatInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 3-dots menu
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Report modal
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportText, setReportText] = useState("");
+  const [reportBusy, setReportBusy] = useState(false);
+  // Block dialog
+  const [blockOpen, setBlockOpen] = useState(false);
+  const [blockBusy, setBlockBusy] = useState(false);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handle = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [menuOpen]);
+
+  const submitReport = async () => {
+    if (!user || !active?.other?.id) return;
+    setReportBusy(true);
+    const { error } = await supabase.from("reports").insert({
+      reporter_id: user.id, target_type: "user", target_id: active.other.id,
+      reason: "User report", description: reportText,
+    });
+    setReportBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Report submitted. We'll review it shortly.");
+    setReportOpen(false); setReportText("");
+  };
+
+  const blockUser = async () => {
+    if (!user || !active?.other?.id) return;
+    setBlockBusy(true);
+    const { error } = await supabase.from("blocked_users").insert({
+      blocker_id: user.id, blocked_id: active.other.id,
+    });
+    setBlockBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("User blocked.");
+    setBlockOpen(false);
+  };
 
   const active = useMemo(() => convs.find((c) => c.id === conversationId) ?? null, [convs, conversationId]);
 
@@ -542,19 +588,92 @@ export default function Inbox() {
                             fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
                           }}
                         >
-                          <Paperclip size={14} /> Send offer
+                          <Paperclip size={14} /> Send Custom Offer
                         </button>
                       }
                     />
                   )}
-                  <button type="button" aria-label="Video call" style={iconBtn("video")}
-                    onMouseEnter={() => setHoverIcon("video")} onMouseLeave={() => setHoverIcon(null)}>
-                    <Video size={18} />
-                  </button>
-                  <button type="button" aria-label="More options" style={iconBtn("more")}
-                    onMouseEnter={() => setHoverIcon("more")} onMouseLeave={() => setHoverIcon(null)}>
-                    <MoreHorizontal size={18} />
-                  </button>
+
+                  {/* 3-dots menu */}
+                  <div ref={menuRef} style={{ position: "relative" }}>
+                    <button
+                      type="button"
+                      aria-label="More options"
+                      onClick={() => setMenuOpen((v) => !v)}
+                      style={{
+                        ...iconBtn("more"),
+                        background: menuOpen ? "#1a1a1a" : "transparent",
+                        borderRadius: 8,
+                      }}
+                    >
+                      <MoreHorizontal size={18} />
+                    </button>
+
+                    {menuOpen && (
+                      <div
+                        style={{
+                          position: "absolute", top: "calc(100% + 8px)", right: 0,
+                          background: "#111111", border: "1px solid #1e1e1e",
+                          borderRadius: 12, padding: "6px 0", minWidth: 180,
+                          zIndex: 100, boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+                        }}
+                      >
+                        {/* View Profile */}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuOpen(false);
+                            const target = active.other?.username ?? active.other?.id;
+                            if (target) nav(`/u/${target}`);
+                          }}
+                          style={{
+                            width: "100%", textAlign: "left", background: "transparent",
+                            border: "none", padding: "10px 16px", fontSize: 14,
+                            color: "#ffffff", cursor: "pointer", display: "flex",
+                            alignItems: "center", gap: 10,
+                          }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                        >
+                          <User size={15} style={{ color: "#888" }} /> View Profile
+                        </button>
+
+                        {/* Report */}
+                        <button
+                          type="button"
+                          onClick={() => { setMenuOpen(false); setReportOpen(true); }}
+                          style={{
+                            width: "100%", textAlign: "left", background: "transparent",
+                            border: "none", padding: "10px 16px", fontSize: 14,
+                            color: "#ffffff", cursor: "pointer", display: "flex",
+                            alignItems: "center", gap: 10,
+                          }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                        >
+                          <Flag size={15} style={{ color: "#888" }} /> Report
+                        </button>
+
+                        <div style={{ height: 1, background: "#1e1e1e", margin: "4px 0" }} />
+
+                        {/* Block */}
+                        <button
+                          type="button"
+                          onClick={() => { setMenuOpen(false); setBlockOpen(true); }}
+                          style={{
+                            width: "100%", textAlign: "left", background: "transparent",
+                            border: "none", padding: "10px 16px", fontSize: 14,
+                            color: "#ef4444", cursor: "pointer", display: "flex",
+                            alignItems: "center", gap: 10,
+                          }}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+                        >
+                          <UserX size={15} style={{ color: "#ef4444" }} /> Block User
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </header>
 
@@ -765,6 +884,131 @@ export default function Inbox() {
         )}
       </div>
       <RecommendationsBlock />
+
+      {/* Report modal */}
+      {reportOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 200, padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setReportOpen(false); }}
+        >
+          <div
+            style={{
+              background: "#111111", border: "1px solid #1e1e1e",
+              borderRadius: 16, padding: 28, width: "100%", maxWidth: 440,
+            }}
+          >
+            <h2 style={{ color: "#ffffff", fontSize: 18, fontWeight: 700, margin: "0 0 6px" }}>Report User</h2>
+            <p style={{ color: "#888", fontSize: 13, margin: "0 0 20px" }}>
+              Tell us what's going on. We'll review your report within 24 hours.
+            </p>
+            <textarea
+              value={reportText}
+              onChange={(e) => setReportText(e.target.value)}
+              placeholder="Describe the issue…"
+              rows={4}
+              style={{
+                width: "100%", background: "#1a1a1a", border: "1px solid #333",
+                borderRadius: 10, padding: "12px 14px", fontSize: 14,
+                color: "#ffffff", outline: "none", resize: "vertical",
+                boxSizing: "border-box", fontFamily: "inherit",
+              }}
+            />
+            <div style={{ display: "flex", gap: 10, marginTop: 16 }}>
+              <button
+                type="button"
+                onClick={() => setReportOpen(false)}
+                style={{
+                  flex: 1, background: "#1a1a1a", color: "#888",
+                  border: "1px solid #333", borderRadius: 999,
+                  padding: "11px 0", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={submitReport}
+                disabled={reportBusy || !reportText.trim()}
+                style={{
+                  flex: 1, background: "#ef4444", color: "#ffffff",
+                  border: "none", borderRadius: 999,
+                  padding: "11px 0", fontSize: 14, fontWeight: 600,
+                  cursor: reportBusy || !reportText.trim() ? "not-allowed" : "pointer",
+                  opacity: reportBusy || !reportText.trim() ? 0.5 : 1,
+                }}
+              >
+                {reportBusy ? "Submitting…" : "Submit Report"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Block user dialog */}
+      {blockOpen && (
+        <div
+          style={{
+            position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 200, padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) setBlockOpen(false); }}
+        >
+          <div
+            style={{
+              background: "#111111", border: "1px solid #1e1e1e",
+              borderRadius: 16, padding: 28, width: "100%", maxWidth: 380,
+              textAlign: "center",
+            }}
+          >
+            <div
+              style={{
+                width: 52, height: 52, borderRadius: "50%",
+                background: "#1a1a1a", display: "flex",
+                alignItems: "center", justifyContent: "center",
+                margin: "0 auto 16px",
+              }}
+            >
+              <UserX size={24} style={{ color: "#ef4444" }} />
+            </div>
+            <h2 style={{ color: "#ffffff", fontSize: 18, fontWeight: 700, margin: "0 0 8px" }}>Block this user?</h2>
+            <p style={{ color: "#888", fontSize: 14, margin: "0 0 24px", lineHeight: 1.5 }}>
+              They won't be able to message you. You can unblock them from your settings.
+            </p>
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                type="button"
+                onClick={() => setBlockOpen(false)}
+                style={{
+                  flex: 1, background: "#1a1a1a", color: "#888",
+                  border: "1px solid #333", borderRadius: 999,
+                  padding: "11px 0", fontSize: 14, fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={blockUser}
+                disabled={blockBusy}
+                style={{
+                  flex: 1, background: "#ef4444", color: "#ffffff",
+                  border: "none", borderRadius: 999,
+                  padding: "11px 0", fontSize: 14, fontWeight: 600,
+                  cursor: blockBusy ? "not-allowed" : "pointer",
+                  opacity: blockBusy ? 0.6 : 1,
+                }}
+              >
+                {blockBusy ? "Blocking…" : "Block"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
