@@ -101,7 +101,7 @@ export default function Search() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SEO title={q ? `${q} — Search` : "Search services"} description="Find AI-native freelancers across design, writing, dev, marketing and more." />
+      <SEO title={q ? `${q} — Search` : "Search services"} description="Find AI experts across GHL, Voice AI, Chat AI, Automation, LLM and more." />
       <SiteHeader />
       <main className="flex-1 container py-10">
         <form onSubmit={(e) => { e.preventDefault(); updateParam("q", input); }}

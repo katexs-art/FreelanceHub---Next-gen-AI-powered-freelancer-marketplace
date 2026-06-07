@@ -120,7 +120,7 @@ export default function GigDetail() {
       }
     } catch (e: any) {
       console.error("toggleSave failed", e);
-      toast.error(e?.message || "Could not update saved gigs");
+      toast.error(e?.message || "Could not update saved projects");
     }
   };
 

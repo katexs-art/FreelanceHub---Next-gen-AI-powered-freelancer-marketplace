@@ -11,7 +11,7 @@ const scrollTo = (id: string) => (e: React.MouseEvent) => {
 };
 
 const terms = [
-  { term: "Service", was: "formerly Gig", green: false, desc: "A Service is something an Expert offers on Katexs. Need a voice AI built? There is a Service for that. Need a GHL setup? There is a Service for that." },
+  { term: "Service", was: "", green: false, desc: "A Service is something an Expert offers on Katexs. Need a voice AI built? There is a Service for that. Need a GHL setup? There is a Service for that." },
   { term: "Expert", was: "formerly Seller", green: false, desc: "An Expert is a verified professional who offers their skills on Katexs. Every Expert is manually approved by our team before they can list their Services." },
   { term: "Partner", was: "formerly Buyer", green: false, desc: "A Partner is anyone who hires an Expert on Katexs. Whether you need one thing done or ten things built — you are a Partner." },
   { term: "Project", was: "formerly Order", green: false, desc: "When a Partner hires an Expert and pays — that becomes a Project. Your Project is tracked, monitored, and protected from start to finish." },
