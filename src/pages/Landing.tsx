@@ -329,7 +329,7 @@ export default function Landing() {
     <div style={{ background: "#000", color: "#fff", minHeight: "100vh" }}>
       <SEO
         title="KATEXS — Hire AI experts. Ship faster."
-        description="Tell River what you need — the best AI experts come to you in seconds. The world's first AI-native freelance marketplace."
+        description="Tell River what you need — the best AI experts come to you in seconds. The world's first AI-native business productivity platform."
         jsonLd={{ "@context": "https://schema.org", "@type": "Organization", name: "Katexs", url: "https://katexs.com" }}
       />
 
@@ -386,7 +386,7 @@ export default function Landing() {
               borderRadius: 999, marginBottom: 32, textTransform: "uppercase",
             }}
           >
-            The 1st AI Marketplace Built for Innovators
+            The 1st AI Platform Built for Innovators
           </div>
 
           <h1
@@ -562,7 +562,7 @@ export default function Landing() {
             <div style={{ fontSize: 13, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888", marginBottom: 8 }}>
               Featured services
             </div>
-            <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: 0 }}>Hand-picked gigs</h2>
+            <h2 style={{ fontSize: 32, fontWeight: 500, color: "#fff", margin: 0 }}>Hand-picked projects</h2>
           </div>
           <Link to="/services" style={{ fontSize: 14, color: "#fff", textDecoration: "none" }}>Browse all →</Link>
         </div>

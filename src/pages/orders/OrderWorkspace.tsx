@@ -341,8 +341,8 @@ export default function OrderWorkspace() {
             <h2 className="text-lg font-semibold mb-1">Requirements</h2>
             <p className="text-sm text-foreground-muted mb-4">
               {isBuyer
-                ? "Send your requirements so the seller can start the project."
-                : "Waiting for the buyer to send their requirements."}
+                ? "Send your requirements so the expert can start the project."
+                : "Waiting for the partner to send their requirements."}
             </p>
             {isBuyer && (
               <Button asChild>

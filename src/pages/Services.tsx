@@ -316,7 +316,7 @@ export default function Services() {
             </FilterPill>
 
             <FilterPill
-              label={rating ? `Rating: ${rating.label}` : "Seller Rating"}
+              label={rating ? `Rating: ${rating.label}` : "Expert Rating"}
               active={!!rating}
               onClear={() => setRating(null)}
             >

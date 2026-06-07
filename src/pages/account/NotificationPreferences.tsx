@@ -28,8 +28,8 @@ type Row = {
 };
 
 const ROWS: Row[] = [
-  { title: "Buyer events", desc: "Orders you place: delivery, completion, refunds.", inappKey: "buyer_orders_inapp", emailKey: "buyer_orders_email" },
-  { title: "Seller events", desc: "Orders you receive: new orders, requirements, deadlines.", inappKey: "seller_orders_inapp", emailKey: "seller_orders_email" },
+  { title: "Partner events", desc: "Orders you place: delivery, completion, refunds.", inappKey: "buyer_orders_inapp", emailKey: "buyer_orders_email" },
+  { title: "Expert events", desc: "Orders you receive: new orders, requirements, deadlines.", inappKey: "seller_orders_inapp", emailKey: "seller_orders_email" },
   { title: "Messages", desc: "Direct messages and custom offers in your inbox.", inappKey: "messages_inapp", emailKey: "messages_email" },
   { title: "Tips & promotions", desc: "Occasional product updates and recommendations.", emailKey: "marketing_email" },
 ];

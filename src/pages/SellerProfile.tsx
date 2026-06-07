@@ -361,7 +361,7 @@ export default function SellerProfile() {
                       <Textarea
                         value={form.bio}
                         onChange={(e) => setForm(f => ({ ...f, bio: e.target.value.slice(0, 250) }))}
-                        placeholder="Tell buyers about yourself"
+                        placeholder="Tell partners about yourself"
                         rows={5}
                       />
                       <div className="text-[11px] text-foreground-muted text-right mt-1">{form.bio.length}/250</div>
@@ -435,7 +435,7 @@ export default function SellerProfile() {
                     {seller.bio ? (
                       <p className="text-sm text-foreground-muted whitespace-pre-line">{seller.bio}</p>
                     ) : (
-                      isOwner && <p className="text-sm text-foreground-subtle italic">Tell buyers about yourself — click Edit profile.</p>
+                      isOwner && <p className="text-sm text-foreground-subtle italic">Tell partners about yourself — click Edit profile.</p>
                     )}
 
                     {(seller.seller_skills?.length ?? 0) > 0 && (

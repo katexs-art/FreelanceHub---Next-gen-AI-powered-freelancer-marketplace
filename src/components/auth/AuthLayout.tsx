@@ -116,7 +116,7 @@ export function AuthLayout({
                 margin: "40px 0 32px",
               }}
             >
-              The AI freelance marketplace built for what's next.
+              The AI platform built for what's next.
             </h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -137,7 +137,7 @@ export function AuthLayout({
                   Icon: Star,
                   color: "#a855f7",
                   bg: "rgba(168,85,247,0.15)",
-                  text: "Get paid in 3 days — fastest payouts of any marketplace",
+                  text: "Get paid in 3 days — fastest payouts on any platform",
                 },
               ].map(({ Icon, color, bg, text }, i) => (
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>

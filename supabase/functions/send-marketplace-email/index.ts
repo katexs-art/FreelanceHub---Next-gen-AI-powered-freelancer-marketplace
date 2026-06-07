@@ -18,7 +18,8 @@ type Template =
   | "order_delivered"
   | "order_completed"
   | "order_refunded"
-  | "new_message";
+  | "new_message"
+  | "bid_received";
 
 interface Payload {
   template: Template;
@@ -172,6 +173,59 @@ function render(t: Template, d: Record<string, any> = {}): { subject: string; ht
           `<b>${d.sender_name ?? "Someone"}</b> sent you a message:<br/><br/><i>${(d.preview ?? "").slice(0, 200)}</i>`,
           { href: url, label: "Open inbox" },
         ),
+      };
+    }
+    case "bid_received": {
+      const hqUrl = d.buyer_hq_url ?? `${APP_URL}/buyer/hq`;
+      const stars = typeof d.expert_rating === "number"
+        ? "★".repeat(Math.round(d.expert_rating)) + "☆".repeat(5 - Math.round(d.expert_rating))
+        : null;
+      const ratingLine = stars
+        ? `<span style="color:#F59E0B;font-size:15px;letter-spacing:1px;">${stars}</span>&nbsp;<span style="color:#888;font-size:13px;">${Number(d.expert_rating).toFixed(1)} · ${d.expert_reviews ?? 0} review${(d.expert_reviews ?? 0) === 1 ? "" : "s"}</span>`
+        : `<span style="color:#888;font-size:13px;">New expert</span>`;
+      const body = `
+        <table width="100%" cellpadding="0" cellspacing="0">
+          <tr>
+            <td style="padding-bottom:20px;">
+              <div style="font-size:13px;color:#888;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Expert</div>
+              <div style="font-size:16px;font-weight:600;color:#0a0a0a;margin-bottom:6px;">${d.expert_name ?? "An expert"}</div>
+              <div>${ratingLine}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-bottom:20px;border-top:1px solid #EBEBEB;padding-top:20px;">
+              <div style="font-size:13px;color:#888;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Bid Amount</div>
+              <div style="font-size:32px;font-weight:700;color:#0a0a0a;letter-spacing:-0.02em;">$${d.bid_amount ?? 0}</div>
+              <div style="font-size:13px;color:#888;margin-top:4px;">Delivery in ${d.delivery_days ?? "?"} day${(d.delivery_days ?? 0) === 1 ? "" : "s"}</div>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding-bottom:4px;border-top:1px solid #EBEBEB;padding-top:20px;">
+              <div style="font-size:13px;color:#888;text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Proposal</div>
+              <div style="font-size:14px;color:#404040;line-height:1.6;font-style:italic;">"${(d.proposal_preview ?? "").slice(0, 150)}${(d.proposal_preview ?? "").length > 150 ? "…" : ""}"</div>
+            </td>
+          </tr>
+        </table>`;
+      return {
+        subject: `New bid on your project — ${d.project_title ?? "your project"}`,
+        html: `<!doctype html><html><body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0a0a0a;padding:40px 20px;">
+    <tr><td align="center">
+      <table width="560" cellpadding="0" cellspacing="0" style="background:#111111;border:1px solid #1e1e1e;border-radius:16px;padding:40px;">
+        <tr><td>
+          <div style="font-weight:800;font-size:22px;color:#ffffff;margin-bottom:8px;letter-spacing:-0.01em;">katexs<span style="color:#16A34A;">.</span></div>
+          <div style="font-size:12px;color:#555;text-transform:uppercase;letter-spacing:0.12em;margin-bottom:32px;">AI Business Productivity Platform</div>
+          <h1 style="font-size:22px;font-weight:700;margin:0 0 8px;color:#ffffff;letter-spacing:-0.01em;">You have a new bid</h1>
+          <p style="font-size:14px;color:#888;margin:0 0 28px;">Someone placed a proposal on <b style="color:#ccc;">${d.project_title ?? "your project"}</b></p>
+          <div style="background:#0a0a0a;border:1px solid #1e1e1e;border-radius:12px;padding:24px;margin-bottom:28px;">
+            ${body}
+          </div>
+          <a href="${hqUrl}" style="display:inline-block;background:#16A34A;color:#ffffff;text-decoration:none;padding:14px 28px;border-radius:999px;font-weight:600;font-size:14px;letter-spacing:0.01em;">Review Bids</a>
+          <div style="margin-top:40px;padding-top:24px;border-top:1px solid #1e1e1e;font-size:11px;color:#444;">Katexs — AI Business Productivity Platform</div>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table></body></html>`,
       };
     }
   }

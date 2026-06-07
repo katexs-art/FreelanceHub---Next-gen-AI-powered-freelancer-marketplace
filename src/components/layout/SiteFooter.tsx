@@ -87,7 +87,7 @@ export function SiteFooter() {
               />
             </Link>
             <p className="mt-4 text-sm text-[#888] leading-relaxed max-w-xs">
-              The AI freelance marketplace built for the next decade of work.
+              The AI platform built for the next decade of work.
             </p>
             <div className="mt-6 flex items-center gap-4">
               {SOCIALS.map(({ label, href, Icon }) => (

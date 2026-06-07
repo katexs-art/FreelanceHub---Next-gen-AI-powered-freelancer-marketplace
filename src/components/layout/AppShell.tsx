@@ -56,7 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex-1" />
           {isSeller && (
             <Button size="sm" onClick={() => nav("/seller/gigs/new")}>
-              <Plus className="h-3.5 w-3.5" /> New gig
+              <Plus className="h-3.5 w-3.5" /> New project
             </Button>
           )}
           <NotificationBell />

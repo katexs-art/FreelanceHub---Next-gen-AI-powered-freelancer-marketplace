@@ -130,7 +130,7 @@ export default function FindExperts() {
 
                   <div className="mt-4 flex items-center justify-between text-xs text-foreground-muted">
                     <span>
-                      {s.average_rating ? `★ ${Number(s.average_rating).toFixed(1)} (${s.total_reviews})` : "New seller"}
+                      {s.average_rating ? `★ ${Number(s.average_rating).toFixed(1)} (${s.total_reviews})` : "New expert"}
                     </span>
                     <Button asChild size="sm" variant="outline">
                       <Link to={`/seller/${handle}`}>View profile</Link>

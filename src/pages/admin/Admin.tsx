@@ -198,7 +198,7 @@ function AdminSidebar({ active, indicators, health }: { active: NavKey; indicato
       { key: "sellers", label: "Experts", icon: Users, dot: i.pendingSellers > 0 ? "yellow" : null },
       { key: "verifications", label: "Verifications", icon: BadgeCheck, badge: i.pendingVerifications > 0 ? { value: i.pendingVerifications, tone: "yellow" } : null },
     ]},
-    { label: "Marketplace", items: [
+    { label: "Platform", items: [
       { key: "orders", label: "Projects", icon: ShoppingBag, dot: i.activeOrders > 0 ? "blue" : null, badge: i.lateOrders > 0 ? { value: i.lateOrders, tone: "red" } : null },
       { key: "projects", label: "Projects and Proposals", icon: Briefcase, badge: i.openProjects > 0 ? { value: i.openProjects, tone: "blue" } : null },
       { key: "gigs", label: "Services", icon: Folder, badge: { value: i.activeGigs, tone: "grey" } },

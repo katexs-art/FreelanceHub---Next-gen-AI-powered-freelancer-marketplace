@@ -298,7 +298,7 @@ export default function SellerDashboard() {
       <div className="max-w-6xl">
         {pending && (
           <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900 p-4 text-sm">
-            Your seller application is under review. We will notify you within 24 hours.
+            Your expert application is under review. We will notify you within 24 hours.
           </div>
         )}
         {rejected && (
@@ -347,7 +347,7 @@ export default function SellerDashboard() {
 
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2 mb-8">
-          <Link to="/seller/gigs/new"><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Create New Gig</Button></Link>
+          <Link to="/seller/gigs/new"><Button size="sm"><Plus className="h-4 w-4 mr-1" /> Create New Project</Button></Link>
           <Link to="/inbox"><Button size="sm" variant="outline"><MessageSquare className="h-4 w-4 mr-1" /> View Messages</Button></Link>
           <Link to="/seller/earnings"><Button size="sm" variant="outline"><Wallet className="h-4 w-4 mr-1" /> Withdraw Earnings</Button></Link>
           <Link to="/settings/profile"><Button size="sm" variant="outline"><UserCog className="h-4 w-4 mr-1" /> Edit Profile</Button></Link>
@@ -465,7 +465,7 @@ export default function SellerDashboard() {
         <div className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-semibold">Your services</h2>
-            <Link to="/seller/gigs/new"><Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> Create New Gig</Button></Link>
+            <Link to="/seller/gigs/new"><Button size="sm" variant="outline"><Plus className="h-4 w-4 mr-1" /> Create New Project</Button></Link>
           </div>
           {gigs.length === 0 ? (
             <EmptyState

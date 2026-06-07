@@ -210,7 +210,7 @@ export default function SellerIntelligenceProfile() {
                  : "consistent delivery";
     const repeat = stats.repeatBuyerRate;
     const topPct = Math.max(5, 100 - Math.round((seller.river_score ?? 50)));
-    return `This seller specializes in ${topSkill}. Buyers consistently praise their ${praise}. They have a ${repeat}% repeat buyer rate which places them in the top ${topPct}% of sellers in this category.`;
+    return `This expert specializes in ${topSkill}. Partners consistently praise their ${praise}. They have a ${repeat}% repeat partner rate which places them in the top ${topPct}% of experts in this category.`;
   }, [seller, skillTags, tools, stats.repeatBuyerRate]);
 
   const isOnlineActive = seller?.is_online || (seller?.last_seen && Date.now() - new Date(seller.last_seen).getTime() < 86_400_000);
@@ -450,7 +450,7 @@ export default function SellerIntelligenceProfile() {
               </div>
               <div className="p-5 text-center">
                 <div style={{ fontSize: 28, fontWeight: 700 }}>{stats.repeatBuyerRate}%</div>
-                <div className="text-xs mt-1" style={{ color: "#999" }}>Repeat partners</div>
+                <div className="text-xs mt-1" style={{ color: "#999" }}>Repeat Partner Rate</div>
               </div>
             </section>
 
