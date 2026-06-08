@@ -197,7 +197,10 @@ function TestimonialsCarousel() {
 export default function Landing() {
   const { user } = useAuth();
   if (user) return <HomeLoggedIn />;
+  return <LandingLoggedOut />;
+}
 
+function LandingLoggedOut() {
   const nav = useNavigate();
   const [q, setQ] = useState("");
   const [sellers, setSellers] = useState<TopSeller[]>([]);
