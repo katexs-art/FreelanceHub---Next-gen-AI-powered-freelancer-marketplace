@@ -64,8 +64,11 @@ export function SiteHeader({
   const ordersHref =
     profile?.role === "seller" ? "/seller/orders" : "/buyer/orders";
 
+  const displayName =
+    profile?.full_name?.trim() || user?.email?.split("@")[0] || "";
+
   const avatarInitial =
-    (profile?.full_name?.[0] ?? profile?.email?.[0] ?? "K").toUpperCase();
+    (profile?.full_name?.trim()?.[0] ?? user?.email?.[0] ?? "?").toUpperCase();
 
   const isTransparent = variant === "transparent";
 
@@ -376,7 +379,7 @@ export function SiteHeader({
                     {/* User info */}
                     <div style={{ padding: "10px 16px 12px", borderBottom: "1px solid #1e1e1e" }}>
                       <div style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>
-                        {profile?.full_name ?? profile?.email ?? "User"}
+                        {displayName}
                       </div>
                       <div style={{ fontSize: 12, color: "#888", marginTop: 2 }}>
                         {profile?.role === "seller" ? "Expert" :
