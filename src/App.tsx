@@ -152,6 +152,7 @@ const App = () => (
             <Route path="/seller/analytics" element={<ProtectedRoute roles={["seller","admin"]}><SellerAnalytics /></ProtectedRoute>} />
             <Route path="/seller/verification" element={<ProtectedRoute roles={["seller","admin"]}><Verification /></ProtectedRoute>} />
             <Route path="/saved" element={<ProtectedRoute><Saved /></ProtectedRoute>} />
+            <Route path="/account/saved" element={<ProtectedRoute><Saved /></ProtectedRoute>} />
 
             {/* Shared (any signed-in user) */}
             <Route path="/checkout/success" element={<ProtectedRoute><CheckoutSuccess /></ProtectedRoute>} />
