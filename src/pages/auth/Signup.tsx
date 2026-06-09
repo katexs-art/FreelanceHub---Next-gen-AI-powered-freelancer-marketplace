@@ -90,7 +90,7 @@ export default function Signup() {
         emailRedirectTo: `${window.location.origin}/services`,
         data: {
           full_name: form.full_name.trim(),
-          role: role === "seller" ? "seller" : "buyer",
+          role: role === "seller" ? "seller" : "client",
           country: form.country || null,
         },
       },
