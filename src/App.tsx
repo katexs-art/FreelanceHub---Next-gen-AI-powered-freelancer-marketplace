@@ -10,7 +10,8 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Loading = () => (
   <div className="min-h-screen flex items-center justify-center p-6">
@@ -40,6 +41,20 @@ const Explore = lazy(() => import("./pages/Explore"));
 function BrowseRedirect() {
   const loc = useLocation();
   return <Navigate to={`/services${loc.search}${loc.hash}`} replace />;
+}
+
+// Capture ?ref=CODE on any page and store as a 30-day cookie
+function AffiliateTracker() {
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (!ref) return;
+    const expires = new Date();
+    expires.setDate(expires.getDate() + 30);
+    document.cookie = `aff_ref=${encodeURIComponent(ref)}; expires=${expires.toUTCString()}; path=/; SameSite=Lax`;
+    supabase.rpc("record_affiliate_click", { p_code: ref, p_page_url: window.location.href }).catch(() => {});
+  }, []);
+  return null;
 }
 const Services = lazy(() => import("./pages/Services"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
@@ -80,6 +95,7 @@ const SellerHq = lazy(() => import("./pages/seller/SellerHq"));
 const Settings = lazy(() => import("./pages/account/Settings"));
 const SellerAnalytics = lazy(() => import("./pages/seller/SellerAnalytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Affiliate = lazy(() => import("./pages/Affiliate"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
 
 function HqRedirect() {
@@ -98,6 +114,7 @@ const App = () => (
       <BrowserRouter>
         <ThemeProvider>
         <ScrollToTop />
+        <AffiliateTracker />
         <ErrorBoundary>
         <Suspense fallback={<Loading />}>
           <Routes>
@@ -172,6 +189,8 @@ const App = () => (
             
             <Route path="/admin" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
             <Route path="/admin/:section" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
+
+            <Route path="/affiliate" element={<Affiliate />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
