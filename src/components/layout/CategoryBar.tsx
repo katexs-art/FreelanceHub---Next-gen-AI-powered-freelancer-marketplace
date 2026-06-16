@@ -1,75 +1,100 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link, useSearchParams, useLocation } from "react-router-dom";
 
 export const NAV_CATEGORIES = [
-  { label: "Trending 🔥", slug: "trending" },
-  { label: "GoHighLevel",  slug: "gohighlevel" },
-  { label: "Voice AI",     slug: "voice-ai" },
-  { label: "Chat AI",      slug: "chat-ai" },
-  { label: "AI Automation", slug: "ai-automation" },
-  { label: "LLM & AI",    slug: "llm-ai" },
-  { label: "AI Content",  slug: "ai-content" },
-  { label: "AI Build Stack", slug: "ai-build-stack" },
-  { label: "AI Strategy", slug: "ai-strategy" },
+  { label: "What's Hot 🔥", slug: "trending" },
+  { label: "GoHighLevel",   slug: "gohighlevel" },
+  { label: "AI & Automation", slug: "ai-automation" },
+  { label: "Scale & Grow",  slug: "scale-grow" },
+  { label: "Voice AI",      slug: "voice-ai" },
+  { label: "Chat AI",       slug: "chat-ai" },
+  { label: "LLM & AI",     slug: "llm-ai" },
+  { label: "AI Content",   slug: "ai-content" },
+  { label: "AI Strategy",  slug: "ai-strategy" },
 ] as const;
 
-const DROPDOWNS: Record<string, { label: string; slug: string }[]> = {
+type DropdownItem = { label: string; to: string; browse?: true };
+
+const DROPDOWNS: Record<string, DropdownItem[]> = {
+  "trending": [
+    { label: "AI Phone Receptionist",    to: "/services?category=voice-ai" },
+    { label: "GHL Funnel Build",         to: "/services?category=gohighlevel" },
+    { label: "WhatsApp Chatbot",         to: "/services?category=chat-ai" },
+    { label: "n8n Automation",           to: "/services?category=ai-automation" },
+    { label: "Cold Email Setup",         to: "/services?category=scale-grow" },
+    { label: "Browse all trending →",   to: "/services?category=trending", browse: true },
+  ],
   "gohighlevel": [
-    { label: "GHL Setup & Configuration", slug: "ghl-setup" },
-    { label: "GHL Funnels & Pipelines",   slug: "ghl-funnels" },
-    { label: "GHL Automations",           slug: "ghl-automations" },
-    { label: "GHL Snapshots",             slug: "ghl-snapshots" },
-    { label: "GHL Integrations",          slug: "ghl-integrations" },
-    { label: "GHL Support & Training",    slug: "ghl-support" },
-  ],
-  "voice-ai": [
-    { label: "Voice Agents",              slug: "voice-agents" },
-    { label: "Voice Cloning",             slug: "voice-cloning" },
-    { label: "IVR & Call Flows",          slug: "ivr-call-flows" },
-    { label: "Conversational AI",         slug: "conversational-ai" },
-    { label: "Text-to-Speech",            slug: "text-to-speech" },
-  ],
-  "chat-ai": [
-    { label: "Customer Support Bots",     slug: "support-bots" },
-    { label: "Sales Chatbots",            slug: "sales-chatbots" },
-    { label: "WhatsApp & SMS Bots",       slug: "whatsapp-bots" },
-    { label: "Knowledge Base Bots",       slug: "knowledge-bots" },
-    { label: "Chatbot Training",          slug: "chatbot-training" },
+    { label: "Full GHL Funnel Build",         to: "/services?category=gohighlevel" },
+    { label: "CRM Setup & Pipeline",          to: "/services?category=gohighlevel" },
+    { label: "Email & SMS Automation",        to: "/services?category=gohighlevel" },
+    { label: "Appointment Booking System",    to: "/services?category=gohighlevel" },
+    { label: "Reputation Management",         to: "/services?category=gohighlevel" },
+    { label: "White Label GHL Setup",         to: "/services?category=gohighlevel" },
+    { label: "GHL Workflow Automation",       to: "/services?category=gohighlevel" },
+    { label: "Browse all GoHighLevel →",      to: "/services?category=gohighlevel", browse: true },
   ],
   "ai-automation": [
-    { label: "Zapier & Make Automations", slug: "zapier-make" },
-    { label: "n8n Workflows",             slug: "n8n" },
-    { label: "AI Email Automation",       slug: "email-automation" },
-    { label: "CRM Automation",            slug: "crm-automation" },
-    { label: "Data Pipelines",            slug: "data-pipelines" },
+    { label: "Voice AI — AI Phone Receptionist", to: "/services?category=voice-ai" },
+    { label: "Voice AI — Outbound AI Caller",    to: "/services?category=voice-ai" },
+    { label: "Chat AI — WhatsApp Chatbot",       to: "/services?category=chat-ai" },
+    { label: "Chat AI — Website Chat Widget",    to: "/services?category=chat-ai" },
+    { label: "Workflow — n8n Automation",        to: "/services?category=ai-automation" },
+    { label: "Workflow — Make/Zapier Setup",     to: "/services?category=ai-automation" },
+    { label: "Web Build — AI Website Build",     to: "/services?category=ai-automation" },
+    { label: "Web Build — No-Code App",          to: "/services?category=ai-automation" },
+    { label: "Browse all AI & Automation →",     to: "/services?category=ai-automation", browse: true },
+  ],
+  "scale-grow": [
+    { label: "Lead Gen — Facebook/Instagram Ads", to: "/services?category=scale-grow" },
+    { label: "Lead Gen — Google Ads Setup",       to: "/services?category=scale-grow" },
+    { label: "Cold Outreach — Cold Email Setup",  to: "/services?category=scale-grow" },
+    { label: "Cold Outreach — Instantly Setup",   to: "/services?category=scale-grow" },
+    { label: "Social — Social Media Management",  to: "/services?category=scale-grow" },
+    { label: "SEO — SEO Audit & Strategy",        to: "/services?category=scale-grow" },
+    { label: "Brand — Logo Design",               to: "/services?category=scale-grow" },
+    { label: "Brand — Brand Identity Package",    to: "/services?category=scale-grow" },
+    { label: "Browse all Scale & Grow →",         to: "/services?category=scale-grow", browse: true },
+  ],
+  "voice-ai": [
+    { label: "AI Phone Receptionist",    to: "/services?category=voice-ai" },
+    { label: "Outbound AI Caller",       to: "/services?category=voice-ai" },
+    { label: "Voice Cloning",            to: "/services?category=voice-ai" },
+    { label: "IVR & Call Flows",         to: "/services?category=voice-ai" },
+    { label: "Text-to-Speech",           to: "/services?category=voice-ai" },
+    { label: "Browse all Voice AI →",   to: "/services?category=voice-ai", browse: true },
+  ],
+  "chat-ai": [
+    { label: "WhatsApp Chatbot",         to: "/services?category=chat-ai" },
+    { label: "Website Chat Widget",      to: "/services?category=chat-ai" },
+    { label: "Sales Chatbot",            to: "/services?category=chat-ai" },
+    { label: "Knowledge Base Bot",       to: "/services?category=chat-ai" },
+    { label: "Chatbot Training",         to: "/services?category=chat-ai" },
+    { label: "Browse all Chat AI →",    to: "/services?category=chat-ai", browse: true },
   ],
   "llm-ai": [
-    { label: "Fine-tuning",               slug: "fine-tuning" },
-    { label: "Prompt Engineering",        slug: "prompt-engineering" },
-    { label: "RAG Systems",               slug: "rag-systems" },
-    { label: "Custom LLM Apps",           slug: "custom-llm" },
-    { label: "AI Agents & Crews",         slug: "ai-agents" },
+    { label: "Prompt Engineering",       to: "/services?category=llm-ai" },
+    { label: "RAG Systems",              to: "/services?category=llm-ai" },
+    { label: "Fine-tuning",              to: "/services?category=llm-ai" },
+    { label: "Custom LLM Apps",          to: "/services?category=llm-ai" },
+    { label: "AI Agents & Crews",        to: "/services?category=llm-ai" },
+    { label: "Browse all LLM & AI →",   to: "/services?category=llm-ai", browse: true },
   ],
   "ai-content": [
-    { label: "AI Copywriting",            slug: "ai-copywriting" },
-    { label: "AI Video Scripts",          slug: "ai-scripts" },
-    { label: "AI Blog Writing",           slug: "ai-blogging" },
-    { label: "AI Social Media",           slug: "ai-social" },
-    { label: "AI Image Prompts",          slug: "ai-image-prompts" },
-  ],
-  "ai-build-stack": [
-    { label: "No-Code AI Apps",           slug: "no-code-ai" },
-    { label: "Bubble & Webflow + AI",     slug: "bubble-webflow-ai" },
-    { label: "API Integrations",          slug: "api-integrations" },
-    { label: "AI SaaS Development",       slug: "ai-saas" },
-    { label: "AI Prototypes",             slug: "ai-prototypes" },
+    { label: "AI Copywriting",           to: "/services?category=ai-content" },
+    { label: "AI Video Scripts",         to: "/services?category=ai-content" },
+    { label: "AI Blog Writing",          to: "/services?category=ai-content" },
+    { label: "AI Social Media",          to: "/services?category=ai-content" },
+    { label: "AI Image Prompts",         to: "/services?category=ai-content" },
+    { label: "Browse all AI Content →", to: "/services?category=ai-content", browse: true },
   ],
   "ai-strategy": [
-    { label: "AI Consulting",             slug: "ai-consulting" },
-    { label: "AI Audits",                 slug: "ai-audits" },
-    { label: "AI Roadmapping",            slug: "ai-roadmapping" },
-    { label: "AI Training & Workshops",   slug: "ai-training" },
-    { label: "AI ROI Analysis",           slug: "ai-roi" },
+    { label: "AI Consulting",            to: "/services?category=ai-strategy" },
+    { label: "AI Audits",                to: "/services?category=ai-strategy" },
+    { label: "AI Roadmapping",           to: "/services?category=ai-strategy" },
+    { label: "AI Training & Workshops",  to: "/services?category=ai-strategy" },
+    { label: "AI ROI Analysis",          to: "/services?category=ai-strategy" },
+    { label: "Browse all AI Strategy →", to: "/services?category=ai-strategy", browse: true },
   ],
 };
 
@@ -77,6 +102,7 @@ export function CategoryBar() {
   const location = useLocation();
   const [params] = useSearchParams();
   const [openSlug, setOpenSlug] = useState<string | null>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activeCat = params.get("category") ?? "";
   const activeSlug = NAV_CATEGORIES.find(
@@ -84,6 +110,15 @@ export function CategoryBar() {
       activeCat.toLowerCase().includes(c.slug) ||
       location.pathname === `/category/${c.slug}`,
   )?.slug ?? "";
+
+  function handleEnter(slug: string) {
+    if (closeTimer.current) clearTimeout(closeTimer.current);
+    if (slug in DROPDOWNS) setOpenSlug(slug);
+  }
+
+  function handleLeave() {
+    closeTimer.current = setTimeout(() => setOpenSlug(null), 150);
+  }
 
   return (
     <div
@@ -101,7 +136,6 @@ export function CategoryBar() {
         .kx-catbar-inner::-webkit-scrollbar { display: none; }
       `}</style>
 
-      {/* ── pill row ─────────────────────────────────── */}
       <div
         className="kx-catbar-inner"
         style={{
@@ -118,16 +152,19 @@ export function CategoryBar() {
           const isActive = cat.slug === activeSlug;
           const hasDropdown = cat.slug in DROPDOWNS;
           const isOpen = openSlug === cat.slug;
+          const items = DROPDOWNS[cat.slug] ?? [];
+          const browseItem = items.find((i) => i.browse);
+          const regularItems = items.filter((i) => !i.browse);
 
           return (
             <div
               key={cat.slug}
               style={{ position: "relative", flexShrink: 0 }}
-              onMouseEnter={() => hasDropdown && setOpenSlug(cat.slug)}
-              onMouseLeave={() => setOpenSlug(null)}
+              onMouseEnter={() => handleEnter(cat.slug)}
+              onMouseLeave={handleLeave}
             >
               <Link
-                to={`/services?category=${encodeURIComponent(cat.label.replace(" 🔥", ""))}`}
+                to={`/services?category=${encodeURIComponent(cat.slug)}`}
                 className="kx-cat"
                 style={{
                   display: "inline-flex",
@@ -146,55 +183,89 @@ export function CategoryBar() {
                 {hasDropdown && (
                   <svg
                     width="10" height="10" viewBox="0 0 10 10"
-                    style={{ opacity: 0.5, transform: isOpen ? "rotate(180deg)" : "none", transition: "transform 0.15s", flexShrink: 0 }}
+                    style={{
+                      opacity: 0.5,
+                      transform: isOpen ? "rotate(180deg)" : "none",
+                      transition: "transform 0.15s",
+                      flexShrink: 0,
+                    }}
                   >
                     <path d="M1 3l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
                   </svg>
                 )}
               </Link>
 
-              {/* ── dropdown ─────────────────────────── */}
               {hasDropdown && isOpen && (
-                <div style={{
-                  position: "absolute",
-                  top: "100%",
-                  left: "50%",
-                  transform: "translateX(-50%)",
-                  background: "#111111",
-                  border: "1px solid #1e1e1e",
-                  borderRadius: 10,
-                  padding: "6px 0",
-                  minWidth: 210,
-                  boxShadow: "0 12px 40px rgba(0,0,0,0.7)",
-                  zIndex: 200,
-                }}>
-                  {DROPDOWNS[cat.slug].map((sub) => (
+                <div
+                  onMouseEnter={() => handleEnter(cat.slug)}
+                  onMouseLeave={handleLeave}
+                  style={{
+                    position: "absolute",
+                    top: "100%",
+                    left: "50%",
+                    transform: "translateX(-50%)",
+                    background: "#111111",
+                    border: "0.5px solid #1e1e1e",
+                    borderRadius: "0 0 12px 12px",
+                    padding: "8px",
+                    minWidth: 220,
+                    boxShadow: "0 12px 40px rgba(0,0,0,0.7)",
+                    zIndex: 100,
+                  }}
+                >
+                  {regularItems.map((item) => (
                     <Link
-                      key={sub.slug}
-                      to={`/services?category=${encodeURIComponent(sub.label)}`}
+                      key={item.label}
+                      to={item.to}
                       style={{
                         display: "block",
-                        padding: "9px 16px",
-                        fontSize: 13,
-                        color: "#aaa",
+                        padding: "8px 14px",
+                        fontSize: 12,
+                        color: "#A7B0C0",
                         textDecoration: "none",
+                        borderRadius: 6,
                         whiteSpace: "nowrap",
                         transition: "background 0.12s, color 0.12s",
                       }}
                       onMouseEnter={(e) => {
                         const el = e.currentTarget as HTMLAnchorElement;
-                        el.style.background = "#1a1a1a";
-                        el.style.color = "#fff";
+                        el.style.background = "#1e1e1e";
+                        el.style.color = "#ffffff";
                       }}
                       onMouseLeave={(e) => {
                         const el = e.currentTarget as HTMLAnchorElement;
                         el.style.background = "transparent";
-                        el.style.color = "#aaa";
+                        el.style.color = "#A7B0C0";
                       }}
                     >
-                      {sub.label}
+                      {item.label}
                     </Link>
                   ))}
+                  {browseItem && (
+                    <div style={{ borderTop: "0.5px solid #1e1e1e", marginTop: 4, paddingTop: 8 }}>
+                      <Link
+                        to={browseItem.to}
+                        style={{
+                          display: "block",
+                          padding: "8px 14px",
+                          fontSize: 12,
+                          color: "#1D4ED8",
+                          textDecoration: "none",
+                          borderRadius: 6,
+                          whiteSpace: "nowrap",
+                          transition: "background 0.12s",
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "#1e1e1e";
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
+                        }}
+                      >
+                        {browseItem.label}
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
