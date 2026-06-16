@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { Search, Grid2X2, List, Star, ChevronLeft, ChevronRight, X, SlidersHorizontal } from "lucide-react";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { CategoryBar } from "@/components/layout/CategoryBar";
 import { SEO } from "@/components/SEO";
 import { supabase } from "@/integrations/supabase/client";
 import { FiverCard, FiverCardSkeleton, FiverCardData } from "@/components/marketplace/FiverCard";
@@ -13,26 +14,12 @@ const PAGE_SIZE = 20;
 
 const CAT_PILLS = [
   { label: "All", slug: "" },
+  { label: "What's Hot 🔥", slug: "trending" },
   { label: "GoHighLevel", slug: "gohighlevel" },
-  { label: "Voice AI", slug: "voice-ai" },
-  { label: "Chat AI", slug: "chat-ai" },
-  { label: "AI Automation", slug: "ai-automation" },
-  { label: "LLM & AI", slug: "llm-ai" },
-  { label: "AI Content", slug: "ai-content" },
-  { label: "AI Build Stack", slug: "ai-build-stack" },
-  { label: "AI Strategy", slug: "ai-strategy" },
+  { label: "AI & Automation", slug: "ai-automation" },
+  { label: "Scale & Grow", slug: "scale-grow" },
 ];
 
-const SIDEBAR_CATS = [
-  "GoHighLevel",
-  "Voice AI",
-  "Chat AI",
-  "AI Automation",
-  "LLM & AI",
-  "AI Content",
-  "AI Build Stack",
-  "AI Strategy",
-];
 
 const DELIVERY_OPTS = [
   { label: "Any", value: "" },
@@ -118,15 +105,15 @@ function Sidebar({
       {/* Category */}
       <div style={{ marginBottom: 20 }}>
         <div style={sectionTitle}>Category</div>
-        {SIDEBAR_CATS.map((c) => (
-          <label key={c} style={label}>
+        {CAT_PILLS.filter((p) => p.slug !== "").map((p) => (
+          <label key={p.slug} style={label}>
             <input
               type="checkbox"
-              checked={cats.includes(c)}
-              onChange={() => toggleCat(c)}
+              checked={cats.includes(p.slug)}
+              onChange={() => toggleCat(p.slug)}
               style={{ accentColor: "#16A34A", width: 14, height: 14 }}
             />
-            {c}
+            {p.label}
           </label>
         ))}
       </div>
@@ -311,16 +298,9 @@ export default function Services() {
 
   // Sync URL category param → activeCats when URL changes
   useEffect(() => {
-    if (catParam) {
-      const match = SIDEBAR_CATS.find((c) => c.toLowerCase().replace(/\s+/g, "-") === catParam.toLowerCase() || c.toLowerCase().includes(catParam.toLowerCase()));
-      if (match) {
-        setActiveCats([match]);
-        setApplied((prev) => ({ ...prev, cats: [match], page: 1 }));
-      } else {
-        setActiveCats([catParam]);
-        setApplied((prev) => ({ ...prev, cats: [catParam], page: 1 }));
-      }
-    }
+    const slug = catParam.toLowerCase();
+    setActiveCats(slug ? [slug] : []);
+    setApplied((prev) => ({ ...prev, cats: slug ? [slug] : [], page: 1 }));
   }, [catParam]);
 
   // Sync URL q param
@@ -342,11 +322,11 @@ export default function Services() {
   };
 
   const pickCatPill = (slug: string) => {
-    const match = slug ? SIDEBAR_CATS.find((c) => c.toLowerCase().replace(/[\s&]+/g, "-").includes(slug) || slug.includes(c.toLowerCase().replace(/[\s&]+/g, "-"))) : undefined;
-    const cats = match ? [match] : slug ? [slug] : [];
+    const cats = slug ? [slug] : [];
     setActiveCats(cats);
     setApplied((prev) => ({ ...prev, cats, page: 1 }));
     setPage(1);
+    setParams(slug ? new URLSearchParams({ category: slug }) : new URLSearchParams());
   };
 
   const goPage = (p: number) => {
@@ -373,8 +353,17 @@ export default function Services() {
         q = q.or(`title.ilike.%${applied.q}%,category.ilike.%${applied.q}%`);
       }
 
-      // Category
-      if (applied.cats.length) {
+      // Category — slug-based mapping
+      const slug = applied.cats[0] ?? "";
+      if (slug === "trending") {
+        // no category filter; will be ordered by rating below
+      } else if (slug === "gohighlevel") {
+        q = q.ilike("category", "%gohighlevel%");
+      } else if (slug === "ai-automation") {
+        q = q.or("category.ilike.%voice-ai%,category.ilike.%chat-ai%,category.ilike.%ai-automation%,category.ilike.%llm-ai%,category.ilike.%ai-build-stack%,category.ilike.%ai-content%");
+      } else if (slug === "scale-grow") {
+        q = q.or("category.ilike.%scale-grow%,category.ilike.%ai-content%,category.ilike.%ai-strategy%");
+      } else if (slug && applied.cats.length) {
         const orParts = applied.cats.map((c) => `category.ilike.%${c}%`).join(",");
         q = q.or(orParts);
       }
@@ -390,12 +379,13 @@ export default function Services() {
         else q = q.gte("average_rating", r);
       }
 
-      // Sort
-      if (applied.sort === "newest") q = q.order("created_at", { ascending: false });
+      // Sort — trending always sorts by rating desc
+      if (slug === "trending" || applied.sort === "recommended") q = q.order("average_rating", { ascending: false });
+      else if (applied.sort === "newest") q = q.order("created_at", { ascending: false });
       else if (applied.sort === "price_asc") q = q.order("starting_price", { ascending: true });
       else if (applied.sort === "price_desc") q = q.order("starting_price", { ascending: false });
       else if (applied.sort === "best_selling") q = q.order("total_orders", { ascending: false });
-      else q = q.order("average_rating", { ascending: false }); // recommended
+      else q = q.order("average_rating", { ascending: false });
 
       const { data, count, error } = await q;
       if (error) console.error(error);
@@ -418,9 +408,6 @@ export default function Services() {
   }, [applied]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
-  const activePillSlug = applied.cats.length === 1
-    ? CAT_PILLS.find((p) => p.label === applied.cats[0] || applied.cats[0]?.toLowerCase().includes(p.slug))?.slug ?? ""
-    : applied.cats.length === 0 ? "" : "__multi__";
 
   const iconBtn = (active: boolean): React.CSSProperties => ({
     background: active ? "#1e1e1e" : "transparent",
@@ -436,34 +423,7 @@ export default function Services() {
 
       <div style={{ background: "#0a0a0a", minHeight: "100vh" }}>
 
-        {/* Category pills */}
-        <div style={{ background: "#111111", borderBottom: "1px solid #1e1e1e", overflowX: "auto", scrollbarWidth: "none" }}>
-          <style>{`.kx-svc-pills::-webkit-scrollbar{display:none}`}</style>
-          <div className="kx-svc-pills" style={{ display: "flex", gap: 0, maxWidth: 1400, margin: "0 auto", padding: "0 24px", overflowX: "auto", scrollbarWidth: "none" }}>
-            {CAT_PILLS.map((p) => {
-              const isActive = p.slug === "" ? activePillSlug === "" : activePillSlug === p.slug || (applied.cats.length === 1 && applied.cats[0] === p.label);
-              return (
-                <button
-                  key={p.slug}
-                  onClick={() => pickCatPill(p.slug)}
-                  style={{
-                    flexShrink: 0, padding: "12px 16px", fontSize: 13,
-                    fontWeight: isActive ? 600 : 400,
-                    color: isActive ? "#ffffff" : "#888",
-                    background: "transparent", border: "none",
-                    borderBottom: `2px solid ${isActive ? "#16A34A" : "transparent"}`,
-                    cursor: "pointer", whiteSpace: "nowrap",
-                    transition: "color 0.15s, border-color 0.15s",
-                  }}
-                  onMouseEnter={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = "#fff"; }}
-                  onMouseLeave={(e) => { if (!isActive) (e.currentTarget as HTMLButtonElement).style.color = "#888"; }}
-                >
-                  {p.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <CategoryBar />
 
         {/* Page body */}
         <div style={{ maxWidth: 1400, margin: "0 auto", padding: "24px 24px 80px" }}>
