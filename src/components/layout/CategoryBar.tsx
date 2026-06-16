@@ -44,11 +44,11 @@ export function CategoryBar() {
         className="kx-catbar-inner"
         style={{
           display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
           overflowX: "auto",
           scrollbarWidth: "none",
-          padding: "0 24px",
-          maxWidth: 1400,
-          margin: "0 auto",
+          padding: "0 32px",
         }}
       >
         {NAV_CATEGORIES.map((cat) => {
