@@ -96,6 +96,9 @@ const Settings = lazy(() => import("./pages/account/Settings"));
 const SellerAnalytics = lazy(() => import("./pages/seller/SellerAnalytics"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Affiliate = lazy(() => import("./pages/Affiliate"));
+const Submit = lazy(() => import("./pages/Submit"));
+const FreeAudit = lazy(() => import("./pages/FreeAudit"));
+const Contact = lazy(() => import("./pages/Contact"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
 
 function HqRedirect() {
@@ -191,6 +194,9 @@ const App = () => (
             <Route path="/admin/:section" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
 
             <Route path="/affiliate" element={<Affiliate />} />
+            <Route path="/submit" element={<Submit />} />
+            <Route path="/free-audit" element={<FreeAudit />} />
+            <Route path="/contact" element={<Contact />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
