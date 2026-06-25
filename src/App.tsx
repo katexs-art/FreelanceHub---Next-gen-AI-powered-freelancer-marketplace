@@ -99,6 +99,7 @@ const Affiliate = lazy(() => import("./pages/Affiliate"));
 const Submit = lazy(() => import("./pages/Submit"));
 const FreeAudit = lazy(() => import("./pages/FreeAudit"));
 const Contact = lazy(() => import("./pages/Contact"));
+const Network = lazy(() => import("./pages/Network"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
 
 function HqRedirect() {
@@ -194,6 +195,7 @@ const App = () => (
             <Route path="/admin/:section" element={<ProtectedRoute roles={["admin"]}><Admin /></ProtectedRoute>} />
 
             <Route path="/affiliate" element={<Affiliate />} />
+            <Route path="/network" element={<Network />} />
             <Route path="/submit" element={<Submit />} />
             <Route path="/free-audit" element={<FreeAudit />} />
             <Route path="/contact" element={<Contact />} />

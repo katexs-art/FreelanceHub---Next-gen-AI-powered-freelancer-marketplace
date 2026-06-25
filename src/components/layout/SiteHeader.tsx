@@ -130,6 +130,7 @@ export function SiteHeader({
           <nav style={{ display: "flex", gap: 4, marginLeft: 8 }}>
             {[
               { to: "/services",    label: "Find Experts" },
+              { to: "/network",     label: "Network" },
               { to: "/projects",    label: "Open Projects" },
               { to: "/how-it-works", label: "How It Works" },
             ].map(({ to, label }) => (
@@ -504,6 +505,7 @@ export function SiteHeader({
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                 {[
                   { to: "/services",    label: "Find Experts" },
+                  { to: "/network",     label: "Network" },
                   { to: "/projects",    label: "Open Projects" },
                   { to: "/how-it-works", label: "How It Works" },
                 ].map(({ to, label }) => (
