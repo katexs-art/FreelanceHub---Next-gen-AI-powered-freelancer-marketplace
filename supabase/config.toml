@@ -17,17 +17,6 @@ project_id = "nswgubxabcjyfsgbiicz"
     verify_jwt = false
   [functions.send-marketplace-email]
     verify_jwt = false
-  [functions.stripe-checkout]
-    verify_jwt = false
-  [functions.stripe-connect-onboard]
-    verify_jwt = false
-  [functions.stripe-payment-intent]
-    verify_jwt = false
-  [functions.stripe-payout]
-    verify_jwt = false
-  [functions.stripe-refund]
-    verify_jwt = false
-  [functions.stripe-webhook]
-    verify_jwt = false
+
   [functions.workflow-engine]
     verify_jwt = false

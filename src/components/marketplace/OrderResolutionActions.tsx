@@ -56,12 +56,10 @@ export function OrderResolutionActions({
     if (error) { setBusy(false); return toast.error(error.message); }
 
     if (accept) {
-      const { data, error: refundErr } = await supabase.functions.invoke("stripe-refund", { body: { order_id: orderId } });
+      // Stripe refund removed — payment integration coming soon
       setBusy(false);
-      if (refundErr || data?.error) {
-        toast.error(refundErr?.message || data?.error || "Refund failed — contact support");
-      } else {
-        toast.success("Project cancelled — refund sent to partner");
+      {
+        toast.success("Project cancelled — refund will be processed manually");
       }
     } else {
       setBusy(false);

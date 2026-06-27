@@ -160,7 +160,7 @@ function useAdminIndicators(): Indicators {
 /* ------------- System health (60s) ------------- */
 type Health = {
   supabase: { status: "connected"|"down"; latency_ms?: number };
-  stripe: { status: "live"|"error"; mode?: "live"|"test" };
+  // stripe removed
   anthropic: { status: "active"|"error" };
   email?: { status: "connected"|"error" };
   last_checked?: string;
@@ -192,7 +192,7 @@ function AdminSidebar({ active, indicators, health }: { active: NavKey; indicato
   const i = indicators;
   const sections: { label: string; items: NavItem[] }[] = [
     { label: "Overview", items: [
-      { key: "overview", label: "Overview", icon: LayoutDashboard, dot: health ? (health.supabase.status === "connected" && health.stripe.status === "live" && health.anthropic.status === "active" ? "green" : "red") : "green" },
+      { key: "overview", label: "Overview", icon: LayoutDashboard, dot: health ? (health.supabase.status === "connected" && health.anthropic.status === "active" ? "green" : "red") : "green" },
     ]},
     { label: "People", items: [
       { key: "buyers", label: "Partners", icon: UserCircle2, badge: i.buyersToday > 0 ? { value: i.buyersToday, tone: "blue" } : null },
@@ -317,7 +317,7 @@ function NavBadge({ tone, value, active }: { tone: "blue"|"grey"|"red"|"orange"|
 function HealthStrip({ health }: { health: Health }) {
   const items = [
     { label: "Supabase", ok: !!health && health.supabase.status === "connected", okLabel: "Connected", badLabel: "Disconnected", warn: false },
-    { label: "Stripe", ok: !!health && health.stripe.status === "live", okLabel: health?.stripe?.mode === "live" ? "Live" : "Test", badLabel: "Error", warn: health?.stripe?.mode !== "live" },
+    // Stripe status removed
     { label: "Anthropic", ok: !!health && health.anthropic.status === "active", okLabel: "Active", badLabel: "Error", warn: false },
   ];
   return (
@@ -434,16 +434,16 @@ export default function Admin() {
     toast.success(`Withdrawal ${status}`); load();
   };
 
-  const processStripePayout = async (id: string) => {
-    const { data, error } = await supabase.functions.invoke("stripe-payout", { body: { withdrawal_id: id } });
+  const processStripePayout = async (_id: string) => {
+    const data: any = null; const error: any = null;
+    // Stripe payout removed — payment integration coming soon
     if (error || data?.error) return toast.error(error?.message || data?.error || "Payout failed");
     toast.success(data?.manual ? `Send manually to ${data.paypal_email}` : "Payout sent via Stripe");
     load();
   };
 
   const refundOrder = async (orderId: string, disputeId?: string) => {
-    const { data, error } = await supabase.functions.invoke("stripe-refund", { body: { order_id: orderId } });
-    if (error || data?.error) return toast.error(error?.message || data?.error || "Refund failed");
+    // Stripe refund removed — payment integration coming soon
     await supabase.from("orders").update({ escrow_status: "refunded" }).eq("id", orderId);
     if (disputeId) {
       await supabase.from("disputes").update({
@@ -1202,7 +1202,7 @@ function OverviewPanel({ indicators, health }: { indicators: Indicators; health:
       </div>
       <div className="bg-background border border-border rounded-xl p-5 text-xs text-foreground-muted">
         System status: {health
-          ? `Supabase ${health.supabase.status} · Stripe ${health.stripe.status} (${health.stripe.mode}) · Anthropic ${health.anthropic.status}`
+          ? `Supabase ${health.supabase.status} · Anthropic ${health.anthropic.status}`
           : "checking…"}
       </div>
     </div>
@@ -1292,10 +1292,9 @@ function PayoutsPanel() {
     setPending(p.data ?? []); setHistory(h.data ?? []); setPaypalPending(pp.data ?? []);
   };
   useEffect(() => { load(); }, []);
-  const approve = async (id: string) => {
-    const { data, error } = await supabase.functions.invoke("stripe-payout", { body: { withdrawal_id: id } });
-    if (error || data?.error) return toast.error(error?.message || data?.error || "Failed");
-    toast.success("Payout sent"); load();
+  const approve = async (_id: string) => {
+    // Stripe payout removed — payment integration coming soon
+    toast("Payment integration coming soon"); load();
   };
   const bulkApprove = async () => {
     if (!confirm(`Approve ${pending.length} payouts?`)) return;
@@ -1335,8 +1334,8 @@ function PayoutsPanel() {
           <h3 className="text-sm font-semibold">Pending Payouts ({pending.length})</h3>
           {pending.length > 0 && <Button size="sm" onClick={bulkApprove}>Bulk Approve All</Button>}
         </div>
-        <Table headers={["Expert","River","Amount","Projects","Stripe","Requested","Action"]}>
-          {pending.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-sm text-foreground-muted">No pending payouts.</td></tr>}
+        <Table headers={["Expert","River","Amount","Projects","Requested","Action"]}>
+          {pending.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-sm text-foreground-muted">No pending payouts.</td></tr>}
           {pending.map((w) => (
             <tr key={w.id} className="border-t border-border">
               <td className="p-3">{w.seller?.full_name ?? w.seller?.username}</td>
@@ -1358,7 +1357,7 @@ function PayoutsPanel() {
               <td className="p-3 text-foreground-muted">{fmtDate(w.paid_at ?? w.created_at)}</td>
               <td className="p-3">{w.seller?.full_name ?? w.seller?.username}</td>
               <td className="p-3 font-medium">{dollars(w.amount)}</td>
-              <td className="p-3 font-mono text-xs">{w.stripe_payout_id ?? "—"}</td>
+
               <td className="p-3"><StatusBadge variant={w.status === "paid" ? "completed" : "banned"} label={w.status} /></td>
             </tr>
           ))}
@@ -1857,7 +1856,7 @@ function SystemHealthPanel({ health }: { health: Health }) {
     <div className="space-y-4">
       <div className="grid sm:grid-cols-4 gap-4">
         <Card name="Supabase" ok={health?.supabase.status === "connected"} lines={[health?.supabase.status === "connected" ? "Connected" : "Disconnected", `${health?.supabase.latency_ms ?? "—"} ms`, `Checked ${fmtDateTime(health?.last_checked)}`]} />
-        <Card name="Stripe" ok={health?.stripe.status === "live"} lines={[`${health?.stripe.mode ?? "test"} mode`, "Webhook errors 24h: —"]} />
+        {/* Stripe card removed */}
         <Card name="Anthropic" ok={health?.anthropic.status === "active"} lines={[health?.anthropic.status === "active" ? "Active" : "Error", "Errors 24h: 0"]} />
         <Card name="Email" ok={health?.email?.status === "connected"} lines={[health?.email?.status === "connected" ? "Connected" : "Not configured"]} />
       </div>

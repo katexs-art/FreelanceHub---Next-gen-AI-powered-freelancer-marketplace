@@ -1124,8 +1124,6 @@ export type Database = {
           seller_earnings: number
           seller_id: string
           status: Database["public"]["Enums"]["order_status"]
-          stripe_charge_id: string | null
-          stripe_payment_intent_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1160,8 +1158,6 @@ export type Database = {
           seller_earnings: number
           seller_id: string
           status?: Database["public"]["Enums"]["order_status"]
-          stripe_charge_id?: string | null
-          stripe_payment_intent_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1196,8 +1192,6 @@ export type Database = {
           seller_earnings?: number
           seller_id?: string
           status?: Database["public"]["Enums"]["order_status"]
-          stripe_charge_id?: string | null
-          stripe_payment_intent_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1695,7 +1689,6 @@ export type Database = {
           paypal_email: string | null
           pending_balance: number
           seller_id: string
-          stripe_account_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1712,7 +1705,6 @@ export type Database = {
           paypal_email?: string | null
           pending_balance?: number
           seller_id: string
-          stripe_account_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1729,7 +1721,6 @@ export type Database = {
           paypal_email?: string | null
           pending_balance?: number
           seller_id?: string
-          stripe_account_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1904,7 +1895,6 @@ export type Database = {
           order_id: string | null
           seller_id: string | null
           status: Database["public"]["Enums"]["transaction_status"]
-          stripe_transfer_id: string | null
           type: Database["public"]["Enums"]["transaction_type"]
         }
         Insert: {
@@ -1915,7 +1905,6 @@ export type Database = {
           order_id?: string | null
           seller_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
-          stripe_transfer_id?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
         }
         Update: {
@@ -1926,7 +1915,6 @@ export type Database = {
           order_id?: string | null
           seller_id?: string | null
           status?: Database["public"]["Enums"]["transaction_status"]
-          stripe_transfer_id?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
         }
         Relationships: [
@@ -2016,7 +2004,6 @@ export type Database = {
           paid_at: string | null
           seller_id: string
           status: Database["public"]["Enums"]["withdrawal_status"]
-          stripe_payout_id: string | null
         }
         Insert: {
           amount: number
@@ -2027,7 +2014,6 @@ export type Database = {
           paid_at?: string | null
           seller_id: string
           status?: Database["public"]["Enums"]["withdrawal_status"]
-          stripe_payout_id?: string | null
         }
         Update: {
           amount?: number
@@ -2038,7 +2024,6 @@ export type Database = {
           paid_at?: string | null
           seller_id?: string
           status?: Database["public"]["Enums"]["withdrawal_status"]
-          stripe_payout_id?: string | null
         }
         Relationships: [
           {
