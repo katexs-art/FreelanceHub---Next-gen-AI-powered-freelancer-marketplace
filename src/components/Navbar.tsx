@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 export default function Navbar() {
   return (
     <nav style={{
-      position: "fixed",
+      position: "sticky",
       top: 0,
       left: 0,
       right: 0,
@@ -11,7 +11,8 @@ export default function Navbar() {
       background: "#000",
       borderBottom: "0.5px solid rgba(255,255,255,0.08)",
       padding: "0 40px",
-      height: "64px",
+      height: "72px",
+      margin: 0,
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -22,7 +23,7 @@ export default function Navbar() {
           src="/Katexs_Logo_White.jpg"
           alt="Katexs"
           style={{
-            height: "52px",
+            height: "56px",
             width: "auto",
             objectFit: "contain",
           }}
