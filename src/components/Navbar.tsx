@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 export default function Navbar() {
   return (
     <nav style={{
-      position: "sticky",
-      top: 0,
+      position: "fixed",
+      top: "40px",
       left: 0,
       right: 0,
       zIndex: 100,
@@ -24,6 +24,7 @@ export default function Navbar() {
           alt="Katexs"
           style={{
             height: "56px",
+            width: "auto",
             width: "auto",
             objectFit: "contain",
           }}
