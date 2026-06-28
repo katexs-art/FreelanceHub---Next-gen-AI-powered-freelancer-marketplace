@@ -11,7 +11,7 @@ export default function Navbar() {
       background: "#000",
       borderBottom: "0.5px solid rgba(255,255,255,0.08)",
       padding: "0 40px",
-      height: "80px",
+      height: "64px",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",
@@ -22,7 +22,7 @@ export default function Navbar() {
           src="/Katexs_Logo_White.jpg"
           alt="Katexs"
           style={{
-            height: "44px",
+            height: "52px",
             width: "auto",
             objectFit: "contain",
           }}
