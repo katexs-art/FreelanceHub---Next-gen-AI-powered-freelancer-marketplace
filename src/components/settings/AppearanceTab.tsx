@@ -22,7 +22,7 @@ export function AppearanceTab() {
     <div className="space-y-6">
       <div>
         <Eyebrow>Appearance</Eyebrow>
-        <h2 className="display-md mt-2">Make Katexs yours</h2>
+        <h2 className="display-md mt-2">Make WeGrow yours</h2>
         <p className="text-foreground-muted mt-1">Choose a theme for your dashboard.</p>
       </div>
 

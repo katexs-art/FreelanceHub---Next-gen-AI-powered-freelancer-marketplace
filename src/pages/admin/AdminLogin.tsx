@@ -58,7 +58,7 @@ export default function AdminLogin() {
               letterSpacing: "-0.02em",
             }}
           >
-            katexs<span style={{ color: "hsl(var(--primary))" }}>.</span>
+            wegrow<span style={{ color: "hsl(var(--primary))" }}>.</span>
           </div>
         </div>
 

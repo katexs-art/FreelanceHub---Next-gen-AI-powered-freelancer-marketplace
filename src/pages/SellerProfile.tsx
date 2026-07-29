@@ -195,7 +195,7 @@ export default function SellerProfile() {
     <div className="min-h-screen flex flex-col bg-background">
       <SEO
         title={`${name} — Profile`}
-        description={(seller.bio ?? `Hire ${name} on Katexs.`).slice(0, 155)}
+        description={(seller.bio ?? `Hire ${name} on WeGrow.`).slice(0, 155)}
       />
       <SiteHeader />
       <main className="flex-1">

@@ -19,7 +19,7 @@ const NotFound = () => {
 
   return (
     <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff", display: "flex", flexDirection: "column" }}>
-      <SiteHeader showCategories={false} />
+      <SiteHeader />
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "64px 24px" }}>
         <div style={{ textAlign: "center", maxWidth: 520 }}>
           <p style={{ fontSize: 120, fontWeight: 700, color: "#1a1a1a", letterSpacing: "-0.06em", lineHeight: 1, margin: 0, userSelect: "none" }}>

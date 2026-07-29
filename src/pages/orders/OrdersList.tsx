@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { EmptyState } from "@/components/EmptyState";
@@ -59,9 +58,8 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
   const counterpartKey = as === "buyer" ? "seller" : "buyer";
 
   return (
-    <>
-      <SiteHeader showCategories={false} />
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+    <AppShell>
+      <div style={{ color: "#fff" }}>
       <div className="max-w-5xl mx-auto px-6 py-8">
       <h1 className="text-2xl font-bold mb-6">{title}</h1>
       {loading ? (
@@ -117,7 +115,6 @@ export default function OrdersList({ as }: { as: "buyer" | "seller" }) {
       <RecommendationsBlock />
       </div>
       </div>
-      <SiteFooter />
-    </>
+    </AppShell>
   );
 }

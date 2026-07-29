@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -69,9 +68,8 @@ export default function NotificationPreferences() {
   };
 
   return (
-    <>
-      <SiteHeader showCategories={false} />
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+    <AppShell>
+      <div style={{ color: "#fff" }}>
       <div className="max-w-3xl mx-auto px-6 py-8">
         <h1 className="text-2xl font-bold">Notifications</h1>
         <p className="text-foreground-muted mt-1 text-sm">
@@ -117,7 +115,6 @@ export default function NotificationPreferences() {
         </p>
       </div>
       </div>
-      <SiteFooter />
-    </>
+    </AppShell>
   );
 }

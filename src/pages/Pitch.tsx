@@ -58,7 +58,7 @@ export default function Pitch() {
           body: {
             template: "new_message",
             to: buyer.email,
-            subject: "Someone pitched your project on Katexs",
+            subject: "Someone pitched your project on WeGrow",
             data: {
               conversation_id: convId,
               preview: "A qualified expert responded to your request. Log in to review their pitch and get your project started.",

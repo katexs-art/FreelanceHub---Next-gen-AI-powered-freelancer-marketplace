@@ -417,7 +417,7 @@ export default function GigDetail() {
 
           {/* Breadcrumb */}
           <nav style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#888", marginBottom: 20, flexWrap: "wrap" }}>
-            <Link to="/" style={{ color: "#888", textDecoration: "none" }} onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}>Katexs</Link>
+            <Link to="/" style={{ color: "#888", textDecoration: "none" }} onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}>WeGrow</Link>
             <ChevronRight size={12} />
             <Link to={`/services?category=${encodeURIComponent(catDisplay)}`} style={{ color: "#888", textDecoration: "none", textTransform: "capitalize" }} onMouseEnter={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#fff"; }} onMouseLeave={(e) => { (e.currentTarget as HTMLAnchorElement).style.color = "#888"; }}>{catDisplay}</Link>
             <ChevronRight size={12} />

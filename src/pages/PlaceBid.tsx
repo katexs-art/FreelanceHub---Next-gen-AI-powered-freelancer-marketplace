@@ -86,7 +86,7 @@ export default function PlaceBid() {
                 bid_amount: parseInt(amount, 10),
                 delivery_days: parseInt(days, 10),
                 proposal_preview: cover.trim(),
-                buyer_hq_url: "https://katexs.com/buyer/hq",
+                buyer_hq_url: "https://wegrow.com/buyer/hq",
               },
             },
           });

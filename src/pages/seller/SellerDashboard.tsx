@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -263,7 +262,7 @@ export default function SellerDashboard() {
     const key = `katexs:seller-approved-toast:${user.id}`;
     if (localStorage.getItem(key)) return;
     localStorage.setItem(key, "1");
-    toast.success("You are approved — start selling on Katexs now.");
+    toast.success("You are approved — start selling on WeGrow now.");
   }, [user, approved]);
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
@@ -277,9 +276,8 @@ export default function SellerDashboard() {
   ];
 
   return (
-    <>
-      <SiteHeader showCategories={false} />
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+    <AppShell>
+      <div style={{ color: "#fff" }}>
       <div className="max-w-6xl mx-auto px-6 py-8">
         {pending && (
           <div className="mb-6 rounded-xl border border-yellow-300 bg-yellow-50 text-yellow-900 p-4 text-sm">
@@ -531,9 +529,8 @@ export default function SellerDashboard() {
           </div>
         </div>
       </div>
-      <SiteFooter />
       </div>
-    </>
+    </AppShell>
   );
 }
 

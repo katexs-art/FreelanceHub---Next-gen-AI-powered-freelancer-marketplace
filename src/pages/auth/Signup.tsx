@@ -10,10 +10,10 @@ type Role = "buyer" | "seller";
 type Errs = Partial<Record<"full_name" | "email" | "password" | "confirm" | "role" | "terms", string>>;
 
 /* ─── helpers ────────────────────────────────────────── */
-function KatexsLogo({ color = "#fff", size = 18 }: { color?: string; size?: number }) {
+function WeGrowLogo({ color = "#fff", size = 18 }: { color?: string; size?: number }) {
   return (
     <span style={{ fontSize: size, fontWeight: 700, letterSpacing: "0.1em", color, fontFamily: "Syne, system-ui, sans-serif", display: "inline-flex", alignItems: "flex-start", lineHeight: 1 }}>
-      KATEXS
+      WeGrow
       <span style={{ color: "#22c55e", fontSize: Math.round(size * 0.45), marginLeft: 2, lineHeight: 1, transform: "translateY(-2px)" }}>●</span>
     </span>
   );
@@ -135,7 +135,7 @@ export default function Signup() {
 
   const LeftPanel = (
     <aside style={{ width: "40%", minHeight: "100vh", background: "#111111", padding: "48px 40px", flexDirection: "column", justifyContent: "space-between", boxSizing: "border-box" }} className="signup-left-panel">
-      <KatexsLogo size={18} />
+      <WeGrowLogo size={18} />
       <div>
         <h2 style={{ color: "#fff", fontSize: 30, fontWeight: 600, lineHeight: 1.3, margin: "0 0 14px" }}>
           Join the AI productivity platform
@@ -204,7 +204,7 @@ export default function Signup() {
         <div style={{ width: "100%", maxWidth: 460 }}>
           {/* mobile logo */}
           <div className="signup-mobile-logo" style={{ marginBottom: 32 }}>
-            <KatexsLogo color="#fff" size={18} />
+            <WeGrowLogo color="#fff" size={18} />
           </div>
 
           <h1 style={{ fontSize: 26, fontWeight: 600, color: "#fff", margin: "0 0 6px" }}>Create your account</h1>

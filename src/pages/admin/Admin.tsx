@@ -249,7 +249,7 @@ function AdminSidebar({ active, indicators, health }: { active: NavKey; indicato
       flexShrink: 0,
     }}>
       <div style={{ padding: "18px 20px 8px" }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: "#111", letterSpacing: "-0.01em" }}>KATEXS</div>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "#111", letterSpacing: "-0.01em" }}>WeGrow</div>
         <div style={{ fontSize: 10, textTransform: "uppercase", letterSpacing: "0.1em", color: "#999", marginTop: 2 }}>Admin Panel</div>
       </div>
 
@@ -503,7 +503,7 @@ export default function Admin() {
   };
 
   if (profile && profile.role !== "admin") {
-    return <><SiteHeader showCategories={false} /><div style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", color: "#888", fontSize: 14 }}>Admin access required.</div><SiteFooter /></>;
+    return <><SiteHeader /><div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh", color: "#888", fontSize: 14 }}>Admin access required.</div><SiteFooter /></>;
   }
 
   // Sort sellers: pending applications first
@@ -520,7 +520,7 @@ export default function Admin() {
 
   return (
     <>
-      <SiteHeader showCategories={false} />
+      <SiteHeader />
       <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
       <div className="flex items-stretch" style={{ minHeight: "calc(100vh - 56px)" }}>
         <AdminSidebar active={active} indicators={indicators} health={health} />

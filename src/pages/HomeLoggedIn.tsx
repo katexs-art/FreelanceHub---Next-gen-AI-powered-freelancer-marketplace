@@ -196,7 +196,7 @@ export default function HomeLoggedIn() {
 
   return (
     <>
-      <SEO title="Home · KATEXS" description="Your AI business productivity hub." />
+      <SEO title="Home · WeGrow" description="Your AI business productivity hub." />
       <SiteHeader />
       <div style={{ background: "#0a0a0a", minHeight: "100vh", paddingBottom: 80 }}>
         <div style={{ maxWidth: 1280, margin: "0 auto", padding: "40px 24px 0" }}>
@@ -207,7 +207,7 @@ export default function HomeLoggedIn() {
               Welcome back, {firstName} 👋
             </h1>
             <p style={{ fontSize: 14, color: "#888", margin: 0 }}>
-              Here's what's happening on your KATEXS dashboard.
+              Here's what's happening on your WeGrow dashboard.
             </p>
           </div>
 

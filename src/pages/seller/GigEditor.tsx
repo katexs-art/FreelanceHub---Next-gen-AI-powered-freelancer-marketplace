@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { useCategories } from "@/hooks/useCategories";
 import { supabase } from "@/integrations/supabase/client";
@@ -289,10 +288,9 @@ export default function GigEditor() {
   };
 
   return (
-    <>
+    <AppShell>
       <style>{GI_STYLES}</style>
-      <SiteHeader showCategories={false} />
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+      <div style={{ color: "#fff" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
 
           <h1 style={{ fontSize: 26, fontWeight: 600, margin: "0 0 32px" }}>
@@ -587,9 +585,8 @@ export default function GigEditor() {
           </div>
 
         </div>
-        <SiteFooter />
       </div>
-    </>
+    </AppShell>
   );
 }
 

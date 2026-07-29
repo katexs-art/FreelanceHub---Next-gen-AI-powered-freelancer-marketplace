@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -54,9 +53,8 @@ export default function MyGigs() {
   };
 
   return (
-    <>
-      <SiteHeader showCategories={false} />
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+    <AppShell>
+      <div style={{ color: "#fff" }}>
       <div className="max-w-5xl mx-auto px-6 py-8">
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -124,7 +122,6 @@ export default function MyGigs() {
         )}
       </div>
       </div>
-      <SiteFooter />
-    </>
+    </AppShell>
   );
 }

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { EmptyState } from "@/components/EmptyState";
@@ -210,9 +209,8 @@ export default function BuyerDashboard() {
   );
 
   return (
-    <>
-      <SiteHeader showCategories={false} />
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+    <AppShell>
+      <div style={{ color: "#fff" }}>
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-10">
         {/* Welcome header */}
         <header>
@@ -435,7 +433,6 @@ export default function BuyerDashboard() {
         </section>
       </div>
       </div>
-      <SiteFooter />
-    </>
+    </AppShell>
   );
 }

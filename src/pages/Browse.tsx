@@ -436,7 +436,7 @@ export default function Browse() {
               <span style={{ fontSize: 20, fontWeight: 700, color: "#111" }}>
                 {totalApproved.toLocaleString()}
               </span>{" "}
-              experts on Katexs
+              experts on WeGrow
             </div>
           </div>
 

@@ -147,7 +147,7 @@ export default function Projects() {
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <SEO title="Open Projects — Katexs" description="Browse open client projects on Katexs and submit bids." />
+      <SEO title="Open Projects — WeGrow" description="Browse open client projects on WeGrow and submit bids." />
       <SiteHeader />
       <main className="flex-1 container-page py-10">
         {/* Header */}

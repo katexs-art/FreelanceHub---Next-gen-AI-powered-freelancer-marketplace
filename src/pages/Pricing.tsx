@@ -65,7 +65,7 @@ const faqs = [
   },
   {
     q: "Are there any monthly fees or subscriptions?",
-    a: "No. Katexs is completely free to join for both Partners and Experts. You only pay when a Project is completed. No monthly fees. No subscriptions. No hidden charges.",
+    a: "No. WeGrow is completely free to join for both Partners and Experts. You only pay when a Project is completed. No monthly fees. No subscriptions. No hidden charges.",
   },
   {
     q: "How does escrow work?",
@@ -232,7 +232,7 @@ export default function Pricing() {
   return (
     <div style={{ background: "#fff", minHeight: "100vh", display: "flex", flexDirection: "column" }}>
       <SEO
-        title="Pricing · KATEXS"
+        title="Pricing · WeGrow"
         description="Transparent pricing. Partners pay 5% at checkout. Experts keep 90%. No subscriptions. No hidden fees."
       />
       <SiteHeader />
@@ -312,7 +312,7 @@ export default function Pricing() {
                 side="right"
                 topBorder="#22c55e"
                 label="For Experts"
-                heading="Earn on Katexs"
+                heading="Earn on WeGrow"
                 subtext="List your Services, win Projects, get paid fast. Keep 90 percent of everything you earn."
                 fee="10%"
                 feeColor="#22c55e"
@@ -320,7 +320,7 @@ export default function Pricing() {
                 features={expertFeatures}
                 example={{
                   line1: "Project price $100",
-                  line2: "Katexs platform fee 10%",
+                  line2: "WeGrow platform fee 10%",
                   total: "You receive $90",
                 }}
                 buttonBg="#22c55e"

@@ -137,7 +137,7 @@ export default function SellerOnboarding() {
     try { localStorage.removeItem(draftKey(user.id)); } catch {}
   };
 
-  if (loading) return <><SiteHeader showCategories={false} /><div style={{ background: "#0a0a0a", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: "#888", fontSize: 14 }}>Loading…</div></div><SiteFooter /></>;
+  if (loading) return <><SiteHeader /><div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}><div style={{ color: "#888", fontSize: 14 }}>Loading…</div></div><SiteFooter /></>;
   if (!user) return <Navigate to="/login?redirect=/seller-onboarding" replace />;
   if (profile?.seller_status === "approved") { clearDraft(); return <Navigate to="/seller/dashboard" replace />; }
   if (profile?.seller_status === "pending_approval") { clearDraft(); return <Navigate to="/seller/dashboard" replace />; }
@@ -235,7 +235,7 @@ export default function SellerOnboarding() {
 
   return (
     <>
-      <SiteHeader showCategories={false} />
+      <SiteHeader />
       <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
       <div className="max-w-3xl mx-auto px-6 py-8">
         <div className="mb-8">

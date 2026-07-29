@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import { SiteHeader } from "@/components/layout/SiteHeader";
+import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -11,9 +11,8 @@ import { toast } from "sonner";
 import { CustomOfferComposer } from "@/components/marketplace/CustomOfferComposer";
 import { CustomOfferCard } from "@/components/marketplace/CustomOfferCard";
 
-// ── Nav height constant (SiteHeader h-14 = 56px + CategoryBar 45px = 101px)
-// SiteHeader showCategories=false → just 56px header
-const NAV_H = 56;
+// AppShell provides the header — Inbox fills the remaining height
+const NAV_H = 0;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -519,12 +518,9 @@ export default function Inbox() {
   });
 
   return (
-    <>
-      {/* SiteHeader without category bar */}
-      <SiteHeader showCategories={false} />
-
+    <AppShell>
       <div style={{
-        height: `calc(100vh - ${NAV_H}px)`,
+        height: "100%",
         display: "grid",
         gridTemplateColumns: active ? "320px 1fr 300px" : "320px 1fr",
         overflow: "hidden",
@@ -925,7 +921,7 @@ export default function Inbox() {
           </div>
         </div>
       )}
-    </>
+    </AppShell>
   );
 }
 

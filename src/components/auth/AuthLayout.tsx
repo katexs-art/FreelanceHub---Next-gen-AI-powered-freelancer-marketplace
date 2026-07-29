@@ -1,32 +1,21 @@
 import { Link } from "react-router-dom";
 import { Zap, Shield, Star } from "lucide-react";
 
-function KatexsLogo({ size = 18, color = "#000" }: { size?: number; color?: string }) {
+function WeGrowLogo({ size = 18, color = "#000" }: { size?: number; color?: string }) {
   return (
     <span
       style={{
         fontSize: size,
         fontWeight: 700,
-        letterSpacing: "0.1em",
+        letterSpacing: "-0.01em",
         color,
-        fontFamily: "Syne, system-ui, sans-serif",
+        fontFamily: "system-ui, sans-serif",
         display: "inline-flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         lineHeight: 1,
       }}
     >
-      KATEXS
-      <span
-        style={{
-          color: "#22c55e",
-          fontSize: Math.round(size * 0.45),
-          marginLeft: 2,
-          lineHeight: 1,
-          transform: "translateY(-2px)",
-        }}
-      >
-        ●
-      </span>
+      WeGrow
     </span>
   );
 }
@@ -55,7 +44,7 @@ export function AuthLayout({
         <div className="kx-auth-form-inner">
           <div style={{ marginBottom: 32 }}>
             <Link to="/" style={{ textDecoration: "none" }}>
-              <KatexsLogo size={18} color="#000" />
+              <WeGrowLogo size={18} color="#000" />
             </Link>
           </div>
 
@@ -84,7 +73,7 @@ export function AuthLayout({
         <div className="kx-auth-brand-inner">
           {/* TOP */}
           <div>
-            <KatexsLogo size={16} color="#fff" />
+            <WeGrowLogo size={16} color="#fff" />
             <div style={{ marginTop: 12 }}>
               <span
                 style={{
@@ -116,7 +105,7 @@ export function AuthLayout({
                 margin: "40px 0 32px",
               }}
             >
-              The AI platform built for what's next.
+              Build Anything With AI
             </h2>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
@@ -125,7 +114,7 @@ export function AuthLayout({
                   Icon: Zap,
                   color: "#22c55e",
                   bg: "rgba(34,197,94,0.15)",
-                  text: "River AI matches you to the perfect Expert in seconds",
+                  text: "AI-powered matching finds the right specialist in seconds",
                 },
                 {
                   Icon: Shield,
@@ -209,7 +198,7 @@ export function AuthLayout({
                       whiteSpace: "nowrap",
                     }}
                   >
-                    River {e.score}
+                    Score {e.score}
                   </span>
                 </div>
               ))}

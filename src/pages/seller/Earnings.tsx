@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { SiteHeader } from "@/components/layout/SiteHeader";
-import { SiteFooter } from "@/components/layout/SiteFooter";
+import { AppShell } from "@/components/layout/AppShell";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -65,9 +64,8 @@ export default function Earnings() {
   };
 
   return (
-    <>
-      <SiteHeader showCategories={false} />
-      <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
+    <AppShell>
+      <div style={{ color: "#fff" }}>
       <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
         <header>
           <h1 className="text-2xl font-bold">Earnings</h1>
@@ -168,8 +166,7 @@ export default function Earnings() {
         </section>
       </div>
       </div>
-      <SiteFooter />
-    </>
+    </AppShell>
   );
 }
 

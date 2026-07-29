@@ -59,12 +59,12 @@ export default function FindExperts() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <SEO title="Find Experts — Katexs" description="Browse verified AI experts ready to deliver." />
+      <SEO title="Find Experts — WeGrow" description="Browse verified AI experts ready to deliver." />
       <SiteHeader />
       <main className="flex-1 container py-10">
         <header className="mb-8">
           <h1 className="text-3xl font-bold">Find experts</h1>
-          <p className="text-foreground-muted mt-1">Browse verified sellers on Katexs.</p>
+          <p className="text-foreground-muted mt-1">Browse verified sellers on WeGrow.</p>
           <div className="mt-5 relative max-w-xl">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-muted" />
             <Input

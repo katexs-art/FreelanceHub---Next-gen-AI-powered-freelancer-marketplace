@@ -11,30 +11,30 @@ const scrollTo = (id: string) => (e: React.MouseEvent) => {
 };
 
 const terms = [
-  { term: "Service", was: "", green: false, desc: "A Service is something an Expert offers on Katexs. Need a voice AI built? There is a Service for that. Need a GHL setup? There is a Service for that." },
-  { term: "Expert", was: "formerly Seller", green: false, desc: "An Expert is a verified professional who offers their skills on Katexs. Every Expert is manually approved by our team before they can list their Services." },
-  { term: "Partner", was: "formerly Buyer", green: false, desc: "A Partner is anyone who hires an Expert on Katexs. Whether you need one thing done or ten things built — you are a Partner." },
+  { term: "Service", was: "", green: false, desc: "A Service is something an Expert offers on WeGrow. Need a voice AI built? There is a Service for that. Need a GHL setup? There is a Service for that." },
+  { term: "Expert", was: "formerly Seller", green: false, desc: "An Expert is a verified professional who offers their skills on WeGrow. Every Expert is manually approved by our team before they can list their Services." },
+  { term: "Partner", was: "formerly Buyer", green: false, desc: "A Partner is anyone who hires an Expert on WeGrow. Whether you need one thing done or ten things built — you are a Partner." },
   { term: "Project", was: "formerly Order", green: false, desc: "When a Partner hires an Expert and pays — that becomes a Project. Your Project is tracked, monitored, and protected from start to finish." },
   { term: "Proposal", was: "formerly Bid", green: false, desc: "When an Expert wants to work on a Brief they submit a Proposal. It includes their price, delivery time, and why they are the best person for the job." },
   { term: "Brief", was: "formerly Job Posting", green: false, desc: "A Brief is what Partners post when they need something done. Describe your problem, set your budget, and Experts submit Proposals to win the work." },
-  { term: "HQ", was: "formerly Dashboard", green: false, desc: "Your HQ is your personal command center on Katexs. Manage your Projects, messages, earnings, and profile all in one place." },
-  { term: "River Score", was: "Unique to Katexs", green: true, desc: "River Score is an AI-generated trust score for every Expert. It measures completion rate, review quality, response time, and repeat Partners. The higher the score the better the Expert." },
+  { term: "HQ", was: "formerly Dashboard", green: false, desc: "Your HQ is your personal command center on WeGrow. Manage your Projects, messages, earnings, and profile all in one place." },
+  { term: "WeGrow Score", was: "Unique to WeGrow", green: true, desc: "WeGrow Score is an AI-generated trust score for every Expert. It measures completion rate, review quality, response time, and repeat Partners. The higher the score the better the Expert." },
 ];
 
 const partnerSteps = [
-  { h: "Sign up as a Partner", d: "Go to katexs.com and click Join Free. Enter your name, email, and password. Select Partner when asked who you are. Verify your email. Done — you are in.", e: "Takes 2 minutes" },
-  { h: "Tell River what you need", d: "On the homepage type what you need into the River search bar. Just talk normally — like you are texting a friend. Example — I need someone to build me a voice AI caller for my real estate business. River reads it and finds the best Experts for you instantly.", e: "River does the hard part" },
-  { h: "Review your Expert matches", d: "River shows you the top 15 Experts for your request. Each Expert has a River Score, their skills, their price, and how fast they deliver. You can message any Expert directly for free before spending a single dollar.", e: "No obligation to buy" },
+  { h: "Sign up as a Partner", d: "Go to wegrow.com and click Join Free. Enter your name, email, and password. Select Partner when asked who you are. Verify your email. Done — you are in.", e: "Takes 2 minutes" },
+  { h: "Tell us what you need", d: "On the homepage type what you need into the search bar. Just talk normally — like you are texting a friend. Example — I need someone to build me a voice AI caller for my real estate business. Our AI reads it and finds the best Experts for you instantly.", e: "AI does the hard part" },
+  { h: "Review your Expert matches", d: "WeGrow shows you the top 15 Experts for your request. Each Expert has a WeGrow Score, their skills, their price, and how fast they deliver. You can message any Expert directly for free before spending a single dollar.", e: "No obligation to buy" },
   { h: "Accept a Proposal and pay", d: "Once you find your Expert they will send you a Proposal with their price and delivery time. When you are happy click Accept Proposal and pay securely. Your money goes into escrow — it is held safely and only released when you approve the work.", e: "100 percent secure escrow" },
   { h: "Review the delivery and release payment", d: "Your Expert delivers the work. You have 3 days to review it. If you are happy click Approve and the Expert gets paid instantly. If something is wrong click Dispute and our team steps in within 24 hours.", e: "3 days to review — no rush" },
 ];
 
 const expertSteps = [
-  { h: "Sign up as an Expert", d: "Go to katexs.com and click Join Free. Enter your name, email, and password. Select Expert when asked who you are. Verify your email.", e: "Takes 2 minutes" },
+  { h: "Sign up as an Expert", d: "Go to wegrow.com and click Join Free. Enter your name, email, and password. Select Expert when asked who you are. Verify your email.", e: "Takes 2 minutes" },
   { h: "Submit your Expert application", d: "Tell us about yourself. What are your skills? What tools do you use? What have you built before? Upload samples of your work if you have them. The more detail you give the faster you get approved.", e: "Approval within 24 hours" },
-  { h: "Get approved and set up your profile", d: "Our team reviews your application within 24 hours. Once approved you can complete your Expert profile — add your photo, write your bio, set your River Score tags, and create your Services.", e: "One time review" },
+  { h: "Get approved and set up your profile", d: "Our team reviews your application within 24 hours. Once approved you can complete your Expert profile — add your photo, write your bio, set your WeGrow Score tags, and create your Services.", e: "One time review" },
   { h: "Create your Services", d: "A Service is what you offer. Give it a title, describe exactly what you will deliver, set your price, and choose your delivery time. You can create up to 10 Services. Example Service — I will build a GoHighLevel voice AI caller for your agency in 3 days.", e: "Be specific to win more" },
-  { h: "Receive Proposals and pitch Partners", d: "Two things will happen. Partners will find your profile and message you directly. And River will match you to Partners who need your exact skills and alert you instantly. When River matches you — go pitch. Be fast. Be specific. Tell them exactly what you will deliver and why you are the best.", e: "River alerts you instantly" },
+  { h: "Receive Proposals and pitch Partners", d: "Two things will happen. Partners will find your profile and message you directly. And WeGrow will match you to Partners who need your exact skills and alert you instantly. When WeGrow matches you — go pitch. Be fast. Be specific. Tell them exactly what you will deliver and why you are the best.", e: "WeGrow alerts you instantly" },
   { h: "Deliver and get paid", d: "Complete the Project on time. Submit your delivery inside the platform. The Partner has 3 days to review. Once they approve — your money transfers to your bank account or debit card the same day. No waiting. No holds. Just instant payment.", e: "Same day payout" },
 ];
 
@@ -90,7 +90,7 @@ export default function HowItWorks() {
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 1 }} />
           <div style={{ position: "relative", zIndex: 2, textAlign: "center", padding: "80px 0" }}>
             <span style={{ display: "inline-block", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(255,255,255,0.05)", color: "#fff", fontSize: 11, letterSpacing: "0.12em", padding: "6px 16px", borderRadius: 999, marginBottom: 24, textTransform: "uppercase" }}>Simple by design</span>
-            <h1 className="hiw-h1" style={{ color: "#fff", fontWeight: 500, lineHeight: 1.1, margin: 0, marginBottom: 16 }}>How Katexs Works</h1>
+            <h1 className="hiw-h1" style={{ color: "#fff", fontWeight: 500, lineHeight: 1.1, margin: 0, marginBottom: 16 }}>How WeGrow Works</h1>
             <p style={{ color: "rgba(255,255,255,0.6)", fontSize: 18, maxWidth: 500, margin: "0 auto" }}>So simple a 9 year old could use it. So powerful it runs your business.</p>
           </div>
         </section>
@@ -100,7 +100,7 @@ export default function HowItWorks() {
           <div style={{ maxWidth: 1200, margin: "0 auto" }}>
             <div style={{ textAlign: "center", marginBottom: 48 }}>
               <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#888", marginBottom: 12 }}>Know the language</div>
-              <h2 style={{ fontSize: 36, fontWeight: 500, color: "#000", margin: 0, marginBottom: 8 }}>The Katexs glossary</h2>
+              <h2 style={{ fontSize: 36, fontWeight: 500, color: "#000", margin: 0, marginBottom: 8 }}>The WeGrow glossary</h2>
               <p style={{ fontSize: 15, color: "#888", margin: 0 }}>New here? Learn our terms in 60 seconds.</p>
             </div>
             <div className="hiw-grid-4">
@@ -162,7 +162,7 @@ export default function HowItWorks() {
           <div style={{ maxWidth: 1100, margin: "0 auto" }}>
             <div style={{ marginBottom: 48 }}>
               <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#888", marginBottom: 12 }}>For Experts</div>
-              <h2 style={{ fontSize: 36, fontWeight: 500, color: "#fff", margin: 0, marginBottom: 8 }}>How to earn on Katexs — 6 simple steps</h2>
+              <h2 style={{ fontSize: 36, fontWeight: 500, color: "#fff", margin: 0, marginBottom: 8 }}>How to earn on WeGrow — 6 simple steps</h2>
               <p style={{ fontSize: 15, color: "#888", margin: 0 }}>Apply once. Get approved. Start earning.</p>
             </div>
             <div>
@@ -177,13 +177,13 @@ export default function HowItWorks() {
         <section style={{ background: "#fff", padding: "80px 40px", borderTop: "1px solid #f5f5f5" }}>
           <div style={{ maxWidth: 1200, margin: "0 auto" }} className="hiw-river">
             <div>
-              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#888", marginBottom: 12 }}>Meet River</div>
-              <h2 style={{ fontSize: 36, fontWeight: 500, color: "#000", lineHeight: 1.2, margin: 0, marginBottom: 20 }}>River is the brain behind Katexs.</h2>
-              <p style={{ fontSize: 15, color: "#666", lineHeight: 1.7, marginBottom: 32 }}>River is not just a search bar. She is an AI matching engine that reads your request, scores every Expert on the platform, and finds the best match in seconds. She looks at River Score, skills, response time, completion rate, and review quality — all at once. The result is a shortlist of the top 15 Experts for exactly what you need. No browsing. No guessing. Just the right person.</p>
+              <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.12em", color: "#888", marginBottom: 12 }}>Our AI</div>
+              <h2 style={{ fontSize: 36, fontWeight: 500, color: "#000", lineHeight: 1.2, margin: 0, marginBottom: 20 }}>AI is the brain behind WeGrow.</h2>
+              <p style={{ fontSize: 15, color: "#666", lineHeight: 1.7, marginBottom: 32 }}>Our AI is not just a search bar. It is a matching engine that reads your request, scores every Expert on the platform, and finds the best match in seconds. It looks at WeGrow Score, skills, response time, completion rate, and review quality — all at once. The result is a shortlist of the top 15 Experts for exactly what you need. No browsing. No guessing. Just the right person.</p>
               <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
                 {[
                   { n: "15", l: "Experts matched per search" },
-                  { n: "98.9", l: "Highest River Score on platform" },
+                  { n: "98.9", l: "Highest WeGrow Score on platform" },
                   { n: "3 days", l: "Average payment time" },
                   { n: "24hrs", l: "Expert approval time" },
                 ].map((r) => (

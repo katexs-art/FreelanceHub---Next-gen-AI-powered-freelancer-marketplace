@@ -10,7 +10,7 @@ interface SEOProps {
 }
 
 export function SEO({ title, description, canonical, image, type = "website", jsonLd }: SEOProps) {
-  const fullTitle = title.includes("KATEXS") ? title : `${title} · KATEXS`;
+  const fullTitle = title.includes("WeGrow") ? title : `${title} · WeGrow`;
   const canonicalUrl = canonical ?? (typeof window !== "undefined" ? window.location.pathname : "/");
   return (
     <Helmet>

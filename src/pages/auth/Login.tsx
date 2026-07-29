@@ -51,7 +51,7 @@ export default function Login() {
   return (
     <AuthLayout
       title="Welcome back"
-      subtitle="Sign in to your Katexs account"
+      subtitle="Sign in to your WeGrow account"
       footer={<>New here? <Link to="/signup">Join now</Link></>}
     >
       <KxAuthStyles />

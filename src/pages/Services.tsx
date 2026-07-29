@@ -418,7 +418,7 @@ export default function Services() {
 
   return (
     <>
-      <SEO title="Find AI Experts — KATEXS" description="Browse top-rated AI experts. GoHighLevel, Voice AI, Automation, LLM, and more." />
+      <SEO title="Find AI Experts — WeGrow" description="Browse top-rated AI experts. GoHighLevel, Voice AI, Automation, LLM, and more." />
       <SiteHeader />
 
       <div style={{ background: "#0a0a0a", minHeight: "100vh" }}>

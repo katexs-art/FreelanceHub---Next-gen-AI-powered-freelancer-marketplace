@@ -317,7 +317,7 @@ export default function Affiliate() {
 function PageShell({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <SiteHeader showCategories={false} />
+      <SiteHeader />
       <div style={{ background: "#0a0a0a", minHeight: "100vh", color: "#fff" }}>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: "48px 24px" }}>
           {children}
@@ -346,7 +346,7 @@ function HeroSection() {
           Earn 40% on every<br />order you refer
         </h1>
         <p style={{ fontSize: 17, color: "#888", maxWidth: 480, margin: "0 auto" }}>
-          Share your unique link. Earn commission when someone hires an expert on Katexs.
+          Share your unique link. Earn commission when someone hires an expert on WeGrow.
         </p>
       </div>
 
