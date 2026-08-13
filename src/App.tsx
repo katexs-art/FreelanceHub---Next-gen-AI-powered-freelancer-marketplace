@@ -100,6 +100,7 @@ const Submit = lazy(() => import("./pages/Submit"));
 const FreeAudit = lazy(() => import("./pages/FreeAudit"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Network = lazy(() => import("./pages/Network"));
+const AgentBuilder = lazy(() => import("./pages/AgentBuilder"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
 
 function HqRedirect() {
@@ -162,6 +163,7 @@ const App = () => (
             <Route path="/seller/hq" element={<ProtectedRoute roles={["seller","admin"]}><SellerHq /></ProtectedRoute>} />
             <Route path="/buyer/dashboard" element={<ProtectedRoute roles={["client","admin"]}><BuyerDashboard /></ProtectedRoute>} />
             <Route path="/buyer/orders" element={<ProtectedRoute roles={["client","seller","admin"]}><OrdersList as="buyer" /></ProtectedRoute>} />
+            <Route path="/buyer/agent-builder" element={<ProtectedRoute roles={["client","admin"]}><AgentBuilder /></ProtectedRoute>} />
 
             {/* Seller */}
             <Route path="/seller/dashboard" element={<ProtectedRoute roles={["seller","admin"]}><SellerDashboard /></ProtectedRoute>} />

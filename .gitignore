@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Archived files from Lovable revert (2026-08-13)
+_archived-pre-revert/
