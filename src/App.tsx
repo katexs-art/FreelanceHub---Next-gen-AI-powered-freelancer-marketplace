@@ -101,7 +101,16 @@ const FreeAudit = lazy(() => import("./pages/FreeAudit"));
 const Contact = lazy(() => import("./pages/Contact"));
 const Network = lazy(() => import("./pages/Network"));
 const AgentBuilder = lazy(() => import("./pages/AgentBuilder"));
+const Demo = lazy(() => import("./pages/Demo"));
+const Deploy = lazy(() => import("./pages/Deploy"));
+const DeployResult = lazy(() => import("./pages/DeployResult"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
+
+function ConditionalRiverWidget() {
+  const { pathname } = useLocation();
+  if (pathname === "/demo" || pathname.startsWith("/deploy")) return null;
+  return <RiverWidget />;
+}
 
 function HqRedirect() {
   const { profile } = useAuth();
@@ -201,12 +210,15 @@ const App = () => (
             <Route path="/submit" element={<Submit />} />
             <Route path="/free-audit" element={<FreeAudit />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/demo" element={<Demo />} />
+            <Route path="/deploy" element={<Deploy />} />
+            <Route path="/deploy/:id" element={<DeployResult />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
         </Suspense>
         <Suspense fallback={null}>
-          <RiverWidget />
+          <ConditionalRiverWidget />
         </Suspense>
         </ErrorBoundary>
         </ThemeProvider>

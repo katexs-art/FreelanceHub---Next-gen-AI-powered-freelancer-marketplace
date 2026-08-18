@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      deploy_configs: {
+        Row: {
+          id: string
+          url: string
+          business_name: string | null
+          niche: string | null
+          services: Json
+          hours: string | null
+          phones: Json
+          faq: Json
+          brand_colors: Json
+          logo: string | null
+          raw_config: Json
+          status: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          url: string
+          business_name?: string | null
+          niche?: string | null
+          services?: Json
+          hours?: string | null
+          phones?: Json
+          faq?: Json
+          brand_colors?: Json
+          logo?: string | null
+          raw_config?: Json
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          url?: string
+          business_name?: string | null
+          niche?: string | null
+          services?: Json
+          hours?: string | null
+          phones?: Json
+          faq?: Json
+          brand_colors?: Json
+          logo?: string | null
+          raw_config?: Json
+          status?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      deploy_chats: {
+        Row: {
+          id: string
+          deploy_config_id: string
+          ip_address: string
+          role: string
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          deploy_config_id: string
+          ip_address: string
+          role: string
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          deploy_config_id?: string
+          ip_address?: string
+          role?: string
+          content?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deploy_chats_deploy_config_id_fkey"
+            columns: ["deploy_config_id"]
+            isOneToOne: false
+            referencedRelation: "deploy_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_search_sessions: {
         Row: {
           budget_filter: string | null
