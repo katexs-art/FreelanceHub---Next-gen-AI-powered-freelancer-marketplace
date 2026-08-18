@@ -103,7 +103,9 @@ const Network = lazy(() => import("./pages/Network"));
 const AgentBuilder = lazy(() => import("./pages/AgentBuilder"));
 const Demo = lazy(() => import("./pages/Demo"));
 const Deploy = lazy(() => import("./pages/Deploy"));
+const DeployBuilding = lazy(() => import("./pages/DeployBuilding"));
 const DeployResult = lazy(() => import("./pages/DeployResult"));
+const DeployHire = lazy(() => import("./pages/DeployHire"));
 const RiverWidget = lazy(() => import("./components/layout/RiverWidget"));
 
 function ConditionalRiverWidget() {
@@ -212,6 +214,8 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/demo" element={<Demo />} />
             <Route path="/deploy" element={<Deploy />} />
+            <Route path="/deploy/building" element={<DeployBuilding />} />
+            <Route path="/deploy/:id/hire" element={<DeployHire />} />
             <Route path="/deploy/:id" element={<DeployResult />} />
 
             <Route path="*" element={<NotFound />} />

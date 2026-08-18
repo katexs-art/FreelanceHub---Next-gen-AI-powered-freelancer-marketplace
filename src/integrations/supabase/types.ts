@@ -100,6 +100,47 @@ export type Database = {
           },
         ]
       }
+      deploy_leads: {
+        Row: {
+          id: string
+          deploy_config_id: string | null
+          name: string
+          email: string
+          phone: string | null
+          business_type: string | null
+          plan: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          deploy_config_id?: string | null
+          name: string
+          email: string
+          phone?: string | null
+          business_type?: string | null
+          plan?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          deploy_config_id?: string | null
+          name?: string
+          email?: string
+          phone?: string | null
+          business_type?: string | null
+          plan?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deploy_leads_deploy_config_id_fkey"
+            columns: ["deploy_config_id"]
+            isOneToOne: false
+            referencedRelation: "deploy_configs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ai_search_sessions: {
         Row: {
           budget_filter: string | null
